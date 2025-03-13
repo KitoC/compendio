@@ -117,6 +117,14 @@ export default {
 				'line-draw': 'line-draw 2s ease-out forwards',
 				'scale-in': 'scale-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
 				'rotate-node': 'rotate-node 10s ease-in-out infinite'
+			},
+			stroke: {
+				'dasharray': {
+					'1000': '1000',
+				},
+				'dashoffset': {
+					'1000': '1000',
+				}
 			}
 		}
 	},

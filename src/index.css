@@ -90,7 +90,12 @@
   
   .node-line {
     @apply stroke-primary/30 stroke-[1.5px] opacity-80 fill-none absolute z-0 
-           transition-all duration-300 stroke-dasharray-[1000] stroke-dashoffset-[1000] animate-line-draw;
+           transition-all duration-300 animate-line-draw;
+  }
+  
+  .node-line {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
   }
   
   .glass-card {

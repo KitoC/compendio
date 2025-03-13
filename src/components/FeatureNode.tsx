@@ -1,6 +1,5 @@
 
 import React, { useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
 import { CalendarIcon, MailIcon, MessageCircleIcon, FileTextIcon, BuildingIcon } from 'lucide-react';
 
 type FeatureNodeProps = {
