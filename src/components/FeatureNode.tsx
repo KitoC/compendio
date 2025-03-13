@@ -1,9 +1,9 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { CalendarIcon, MailIcon, MessageCircleIcon, FileTextIcon, BuildingIcon } from 'lucide-react';
+import { WrenchIcon, HammerIcon, TruckIcon, HomeIcon, MessageCircleIcon, CalendarIcon } from 'lucide-react';
 
 type FeatureNodeProps = {
-  type: 'crm' | 'messaging' | 'quotes' | 'invoices' | 'calendar' | 'email';
+  type: 'repairs' | 'construction' | 'messaging' | 'quotes' | 'scheduling' | 'transport';
   delay: number;
   position: {
     top?: string;
@@ -16,38 +16,39 @@ type FeatureNodeProps = {
 
 const getIcon = (type: string) => {
   switch (type) {
-    case 'crm':
-      return <BuildingIcon className="h-5 w-5 mr-2 text-blue-500" />;
+    case 'repairs':
+      return <WrenchIcon className="h-5 w-5 mr-2 text-primary" />;
+    case 'construction':
+      return <HammerIcon className="h-5 w-5 mr-2 text-accent" />;
     case 'messaging':
       return <MessageCircleIcon className="h-5 w-5 mr-2 text-green-500" />;
     case 'quotes':
-    case 'invoices':
-      return <FileTextIcon className="h-5 w-5 mr-2 text-amber-500" />;
-    case 'calendar':
+      return <HomeIcon className="h-5 w-5 mr-2 text-amber-500" />;
+    case 'scheduling':
       return <CalendarIcon className="h-5 w-5 mr-2 text-purple-500" />;
-    case 'email':
-      return <MailIcon className="h-5 w-5 mr-2 text-red-500" />;
+    case 'transport':
+      return <TruckIcon className="h-5 w-5 mr-2 text-red-500" />;
     default:
-      return <MessageCircleIcon className="h-5 w-5 mr-2 text-blue-500" />;
+      return <WrenchIcon className="h-5 w-5 mr-2 text-primary" />;
   }
 };
 
 const getLabel = (type: string) => {
   switch (type) {
-    case 'crm':
-      return 'CRM';
+    case 'repairs':
+      return 'Repairs';
+    case 'construction':
+      return 'Construction';
     case 'messaging':
       return 'Messaging';
     case 'quotes':
       return 'Quotes';
-    case 'invoices':
-      return 'Invoices';
-    case 'calendar':
-      return 'Calendar';
-    case 'email':
-      return 'Email';
+    case 'scheduling':
+      return 'Scheduling';
+    case 'transport':
+      return 'Transport';
     default:
-      return 'Feature';
+      return 'Service';
   }
 };
 

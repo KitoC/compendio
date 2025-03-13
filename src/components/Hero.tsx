@@ -7,12 +7,12 @@ const Hero: React.FC = () => {
 
   return (
     <div className="min-h-screen w-full overflow-hidden pt-16 flex flex-col items-center justify-center relative">
-      <div className="absolute inset-0 bg-gradient-to-b from-blue-50 to-white z-0" />
+      <div className="absolute inset-0 bg-gradient-to-b from-orange-50 to-white z-0" />
       
       <svg className="absolute w-full h-full top-0 left-0 opacity-30 z-0" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(0,0,150,0.05)" strokeWidth="1" />
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(234,88,12,0.05)" strokeWidth="1" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill="url(#grid)" />
@@ -21,21 +21,21 @@ const Hero: React.FC = () => {
       <div className="w-full max-w-6xl px-6 py-24 flex flex-col items-center relative z-10 animate-fade-in">
         <div className="text-center mb-8 md:mb-10">
           <h3 className="text-lg md:text-xl font-medium text-primary animate-fade-in opacity-0" style={{ animationDelay: '0.1s' }}>
-            All-in-one Communication Platform
+            Professional Trade Services Platform
           </h3>
           <h1 className="text-4xl md:text-6xl font-display font-bold tracking-tight mt-2 animate-fade-in opacity-0" style={{ animationDelay: '0.3s' }}>
-            Your Business <span className="text-gradient">Messaging Hub</span>
+            Your Complete <span className="text-gradient">Tradies Solution</span>
           </h1>
           <p className="mt-6 max-w-xl mx-auto text-lg text-muted-foreground animate-fade-in opacity-0" style={{ animationDelay: '0.5s' }}>
-            Seamlessly connect with customers through multiple channels while managing all your business communications in one place.
+            Easily manage jobs, quotes, scheduling and client communications all in one place. The smart platform built for busy tradies.
           </p>
           
           <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4 animate-fade-in opacity-0" style={{ animationDelay: '0.7s' }}>
             <a href="#demo" className="px-8 py-3 bg-primary text-white rounded-full shadow-lg hover:bg-primary/90 transition-colors font-medium">
-              Watch Demo
+              Get a Demo
             </a>
             <a href="#signup" className="px-8 py-3 bg-white border border-gray-200 text-gray-800 rounded-full shadow-sm hover:shadow-md transition-all font-medium">
-              Start Free Trial
+              Start 14-Day Free Trial
             </a>
           </div>
         </div>
@@ -47,53 +47,60 @@ const Hero: React.FC = () => {
           >
             <div className="device-notch"></div>
             <div className="device-screen h-full w-full">
-              {/* Messaging App UI */}
+              {/* Job Management App UI */}
               <div className="h-full flex flex-col">
                 <div className="bg-primary p-4 text-white">
-                  <div className="text-sm mb-1 opacity-80">Messages</div>
+                  <div className="text-sm mb-1 opacity-80">My Jobs</div>
                   <div className="flex items-center">
                     <div className="w-8 h-8 rounded-full bg-white/30 flex items-center justify-center mr-2">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                       </svg>
                     </div>
-                    <div className="font-medium">Business Messages</div>
+                    <div className="font-medium">Today's Schedule</div>
                   </div>
                 </div>
                 <div className="flex-1 p-3 overflow-hidden">
-                  {Array.from({ length: 5 }).map((_, index) => (
+                  {Array.from({ length: 4 }).map((_, index) => (
                     <div 
                       key={index} 
-                      className="flex mb-3 items-start animate-fade-in opacity-0" 
+                      className="p-3 mb-3 rounded-lg border border-gray-200 shadow-sm bg-white animate-fade-in opacity-0" 
                       style={{ animationDelay: `${1.2 + index * 0.1}s` }}
                     >
-                      <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0"></div>
-                      <div className="ml-2 bg-gray-100 rounded-2xl rounded-tl-none p-3 max-w-[80%]">
-                        <div className="w-full h-2 bg-gray-300 rounded-full mb-2"></div>
-                        <div className="w-2/3 h-2 bg-gray-300 rounded-full"></div>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-medium text-sm">
+                          {["Kitchen Renovation", "Bathroom Repair", "Deck Installation", "Plumbing Fixes"][index]}
+                        </div>
+                        <div className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
+                          {["9:00 AM", "11:30 AM", "2:00 PM", "4:30 PM"][index]}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                  {Array.from({ length: 3 }).map((_, index) => (
-                    <div 
-                      key={index} 
-                      className="flex mb-3 items-start justify-end animate-fade-in opacity-0" 
-                      style={{ animationDelay: `${1.7 + index * 0.1}s` }}
-                    >
-                      <div className="mr-2 bg-primary/20 rounded-2xl rounded-tr-none p-3 max-w-[80%]">
-                        <div className="w-full h-2 bg-primary/30 rounded-full mb-2"></div>
-                        <div className="w-3/4 h-2 bg-primary/30 rounded-full"></div>
+                      <div className="text-xs text-gray-500">
+                        {["123 Main St", "456 Oak Ave", "789 Pine Rd", "321 Cedar Ln"][index]}
                       </div>
-                      <div className="w-8 h-8 rounded-full bg-gray-300 flex-shrink-0"></div>
                     </div>
                   ))}
                 </div>
                 <div className="p-3 border-t border-gray-200">
-                  <div className="flex items-center bg-gray-100 rounded-full p-2">
-                    <div className="w-full h-6 bg-white rounded-full"></div>
-                    <div className="ml-2 w-6 h-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                       </svg>
                     </div>
                   </div>
@@ -104,7 +111,7 @@ const Hero: React.FC = () => {
           
           {/* Feature Nodes */}
           <FeatureNode 
-            type="crm" 
+            type="repairs" 
             delay={2.5} 
             position={{ top: '15%', left: '10%' }} 
             phoneRef={phoneRef} 
@@ -122,19 +129,19 @@ const Hero: React.FC = () => {
             phoneRef={phoneRef} 
           />
           <FeatureNode 
-            type="invoices" 
+            type="construction" 
             delay={3.1} 
             position={{ bottom: '20%', right: '7%' }} 
             phoneRef={phoneRef} 
           />
           <FeatureNode 
-            type="calendar" 
+            type="scheduling" 
             delay={3.3} 
             position={{ bottom: '10%', left: '20%' }} 
             phoneRef={phoneRef} 
           />
           <FeatureNode 
-            type="email" 
+            type="transport" 
             delay={3.5} 
             position={{ top: '5%', right: '25%' }} 
             phoneRef={phoneRef} 

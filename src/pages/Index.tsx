@@ -11,43 +11,42 @@ const Index: React.FC = () => {
       <main>
         <Hero />
         
-        {/* We can add more sections here as needed */}
+        {/* Features section */}
         <section className="py-24 bg-white">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Unify Your Business Communications</h2>
+              <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Everything You Need to Run Your Trade Business</h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Connect all your communication channels in one platform and never miss a customer interaction again.
+                All the tools you need to manage jobs, quotes, scheduling and client relationships in one easy platform.
               </p>
             </div>
             
-            {/* Feature boxes can be expanded in future iterations */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
                 {
-                  title: "Customer Management",
-                  description: "Track all interactions and manage customer relationships in one place.",
+                  title: "Job Management",
+                  description: "Schedule, track and manage all your jobs in one place. Never miss an appointment again.",
                   icon: (
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
                   )
                 },
                 {
-                  title: "Multi-Channel Messaging",
-                  description: "Communicate via SMS, social media, and live chat from a single interface.",
+                  title: "Quote & Invoice Builder",
+                  description: "Create professional quotes and invoices in seconds. Get paid faster and track all financials.",
+                  icon: (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                  )
+                },
+                {
+                  title: "Client Communication",
+                  description: "Message clients, send updates, and get approvals all within the app. Keep all communications in one place.",
                   icon: (
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                  )
-                },
-                {
-                  title: "Business Tools Integration",
-                  description: "Seamlessly integrate with your existing invoicing, calendar, and CRM systems.",
-                  icon: (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
                     </svg>
                   )
                 }
@@ -69,12 +68,12 @@ const Index: React.FC = () => {
 
         <section className="py-24 bg-gradient-to-b from-gray-50 to-white">
           <div className="max-w-7xl mx-auto px-6 text-center">
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-8">Ready to transform your business communications?</h2>
+            <h2 className="text-3xl md:text-4xl font-display font-bold mb-8">Ready to level up your trade business?</h2>
             <a 
               href="#getstarted" 
               className="inline-flex items-center justify-center px-8 py-4 bg-primary text-white rounded-full shadow-lg hover:bg-primary/90 transition-colors font-medium text-lg"
             >
-              Get Started For Free
+              Start Your Free Trial
             </a>
             <p className="mt-4 text-sm text-muted-foreground">No credit card required. 14-day free trial.</p>
           </div>
