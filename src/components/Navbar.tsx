@@ -7,7 +7,7 @@ const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <div className="flex items-center">
           <span className="text-xl font-display font-bold tracking-tight">
-            Messenger<span className="text-primary">Hub</span>
+            Task<span className="text-primary">Flow</span>
           </span>
         </div>
         

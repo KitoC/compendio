@@ -8,10 +8,10 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1">
             <div className="text-xl font-display font-bold tracking-tight mb-4">
-              Messenger<span className="text-primary">Hub</span>
+              Task<span className="text-primary">Flow</span>
             </div>
             <p className="text-muted-foreground text-sm">
-              Your all-in-one solution for business communications. Connect with customers seamlessly across platforms.
+              Your all-in-one solution for business management. Connect with customers seamlessly across platforms.
             </p>
           </div>
           
@@ -47,7 +47,7 @@ const Footer: React.FC = () => {
         
         <div className="mt-12 pt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} MessengerHub. All rights reserved.
+            © {new Date().getFullYear()} TaskFlow. All rights reserved.
           </p>
           
           <div className="flex items-center space-x-4 mt-4 md:mt-0">

@@ -15,17 +15,17 @@ const Index: React.FC = () => {
         <section className="py-24 bg-white">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Everything You Need to Run Your Trade Business</h2>
+              <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">Everything You Need to Run Your Business</h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                All the tools you need to manage jobs, quotes, scheduling and client relationships in one easy platform.
+                All the tools you need to manage tasks, projects, scheduling and client relationships in one easy platform.
               </p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
                 {
-                  title: "Job Management",
-                  description: "Schedule, track and manage all your jobs in one place. Never miss an appointment again.",
+                  title: "Task Management",
+                  description: "Schedule, track and manage all your tasks in one place. Never miss an appointment again.",
                   icon: (
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -68,7 +68,7 @@ const Index: React.FC = () => {
 
         <section className="py-24 bg-gradient-to-b from-gray-50 to-white">
           <div className="max-w-7xl mx-auto px-6 text-center">
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-8">Ready to level up your trade business?</h2>
+            <h2 className="text-3xl md:text-4xl font-display font-bold mb-8">Ready to level up your business?</h2>
             <a 
               href="#getstarted" 
               className="inline-flex items-center justify-center px-8 py-4 bg-primary text-white rounded-full shadow-lg hover:bg-primary/90 transition-colors font-medium text-lg"
