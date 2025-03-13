@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { CalendarIcon, MailIcon, MessageCircleIcon, FileTextIcon, BuildingIcon } from 'lucide-react';
 
 type FeatureNodeProps = {
@@ -54,9 +54,19 @@ const getLabel = (type: string) => {
 export const FeatureNode: React.FC<FeatureNodeProps> = ({ type, delay, position, phoneRef }) => {
   const nodeRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
   
   useEffect(() => {
-    if (!nodeRef.current || !phoneRef.current || !svgRef.current) return;
+    // Add visibility after delay
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+    }, delay * 100);
+    
+    return () => clearTimeout(timer);
+  }, [delay]);
+  
+  useEffect(() => {
+    if (!nodeRef.current || !phoneRef.current || !svgRef.current || !isVisible) return;
     
     const drawConnectionLine = () => {
       const phoneRect = phoneRef.current?.getBoundingClientRect();
@@ -77,7 +87,6 @@ export const FeatureNode: React.FC<FeatureNodeProps> = ({ type, delay, position,
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', `M${phoneCenterX},${phoneCenterY} Q${(phoneCenterX + nodeCenterX) / 2},${(phoneCenterY + nodeCenterY) / 1.5} ${nodeCenterX},${nodeCenterY}`);
       path.setAttribute('class', 'node-line');
-      path.style.animationDelay = `${delay * 0.1}s`;
       
       // Clear and append
       while (svg.firstChild) {
@@ -86,23 +95,28 @@ export const FeatureNode: React.FC<FeatureNodeProps> = ({ type, delay, position,
       svg.appendChild(path);
     };
     
+    // Initial draw
     drawConnectionLine();
+    
+    // Handle window resize
     window.addEventListener('resize', drawConnectionLine);
     
     return () => {
       window.removeEventListener('resize', drawConnectionLine);
     };
-  }, [phoneRef, delay]);
+  }, [phoneRef, isVisible]);
+  
+  const nodeStyle = {
+    ...position,
+    opacity: isVisible ? 1 : 0,
+    animation: isVisible ? `rotate-node 3s ease-in-out infinite ${delay * 0.2}s` : 'none',
+  };
   
   return (
     <div 
-      className={`feature-node animate-rotate-node`}
+      className="feature-node"
       ref={nodeRef}
-      style={{
-        ...position,
-        animationDelay: `${delay * 0.1}s`,
-        animationFillMode: 'both'
-      }}
+      style={nodeStyle}
     >
       <svg
         ref={svgRef}

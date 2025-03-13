@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
@@ -84,18 +83,17 @@
 /* Custom classes */
 @layer components {
   .feature-node {
-    @apply opacity-0 animate-scale-in bg-white shadow-lg rounded-full px-4 py-2 flex items-center absolute
+    @apply bg-white shadow-lg rounded-full px-4 py-2 flex items-center absolute
            transition-all duration-300 hover:shadow-xl hover:scale-105 hover:z-10;
+    z-index: 5;
   }
   
   .node-line {
     @apply stroke-primary/30 stroke-[1.5px] opacity-80 fill-none absolute z-0 
-           transition-all duration-300 animate-line-draw;
-  }
-  
-  .node-line {
+           transition-all duration-300;
     stroke-dasharray: 1000;
     stroke-dashoffset: 1000;
+    animation: line-draw 2s ease-out forwards;
   }
   
   .glass-card {
@@ -116,5 +114,31 @@
   
   .device-screen {
     @apply overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50;
+  }
+}
+
+@keyframes line-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes scale-in {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes rotate-node {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
   }
 }

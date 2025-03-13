@@ -4,9 +4,6 @@ import Navbar from '../components/Navbar';
 import Hero from '../components/Hero';
 import Footer from '../components/Footer';
 
-// Install the framer-motion package for animations
-<lov-add-dependency>framer-motion@latest</lov-add-dependency>
-
 const Index: React.FC = () => {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
