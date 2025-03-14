@@ -1,22 +1,53 @@
+import { MessageSquare, User, Settings } from "lucide-react";
+import { ReactNode } from "react";
 
+// Route constants to ensure consistency across the application
 export const ROUTES = {
-  HOME: "/",
   INDEX: "/",
-  LOGIN: "/auth",
   AUTH: "/auth",
-  CONVERSATIONS: "/conversations",
-  CONVERSATION: "/conversation",
-  ASSISTANT_CHAT: "/app/conversations/general-assistant",
-  CONVERSATION_ASSISTANT: "/app/conversations/general-assistant",
+  AUTH_CALLBACK: "/auth/callback",
   FORGOT_PASSWORD: "/forgot-password",
-  REQUEST_ACCESS: "/request-access",
-  ACCESS_PENDING: "/access-pending"
+  RESET_PASSWORD: "/reset-password",
+  CONVERSATIONS: "/app/conversations",
+  CONVERSATION_ASSISTANT: "/app/conversations/general-assistant",
+  CONVERSATION: "/app/conversations/:id",
+  REQUEST_ACCESS: "/app/request-access",
+  ACCESS_PENDING: "/app/access-pending",
 };
 
-export const sidebarItems = [
+// Sidebar configuration types
+export type SidebarItem = {
+  label: string;
+  url?: string;
+  icon?: React.ComponentType;
+  children?: SidebarItem[];
+};
+
+// Configurable sidebar items
+export const sidebarItems: SidebarItem[] = [
   {
-    label: "Conversations",
-    children: [{ label: "Assistant chat", url: ROUTES.ASSISTANT_CHAT }],
+    label: "Assistants",
+    children: [
+      {
+        label: "General Assistant",
+        url: ROUTES.CONVERSATION_ASSISTANT,
+        icon: MessageSquare,
+      },
+    ],
   },
-  { label: "Assistant chat", url: ROUTES.ASSISTANT_CHAT },
+  {
+    label: "Settings",
+    children: [
+      {
+        label: "Profile",
+        url: "#",
+        icon: User,
+      },
+      {
+        label: "Settings",
+        url: "#",
+        icon: Settings,
+      },
+    ],
+  },
 ];

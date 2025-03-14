@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -19,25 +18,28 @@ interface ChatContainerProps {
   className?: string;
 }
 
-export const ChatContainer = ({ conversationId: propConversationId, className }: ChatContainerProps) => {
+export const ChatContainer = ({
+  conversationId: propConversationId,
+  className,
+}: ChatContainerProps) => {
   const { id: paramId } = useParams<{ id: string }>();
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
-  
+
   // Use the ID from props or URL params
   const conversationId = propConversationId || paramId;
-  
+
   useEffect(() => {
     const fetchOrCreateConversation = async () => {
       if (!user) {
         return;
       }
-      
+
       setLoading(true);
-      
+
       try {
         // Check if conversation exists
         if (conversationId) {
@@ -46,26 +48,27 @@ export const ChatContainer = ({ conversationId: propConversationId, className }:
             .select("*")
             .eq("id", conversationId)
             .single();
-          
+
           if (error) {
-            if (error.code === "PGRST116") { // No rows found
+            if (error.code === "PGRST116") {
+              // No rows found
               // Create a new conversation with this ID
               const newConversation = {
                 id: conversationId,
                 title: "New Conversation",
                 user_id: user.id,
                 domain: window.location.hostname,
-                tenant_id: "35eb8c76-7ed5-4109-a520-99c7402d1f03" // Default tenant ID
+                tenant_id: "35eb8c76-7ed5-4109-a520-99c7402d1f03", // Default tenant ID
               };
-              
+
               const { error: createError } = await supabase
                 .from("conversations")
                 .insert(newConversation);
-              
+
               if (createError) {
                 throw createError;
               }
-              
+
               setConversation(newConversation as Conversation);
             } else {
               throw error;
@@ -89,10 +92,10 @@ export const ChatContainer = ({ conversationId: propConversationId, className }:
         setLoading(false);
       }
     };
-    
+
     fetchOrCreateConversation();
   }, [conversationId, user, navigate, toast]);
-  
+
   if (loading) {
     return (
       <Card className="flex items-center justify-center p-8 h-full">
@@ -101,16 +104,18 @@ export const ChatContainer = ({ conversationId: propConversationId, className }:
       </Card>
     );
   }
-  
+
   if (!conversationId || !user) {
     return (
       <Card className="flex flex-col items-center justify-center p-8 h-full">
         <p className="mb-4">No conversation selected or you need to sign in.</p>
-        <Button onClick={() => navigate(ROUTES.CONVERSATIONS)}>Back to Conversations</Button>
+        <Button onClick={() => navigate(ROUTES.CONVERSATIONS)}>
+          Back to Conversations
+        </Button>
       </Card>
     );
   }
-  
+
   return (
     <ChatProvider conversationId={conversationId}>
       <div className={`flex flex-col h-full bg-background ${className}`}>
