@@ -1,6 +1,6 @@
 
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
 interface AuthRequiredProps {
@@ -8,14 +8,23 @@ interface AuthRequiredProps {
 }
 
 const AuthRequired: React.FC<AuthRequiredProps> = ({ children }) => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, hasTenant } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      navigate('/auth');
+    if (!isLoading) {
+      if (!user) {
+        // Not authenticated, redirect to login
+        navigate('/auth');
+      } else if (!hasTenant && 
+                !location.pathname.includes('/request-access') && 
+                !location.pathname.includes('/access-pending')) {
+        // User has no tenant and isn't already on request access pages
+        navigate('/request-access');
+      }
     }
-  }, [user, isLoading, navigate]);
+  }, [user, isLoading, hasTenant, navigate, location.pathname]);
 
   if (isLoading) {
     return (
@@ -28,7 +37,13 @@ const AuthRequired: React.FC<AuthRequiredProps> = ({ children }) => {
     );
   }
 
-  return user ? <>{children}</> : null;
+  // Only render children if authenticated and has tenant access
+  // or is on the request access pages
+  return user && (hasTenant || 
+                  location.pathname.includes('/request-access') || 
+                  location.pathname.includes('/access-pending')) 
+    ? <>{children}</> 
+    : null;
 };
 
 export default AuthRequired;

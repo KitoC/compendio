@@ -2,6 +2,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
+import { useNavigate } from 'react-router-dom';
 
 interface Profile {
   id: string;
@@ -14,6 +15,7 @@ interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   isLoading: boolean;
+  hasTenant: boolean;
   signOut: () => Promise<void>;
 }
 
@@ -24,6 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasTenant, setHasTenant] = useState(true);
 
   useEffect(() => {
     // Get initial session
@@ -32,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        checkTenantAccess(session.user.id);
         fetchProfile(session.user.id);
       } else {
         setIsLoading(false);
@@ -45,9 +49,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          checkTenantAccess(session.user.id);
           fetchProfile(session.user.id);
         } else {
           setProfile(null);
+          setHasTenant(true);
           setIsLoading(false);
         }
       }
@@ -57,6 +63,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       subscription.unsubscribe();
     };
   }, []);
+
+  const checkTenantAccess = async (userId: string) => {
+    try {
+      // Check if user has pending request
+      const { data: pendingRequest } = await supabase
+        .from('tenant_requests')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('status', 'pending')
+        .single();
+
+      if (pendingRequest) {
+        setHasTenant(false);
+        return;
+      }
+
+      // Check if user is assigned to any tenant
+      const { data: tenantUser } = await supabase
+        .from('tenant_users')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      setHasTenant(!!tenantUser);
+    } catch (error) {
+      console.error('Error checking tenant access:', error);
+      setHasTenant(false);
+    }
+  };
 
   const fetchProfile = async (userId: string) => {
     setIsLoading(true);
@@ -90,6 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     profile,
     isLoading,
+    hasTenant,
     signOut
   };
 

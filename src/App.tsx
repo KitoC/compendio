@@ -11,6 +11,8 @@ import AuthCallback from "./pages/AuthCallback";
 import Conversations from "./pages/Conversations";
 import ConversationDetail from "./pages/ConversationDetail";
 import NotFound from "./pages/NotFound";
+import RequestAccess from "./pages/RequestAccess";
+import AccessPending from "./pages/AccessPending";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +29,8 @@ const App = () => (
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/conversations" element={<Conversations />} />
             <Route path="/conversation/:id" element={<ConversationDetail />} />
+            <Route path="/request-access" element={<RequestAccess />} />
+            <Route path="/access-pending" element={<AccessPending />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

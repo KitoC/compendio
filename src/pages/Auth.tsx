@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Separator } from "@/components/ui/separator";
 import { FaMicrosoft } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
+import { Provider } from '@supabase/supabase-js';
 
 const Auth: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -97,7 +98,7 @@ const Auth: React.FC = () => {
     }
   };
 
-  const handleSSOLogin = async (provider: 'google' | 'microsoft') => {
+  const handleSSOLogin = async (provider: Provider) => {
     setSsoLoading(provider);
 
     try {
