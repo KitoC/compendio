@@ -566,6 +566,68 @@ export type Database = {
           },
         ]
       }
+      tenant_requests: {
+        Row: {
+          company_name: string
+          created_at: string | null
+          id: string
+          status: string
+          updated_at: string | null
+          user_email: string | null
+          user_id: string
+        }
+        Insert: {
+          company_name: string
+          created_at?: string | null
+          id?: string
+          status?: string
+          updated_at?: string | null
+          user_email?: string | null
+          user_id: string
+        }
+        Update: {
+          company_name?: string
+          created_at?: string | null
+          id?: string
+          status?: string
+          updated_at?: string | null
+          user_email?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tenant_users: {
+        Row: {
+          created_at: string | null
+          id: string
+          tenant_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          tenant_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          tenant_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_users_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenants: {
         Row: {
           id: string
@@ -580,6 +642,41 @@ export type Database = {
           name?: string | null
         }
         Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role_type: Database["public"]["Enums"]["user_role_type"]
+          tenant_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role_type?: Database["public"]["Enums"]["user_role_type"]
+          tenant_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role_type?: Database["public"]["Enums"]["user_role_type"]
+          tenant_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -630,6 +727,14 @@ export type Database = {
           "": unknown[]
         }
         Returns: number
+      }
+      has_role: {
+        Args: {
+          _user_id: string
+          _tenant_id: string
+          _role: Database["public"]["Enums"]["user_role_type"]
+        }
+        Returns: boolean
       }
       hnsw_bit_support: {
         Args: {
@@ -789,7 +894,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      user_role_type: "admin" | "member" | "guest"
     }
     CompositeTypes: {
       [_ in never]: never
