@@ -19,14 +19,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LogOut, Menu } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { ROUTES, sidebarItems, SidebarItem } from "@/lib/constants";
+import { ROUTES, sidebarItems } from "@/lib/constants";
 import { useSidebar } from "@/components/ui/sidebar/context";
 
 const AppSidebar = () => {
-  const [collapsed, setCollapsed] = useState(false);
   const { user, profile, signOut } = useAuth();
   const location = useLocation();
-  const { state } = useSidebar();
+  const { state, isMobile, toggleSidebar } = useSidebar();
   
   const handleSignOut = async () => {
     await signOut();
@@ -44,7 +43,7 @@ const AppSidebar = () => {
   };
 
   // Render sidebar menu items recursively
-  const renderSidebarItems = (items: SidebarItem[]) => {
+  const renderSidebarItems = (items) => {
     return items.map((item) => {
       if (item.url) {
         return (
@@ -52,7 +51,6 @@ const AppSidebar = () => {
             <Link to={item.url}>
               <SidebarMenuButton 
                 isActive={location.pathname === item.url}
-                tooltip={item.label}
               >
                 {item.icon && <item.icon className="mr-2 h-4 w-4" />}
                 <span>{item.label}</span>
@@ -65,14 +63,41 @@ const AppSidebar = () => {
     });
   };
 
+  // Mobile menu button - shown when sidebar is collapsed or on mobile
+  const MobileMenuButton = () => {
+    if ((state === "collapsed" || isMobile) && !isMobile) {
+      return (
+        <div className="fixed top-4 left-4 z-50">
+          <SidebarTrigger>
+            <Menu className="h-6 w-6" />
+          </SidebarTrigger>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <>
-      {/* Show trigger button when sidebar is collapsed */}
+      {/* Mobile menu button visible when sidebar is collapsed */}
       {state === "collapsed" && (
         <div className="fixed top-4 left-4 z-50">
           <SidebarTrigger>
             <Menu className="h-6 w-6" />
           </SidebarTrigger>
+        </div>
+      )}
+      
+      {/* Fixed mobile menu button when on mobile devices */}
+      {isMobile && (
+        <div className="fixed top-4 left-4 z-50">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={toggleSidebar}
+          >
+            <Menu className="h-6 w-6" />
+          </Button>
         </div>
       )}
       
