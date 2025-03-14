@@ -1,107 +1,95 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from '@/integrations/supabase/client';
-import { Separator } from "@/components/ui/separator";
-import { FaMicrosoft } from "react-icons/fa";
-import { FcGoogle } from "react-icons/fc";
 import { Provider } from '@supabase/supabase-js';
+import { toast } from "sonner";
 
-const Auth: React.FC = () => {
+const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [ssoLoading, setSsoLoading] = useState<string | null>(null);
+  const [view, setView] = useState<'sign-in' | 'sign-up'>('sign-in');
   const navigate = useNavigate();
-  const { toast } = useToast();
 
+  // Check if user is already authenticated
   useEffect(() => {
-    // Check if user is already logged in
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
         navigate('/');
       }
     };
     
-    checkAuth();
-    
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN') {
-        navigate('/');
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    checkSession();
   }, [navigate]);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Success!",
-        description: "You have been logged in.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "An error occurred during login.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+    if (!email || !password) {
+      toast.error("Please enter both email and password");
+      return;
     }
-  };
-
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
     
     try {
+      setLoading(true);
+      
       const { error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
       });
       
       if (error) throw error;
       
-      toast({
-        title: "Success!",
-        description: "Check your email for the confirmation link.",
-      });
+      toast.success("Sign-up successful! Please check your email for verification.");
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "An error occurred during signup.",
-        variant: "destructive",
-      });
+      console.error('Error signing up:', error);
+      toast.error(error.message || "An error occurred during sign-up");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSSOLogin = async (provider: Provider) => {
-    setSsoLoading(provider);
-
+  const handleEmailSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error("Please enter both email and password");
+      return;
+    }
+    
     try {
+      setLoading(true);
+      
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) throw error;
+      
+      // Will redirect in useEffect when session is detected
+    } catch (error: any) {
+      console.error('Error signing in:', error);
+      toast.error(error.message || "Invalid login credentials");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOAuthSignIn = async (provider: Provider) => {
+    try {
+      setLoading(true);
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -110,13 +98,12 @@ const Auth: React.FC = () => {
       });
       
       if (error) throw error;
+      
+      // Will redirect from OAuth provider
     } catch (error: any) {
-      toast({
-        title: "SSO Error",
-        description: error.message || `An error occurred during ${provider} login.`,
-        variant: "destructive",
-      });
-      setSsoLoading(null);
+      console.error(`Error signing in with ${provider}:`, error);
+      toast.error(error.message || `Failed to sign in with ${provider}`);
+      setLoading(false);
     }
   };
 
@@ -124,59 +111,25 @@ const Auth: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Welcome</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">
+            {view === 'sign-in' ? 'Sign In' : 'Create an Account'}
+          </CardTitle>
           <CardDescription className="text-center">
-            Login or create an account to get started
+            {view === 'sign-in' 
+              ? 'Enter your credentials to access your account' 
+              : 'Enter your details to create an account'}
           </CardDescription>
         </CardHeader>
         
-        <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid grid-cols-2 mb-4 mx-4">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+        <Tabs defaultValue={view} onValueChange={(v) => setView(v as 'sign-in' | 'sign-up')}>
+          <TabsList className="grid grid-cols-2 w-full">
+            <TabsTrigger value="sign-in">Sign In</TabsTrigger>
+            <TabsTrigger value="sign-up">Sign Up</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="login">
-            <form onSubmit={handleLogin}>
+          <TabsContent value="sign-in">
+            <form onSubmit={handleEmailSignIn}>
               <CardContent className="space-y-4">
-                <div className="space-y-4">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="w-full flex items-center justify-center gap-2"
-                    onClick={() => handleSSOLogin('google')}
-                    disabled={ssoLoading !== null}
-                  >
-                    {ssoLoading === 'google' ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                    ) : (
-                      <FcGoogle className="h-5 w-5" />
-                    )}
-                    Continue with Google
-                  </Button>
-                  
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="w-full flex items-center justify-center gap-2"
-                    onClick={() => handleSSOLogin('microsoft')}
-                    disabled={ssoLoading !== null}
-                  >
-                    {ssoLoading === 'microsoft' ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                    ) : (
-                      <FaMicrosoft className="h-5 w-5 text-blue-500" />
-                    )}
-                    Continue with Microsoft
-                  </Button>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Separator className="flex-grow" />
-                  <span className="text-xs text-muted-foreground">OR</span>
-                  <Separator className="flex-grow" />
-                </div>
-                
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input 
@@ -189,7 +142,12 @@ const Auth: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">Password</Label>
+                    <Link to="/forgot-password" className="text-sm text-primary">
+                      Forgot password?
+                    </Link>
+                  </div>
                   <Input 
                     id="password" 
                     type="password" 
@@ -199,59 +157,52 @@ const Auth: React.FC = () => {
                   />
                 </div>
               </CardContent>
-              <CardFooter>
+              
+              <CardFooter className="flex flex-col gap-4">
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Logging in..." : "Login"}
+                  {loading ? "Signing in..." : "Sign In"}
                 </Button>
+                
+                <div className="relative w-full">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-muted-foreground/30" />
+                  </div>
+                  <div className="relative flex justify-center text-xs">
+                    <span className="bg-card px-2 text-muted-foreground">
+                      Or continue with
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    disabled={loading}
+                    onClick={() => handleOAuthSignIn('google' as Provider)}
+                  >
+                    Google
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    disabled={loading}
+                    onClick={() => handleOAuthSignIn('github' as Provider)}
+                  >
+                    GitHub
+                  </Button>
+                </div>
               </CardFooter>
             </form>
           </TabsContent>
           
-          <TabsContent value="signup">
-            <form onSubmit={handleSignup}>
+          <TabsContent value="sign-up">
+            <form onSubmit={handleEmailSignUp}>
               <CardContent className="space-y-4">
-                <div className="space-y-4">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="w-full flex items-center justify-center gap-2"
-                    onClick={() => handleSSOLogin('google')}
-                    disabled={ssoLoading !== null}
-                  >
-                    {ssoLoading === 'google' ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                    ) : (
-                      <FcGoogle className="h-5 w-5" />
-                    )}
-                    Sign up with Google
-                  </Button>
-                  
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="w-full flex items-center justify-center gap-2"
-                    onClick={() => handleSSOLogin('microsoft')}
-                    disabled={ssoLoading !== null}
-                  >
-                    {ssoLoading === 'microsoft' ? (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                    ) : (
-                      <FaMicrosoft className="h-5 w-5 text-blue-500" />
-                    )}
-                    Sign up with Microsoft
-                  </Button>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Separator className="flex-grow" />
-                  <span className="text-xs text-muted-foreground">OR</span>
-                  <Separator className="flex-grow" />
-                </div>
-                
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="signup-email">Email</Label>
                   <Input 
-                    id="email" 
+                    id="signup-email" 
                     type="email" 
                     placeholder="m@example.com" 
                     value={email}
@@ -260,9 +211,9 @@ const Auth: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="signup-password">Password</Label>
                   <Input 
-                    id="password" 
+                    id="signup-password" 
                     type="password" 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -270,10 +221,41 @@ const Auth: React.FC = () => {
                   />
                 </div>
               </CardContent>
-              <CardFooter>
+              
+              <CardFooter className="flex flex-col gap-4">
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Creating account..." : "Create account"}
+                  {loading ? "Creating account..." : "Create Account"}
                 </Button>
+                
+                <div className="relative w-full">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-muted-foreground/30" />
+                  </div>
+                  <div className="relative flex justify-center text-xs">
+                    <span className="bg-card px-2 text-muted-foreground">
+                      Or sign up with
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    disabled={loading}
+                    onClick={() => handleOAuthSignIn('google' as Provider)}
+                  >
+                    Google
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    disabled={loading}
+                    onClick={() => handleOAuthSignIn('github' as Provider)}
+                  >
+                    GitHub
+                  </Button>
+                </div>
               </CardFooter>
             </form>
           </TabsContent>

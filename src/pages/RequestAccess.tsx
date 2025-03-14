@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
 const RequestAccess = () => {
-  const [companyName, setCompanyName] = useState('');
+  const [workspace, setWorkspace] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -18,8 +18,8 @@ const RequestAccess = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!companyName.trim()) {
-      toast.error("Please enter a company name");
+    if (!workspace.trim()) {
+      toast.error("Please enter a workspace name");
       return;
     }
 
@@ -30,7 +30,7 @@ const RequestAccess = () => {
       const { error } = await supabase
         .from('tenant_requests')
         .insert({
-          company_name: companyName,
+          workspace: workspace,
           user_id: user?.id,
           user_email: user?.email,
           status: 'pending'
@@ -54,19 +54,19 @@ const RequestAccess = () => {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Request Access</CardTitle>
           <CardDescription className="text-center">
-            Enter your company name to request tenant access
+            Enter your workspace name to request tenant access
           </CardDescription>
         </CardHeader>
         
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="companyName">Company Name</Label>
+              <Label htmlFor="workspace">Workspace Name</Label>
               <Input 
-                id="companyName" 
-                placeholder="Enter company name" 
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
+                id="workspace" 
+                placeholder="Enter workspace name" 
+                value={workspace}
+                onChange={(e) => setWorkspace(e.target.value)}
                 required
               />
             </div>
