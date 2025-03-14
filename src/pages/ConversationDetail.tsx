@@ -1,16 +1,16 @@
-
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import AuthRequired from '@/components/AuthRequired';
-import Navbar from '@/components/Navbar';
-import { Message } from '@/types/message';
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import AuthRequired from "@/components/AuthRequired";
+import Navbar from "@/components/Navbar";
+import { Message } from "@/types/message";
+import { ROUTES } from "@/lib/constants";
 
 const ConversationDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,71 +24,69 @@ const ConversationDetail = () => {
 
   const fetchConversation = async () => {
     if (!id || !user) return;
-    
+
     try {
       const { data, error } = await supabase
-        .from('conversations')
-        .select('*')
-        .eq('id', id)
+        .from("conversations")
+        .select("*")
+        .eq("id", id)
         .single();
-      
+
       if (error) {
         throw error;
       }
-      
+
       setConversation(data);
-      
+
       // Check if user is a participant
       const { data: participantData, error: participantError } = await supabase
-        .from('conversation_participants')
-        .select('*')
-        .eq('conversation_id', id)
-        .eq('user_id', user.id);
-      
+        .from("conversation_participants")
+        .select("*")
+        .eq("conversation_id", id)
+        .eq("user_id", user.id);
+
       if (participantError) {
         throw participantError;
       }
-      
+
       if (!participantData || participantData.length === 0) {
         toast({
           title: "Access Denied",
           description: "You are not a participant in this conversation.",
           variant: "destructive",
         });
-        navigate('/conversations');
+        navigate(ROUTES.CONVERSATIONS);
         return;
       }
-      
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Failed to load conversation",
         variant: "destructive",
       });
-      navigate('/conversations');
+      navigate(ROUTES.CONVERSATIONS);
     }
   };
 
   const fetchMessages = async () => {
     if (!id) return;
-    
+
     try {
       const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('conversation_id', id)
-        .order('created_at', { ascending: true });
-      
+        .from("messages")
+        .select("*")
+        .eq("conversation_id", id)
+        .order("created_at", { ascending: true });
+
       if (error) {
         throw error;
       }
-      
+
       if (data) {
         // Ensure data matches our Message type
         const typedMessages: Message[] = data;
         setMessages(typedMessages);
       }
-      
     } catch (error: any) {
       toast({
         title: "Error",
@@ -102,29 +100,26 @@ const ConversationDetail = () => {
 
   const sendMessage = async () => {
     if (!message.trim() || !id || !user) return;
-    
+
     try {
       // Create the message object with all required fields including tenant_id
       const newMessage: Message = {
         conversation_id: id,
         user_id: user.id,
-        role: 'user',
+        role: "user",
         content: { text: message },
         metadata: {},
-        tenant_id: '35eb8c76-7ed5-4109-a520-99c7402d1f03' // Using default tenant ID
+        tenant_id: "35eb8c76-7ed5-4109-a520-99c7402d1f03", // Using default tenant ID
       };
-      
-      const { error } = await supabase
-        .from('messages')
-        .insert([newMessage]);
-      
+
+      const { error } = await supabase.from("messages").insert([newMessage]);
+
       if (error) {
         throw error;
       }
-      
+
       setMessage("");
       fetchMessages();
-      
     } catch (error: any) {
       toast({
         title: "Error",
@@ -137,31 +132,32 @@ const ConversationDetail = () => {
   useEffect(() => {
     fetchConversation();
     fetchMessages();
-    
+
     // Subscribe to new messages
     const subscription = supabase
-      .channel('messages-channel')
-      .on('postgres_changes', 
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'messages',
-          filter: `conversation_id=eq.${id}`
-        }, 
+      .channel("messages-channel")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${id}`,
+        },
         (payload) => {
           // Add new message to state
-          setMessages(prev => [...prev, payload.new as Message]);
+          setMessages((prev) => [...prev, payload.new as Message]);
         }
       )
       .subscribe();
-    
+
     return () => {
       supabase.removeChannel(subscription);
     };
   }, [id, user]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
@@ -175,28 +171,30 @@ const ConversationDetail = () => {
           <Card className="h-full flex flex-col">
             <CardHeader>
               <CardTitle>
-                {loading ? 'Loading...' : conversation?.title || 'Conversation'}
+                {loading ? "Loading..." : conversation?.title || "Conversation"}
               </CardTitle>
             </CardHeader>
             <CardContent className="flex-grow flex flex-col">
               <div className="flex-grow mb-4 overflow-y-auto space-y-4 max-h-[60vh]">
                 {messages.length === 0 && !loading ? (
-                  <p className="text-center text-muted-foreground">No messages yet.</p>
+                  <p className="text-center text-muted-foreground">
+                    No messages yet.
+                  </p>
                 ) : (
                   messages.map((msg) => (
-                    <div 
-                      key={msg.id} 
+                    <div
+                      key={msg.id}
                       className={`p-3 rounded-lg max-w-[80%] ${
-                        msg.user_id === user?.id 
-                          ? 'ml-auto bg-primary text-primary-foreground' 
-                          : 'bg-muted'
+                        msg.user_id === user?.id
+                          ? "ml-auto bg-primary text-primary-foreground"
+                          : "bg-muted"
                       }`}
                     >
-                      {typeof msg.content === 'object' && msg.content?.text 
-                        ? msg.content.text 
-                        : typeof msg.content === 'string' 
-                          ? msg.content 
-                          : JSON.stringify(msg.content)}
+                      {typeof msg.content === "object" && msg.content?.text
+                        ? msg.content.text
+                        : typeof msg.content === "string"
+                        ? msg.content
+                        : JSON.stringify(msg.content)}
                     </div>
                   ))
                 )}
@@ -210,8 +208,8 @@ const ConversationDetail = () => {
                   className="flex-grow resize-none"
                   rows={2}
                 />
-                <Button 
-                  onClick={sendMessage} 
+                <Button
+                  onClick={sendMessage}
                   disabled={!message.trim()}
                   className="self-end"
                 >

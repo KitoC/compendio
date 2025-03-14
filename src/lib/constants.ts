@@ -1,4 +1,3 @@
-
 import { MessageSquare, User, Settings } from "lucide-react";
 import { ReactNode } from "react";
 
@@ -9,11 +8,11 @@ export const ROUTES = {
   AUTH_CALLBACK: "/auth/callback",
   FORGOT_PASSWORD: "/forgot-password",
   RESET_PASSWORD: "/reset-password",
-  CONVERSATIONS: "/conversations",
+  CONVERSATIONS: "/app/conversations",
   CONVERSATION_ASSISTANT: "/app/conversations/assistant",
-  CONVERSATION_DETAIL: "/conversation/:id",
-  REQUEST_ACCESS: "/request-access",
-  ACCESS_PENDING: "/access-pending",
+  CONVERSATION_DETAIL: "/app/conversation/:id",
+  REQUEST_ACCESS: "/app/request-access",
+  ACCESS_PENDING: "/app/access-pending",
 };
 
 // Sidebar configuration types
@@ -29,31 +28,31 @@ export const sidebarItems: SidebarItem[] = [
   {
     label: "Navigation",
     children: [
-      { 
-        label: "Conversations", 
-        url: ROUTES.CONVERSATIONS, 
-        icon: MessageSquare 
+      {
+        label: "Conversations",
+        url: ROUTES.CONVERSATIONS,
+        icon: MessageSquare,
       },
-      { 
-        label: "Assistant Chat", 
-        url: ROUTES.CONVERSATION_ASSISTANT, 
-        icon: MessageSquare 
-      }
-    ]
+      {
+        label: "Assistant Chat",
+        url: ROUTES.CONVERSATION_ASSISTANT,
+        icon: MessageSquare,
+      },
+    ],
   },
   {
     label: "Settings",
     children: [
-      { 
-        label: "Profile", 
-        url: "#", 
-        icon: User 
+      {
+        label: "Profile",
+        url: "#",
+        icon: User,
       },
-      { 
-        label: "Settings", 
-        url: "#", 
-        icon: Settings 
-      }
-    ]
-  }
+      {
+        label: "Settings",
+        url: "#",
+        icon: Settings,
+      },
+    ],
+  },
 ];

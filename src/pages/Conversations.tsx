@@ -1,17 +1,30 @@
-
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { MessageSquare, Plus } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import AuthRequired from '@/components/AuthRequired';
-import Navbar from '@/components/Navbar';
+import { MessageSquare, Plus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import AuthRequired from "@/components/AuthRequired";
+import Navbar from "@/components/Navbar";
 
 interface Conversation {
   id: string;
@@ -28,14 +41,15 @@ const Conversations = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
-  
+
   const fetchConversations = async () => {
     if (!user) return;
-    
+
     try {
       const { data, error } = await supabase
-        .from('conversation_participants')
-        .select(`
+        .from("conversation_participants")
+        .select(
+          `
           conversation_id,
           conversations:conversation_id (
             id,
@@ -43,19 +57,21 @@ const Conversations = () => {
             created_at,
             icon
           )
-        `)
-        .eq('user_id', user.id);
-      
+        `
+        )
+        .eq("user_id", user.id);
+
       if (error) {
         throw error;
       }
-      
+
       if (data) {
         // Extract conversations from the joined query
-        const conversationsList = data.map(item => item.conversations).filter(Boolean);
+        const conversationsList = data
+          .map((item) => item.conversations)
+          .filter(Boolean);
         setConversations(conversationsList);
       }
-      
     } catch (error: any) {
       toast({
         title: "Error",
@@ -69,49 +85,49 @@ const Conversations = () => {
 
   const createConversation = async () => {
     if (!newConversationTitle.trim() || !user) return;
-    
+
     try {
       // Create a new conversation with tenant_id
-      const { data: conversationData, error: conversationError } = await supabase
-        .from('conversations')
-        .insert({
-          title: newConversationTitle,
-          user_id: user.id,
-          domain: 'default',
-          tenant_id: '35eb8c76-7ed5-4109-a520-99c7402d1f03' // Using default tenant ID
-        })
-        .select()
-        .single();
-      
+      const { data: conversationData, error: conversationError } =
+        await supabase
+          .from("conversations")
+          .insert({
+            title: newConversationTitle,
+            user_id: user.id,
+            domain: "default",
+            tenant_id: "35eb8c76-7ed5-4109-a520-99c7402d1f03", // Using default tenant ID
+          })
+          .select()
+          .single();
+
       if (conversationError) {
         throw conversationError;
       }
-      
+
       // Add the user as a participant with tenant_id
       const { error: participantError } = await supabase
-        .from('conversation_participants')
+        .from("conversation_participants")
         .insert({
           conversation_id: conversationData.id,
           user_id: user.id,
-          tenant_id: '35eb8c76-7ed5-4109-a520-99c7402d1f03' // Using default tenant ID
+          tenant_id: "35eb8c76-7ed5-4109-a520-99c7402d1f03", // Using default tenant ID
         });
-      
+
       if (participantError) {
         throw participantError;
       }
-      
+
       setNewConversationTitle("");
       setOpen(false);
       fetchConversations();
-      
+
       toast({
         title: "Success",
         description: "Conversation created successfully",
       });
-      
+
       // Navigate to the new conversation
       navigate(`/conversation/${conversationData.id}`);
-      
     } catch (error: any) {
       toast({
         title: "Error",
@@ -148,8 +164,8 @@ const Conversations = () => {
                 </DialogHeader>
                 <div className="py-4">
                   <Label htmlFor="title">Conversation name</Label>
-                  <Input 
-                    id="title" 
+                  <Input
+                    id="title"
                     value={newConversationTitle}
                     onChange={(e) => setNewConversationTitle(e.target.value)}
                     placeholder="e.g., Project Discussion"
@@ -161,7 +177,7 @@ const Conversations = () => {
               </DialogContent>
             </Dialog>
           </div>
-          
+
           {loading ? (
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
@@ -186,14 +202,20 @@ const Conversations = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {conversations.map((conversation) => (
-                <Link key={conversation.id} to={`/conversation/${conversation.id}`}>
+                <Link
+                  key={conversation.id}
+                  to={`/conversation/${conversation.id}`}
+                >
                   <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-xl">{conversation.title}</CardTitle>
+                      <CardTitle className="text-xl">
+                        {conversation.title}
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm text-muted-foreground">
-                        Created {new Date(conversation.created_at).toLocaleDateString()}
+                        Created{" "}
+                        {new Date(conversation.created_at).toLocaleDateString()}
                       </p>
                     </CardContent>
                   </Card>

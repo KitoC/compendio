@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -56,9 +55,7 @@ const AuthenticatedLayout = ({ children }: AuthenticatedLayoutProps) => {
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <AppSidebar />
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
+        <main className="flex-1 overflow-auto h-screen">{children}</main>
       </div>
     </SidebarProvider>
   );

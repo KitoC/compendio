@@ -1,6 +1,5 @@
-
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -8,8 +7,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from '@/hooks/useAuth';
-import { LogOut, User, MessageSquare, Menu, X } from 'lucide-react';
+import { useAuth } from "@/hooks/useAuth";
+import { LogOut, User, MessageSquare, Menu, X } from "lucide-react";
+import { ROUTES } from "@/lib/constants";
 
 const Navbar: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -24,16 +24,21 @@ const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <Link to="/" className="font-display font-bold text-xl">
+            <Link to={ROUTES.INDEX} className="font-display font-bold text-xl">
               TradeStack
             </Link>
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-4">
-            <Link to="/" className="px-3 py-2 text-sm font-medium">Home</Link>
+            <Link to={ROUTES.INDEX} className="px-3 py-2 text-sm font-medium">
+              Home
+            </Link>
             {user && (
-              <Link to="/conversations" className="px-3 py-2 text-sm font-medium">
+              <Link
+                to={ROUTES.CONVERSATIONS}
+                className="px-3 py-2 text-sm font-medium"
+              >
                 Conversations
               </Link>
             )}
@@ -50,12 +55,15 @@ const Navbar: React.FC = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild>
-                    <Link to="/conversations" className="cursor-pointer">
+                    <Link to={ROUTES.CONVERSATIONS} className="cursor-pointer">
                       <MessageSquare className="mr-2 h-4 w-4" />
                       <span>My Conversations</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={signOut} className="cursor-pointer">
+                  <DropdownMenuItem
+                    onClick={signOut}
+                    className="cursor-pointer"
+                  >
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
                   </DropdownMenuItem>
@@ -63,7 +71,7 @@ const Navbar: React.FC = () => {
               </DropdownMenu>
             ) : (
               <Button asChild variant="default" size="sm">
-                <Link to="/auth">Sign In</Link>
+                <Link to={ROUTES.AUTH}>Sign In</Link>
               </Button>
             )}
           </div>
@@ -85,16 +93,16 @@ const Navbar: React.FC = () => {
       {mobileMenuOpen && (
         <div className="md:hidden bg-white pb-4 px-6">
           <div className="space-y-1">
-            <Link 
-              to="/" 
+            <Link
+              to={ROUTES.INDEX}
               className="block px-3 py-2 rounded-md text-base font-medium"
               onClick={() => setMobileMenuOpen(false)}
             >
               Home
             </Link>
             {user && (
-              <Link 
-                to="/conversations" 
+              <Link
+                to={ROUTES.CONVERSATIONS}
                 className="block px-3 py-2 rounded-md text-base font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
@@ -102,8 +110,8 @@ const Navbar: React.FC = () => {
               </Link>
             )}
             {user ? (
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 className="w-full justify-start px-3 py-2 rounded-md text-base font-medium"
                 onClick={() => {
                   signOut();
@@ -114,8 +122,8 @@ const Navbar: React.FC = () => {
                 Log out
               </Button>
             ) : (
-              <Link 
-                to="/auth" 
+              <Link
+                to={ROUTES.AUTH}
                 className="block px-3 py-2 rounded-md text-base font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
