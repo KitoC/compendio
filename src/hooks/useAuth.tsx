@@ -1,8 +1,14 @@
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Session, User } from '@supabase/supabase-js';
-import { useNavigate } from 'react-router-dom';
-import { ROUTES } from '@/lib/constants';
+import {
+  useState,
+  useEffect,
+  createContext,
+  useContext,
+  ReactNode,
+} from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Session, User } from "@supabase/supabase-js";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/lib/constants";
 
 interface Profile {
   id: string;
@@ -34,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       if (session?.user) {
         checkTenantAccess(session.user.id);
         fetchProfile(session.user.id);
@@ -44,26 +50,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          checkTenantAccess(session.user.id);
-          fetchProfile(session.user.id);
-          
-          // Redirect to assistant page on sign in
-          if (event === 'SIGNED_IN') {
-            navigate(ROUTES.CONVERSATION_ASSISTANT);
-          }
-        } else {
-          setProfile(null);
-          setHasTenant(true);
-          setIsLoading(false);
-        }
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+        checkTenantAccess(session.user.id);
+        fetchProfile(session.user.id);
+      } else {
+        setProfile(null);
+        setHasTenant(true);
+        setIsLoading(false);
       }
-    );
+    });
 
     return () => {
       subscription.unsubscribe();
@@ -74,10 +75,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       // Check if user has pending request
       const { data: pendingRequest } = await supabase
-        .from('tenant_requests')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('status', 'pending')
+        .from("tenant_requests")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("status", "pending")
         .single();
 
       if (pendingRequest) {
@@ -87,14 +88,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Check if user is assigned to any tenant
       const { data: tenantUser } = await supabase
-        .from('tenant_users')
-        .select('*')
-        .eq('user_id', userId)
+        .from("tenant_users")
+        .select("*")
+        .eq("user_id", userId)
         .single();
 
       setHasTenant(!!tenantUser);
     } catch (error) {
-      console.error('Error checking tenant access:', error);
+      console.error("Error checking tenant access:", error);
       setHasTenant(false);
     }
   };
@@ -103,9 +104,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
         .single();
 
       if (error) {
@@ -116,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(data);
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error("Error fetching profile:", error);
     } finally {
       setIsLoading(false);
     }
@@ -133,7 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profile,
     isLoading,
     hasTenant,
-    signOut
+    signOut,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -142,7 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
