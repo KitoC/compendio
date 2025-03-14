@@ -1,30 +1,27 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 import { MessageCircle } from "lucide-react";
-import ChatWidget from "./ChatWidget";
+import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog";
+import { ChatWidget } from "./ChatWidget";
 
-const ChatWidgetTrigger = () => {
-  const [isVisible, setIsVisible] = useState(false);
-  
+export function ChatWidgetTrigger() {
+  const [open, setOpen] = useState(false);
+
   return (
-    <>
-      <Button
-        onClick={() => setIsVisible(true)}
-        className="fixed bottom-4 right-4 rounded-full"
-      >
-        <MessageCircle className="mr-2 h-4 w-4" />
-        Chat with us
-      </Button>
-      
-      {isVisible && (
-        <ChatWidget 
-          defaultOpen={true}
-          position="bottom-right"
-        />
-      )}
-    </>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon"
+          className="fixed bottom-4 right-4 h-12 w-12 rounded-full shadow-lg"
+        >
+          <MessageCircle className="h-6 w-6" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="p-0 border-0 max-w-3xl h-[80vh] bg-transparent shadow-none">
+        <ChatWidget defaultOpen={true} />
+      </DialogContent>
+    </Dialog>
   );
-};
-
-export default ChatWidgetTrigger;
+}

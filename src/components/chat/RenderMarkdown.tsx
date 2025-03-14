@@ -1,4 +1,3 @@
-
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -18,32 +17,20 @@ const RenderMarkdown: React.FC<RenderMarkdownProps> = ({
   isStreamedMessage,
 }) => {
   const renderChildren = (children: React.ReactNode) => {
-    // Handle null or undefined children
     if (!children) {
       return null;
     }
-
-    // Convert to array if it's not already
     const childrenArray = React.Children.toArray(children);
-
-    // Check if we have any children
     if (childrenArray.length === 0) {
       return null;
     }
-
-    // Check if the last child contains the insert_span marker
     const lastChild = childrenArray[childrenArray.length - 1];
-
-    // Handle different types of children
     const hasInsertSpan =
       typeof lastChild === "string" && lastChild === INDICATOR_PLACEHOLDER;
-
-    // Check if any child contains the insert_span marker
     const childrenString = childrenArray.join("");
     const containsInsertSpan = childrenString.includes(INDICATOR_PLACEHOLDER);
 
     if (hasInsertSpan || containsInsertSpan) {
-      // Process the children to remove the marker
       const processedChildren = childrenArray.map((child) => {
         if (typeof child === "string") {
           return child.replace(INDICATOR_PLACEHOLDER, "");
@@ -85,7 +72,7 @@ const RenderMarkdown: React.FC<RenderMarkdownProps> = ({
             {renderChildren(children)}
           </a>
         ),
-        code: ({ inline, className, children }) => {
+        code: ({ node, inline, className, children, ...props }) => {
           if (inline) {
             return (
               <code

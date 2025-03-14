@@ -1,7 +1,7 @@
 
 import React from "react";
 import { createRoot } from "react-dom/client";
-import ChatWidget from "../components/chat/ChatWidget";
+import { ChatWidget } from "../components/chat/ChatWidget";
 
 (function () {
   // Create container element

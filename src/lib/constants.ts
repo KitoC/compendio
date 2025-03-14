@@ -19,3 +19,15 @@ export const ROUTES = {
 };
 
 export const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:3001/api`;
+
+// Sidebar navigation configuration
+export const sidebarItems = [
+  {
+    label: "Conversations",
+    children: [
+      { label: "All Conversations", url: ROUTES.CONVERSATIONS },
+      { label: "Assistant Chat", url: ROUTES.CONVERSATION_ASSISTANT }
+    ],
+  },
+  { label: "Dashboard", url: ROUTES.DASHBOARD },
+];

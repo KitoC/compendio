@@ -59,13 +59,16 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       throw new Error("No tenant ID available. Please ensure you are authenticated.");
     }
     
+    // Format content as JSON-compatible object
+    const content = typeof message.content === 'string' 
+      ? { text: message.content } 
+      : message.content;
+      
     return {
       id: message.id,
       conversation_id: convId,
       role: message.role,
-      content: typeof message.content === 'string' 
-        ? { text: message.content } 
-        : message.content,
+      content,
       metadata: {},
       user_id: user?.id,
       tenant_id: tenantId
@@ -160,7 +163,8 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       
       // Handle streaming response
       while (true) {
-        const { done, value } = await reader!.read();
+        if (!reader) break;
+        const { done, value } = await reader.read();
         if (done) break;
         
         const chunk = new TextDecoder().decode(value);
@@ -184,9 +188,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       
       await supabase
         .from("messages")
-        .insert({
-          ...iMessageToDbMessage(finalMessage, conversationId),
-        });
+        .insert(iMessageToDbMessage(finalMessage, conversationId));
       
       setMessages((prev) =>
         prev.map((msg) =>
@@ -237,9 +239,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         // Save the user message to the database
         await supabase
           .from("messages")
-          .insert({
-            ...iMessageToDbMessage(newMessage, conversationId),
-          });
+          .insert(iMessageToDbMessage(newMessage, conversationId));
         
         // Send the message to the AI
         await sendMessageToAI([...messages, newMessage]);
@@ -288,7 +288,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       .subscribe();
     
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, [conversationId, dbMessageToIMessage, loadMessages]);
 

@@ -4,7 +4,7 @@ import CommandSuggestions from "./CommandSuggestions";
 import { IconButton } from "../common/Button";
 import styled from "styled-components";
 import AutoExpandingTextArea from "../common/form/AutoExpandingTextArea";
-import { RiChatVoiceAiFill } from "react-icons/ri";
+import { RiChatVoiceFill } from "react-icons/ri";
 import { RiSendPlaneFill } from "react-icons/ri";
 import { RiCloseFill } from "react-icons/ri";
 
@@ -146,7 +146,7 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
                 listening ? (
                   <RiCloseFill />
                 ) : (
-                  <RiChatVoiceAiFill />
+                  <RiChatVoiceFill />
                 )
               ) : (
                 <RiSendPlaneFill />
@@ -160,17 +160,6 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
             Send
           </IconButton>
         </InputContainer>
-        {/* <div className="flex justify-end">
-          <IconButton
-            icon={!message.length ? <RiChatVoiceAiFill /> : <RiSendPlaneFill />}
-            externalIcon
-            type="submit"
-            variant="primary"
-            size="lg"
-          >
-            Send
-          </IconButton>
-        </div> */}
       </FormContainer>
     );
   }

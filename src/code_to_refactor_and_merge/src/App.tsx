@@ -1,5 +1,6 @@
+
 import "./styles/main.css";
-import { BrowserRouter, Route, Routes } from "react-router";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import ChatPage from "./pages/chat-page";
 import { AppConfigProvider } from "./contexts/appConfig";
 import { AIProvider } from "./contexts/ai";

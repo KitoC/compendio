@@ -17,7 +17,7 @@ interface ChatWidgetProps {
   conversationId?: string;
 }
 
-const ChatWidget: React.FC<ChatWidgetProps> = ({
+export const ChatWidget: React.FC<ChatWidgetProps> = ({
   position = "bottom-right",
   defaultOpen = false,
   defaultFullScreen = false,

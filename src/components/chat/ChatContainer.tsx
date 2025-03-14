@@ -68,6 +68,8 @@ export const ChatContainer = ({
                   user_id: user.id,
                   domain: window.location.hostname,
                   tenant_id: tenantId,
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
                 };
 
                 const { error: createError } = await supabase
@@ -89,6 +91,8 @@ export const ChatContainer = ({
                   user_id: user.id,
                   domain: window.location.hostname,
                   tenant_id: tenantId,
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
                 };
 
                 const { error: createError } = await supabase
