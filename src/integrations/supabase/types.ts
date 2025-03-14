@@ -156,6 +156,7 @@ export type Database = {
       }
       conversations: {
         Row: {
+          alias: string | null
           created_at: string
           deleted_at: string | null
           domain: string
@@ -168,6 +169,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          alias?: string | null
           created_at?: string
           deleted_at?: string | null
           domain: string
@@ -180,6 +182,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          alias?: string | null
           created_at?: string
           deleted_at?: string | null
           domain?: string

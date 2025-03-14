@@ -1,53 +1,21 @@
-import { MessageSquare, User, Settings } from "lucide-react";
-import { ReactNode } from "react";
 
-// Route constants to ensure consistency across the application
 export const ROUTES = {
+  // Public routes
   INDEX: "/",
   AUTH: "/auth",
   AUTH_CALLBACK: "/auth/callback",
-  FORGOT_PASSWORD: "/forgot-password",
-  RESET_PASSWORD: "/reset-password",
-  CONVERSATIONS: "/app/conversations",
-  CONVERSATION_ASSISTANT: "/app/conversations/general-assistant",
-  CONVERSATION: "/app/conversations/:id",
-  REQUEST_ACCESS: "/app/request-access",
-  ACCESS_PENDING: "/app/access-pending",
+  FORGOT_PASSWORD: "/auth/forgot-password",
+  RESET_PASSWORD: "/auth/reset-password",
+  
+  // Protected routes
+  DASHBOARD: "/dashboard",
+  CONVERSATIONS: "/conversations",
+  CONVERSATION: "/conversation", // Base path, will be followed by an ID or alias
+  CONVERSATION_ASSISTANT: "/conversation/general-assistant", // Predefined alias for assistant chat
+  
+  // Tenant management
+  REQUEST_ACCESS: "/request-access",
+  ACCESS_PENDING: "/access-pending",
 };
 
-// Sidebar configuration types
-export type SidebarItem = {
-  label: string;
-  url?: string;
-  icon?: React.ComponentType;
-  children?: SidebarItem[];
-};
-
-// Configurable sidebar items
-export const sidebarItems: SidebarItem[] = [
-  {
-    label: "Assistants",
-    children: [
-      {
-        label: "General Assistant",
-        url: ROUTES.CONVERSATION_ASSISTANT,
-        icon: MessageSquare,
-      },
-    ],
-  },
-  {
-    label: "Settings",
-    children: [
-      {
-        label: "Profile",
-        url: "#",
-        icon: User,
-      },
-      {
-        label: "Settings",
-        url: "#",
-        icon: Settings,
-      },
-    ],
-  },
-];
+export const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:3001/api`;

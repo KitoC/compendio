@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -25,11 +26,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import AuthRequired from "@/components/AuthRequired";
 import Navbar from "@/components/Navbar";
+import { generateAlias } from "@/utils/generateAlias";
 
 interface Conversation {
   id: string;
   title: string;
   created_at: string;
+  alias?: string;
   icon?: string;
 }
 
@@ -55,6 +58,7 @@ const Conversations = () => {
             id,
             title,
             created_at,
+            alias,
             icon
           )
         `
@@ -87,7 +91,10 @@ const Conversations = () => {
     if (!newConversationTitle.trim() || !user || !tenantId) return;
 
     try {
-      // Create a new conversation with tenant_id
+      // Generate a URL-friendly alias from the title
+      const alias = generateAlias(newConversationTitle);
+      
+      // Create a new conversation with tenant_id and alias
       const { data: conversationData, error: conversationError } =
         await supabase
           .from("conversations")
@@ -96,6 +103,7 @@ const Conversations = () => {
             user_id: user.id,
             domain: "default",
             tenant_id: tenantId,
+            alias: alias
           })
           .select()
           .single();
@@ -126,8 +134,9 @@ const Conversations = () => {
         description: "Conversation created successfully",
       });
 
-      // Navigate to the new conversation
-      navigate(`/conversation/${conversationData.id}`);
+      // Navigate to the new conversation using the alias if available
+      const conversationPath = conversationData.alias || conversationData.id;
+      navigate(`/conversation/${conversationPath}`);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -204,7 +213,7 @@ const Conversations = () => {
               {conversations.map((conversation) => (
                 <Link
                   key={conversation.id}
-                  to={`/conversation/${conversation.id}`}
+                  to={`/conversation/${conversation.alias || conversation.id}`}
                 >
                   <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
                     <CardHeader className="pb-2">

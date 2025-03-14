@@ -1,7 +1,7 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +11,7 @@ import AuthRequired from "@/components/AuthRequired";
 import Navbar from "@/components/Navbar";
 import { Message } from "@/types/message";
 import { ROUTES } from "@/lib/constants";
+import { isUuid } from "@/utils/generateAlias";
 
 const ConversationDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,11 +27,16 @@ const ConversationDetail = () => {
     if (!id || !user) return;
 
     try {
-      const { data, error } = await supabase
-        .from("conversations")
-        .select("*")
-        .eq("id", id)
-        .single();
+      // Query by ID or alias based on the format
+      let query = supabase.from("conversations").select("*");
+      
+      if (isUuid(id)) {
+        query = query.eq("id", id);
+      } else {
+        query = query.eq("alias", id);
+      }
+      
+      const { data, error } = await query.single();
 
       if (error) {
         throw error;
@@ -42,7 +48,7 @@ const ConversationDetail = () => {
       const { data: participantData, error: participantError } = await supabase
         .from("conversation_participants")
         .select("*")
-        .eq("conversation_id", id)
+        .eq("conversation_id", data.id)
         .eq("user_id", user.id);
 
       if (participantError) {
@@ -69,13 +75,13 @@ const ConversationDetail = () => {
   };
 
   const fetchMessages = async () => {
-    if (!id) return;
+    if (!conversation?.id) return;
 
     try {
       const { data, error } = await supabase
         .from("messages")
         .select("*")
-        .eq("conversation_id", id)
+        .eq("conversation_id", conversation.id)
         .order("created_at", { ascending: true });
 
       if (error) {
@@ -99,12 +105,12 @@ const ConversationDetail = () => {
   };
 
   const sendMessage = async () => {
-    if (!message.trim() || !id || !user || !tenantId) return;
+    if (!message.trim() || !conversation?.id || !user || !tenantId) return;
 
     try {
       // Create the message object with all required fields including tenant_id
       const newMessage: Message = {
-        conversation_id: id,
+        conversation_id: conversation.id,
         user_id: user.id,
         role: "user",
         content: { text: message },
@@ -131,30 +137,35 @@ const ConversationDetail = () => {
 
   useEffect(() => {
     fetchConversation();
-    fetchMessages();
-
-    // Subscribe to new messages
-    const subscription = supabase
-      .channel("messages-channel")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `conversation_id=eq.${id}`,
-        },
-        (payload) => {
-          // Add new message to state
-          setMessages((prev) => [...prev, payload.new as Message]);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(subscription);
-    };
   }, [id, user, tenantId]);
+
+  useEffect(() => {
+    if (conversation?.id) {
+      fetchMessages();
+      
+      // Subscribe to new messages for this conversation
+      const subscription = supabase
+        .channel("messages-channel")
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "messages",
+            filter: `conversation_id=eq.${conversation.id}`,
+          },
+          (payload) => {
+            // Add new message to state
+            setMessages((prev) => [...prev, payload.new as Message]);
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(subscription);
+      };
+    }
+  }, [conversation]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {

@@ -31,7 +31,7 @@ export const ChatContainer = ({
   const navigate = useNavigate();
 
   // Use the ID from props or URL params
-  const conversationId = propConversationId || paramId;
+  const conversationIdOrAlias = propConversationId || paramId;
 
   useEffect(() => {
     const fetchOrCreateConversation = async () => {
@@ -42,35 +42,65 @@ export const ChatContainer = ({
       setLoading(true);
 
       try {
-        // Check if conversation exists
-        if (conversationId) {
-          const { data, error } = await supabase
-            .from("conversations")
-            .select("*")
-            .eq("id", conversationId)
-            .single();
+        // Check if conversation exists by ID or alias
+        if (conversationIdOrAlias) {
+          // Try to fetch by ID first (for UUID format)
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conversationIdOrAlias);
+          
+          let query = supabase.from("conversations").select("*");
+          
+          if (isUuid) {
+            query = query.eq("id", conversationIdOrAlias);
+          } else {
+            query = query.eq("alias", conversationIdOrAlias);
+          }
+          
+          const { data, error } = await query.single();
 
           if (error) {
             if (error.code === "PGRST116") {
-              // No rows found
-              // Create a new conversation with this ID
-              const newConversation = {
-                id: conversationId,
-                title: "New Conversation",
-                user_id: user.id,
-                domain: window.location.hostname,
-                tenant_id: tenantId,
-              };
+              // No rows found - create a new conversation
+              if (isUuid) {
+                // Create with the provided UUID
+                const newConversation = {
+                  id: conversationIdOrAlias,
+                  title: "New Conversation",
+                  user_id: user.id,
+                  domain: window.location.hostname,
+                  tenant_id: tenantId,
+                };
 
-              const { error: createError } = await supabase
-                .from("conversations")
-                .insert(newConversation);
+                const { error: createError } = await supabase
+                  .from("conversations")
+                  .insert(newConversation);
 
-              if (createError) {
-                throw createError;
+                if (createError) {
+                  throw createError;
+                }
+
+                setConversation(newConversation as Conversation);
+              } else {
+                // Create a new conversation with a generated ID but requested alias
+                const newId = uuidv4();
+                const newConversation = {
+                  id: newId,
+                  alias: conversationIdOrAlias,
+                  title: conversationIdOrAlias.replace(/-/g, ' '),
+                  user_id: user.id,
+                  domain: window.location.hostname,
+                  tenant_id: tenantId,
+                };
+
+                const { error: createError } = await supabase
+                  .from("conversations")
+                  .insert(newConversation);
+
+                if (createError) {
+                  throw createError;
+                }
+
+                setConversation(newConversation as Conversation);
               }
-
-              setConversation(newConversation as Conversation);
             } else {
               throw error;
             }
@@ -95,7 +125,7 @@ export const ChatContainer = ({
     };
 
     fetchOrCreateConversation();
-  }, [conversationId, user, tenantId, navigate, toast]);
+  }, [conversationIdOrAlias, user, tenantId, navigate, toast]);
 
   if (loading) {
     return (
@@ -106,7 +136,7 @@ export const ChatContainer = ({
     );
   }
 
-  if (!conversationId || !user || !tenantId) {
+  if (!conversationIdOrAlias || !user || !tenantId) {
     return (
       <Card className="flex flex-col items-center justify-center p-8 h-full">
         <p className="mb-4">No conversation selected or you need to sign in.</p>
@@ -118,7 +148,7 @@ export const ChatContainer = ({
   }
 
   return (
-    <ChatProvider conversationId={conversationId}>
+    <ChatProvider conversationId={conversation?.id || ""}>
       <div className={`flex flex-col h-full bg-background ${className}`}>
         <div className="flex-1 overflow-hidden flex flex-col">
           <ChatMessages />

@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -40,10 +41,14 @@ const AppContent = () => {
             {/* Protected routes with sidebar */}
             <Route
               path={ROUTES.CONVERSATIONS}
-              element={<Navigate to={ROUTES.CONVERSATION_ASSISTANT} />}
+              element={
+                <AuthenticatedLayout>
+                  <ChatPage />
+                </AuthenticatedLayout>
+              }
             />
             <Route
-              path={ROUTES.CONVERSATION}
+              path={`${ROUTES.CONVERSATION}/:id`}
               element={
                 <AuthenticatedLayout>
                   <ChatPage />
