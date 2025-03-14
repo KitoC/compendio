@@ -1,84 +1,64 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import AuthRequired from '@/components/AuthRequired';
 import Navbar from '@/components/Navbar';
-import { ArrowLeft, Send, User } from 'lucide-react';
+import { Message } from '@/types/message';
 
-interface Message {
-  id: string;
-  content: { text: string };
-  role: string;
-  created_at: string;
-  user_id: string | null;
-}
-
-interface ConversationDetail {
-  id: string;
-  title: string | null;
-}
-
-const ConversationDetail: React.FC = () => {
+const ConversationDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const [conversation, setConversation] = useState<ConversationDetail | null>(null);
+  const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
-  const [sendingMessage, setSendingMessage] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [conversation, setConversation] = useState<any>(null);
+  const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    if (user && id) {
-      fetchConversation();
-      fetchMessages();
-      
-      // Subscribe to new messages
-      const messageSubscription = supabase
-        .channel('public:messages')
-        .on('postgres_changes', { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'messages',
-          filter: `conversation_id=eq.${id}`
-        }, (payload) => {
-          const newMessage = payload.new as Message;
-          setMessages(prevMessages => [...prevMessages, newMessage]);
-        })
-        .subscribe();
-        
-      return () => {
-        supabase.removeChannel(messageSubscription);
-      };
-    }
-  }, [user, id]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   const fetchConversation = async () => {
+    if (!id || !user) return;
+    
     try {
       const { data, error } = await supabase
         .from('conversations')
-        .select('id, title')
-        .eq('id', id!)
+        .select('*')
+        .eq('id', id)
         .single();
-
-      if (error) throw error;
+      
+      if (error) {
+        throw error;
+      }
       
       setConversation(data);
+      
+      // Check if user is a participant
+      const { data: participantData, error: participantError } = await supabase
+        .from('conversation_participants')
+        .select('*')
+        .eq('conversation_id', id)
+        .eq('user_id', user.id);
+      
+      if (participantError) {
+        throw participantError;
+      }
+      
+      if (!participantData || participantData.length === 0) {
+        toast({
+          title: "Access Denied",
+          description: "You are not a participant in this conversation.",
+          variant: "destructive",
+        });
+        navigate('/conversations');
+        return;
+      }
+      
     } catch (error: any) {
       toast({
         title: "Error",
@@ -90,16 +70,25 @@ const ConversationDetail: React.FC = () => {
   };
 
   const fetchMessages = async () => {
+    if (!id) return;
+    
     try {
       const { data, error } = await supabase
         .from('messages')
         .select('*')
-        .eq('conversation_id', id!)
+        .eq('conversation_id', id)
         .order('created_at', { ascending: true });
-
-      if (error) throw error;
       
-      setMessages(data || []);
+      if (error) {
+        throw error;
+      }
+      
+      if (data) {
+        // Ensure data matches our Message type
+        const typedMessages: Message[] = data;
+        setMessages(typedMessages);
+      }
+      
     } catch (error: any) {
       toast({
         title: "Error",
@@ -111,121 +100,126 @@ const ConversationDetail: React.FC = () => {
     }
   };
 
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!newMessage.trim()) return;
-    
-    setSendingMessage(true);
+  const sendMessage = async () => {
+    if (!message.trim() || !id || !user) return;
     
     try {
+      // Create the message object with all required fields including tenant_id
+      const newMessage: Message = {
+        conversation_id: id,
+        user_id: user.id,
+        role: 'user',
+        content: { text: message },
+        metadata: {},
+        tenant_id: '35eb8c76-7ed5-4109-a520-99c7402d1f03' // Using default tenant ID
+      };
+      
       const { error } = await supabase
         .from('messages')
-        .insert([
-          { 
-            conversation_id: id!,
-            content: { text: newMessage },
-            role: 'user',
-            user_id: user!.id,
-            metadata: {}
-          }
-        ]);
-
-      if (error) throw error;
+        .insert([newMessage]);
       
-      setNewMessage('');
+      if (error) {
+        throw error;
+      }
+      
+      setMessage("");
+      fetchMessages();
+      
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Failed to send message",
         variant: "destructive",
       });
-    } finally {
-      setSendingMessage(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchConversation();
+    fetchMessages();
+    
+    // Subscribe to new messages
+    const subscription = supabase
+      .channel('messages-channel')
+      .on('postgres_changes', 
+        { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'messages',
+          filter: `conversation_id=eq.${id}`
+        }, 
+        (payload) => {
+          // Add new message to state
+          setMessages(prev => [...prev, payload.new as Message]);
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, [id, user]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
     }
   };
 
   return (
     <AuthRequired>
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="min-h-screen bg-background flex flex-col">
         <Navbar />
-        <div className="flex-1 flex flex-col max-h-[calc(100vh-64px)]">
-          {/* Header */}
-          <div className="border-b p-4 flex items-center">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigate('/conversations')}
-              className="mr-2"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-xl font-semibold">
-              {conversation?.title || "Conversation"}
-            </h1>
-          </div>
-          
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {loading ? (
-              <div className="flex justify-center my-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-              </div>
-            ) : messages.length > 0 ? (
-              messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${
-                    message.user_id === user?.id ? 'justify-end' : 'justify-start'
-                  }`}
-                >
-                  <div
-                    className={`max-w-[80%] rounded-lg p-3 ${
-                      message.user_id === user?.id
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
-                    }`}
-                  >
-                    <div className="flex items-center mb-1">
-                      <User className="h-4 w-4 mr-2" />
-                      <span className="text-xs font-medium">
-                        {message.user_id === user?.id ? 'You' : 'Other User'}
-                      </span>
-                    </div>
-                    <p>{message.content.text}</p>
-                    <div className="text-xs opacity-70 mt-1 text-right">
-                      {new Date(message.created_at).toLocaleTimeString()}
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                No messages yet. Start the conversation!
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-          
-          {/* Message Input */}
-          <div className="border-t p-4">
-            <form onSubmit={sendMessage} className="flex gap-2">
-              <Input
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type a message..."
-                disabled={sendingMessage}
-                className="flex-1"
-              />
-              <Button type="submit" disabled={sendingMessage || !newMessage.trim()}>
-                {sendingMessage ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground"></div>
+        <div className="flex-grow container max-w-4xl py-8">
+          <Card className="h-full flex flex-col">
+            <CardHeader>
+              <CardTitle>
+                {loading ? 'Loading...' : conversation?.title || 'Conversation'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex-grow flex flex-col">
+              <div className="flex-grow mb-4 overflow-y-auto space-y-4 max-h-[60vh]">
+                {messages.length === 0 && !loading ? (
+                  <p className="text-center text-muted-foreground">No messages yet.</p>
                 ) : (
-                  <Send className="h-4 w-4" />
+                  messages.map((msg) => (
+                    <div 
+                      key={msg.id} 
+                      className={`p-3 rounded-lg max-w-[80%] ${
+                        msg.user_id === user?.id 
+                          ? 'ml-auto bg-primary text-primary-foreground' 
+                          : 'bg-muted'
+                      }`}
+                    >
+                      {typeof msg.content === 'object' && msg.content?.text 
+                        ? msg.content.text 
+                        : typeof msg.content === 'string' 
+                          ? msg.content 
+                          : JSON.stringify(msg.content)}
+                    </div>
+                  ))
                 )}
-              </Button>
-            </form>
-          </div>
+              </div>
+              <div className="flex gap-2">
+                <Textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Type your message..."
+                  className="flex-grow resize-none"
+                  rows={2}
+                />
+                <Button 
+                  onClick={sendMessage} 
+                  disabled={!message.trim()}
+                  className="self-end"
+                >
+                  Send
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </AuthRequired>

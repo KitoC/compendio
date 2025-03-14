@@ -8,11 +8,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
+import { Separator } from "@/components/ui/separator";
+import { FaMicrosoft } from "react-icons/fa";
+import { FcGoogle } from "react-icons/fc";
 
 const Auth: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [ssoLoading, setSsoLoading] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -93,6 +97,28 @@ const Auth: React.FC = () => {
     }
   };
 
+  const handleSSOLogin = async (provider: 'google' | 'microsoft') => {
+    setSsoLoading(provider);
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+      
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        title: "SSO Error",
+        description: error.message || `An error occurred during ${provider} login.`,
+        variant: "destructive",
+      });
+      setSsoLoading(null);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
@@ -112,6 +138,44 @@ const Auth: React.FC = () => {
           <TabsContent value="login">
             <form onSubmit={handleLogin}>
               <CardContent className="space-y-4">
+                <div className="space-y-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="w-full flex items-center justify-center gap-2"
+                    onClick={() => handleSSOLogin('google')}
+                    disabled={ssoLoading !== null}
+                  >
+                    {ssoLoading === 'google' ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                    ) : (
+                      <FcGoogle className="h-5 w-5" />
+                    )}
+                    Continue with Google
+                  </Button>
+                  
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="w-full flex items-center justify-center gap-2"
+                    onClick={() => handleSSOLogin('microsoft')}
+                    disabled={ssoLoading !== null}
+                  >
+                    {ssoLoading === 'microsoft' ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                    ) : (
+                      <FaMicrosoft className="h-5 w-5 text-blue-500" />
+                    )}
+                    Continue with Microsoft
+                  </Button>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Separator className="flex-grow" />
+                  <span className="text-xs text-muted-foreground">OR</span>
+                  <Separator className="flex-grow" />
+                </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input 
@@ -145,6 +209,44 @@ const Auth: React.FC = () => {
           <TabsContent value="signup">
             <form onSubmit={handleSignup}>
               <CardContent className="space-y-4">
+                <div className="space-y-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="w-full flex items-center justify-center gap-2"
+                    onClick={() => handleSSOLogin('google')}
+                    disabled={ssoLoading !== null}
+                  >
+                    {ssoLoading === 'google' ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                    ) : (
+                      <FcGoogle className="h-5 w-5" />
+                    )}
+                    Sign up with Google
+                  </Button>
+                  
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    className="w-full flex items-center justify-center gap-2"
+                    onClick={() => handleSSOLogin('microsoft')}
+                    disabled={ssoLoading !== null}
+                  >
+                    {ssoLoading === 'microsoft' ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                    ) : (
+                      <FaMicrosoft className="h-5 w-5 text-blue-500" />
+                    )}
+                    Sign up with Microsoft
+                  </Button>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Separator className="flex-grow" />
+                  <span className="text-xs text-muted-foreground">OR</span>
+                  <Separator className="flex-grow" />
+                </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input 
