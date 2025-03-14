@@ -1,0 +1,20 @@
+@layer theme, base, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+/* @import "tailwindcss/preflight.css" layer(base); */
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+.skybrook-chat-widget [role="button"],
+.skybrook-chat-widget button {
+  cursor: pointer;
+}
+#root,
+body {
+  @apply p-0 h-screen w-screen m-0;
+}
+
+* {
+  box-sizing: border-box;
+}
