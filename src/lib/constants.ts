@@ -1,4 +1,7 @@
 
+import { MessageSquare, User, Settings } from "lucide-react";
+import { ReactNode } from "react";
+
 // Route constants to ensure consistency across the application
 export const ROUTES = {
   INDEX: "/",
@@ -13,14 +16,44 @@ export const ROUTES = {
   ACCESS_PENDING: "/access-pending",
 };
 
-// Sidebar configuration
-export type SidebarLink = {
-  title: string;
-  href: string;
+// Sidebar configuration types
+export type SidebarItem = {
+  label: string;
+  url?: string;
   icon?: React.ComponentType;
+  children?: SidebarItem[];
 };
 
-export type SidebarSection = {
-  title: string;
-  links: SidebarLink[];
-};
+// Configurable sidebar items
+export const sidebarItems: SidebarItem[] = [
+  {
+    label: "Navigation",
+    children: [
+      { 
+        label: "Conversations", 
+        url: ROUTES.CONVERSATIONS, 
+        icon: MessageSquare 
+      },
+      { 
+        label: "Assistant Chat", 
+        url: ROUTES.CONVERSATION_ASSISTANT, 
+        icon: MessageSquare 
+      }
+    ]
+  },
+  {
+    label: "Settings",
+    children: [
+      { 
+        label: "Profile", 
+        url: "#", 
+        icon: User 
+      },
+      { 
+        label: "Settings", 
+        url: "#", 
+        icon: Settings 
+      }
+    ]
+  }
+];

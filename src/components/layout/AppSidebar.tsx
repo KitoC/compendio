@@ -11,18 +11,22 @@ import {
   SidebarMenu,
   SidebarSeparator,
   SidebarFooter,
-  SidebarTrigger
+  SidebarTrigger,
+  SidebarMenuItem,
+  SidebarMenuButton
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, User, LogOut, Settings, Menu } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { ROUTES } from "@/lib/constants";
+import { ROUTES, sidebarItems, SidebarItem } from "@/lib/constants";
+import { useSidebar } from "@/components/ui/sidebar/context";
 
 const AppSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const { user, profile, signOut } = useAuth();
   const location = useLocation();
+  const { state } = useSidebar();
   
   const handleSignOut = async () => {
     await signOut();
@@ -39,10 +43,32 @@ const AppSidebar = () => {
     return "U";
   };
 
+  // Render sidebar menu items recursively
+  const renderSidebarItems = (items: SidebarItem[]) => {
+    return items.map((item) => {
+      if (item.url) {
+        return (
+          <SidebarMenuItem key={item.label}>
+            <Link to={item.url}>
+              <SidebarMenuButton 
+                isActive={location.pathname === item.url}
+                tooltip={item.label}
+              >
+                {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+                <span>{item.label}</span>
+              </SidebarMenuButton>
+            </Link>
+          </SidebarMenuItem>
+        );
+      }
+      return null;
+    });
+  };
+
   return (
     <>
       {/* Show trigger button when sidebar is collapsed */}
-      {collapsed && (
+      {state === "collapsed" && (
         <div className="fixed top-4 left-4 z-50">
           <SidebarTrigger>
             <Menu className="h-6 w-6" />
@@ -53,7 +79,6 @@ const AppSidebar = () => {
       <Sidebar 
         collapsible="offcanvas"
         side="left"
-        onStateChange={(state) => setCollapsed(state === "collapsed")}
         className="border-r border-border"
       >
         <SidebarHeader className="flex items-center">
@@ -68,40 +93,19 @@ const AppSidebar = () => {
         </SidebarHeader>
         
         <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <Link to={ROUTES.CONVERSATIONS}>
-                  <Button 
-                    variant="ghost" 
-                    className={`w-full justify-start ${location.pathname === ROUTES.CONVERSATIONS ? 'bg-accent text-accent-foreground' : ''}`}
-                  >
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    Conversations
-                  </Button>
-                </Link>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-          
-          <SidebarSeparator />
-          
-          <SidebarGroup>
-            <SidebarGroupLabel>Settings</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <Button variant="ghost" className="w-full justify-start">
-                  <User className="mr-2 h-4 w-4" />
-                  Profile
-                </Button>
-                <Button variant="ghost" className="w-full justify-start">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </Button>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          {sidebarItems.map((section, index) => (
+            <div key={section.label}>
+              {index > 0 && <SidebarSeparator />}
+              <SidebarGroup>
+                <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {section.children && renderSidebarItems(section.children)}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </div>
+          ))}
         </SidebarContent>
         
         <SidebarFooter>
