@@ -707,6 +707,13 @@ export type Database = {
             }
             Returns: unknown
           }
+      create_tenant_request: {
+        Args: {
+          workspace_name: string
+          user_email: string
+        }
+        Returns: string
+      }
       halfvec_avg: {
         Args: {
           "": number[]
