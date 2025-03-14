@@ -70,9 +70,13 @@ const AiIndicator = styled.span`
   display: inline-block;
 `;
 
-interface MarkdownProps {
-  className?: string;
-}
+const MarkdownWrapper = styled.div<{ isStreamedMessage?: boolean }>`
+  ${(props) => props.isStreamedMessage && `
+    .streamed-message {
+      opacity: 0.8;
+    }
+  `}
+`;
 
 const INDICATOR_PLACEHOLDER = "{{INDICATOR}}";
 
@@ -133,113 +137,116 @@ const RenderMarkdown = ({
     return <>{children}</>;
   };
 
+  const markdownClasses = clsx("prose prose-sm max-w-none dark:text-white", {
+    "streamed-message": isStreamedMessage,
+  });
+
   return (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      className={clsx("prose prose-sm max-w-none dark:text-white", {
-        "streamed-message": isStreamedMessage,
-      })}
-      components={{
-        p: ({ children }) => {
-          return <p style={{ margin: 0 }}>{renderChildren(children)}</p>;
-        },
-        a: ({ href, children }) => (
-          <StyledLink
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
-            isUser={isUser}
-            theme={theme}
-          >
-            {renderChildren(children)}
-          </StyledLink>
-        ),
-        code: ({ className, children, node, ...props }) => {
-          const isInline = !className;
-          if (isInline) {
+    <MarkdownWrapper isStreamedMessage={isStreamedMessage} className={markdownClasses}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          p: ({ children }) => {
+            return <p style={{ margin: 0 }}>{renderChildren(children)}</p>;
+          },
+          a: ({ href, children }) => (
+            <StyledLink
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              isUser={isUser}
+              theme={theme}
+            >
+              {renderChildren(children)}
+            </StyledLink>
+          ),
+          code: ({ className, children, node, ...props }) => {
+            const isInline = !className;
+            if (isInline) {
+              return (
+                <InlineCode isUser={isUser}>
+                  {renderChildren(children)}
+                </InlineCode>
+              );
+            }
             return (
-              <InlineCode isUser={isUser}>
-                {renderChildren(children)}
-              </InlineCode>
+              <CodeBlock isUser={isUser}>
+                <code className={`language-${className} text-sm`}>
+                  {renderChildren(children)}
+                </code>
+              </CodeBlock>
             );
-          }
-          return (
-            <CodeBlock isUser={isUser}>
-              <code className={`language-${className} text-sm`}>
-                {renderChildren(children)}
-              </code>
-            </CodeBlock>
-          );
-        },
-        ul: ({ children }) => (
-          <ul
-            style={{
-              listStyleType: "disc",
-              paddingLeft: "1rem",
-              margin: "0.5rem 0",
-            }}
-          >
-            {renderChildren(children)}
-          </ul>
-        ),
-        ol: ({ children }) => (
-          <ol
-            style={{
-              listStyleType: "decimal",
-              paddingLeft: "1rem",
-              margin: "0.5rem 0",
-            }}
-          >
-            {renderChildren(children)}
-          </ol>
-        ),
-        li: ({ children }) => (
-          <li style={{ marginBottom: "0.25rem" }}>
-            {renderChildren(children)}
-          </li>
-        ),
-        blockquote: ({ children }) => (
-          <StyledBlockquote isUser={isUser}>
-            {renderChildren(children)}
-          </StyledBlockquote>
-        ),
-        h1: ({ children }) => (
-          <h1
-            style={{
-              fontSize: "1.25rem",
-              fontWeight: "bold",
-              margin: "0.5rem 0",
-            }}
-          >
-            {renderChildren(children)}
-          </h1>
-        ),
-        h2: ({ children }) => (
-          <h2
-            style={{
-              fontSize: "1.125rem",
-              fontWeight: "bold",
-              margin: "0.5rem 0",
-            }}
-          >
-            {renderChildren(children)}
-          </h2>
-        ),
-        h3: ({ children }) => (
-          <h3
-            style={{
-              fontSize: "1rem",
-              fontWeight: "bold",
-              margin: "0.5rem 0",
-            }}
-          >
-            {renderChildren(children)}
-          </h3>
-        ),
-      }}
-    >
-      {isStreamedMessage ? message + INDICATOR_PLACEHOLDER : message}
-    </ReactMarkdown>
+          },
+          ul: ({ children }) => (
+            <ul
+              style={{
+                listStyleType: "disc",
+                paddingLeft: "1rem",
+                margin: "0.5rem 0",
+              }}
+            >
+              {renderChildren(children)}
+            </ul>
+          ),
+          ol: ({ children }) => (
+            <ol
+              style={{
+                listStyleType: "decimal",
+                paddingLeft: "1rem",
+                margin: "0.5rem 0",
+              }}
+            >
+              {renderChildren(children)}
+            </ol>
+          ),
+          li: ({ children }) => (
+            <li style={{ marginBottom: "0.25rem" }}>
+              {renderChildren(children)}
+            </li>
+          ),
+          blockquote: ({ children }) => (
+            <StyledBlockquote isUser={isUser}>
+              {renderChildren(children)}
+            </StyledBlockquote>
+          ),
+          h1: ({ children }) => (
+            <h1
+              style={{
+                fontSize: "1.25rem",
+                fontWeight: "bold",
+                margin: "0.5rem 0",
+              }}
+            >
+              {renderChildren(children)}
+            </h1>
+          ),
+          h2: ({ children }) => (
+            <h2
+              style={{
+                fontSize: "1.125rem",
+                fontWeight: "bold",
+                margin: "0.5rem 0",
+              }}
+            >
+              {renderChildren(children)}
+            </h2>
+          ),
+          h3: ({ children }) => (
+            <h3
+              style={{
+                fontSize: "1rem",
+                fontWeight: "bold",
+                margin: "0.5rem 0",
+              }}
+            >
+              {renderChildren(children)}
+            </h3>
+          ),
+        }}
+      >
+        {isStreamedMessage ? message + INDICATOR_PLACEHOLDER : message}
+      </ReactMarkdown>
+    </MarkdownWrapper>
   );
 };
 
