@@ -770,6 +770,14 @@ export type Database = {
         }
         Returns: unknown
       }
+      insert_user_role: {
+        Args: {
+          p_email: string
+          p_tenant_workspace: string
+          p_role: Database["public"]["Enums"]["user_role_type"]
+        }
+        Returns: undefined
+      }
       ivfflat_bit_support: {
         Args: {
           "": unknown

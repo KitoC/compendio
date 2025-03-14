@@ -6,6 +6,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import AuthenticatedLayout from "@/components/layout/AuthenticatedLayout";
+import { ROUTES } from "@/lib/constants";
+
+// Pages
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
@@ -19,7 +23,7 @@ import AccessPending from "./pages/AccessPending";
 
 const queryClient = new QueryClient();
 
-// Create a wrapper component that will use the router context
+// Separate routes into public and protected
 const AppContent = () => {
   return (
     <ThemeProvider>
@@ -28,16 +32,30 @@ const AppContent = () => {
           <Toaster />
           <Sonner />
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/conversations" element={<Conversations />} />
-            <Route path="/conversation/:id" element={<ConversationDetail />} />
-            <Route path="/request-access" element={<RequestAccess />} />
-            <Route path="/access-pending" element={<AccessPending />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            {/* Public routes */}
+            <Route path={ROUTES.INDEX} element={<Index />} />
+            <Route path={ROUTES.AUTH} element={<Auth />} />
+            <Route path={ROUTES.AUTH_CALLBACK} element={<AuthCallback />} />
+            <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword />} />
+            <Route path={ROUTES.RESET_PASSWORD} element={<ResetPassword />} />
+            
+            {/* Protected routes with sidebar */}
+            <Route path={ROUTES.CONVERSATIONS} element={
+              <AuthenticatedLayout>
+                <Conversations />
+              </AuthenticatedLayout>
+            } />
+            <Route path={ROUTES.CONVERSATION_DETAIL} element={
+              <AuthenticatedLayout>
+                <ConversationDetail />
+              </AuthenticatedLayout>
+            } />
+            
+            {/* Access request routes */}
+            <Route path={ROUTES.REQUEST_ACCESS} element={<RequestAccess />} />
+            <Route path={ROUTES.ACCESS_PENDING} element={<AccessPending />} />
+            
+            {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>
