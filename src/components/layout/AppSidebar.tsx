@@ -51,7 +51,6 @@ const AppSidebar = () => {
       )}
       
       <Sidebar 
-        defaultState="expanded" 
         collapsible="offcanvas"
         side="left"
         onStateChange={(state) => setCollapsed(state === "collapsed")}

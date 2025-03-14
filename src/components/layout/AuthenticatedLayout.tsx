@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import AppSidebar from "./AppSidebar";
 import { ROUTES } from "@/lib/constants";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 interface AuthenticatedLayoutProps {
   children: ReactNode;
@@ -52,12 +53,14 @@ const AuthenticatedLayout = ({ children }: AuthenticatedLayoutProps) => {
   }
 
   return (
-    <div className="flex min-h-screen">
-      <AppSidebar />
-      <main className="flex-1 overflow-auto">
-        {children}
-      </main>
-    </div>
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        <AppSidebar />
+        <main className="flex-1 overflow-auto">
+          {children}
+        </main>
+      </div>
+    </SidebarProvider>
   );
 };
 
