@@ -26,15 +26,11 @@ const RequestAccess = () => {
     try {
       setIsSubmitting(true);
       
-      // Request access by creating a pending tenant request
-      const { error } = await supabase
-        .from('tenant_requests')
-        .insert({
-          workspace: workspace,
-          user_id: user?.id,
-          user_email: user?.email,
-          status: 'pending'
-        });
+      // Using the RPC endpoint for the function to avoid policy recursion
+      const { data, error } = await supabase.rpc('create_tenant_request', {
+        workspace_name: workspace,
+        user_email: user?.email
+      });
 
       if (error) {
         console.error('Tenant request error:', error);
