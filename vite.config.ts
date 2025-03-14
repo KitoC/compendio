@@ -1,4 +1,3 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -30,6 +29,19 @@ export default defineConfig(({ mode, command }) => ({
       },
       outDir: 'dist/cdn',
       emptyOutDir: false,
-    } : {})
+    } : {}),
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        widget: path.resolve(__dirname, 'src/lib/cdn-widget.ts'),
+      },
+      output: {
+        entryFileNames: (assetInfo) => {
+          return assetInfo.name === 'widget' 
+            ? 'assets/chat-widget.[hash].js'
+            : 'assets/[name].[hash].js';
+        }
+      }
+    }
   }
 }));

@@ -1,85 +1,83 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import AuthenticatedLayout from "@/components/layout/AuthenticatedLayout";
+import Footer from "@/components/Footer";
+import Navbar from "@/components/Navbar";
+import { Toaster } from "@/components/ui/toaster";
 import { ROUTES } from "@/lib/constants";
-
-// Pages
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import AuthCallback from "./pages/AuthCallback";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
+import { SiteConfig } from "@/types";
+import { Auth } from "@supabase/auth-ui-react";
+import { ThemeSupa } from "@supabase/auth-ui-shared";
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  useNavigate,
+} from "react-router-dom";
+import Account from "./pages/Account";
+import AuthRequired from "./components/AuthRequired";
 import Conversations from "./pages/Conversations";
-import ConversationDetail from "./pages/ConversationDetail";
-import NotFound from "./pages/NotFound";
-import RequestAccess from "./pages/RequestAccess";
-import AccessPending from "./pages/AccessPending";
-import ConversationAssistant from "./pages/ConversationAssistant";
+import Home from "./pages/Home";
 
-const queryClient = new QueryClient();
+import ChatPage from "./pages/ChatPage";
+import ChatWidgetTrigger from "./components/chat/ChatWidgetTrigger";
+import { ROUTES } from "./lib/constants";
 
-// Separate routes into public and protected
-const AppContent = () => {
+function App() {
+  const { session, isLoading } = useAuth();
+
+  const siteConfig: SiteConfig = {
+    name: "Skybrook AI",
+    description:
+      "An open source platform for creating and managing AI-powered chatbots.",
+    url: "https://skybrook.ai",
+    ogImage: "https://skybrook.ai/og.jpg",
+    links: {
+      twitter: "https://twitter.com/skybrookai",
+      github: "https://github.com/skybrookai/skybrookai",
+    },
+  };
+
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            {/* Public routes */}
-            <Route path={ROUTES.INDEX} element={<Index />} />
-            <Route path={ROUTES.AUTH} element={<Auth />} />
-            <Route path={ROUTES.AUTH_CALLBACK} element={<AuthCallback />} />
-            <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword />} />
-            <Route path={ROUTES.RESET_PASSWORD} element={<ResetPassword />} />
-
-            {/* Protected routes with sidebar */}
-            <Route
-              path={ROUTES.CONVERSATIONS}
-              element={<Navigate to={ROUTES.CONVERSATION_ASSISTANT} />}
-            />
-            <Route
-              path={ROUTES.CONVERSATION_DETAIL}
-              element={
-                <AuthenticatedLayout>
-                  <ConversationDetail />
-                </AuthenticatedLayout>
-              }
-            />
-            <Route
-              path={ROUTES.CONVERSATION_ASSISTANT}
-              element={
-                <AuthenticatedLayout>
-                  <ConversationAssistant />
-                </AuthenticatedLayout>
-              }
-            />
-
-            {/* Access request routes */}
-            <Route path={ROUTES.REQUEST_ACCESS} element={<RequestAccess />} />
-            <Route path={ROUTES.ACCESS_PENDING} element={<AccessPending />} />
-
-            {/* Catch-all */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </TooltipProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+        <Navbar />
+        <Routes>
+          <Route path={ROUTES.HOME} element={<Home />} />
+          <Route path={ROUTES.LOGIN} element={<AuthPage />} />
+          <Route path="/account" element={<Account />} />
+          <Route path={ROUTES.CONVERSATIONS} element={<Conversations />} />
+          <Route path={`${ROUTES.CONVERSATION}/:id`} element={<ChatPage />} />
+          <Route path={ROUTES.ASSISTANT_CHAT} element={<ChatPage />} />
+        </Routes>
+        <Footer />
+        <Toaster />
+        <ChatWidgetTrigger />
+      </ThemeProvider>
+    </div>
   );
-};
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <AppContent />
-    </BrowserRouter>
-  </QueryClientProvider>
-);
+}
 
 export default App;
+
+const AuthPage = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Redirect to home page if user is already logged in
+    if (localStorage.getItem("sb-access-token")) {
+      navigate("/");
+    }
+  }, [navigate]);
+
+  return (
+    <div className="flex-1 container px-4 py-6 max-w-5xl mx-auto">
+      <Auth
+        supabaseClient={"" as any}
+        appearance={{ theme: ThemeSupa }}
+        theme="dark"
+        providers={["github", "google"]}
+      />
+    </div>
+  );
+};
