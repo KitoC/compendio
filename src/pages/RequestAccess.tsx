@@ -36,7 +36,10 @@ const RequestAccess = () => {
           status: 'pending'
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Tenant request error:', error);
+        throw error;
+      }
       
       toast.success("Access request submitted successfully");
       navigate('/access-pending');
