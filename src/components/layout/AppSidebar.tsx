@@ -1,150 +1,111 @@
 
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ChevronDown, LayoutDashboard, MessageSquare, Settings, Users } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
 import { 
-  SidebarProvider, 
   Sidebar, 
-  SidebarHeader, 
   SidebarContent, 
-  SidebarFooter, 
-  SidebarTrigger, 
-  SidebarGroup, 
-  SidebarGroupLabel, 
-  SidebarMenu, 
-  SidebarMenuItem, 
-  SidebarMenuButton,
-  SidebarMenuSub,
-  SidebarMenuSubItem,
-  SidebarMenuSubButton
+  SidebarHeader, 
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarSeparator,
+  SidebarFooter
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ROUTES, SidebarSection } from "@/lib/constants";
-
-// Default sidebar configuration - this could be fetched from an API or context
-const SIDEBAR_CONFIG: SidebarSection[] = [
-  {
-    title: "Communication",
-    links: [
-      {
-        title: "Conversations",
-        href: ROUTES.CONVERSATIONS,
-        icon: MessageSquare,
-      },
-    ],
-  },
-  {
-    title: "Management",
-    links: [
-      {
-        title: "Users",
-        href: "#users",
-        icon: Users,
-      },
-      {
-        title: "Settings",
-        href: "#settings",
-        icon: Settings,
-      },
-    ],
-  },
-];
+import { Icon } from "@/components/ui/icon";
+import { Message, MessageSquare, User, LogOut, Settings } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { ROUTES } from "@/lib/constants";
 
 const AppSidebar = () => {
-  const { profile, signOut } = useAuth();
+  const [collapsed, setCollapsed] = useState(false);
+  const { user, profile, signOut } = useAuth();
   const location = useLocation();
   
-  return (
-    <SidebarProvider className="group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-sidebar">
-      <Sidebar className="border-r">
-        <SidebarHeader className="border-b">
-          <div className="flex items-center justify-between py-2">
-            <div className="flex items-center gap-2 pl-2">
-              <LayoutDashboard className="h-6 w-6" />
-              <h2 className="text-lg font-semibold">Dashboard</h2>
-            </div>
-            <SidebarTrigger />
-          </div>
-        </SidebarHeader>
-        
-        <SidebarContent>
-          {SIDEBAR_CONFIG.map((section, index) => (
-            <SidebarGroup key={index}>
-              <SidebarGroupLabel>{section.title}</SidebarGroupLabel>
-              <SidebarMenu>
-                {section.links.map((link) => {
-                  const isActive = location.pathname === link.href;
-                  const Icon = link.icon;
-                  
-                  return (
-                    <SidebarMenuItem key={link.title}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive}
-                        tooltip={link.title}
-                      >
-                        <Link to={link.href}>
-                          {Icon && <Icon className="h-4 w-4" />}
-                          <span>{link.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </SidebarGroup>
-          ))}
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
-          {/* Example of nested section with collapsible content */}
-          <SidebarGroup>
-            <SidebarGroupLabel>Advanced Features</SidebarGroupLabel>
-            <Collapsible>
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" size="sm" className="w-full flex items-center justify-between px-2">
-                  <span>Analytics</span>
-                  <ChevronDown className="h-4 w-4" />
+  // Get user initials for avatar fallback
+  const getInitials = () => {
+    if (profile?.username) {
+      return profile.username.substring(0, 2).toUpperCase();
+    }
+    if (user?.email) {
+      return user.email.substring(0, 2).toUpperCase();
+    }
+    return "U";
+  };
+
+  return (
+    <Sidebar 
+      defaultState="expanded" 
+      collapsible
+      side="left"
+      onStateChange={(state) => setCollapsed(state === "collapsed")}
+      className="border-r border-border"
+    >
+      <SidebarHeader className="flex items-center">
+        <Avatar className="w-8 h-8 mr-2">
+          <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.username || "User"} />
+          <AvatarFallback>{getInitials()}</AvatarFallback>
+        </Avatar>
+        <div className="flex flex-col text-left">
+          <span className="text-sm font-medium">{profile?.username || user?.email}</span>
+          <span className="text-xs text-muted-foreground">Online</span>
+        </div>
+      </SidebarHeader>
+      
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <Link to={ROUTES.CONVERSATIONS}>
+                <Button 
+                  variant="ghost" 
+                  className={`w-full justify-start ${location.pathname === ROUTES.CONVERSATIONS ? 'bg-accent text-accent-foreground' : ''}`}
+                >
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Conversations
                 </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton href="#reports">
-                      Reports
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                  <SidebarMenuSubItem>
-                    <SidebarMenuSubButton href="#dashboard">
-                      Dashboard
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                </SidebarMenuSub>
-              </CollapsibleContent>
-            </Collapsible>
-          </SidebarGroup>
-        </SidebarContent>
+              </Link>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
         
-        <SidebarFooter className="border-t">
-          <div className="p-2">
-            <div className="flex items-center gap-2 p-2">
-              <Avatar>
-                <AvatarImage src={profile?.avatar_url || undefined} />
-                <AvatarFallback>{profile?.username?.[0] || 'U'}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 overflow-hidden">
-                <p className="text-sm font-medium truncate">
-                  {profile?.username || 'User'}
-                </p>
-              </div>
-              <Button variant="ghost" size="sm" onClick={signOut}>
-                Logout
+        <SidebarSeparator />
+        
+        <SidebarGroup>
+          <SidebarGroupLabel>Settings</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <Button variant="ghost" className="w-full justify-start">
+                <User className="mr-2 h-4 w-4" />
+                Profile
               </Button>
-            </div>
-          </div>
-        </SidebarFooter>
-      </Sidebar>
-    </SidebarProvider>
+              <Button variant="ghost" className="w-full justify-start">
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </Button>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      
+      <SidebarFooter>
+        <Button 
+          variant="ghost" 
+          className="w-full justify-start text-red-500 hover:text-red-700 hover:bg-red-100"
+          onClick={handleSignOut}
+        >
+          <LogOut className="mr-2 h-4 w-4" />
+          Sign Out
+        </Button>
+      </SidebarFooter>
+    </Sidebar>
   );
 };
 

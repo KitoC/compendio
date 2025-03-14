@@ -7,6 +7,7 @@ export const ROUTES = {
   FORGOT_PASSWORD: "/forgot-password",
   RESET_PASSWORD: "/reset-password",
   CONVERSATIONS: "/conversations",
+  CONVERSATION_ASSISTANT: "/app/conversations/assistant",
   CONVERSATION_DETAIL: "/conversation/:id",
   REQUEST_ACCESS: "/request-access",
   ACCESS_PENDING: "/access-pending",

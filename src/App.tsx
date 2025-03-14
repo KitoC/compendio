@@ -20,6 +20,7 @@ import ConversationDetail from "./pages/ConversationDetail";
 import NotFound from "./pages/NotFound";
 import RequestAccess from "./pages/RequestAccess";
 import AccessPending from "./pages/AccessPending";
+import ConversationAssistant from "./pages/ConversationAssistant";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,11 @@ const AppContent = () => {
             <Route path={ROUTES.CONVERSATION_DETAIL} element={
               <AuthenticatedLayout>
                 <ConversationDetail />
+              </AuthenticatedLayout>
+            } />
+            <Route path={ROUTES.CONVERSATION_ASSISTANT} element={
+              <AuthenticatedLayout>
+                <ConversationAssistant />
               </AuthenticatedLayout>
             } />
             

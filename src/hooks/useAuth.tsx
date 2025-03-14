@@ -1,8 +1,8 @@
-
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/lib/constants';
 
 interface Profile {
   id: string;
@@ -27,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasTenant, setHasTenant] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Get initial session
@@ -44,13 +45,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
           checkTenantAccess(session.user.id);
           fetchProfile(session.user.id);
+          
+          // Redirect to assistant page on sign in
+          if (event === 'SIGNED_IN') {
+            navigate(ROUTES.CONVERSATION_ASSISTANT);
+          }
         } else {
           setProfile(null);
           setHasTenant(true);
@@ -62,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate]);
 
   const checkTenantAccess = async (userId: string) => {
     try {
@@ -118,6 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    navigate(ROUTES.AUTH);
   };
 
   const value = {
