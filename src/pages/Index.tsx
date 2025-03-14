@@ -1,15 +1,41 @@
 
 import React from 'react';
-import Navbar from '../components/Navbar';
-import Hero from '../components/Hero';
-import Footer from '../components/Footer';
+import { Link } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import Navbar from '@/components/Navbar';
+import Hero from '@/components/Hero';
+import Footer from '@/components/Footer';
+import { useAuth } from '@/hooks/useAuth';
+import { MessageSquare } from 'lucide-react';
 
 const Index: React.FC = () => {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <Navbar />
       <main>
         <Hero />
+        
+        {/* Call to Action Section for Conversations */}
+        {user && (
+          <section className="py-16 bg-primary/5">
+            <div className="max-w-7xl mx-auto px-6 text-center">
+              <div className="bg-white p-8 rounded-lg shadow-sm border">
+                <MessageSquare className="mx-auto h-12 w-12 text-primary mb-4" />
+                <h2 className="text-2xl font-bold mb-4">Start Collaborating Now</h2>
+                <p className="mb-6 text-muted-foreground max-w-xl mx-auto">
+                  Access your conversations and collaborate with your team in real-time.
+                </p>
+                <Button asChild size="lg">
+                  <Link to="/conversations">
+                    Go to My Conversations
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </section>
+        )}
         
         {/* Features section */}
         <section className="py-24 bg-white">
@@ -42,12 +68,10 @@ const Index: React.FC = () => {
                   )
                 },
                 {
-                  title: "Client Communication",
-                  description: "Message clients, send updates, and get approvals all within the app. Keep all communications in one place.",
+                  title: "Team Communication",
+                  description: "Message clients and team members, send updates, and get approvals all within the app.",
                   icon: (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
+                    <MessageSquare className="h-10 w-10 text-primary" />
                   )
                 }
               ].map((feature, index) => (
@@ -69,12 +93,27 @@ const Index: React.FC = () => {
         <section className="py-24 bg-gradient-to-b from-gray-50 to-white">
           <div className="max-w-7xl mx-auto px-6 text-center">
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-8">Ready to level up your trade business?</h2>
-            <a 
-              href="#getstarted" 
-              className="inline-flex items-center justify-center px-8 py-4 bg-primary text-white rounded-full shadow-lg hover:bg-primary/90 transition-colors font-medium text-lg"
-            >
-              Start Your Free Trial
-            </a>
+            {user ? (
+              <Button 
+                asChild
+                size="lg"
+                className="px-8 py-4 rounded-full shadow-lg font-medium text-lg"
+              >
+                <Link to="/conversations">
+                  Access Conversations
+                </Link>
+              </Button>
+            ) : (
+              <Button 
+                asChild
+                size="lg"
+                className="px-8 py-4 rounded-full shadow-lg font-medium text-lg"
+              >
+                <Link to="/auth">
+                  Start Your Free Trial
+                </Link>
+              </Button>
+            )}
             <p className="mt-4 text-sm text-muted-foreground">No credit card required. 14-day free trial.</p>
           </div>
         </section>

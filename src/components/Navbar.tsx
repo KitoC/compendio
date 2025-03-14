@@ -1,38 +1,131 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from '@/hooks/useAuth';
+import { LogOut, User, MessageSquare, Menu, X } from 'lucide-react';
 
 const Navbar: React.FC = () => {
+  const { user, signOut } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
   return (
-    <nav className="fixed w-full z-50 top-0 left-0 px-6 py-4 bg-transparent">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <div className="flex items-center">
-          <span className="text-xl font-display font-bold tracking-tight">
-            Messenger<span className="text-primary">Hub</span>
-          </span>
-        </div>
-        
-        <div className="hidden md:flex items-center space-x-8">
-          <a href="#features" className="text-sm font-medium hover:text-primary transition-colors">Features</a>
-          <a href="#about" className="text-sm font-medium hover:text-primary transition-colors">About</a>
-          <a href="#pricing" className="text-sm font-medium hover:text-primary transition-colors">Pricing</a>
-          <a href="#contact" className="text-sm font-medium hover:text-primary transition-colors">Contact</a>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          <a 
-            href="#getstarted" 
-            className="hidden md:inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary shadow-sm hover:bg-primary/90 transition-colors"
-          >
-            Get Started
-          </a>
-          <button className="md:hidden block p-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
+    <header className="bg-white border-b">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="flex justify-between items-center h-16">
+          <div className="flex items-center">
+            <Link to="/" className="font-display font-bold text-xl">
+              TradeStack
+            </Link>
+          </div>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex space-x-4">
+            <Link to="/" className="px-3 py-2 text-sm font-medium">Home</Link>
+            {user && (
+              <Link to="/conversations" className="px-3 py-2 text-sm font-medium">
+                Conversations
+              </Link>
+            )}
+          </nav>
+
+          {/* User Menu - Desktop */}
+          <div className="hidden md:flex items-center">
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative rounded-full">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Link to="/conversations" className="cursor-pointer">
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      <span>My Conversations</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={signOut} className="cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button asChild variant="default" size="sm">
+                <Link to="/auth">Sign In</Link>
+              </Button>
+            )}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <div className="md:hidden">
+            <Button variant="ghost" size="icon" onClick={toggleMobileMenu}>
+              {mobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </Button>
+          </div>
         </div>
       </div>
-    </nav>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-white pb-4 px-6">
+          <div className="space-y-1">
+            <Link 
+              to="/" 
+              className="block px-3 py-2 rounded-md text-base font-medium"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Home
+            </Link>
+            {user && (
+              <Link 
+                to="/conversations" 
+                className="block px-3 py-2 rounded-md text-base font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Conversations
+              </Link>
+            )}
+            {user ? (
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start px-3 py-2 rounded-md text-base font-medium"
+                onClick={() => {
+                  signOut();
+                  setMobileMenuOpen(false);
+                }}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Log out
+              </Button>
+            ) : (
+              <Link 
+                to="/auth" 
+                className="block px-3 py-2 rounded-md text-base font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Sign In
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+    </header>
   );
 };
 

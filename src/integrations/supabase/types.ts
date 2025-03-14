@@ -106,14 +106,64 @@ export type Database = {
           },
         ]
       }
+      conversation_participants: {
+        Row: {
+          conversation_id: string | null
+          created_at: string | null
+          deleted_at: string | null
+          id: string
+          joined_at: string | null
+          tenant_id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string
+          joined_at?: string | null
+          tenant_id: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string
+          joined_at?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_participants_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_conversation_participants_tenant"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           created_at: string
           deleted_at: string | null
           domain: string
+          icon: string | null
           id: string
           session_id: string | null
           tenant_id: string
+          title: string | null
           updated_at: string | null
           user_id: string
         }
@@ -121,9 +171,11 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           domain: string
+          icon?: string | null
           id?: string
           session_id?: string | null
           tenant_id: string
+          title?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -131,9 +183,11 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           domain?: string
+          icon?: string | null
           id?: string
           session_id?: string | null
           tenant_id?: string
+          title?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -422,6 +476,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          deleted_at: string | null
+          id: string
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          id: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
       }
       tempEmails: {
         Row: {
