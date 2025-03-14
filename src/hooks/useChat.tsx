@@ -6,8 +6,6 @@ import { IMessage, MessageRole, ChatMessage } from "@/types/chat";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
-const TENANT_ID = "35eb8c76-7ed5-4109-a520-99c7402d1f03";
-
 export interface ChatContextType {
   messages: IMessage[];
   isTyping: boolean;
@@ -40,7 +38,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, tenantId } = useAuth();
   
   // Convert database message to IMessage format
   const dbMessageToIMessage = useCallback((dbMessage: any): IMessage => {
@@ -57,6 +55,10 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
 
   // Convert IMessage to database message format
   const iMessageToDbMessage = useCallback((message: IMessage, convId: string) => {
+    if (!tenantId) {
+      throw new Error("No tenant ID available. Please ensure you are authenticated.");
+    }
+    
     return {
       id: message.id,
       conversation_id: convId,
@@ -66,9 +68,9 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         : message.content,
       metadata: {},
       user_id: user?.id,
-      tenant_id: TENANT_ID
+      tenant_id: tenantId
     };
-  }, [user]);
+  }, [user, tenantId]);
 
   // Load messages from the database
   const loadMessages = useCallback(async () => {
@@ -113,7 +115,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
 
   // Send message to AI
   const sendMessageToAI = useCallback(async (messagesToSend: IMessage[]) => {
-    if (!conversationId || !user) return null;
+    if (!conversationId || !user || !tenantId) return null;
     
     setIsStreaming(true);
     const newMessage: IMessage = {
@@ -184,7 +186,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         .from("messages")
         .insert({
           ...iMessageToDbMessage(finalMessage, conversationId),
-          tenant_id: TENANT_ID
         });
       
       setMessages((prev) =>
@@ -215,12 +216,12 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     } finally {
       setIsStreaming(false);
     }
-  }, [conversationId, iMessageToDbMessage, toast, user]);
+  }, [conversationId, iMessageToDbMessage, toast, user, tenantId]);
 
   // Handle sending a message
   const handleSendMessage = useCallback(
     async (content: string, role: MessageRole = MessageRole.USER) => {
-      if (!content.trim() || !conversationId || !user) return;
+      if (!content.trim() || !conversationId || !user || !tenantId) return;
       
       const newMessage: IMessage = {
         id: uuidv4(),
@@ -238,7 +239,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
           .from("messages")
           .insert({
             ...iMessageToDbMessage(newMessage, conversationId),
-            tenant_id: TENANT_ID
           });
         
         // Send the message to the AI
@@ -254,7 +254,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         setIsTyping(false);
       }
     },
-    [messages, conversationId, iMessageToDbMessage, sendMessageToAI, scrollToOptimalPosition, toast, user]
+    [messages, conversationId, iMessageToDbMessage, sendMessageToAI, scrollToOptimalPosition, toast, user, tenantId]
   );
 
   // Load messages on initial render and subscribe to new messages

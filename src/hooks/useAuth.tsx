@@ -1,3 +1,4 @@
+
 import {
   useState,
   useEffect,
@@ -22,6 +23,7 @@ interface AuthContextType {
   profile: Profile | null;
   isLoading: boolean;
   hasTenant: boolean;
+  tenantId: string | null;
   signOut: () => Promise<void>;
 }
 
@@ -33,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasTenant, setHasTenant] = useState(true);
+  const [tenantId, setTenantId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -62,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setProfile(null);
         setHasTenant(true);
+        setTenantId(null);
         setIsLoading(false);
       }
     });
@@ -89,14 +93,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Check if user is assigned to any tenant
       const { data: tenantUser } = await supabase
         .from("tenant_users")
-        .select("*")
+        .select("tenant_id")
         .eq("user_id", userId)
         .single();
 
-      setHasTenant(!!tenantUser);
+      if (tenantUser) {
+        setHasTenant(true);
+        setTenantId(tenantUser.tenant_id);
+      } else {
+        setHasTenant(false);
+        setTenantId(null);
+      }
     } catch (error) {
       console.error("Error checking tenant access:", error);
       setHasTenant(false);
+      setTenantId(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -118,8 +131,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -134,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profile,
     isLoading,
     hasTenant,
+    tenantId,
     signOut,
   };
 

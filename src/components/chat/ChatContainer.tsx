@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ export const ChatContainer = ({
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, tenantId } = useAuth();
   const navigate = useNavigate();
 
   // Use the ID from props or URL params
@@ -34,7 +35,7 @@ export const ChatContainer = ({
 
   useEffect(() => {
     const fetchOrCreateConversation = async () => {
-      if (!user) {
+      if (!user || !tenantId) {
         return;
       }
 
@@ -58,7 +59,7 @@ export const ChatContainer = ({
                 title: "New Conversation",
                 user_id: user.id,
                 domain: window.location.hostname,
-                tenant_id: "35eb8c76-7ed5-4109-a520-99c7402d1f03", // Default tenant ID
+                tenant_id: tenantId,
               };
 
               const { error: createError } = await supabase
@@ -94,7 +95,7 @@ export const ChatContainer = ({
     };
 
     fetchOrCreateConversation();
-  }, [conversationId, user, navigate, toast]);
+  }, [conversationId, user, tenantId, navigate, toast]);
 
   if (loading) {
     return (
@@ -105,7 +106,7 @@ export const ChatContainer = ({
     );
   }
 
-  if (!conversationId || !user) {
+  if (!conversationId || !user || !tenantId) {
     return (
       <Card className="flex flex-col items-center justify-center p-8 h-full">
         <p className="mb-4">No conversation selected or you need to sign in.</p>

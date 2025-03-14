@@ -39,11 +39,11 @@ const Conversations = () => {
   const [open, setOpen] = useState(false);
   const [newConversationTitle, setNewConversationTitle] = useState("");
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, tenantId } = useAuth();
   const navigate = useNavigate();
 
   const fetchConversations = async () => {
-    if (!user) return;
+    if (!user || !tenantId) return;
 
     try {
       const { data, error } = await supabase
@@ -84,7 +84,7 @@ const Conversations = () => {
   };
 
   const createConversation = async () => {
-    if (!newConversationTitle.trim() || !user) return;
+    if (!newConversationTitle.trim() || !user || !tenantId) return;
 
     try {
       // Create a new conversation with tenant_id
@@ -95,7 +95,7 @@ const Conversations = () => {
             title: newConversationTitle,
             user_id: user.id,
             domain: "default",
-            tenant_id: "35eb8c76-7ed5-4109-a520-99c7402d1f03", // Using default tenant ID
+            tenant_id: tenantId,
           })
           .select()
           .single();
@@ -110,7 +110,7 @@ const Conversations = () => {
         .insert({
           conversation_id: conversationData.id,
           user_id: user.id,
-          tenant_id: "35eb8c76-7ed5-4109-a520-99c7402d1f03", // Using default tenant ID
+          tenant_id: tenantId,
         });
 
       if (participantError) {
@@ -139,7 +139,7 @@ const Conversations = () => {
 
   useEffect(() => {
     fetchConversations();
-  }, [user]);
+  }, [user, tenantId]);
 
   return (
     <AuthRequired>

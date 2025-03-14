@@ -19,7 +19,7 @@ const ConversationDetail = () => {
   const [loading, setLoading] = useState(true);
   const [conversation, setConversation] = useState<any>(null);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, tenantId } = useAuth();
   const navigate = useNavigate();
 
   const fetchConversation = async () => {
@@ -99,7 +99,7 @@ const ConversationDetail = () => {
   };
 
   const sendMessage = async () => {
-    if (!message.trim() || !id || !user) return;
+    if (!message.trim() || !id || !user || !tenantId) return;
 
     try {
       // Create the message object with all required fields including tenant_id
@@ -109,7 +109,7 @@ const ConversationDetail = () => {
         role: "user",
         content: { text: message },
         metadata: {},
-        tenant_id: "35eb8c76-7ed5-4109-a520-99c7402d1f03", // Using default tenant ID
+        tenant_id: tenantId,
       };
 
       const { error } = await supabase.from("messages").insert([newMessage]);
@@ -154,7 +154,7 @@ const ConversationDetail = () => {
     return () => {
       supabase.removeChannel(subscription);
     };
-  }, [id, user]);
+  }, [id, user, tenantId]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
