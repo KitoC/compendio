@@ -568,31 +568,31 @@ export type Database = {
       }
       tenant_requests: {
         Row: {
-          company_name: string
           created_at: string | null
           id: string
           status: string
           updated_at: string | null
           user_email: string | null
           user_id: string
+          workspace: string
         }
         Insert: {
-          company_name: string
           created_at?: string | null
           id?: string
           status?: string
           updated_at?: string | null
           user_email?: string | null
           user_id: string
+          workspace: string
         }
         Update: {
-          company_name?: string
           created_at?: string | null
           id?: string
           status?: string
           updated_at?: string | null
           user_email?: string | null
           user_id?: string
+          workspace?: string
         }
         Relationships: []
       }
@@ -632,14 +632,17 @@ export type Database = {
         Row: {
           id: string
           name: string | null
+          workspace: string | null
         }
         Insert: {
           id?: string
           name?: string | null
+          workspace?: string | null
         }
         Update: {
           id?: string
           name?: string | null
+          workspace?: string | null
         }
         Relationships: []
       }
