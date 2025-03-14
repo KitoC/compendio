@@ -43,7 +43,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
   const { user } = useAuth();
   
   // Convert database message to IMessage format
-  const dbMessageToIMessage = useCallback((dbMessage: ChatMessage): IMessage => {
+  const dbMessageToIMessage = useCallback((dbMessage: any): IMessage => {
     return {
       id: dbMessage.id,
       role: dbMessage.role,
@@ -56,7 +56,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
   }, []);
 
   // Convert IMessage to database message format
-  const iMessageToDbMessage = useCallback((message: IMessage, convId: string): Partial<ChatMessage> => {
+  const iMessageToDbMessage = useCallback((message: IMessage, convId: string) => {
     return {
       id: message.id,
       conversation_id: convId,
@@ -86,7 +86,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       }
 
       if (data) {
-        setMessages(data.map(dbMessageToIMessage));
+        setMessages(data.map(msg => dbMessageToIMessage(msg)));
       }
     } catch (error: any) {
       toast({
@@ -182,7 +182,10 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       
       await supabase
         .from("messages")
-        .insert(iMessageToDbMessage(finalMessage, conversationId));
+        .insert({
+          ...iMessageToDbMessage(finalMessage, conversationId),
+          tenant_id: TENANT_ID
+        });
       
       setMessages((prev) =>
         prev.map((msg) =>
@@ -233,7 +236,10 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         // Save the user message to the database
         await supabase
           .from("messages")
-          .insert(iMessageToDbMessage(newMessage, conversationId));
+          .insert({
+            ...iMessageToDbMessage(newMessage, conversationId),
+            tenant_id: TENANT_ID
+          });
         
         // Send the message to the AI
         await sendMessageToAI([...messages, newMessage]);
@@ -269,7 +275,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
-          const newMessage = dbMessageToIMessage(payload.new as ChatMessage);
+          const newMessage = dbMessageToIMessage(payload.new);
           // Only add if it's not already in the messages array
           setMessages((prev) => {
             if (!prev.some(msg => msg.id === newMessage.id)) {

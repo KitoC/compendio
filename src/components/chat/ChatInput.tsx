@@ -1,5 +1,5 @@
 
-import { forwardRef, useState, KeyboardEvent } from "react";
+import { forwardRef, useState, KeyboardEvent, useEffect } from "react";
 import { MessageSquare, Send, Mic, X } from "lucide-react";
 import { IconButton } from "../ui/IconButton";
 import { CHAT_COMMANDS } from "@/lib/chat-commands";

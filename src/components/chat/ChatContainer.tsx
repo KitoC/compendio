@@ -55,6 +55,7 @@ export const ChatContainer = ({ conversationId: propConversationId, className }:
                 title: "New Conversation",
                 user_id: user.id,
                 domain: window.location.hostname,
+                tenant_id: "35eb8c76-7ed5-4109-a520-99c7402d1f03" // Default tenant ID
               };
               
               const { error: createError } = await supabase
