@@ -1,6 +1,6 @@
 
 import "./styles/main.css";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import ChatPage from "./pages/chat-page";
 import { AppConfigProvider } from "./contexts/appConfig";
 import { AIProvider } from "./contexts/ai";
@@ -8,7 +8,7 @@ import { ChatProvider } from "./contexts/chat";
 
 const App = () => {
   return (
-    <BrowserRouter>
+    <Router>
       <AppConfigProvider apiKey={""}>
         <AIProvider>
           <ChatProvider>
@@ -21,7 +21,7 @@ const App = () => {
           </ChatProvider>
         </AIProvider>
       </AppConfigProvider>
-    </BrowserRouter>
+    </Router>
   );
 };
 

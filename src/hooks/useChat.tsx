@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { IMessage, MessageRole, ChatMessage } from "@/types/chat";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { Json } from "@/integrations/supabase/types";
 
 export interface ChatContextType {
   messages: IMessage[];
@@ -60,16 +61,16 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     }
     
     // Format content as JSON-compatible object
-    const content = typeof message.content === 'string' 
+    const content: Json = typeof message.content === 'string' 
       ? { text: message.content } 
-      : message.content;
+      : message.content as Json;
       
     return {
       id: message.id,
       conversation_id: convId,
       role: message.role,
       content,
-      metadata: {},
+      metadata: {} as Json,
       user_id: user?.id,
       tenant_id: tenantId
     };

@@ -1,3 +1,4 @@
+
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -69,19 +70,25 @@ const AiIndicator = styled.span`
   display: inline-block;
 `;
 
+interface MarkdownProps {
+  className?: string;
+}
+
 const INDICATOR_PLACEHOLDER = "{{INDICATOR}}";
+
+interface RenderMarkdownProps {
+  message: string;
+  isUser: boolean;
+  theme: ThemeConfig;
+  isStreamedMessage?: boolean;
+}
 
 const RenderMarkdown = ({
   message,
   isUser,
   theme,
   isStreamedMessage,
-}: {
-  message: string;
-  isUser: boolean;
-  theme: ThemeConfig;
-  isStreamedMessage?: boolean;
-}) => {
+}: RenderMarkdownProps) => {
   const renderChildren = (children: React.ReactNode) => {
     // Handle null or undefined children
     if (!children) {
@@ -147,9 +154,9 @@ const RenderMarkdown = ({
             {renderChildren(children)}
           </StyledLink>
         ),
-        // @ts-expect-error - TODO: fix this
-        code: ({ inline, className, children }) => {
-          if (inline) {
+        code: ({ className, children, node, ...props }) => {
+          const isInline = !className;
+          if (isInline) {
             return (
               <InlineCode isUser={isUser}>
                 {renderChildren(children)}

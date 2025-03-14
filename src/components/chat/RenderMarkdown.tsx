@@ -1,3 +1,4 @@
+
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -72,8 +73,9 @@ const RenderMarkdown: React.FC<RenderMarkdownProps> = ({
             {renderChildren(children)}
           </a>
         ),
-        code: ({ node, inline, className, children, ...props }) => {
-          if (inline) {
+        code: ({ className, children, node, ...props }) => {
+          const isInline = !className;
+          if (isInline) {
             return (
               <code
                 className={clsx("px-2 py-0.5 rounded text-sm", {
