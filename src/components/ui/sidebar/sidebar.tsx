@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./context";
@@ -65,7 +64,7 @@ export const Sidebar = React.forwardRef<
       <TooltipProvider delayDuration={0}>
         <div
           ref={ref}
-          className="group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-sidebar"
+          className="group/sidebar-wrapper flex min-h-svh w-[--sidebar-width] has-[[data-variant=inset]]:bg-sidebar"
           {...props}
         >
           <div
