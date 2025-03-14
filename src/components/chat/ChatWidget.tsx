@@ -1,11 +1,10 @@
 
 import React, { useState } from "react";
-import { MessageCircle, X, Expand, Minimize, ArrowLeftFromLine } from "lucide-react";
+import { MessageCircle, X, Expand, Minimize } from "lucide-react";
 import { IconButton } from "../ui/IconButton";
 import ChatMessages from "./ChatMessages";
 import ChatFooter from "./ChatFooter";
 import { ChatProvider } from "@/hooks/useChat";
-import { v4 as uuidv4 } from "uuid";
 import { cn } from "@/lib/utils";
 
 type Position = "bottom-right" | "bottom-left" | "top-right" | "top-left" | "left" | "right";
@@ -14,14 +13,14 @@ interface ChatWidgetProps {
   position?: Position;
   defaultOpen?: boolean;
   defaultFullScreen?: boolean;
-  conversationId?: string;
+  conversationId: string;
 }
 
-const ChatWidget: React.FC<ChatWidgetProps> = ({
+export const ChatWidget: React.FC<ChatWidgetProps> = ({
   position = "bottom-right",
   defaultOpen = false,
   defaultFullScreen = false,
-  conversationId = uuidv4(),
+  conversationId,
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [isFullScreen, setIsFullScreen] = useState(defaultFullScreen);
@@ -111,7 +110,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
             <div className="flex justify-between items-center p-2 border-b dark:border-gray-700">
               <div className="flex items-center gap-2">
                 <MessageCircle className="w-5 h-5" />
-                <span className="font-medium">Chat Assistant</span>
+                <span className="font-medium">Website Builder Assistant</span>
               </div>
               <div className="flex items-center gap-1">
                 <IconButton
@@ -144,5 +143,3 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
     </div>
   );
 };
-
-export default ChatWidget;

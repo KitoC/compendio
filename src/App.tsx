@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AuthenticatedLayout from "@/components/layout/AuthenticatedLayout";
@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 import RequestAccess from "./pages/RequestAccess";
 import AccessPending from "./pages/AccessPending";
 import ChatPage from "./pages/ChatPage";
+import WebsiteBuilder from "./pages/WebsiteBuilder";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,14 @@ const AppContent = () => {
               element={
                 <AuthenticatedLayout>
                   <ChatPage />
+                </AuthenticatedLayout>
+              }
+            />
+            <Route
+              path={ROUTES.WEBSITE_BUILDER}
+              element={
+                <AuthenticatedLayout>
+                  <WebsiteBuilder />
                 </AuthenticatedLayout>
               }
             />
