@@ -9,7 +9,7 @@ export const ROUTES = {
   FORGOT_PASSWORD: "/forgot-password",
   RESET_PASSWORD: "/reset-password",
   CONVERSATIONS: "/app/conversations",
-  CONVERSATION_ASSISTANT: "/app/conversations/assistant",
+  CONVERSATION_ASSISTANT: "/app/conversations/general-assistant",
   CONVERSATION_DETAIL: "/app/conversation/:id",
   REQUEST_ACCESS: "/app/request-access",
   ACCESS_PENDING: "/app/access-pending",
@@ -26,15 +26,10 @@ export type SidebarItem = {
 // Configurable sidebar items
 export const sidebarItems: SidebarItem[] = [
   {
-    label: "Navigation",
+    label: "Assistants",
     children: [
       {
-        label: "Conversations",
-        url: ROUTES.CONVERSATIONS,
-        icon: MessageSquare,
-      },
-      {
-        label: "Assistant Chat",
+        label: "General Assistant",
         url: ROUTES.CONVERSATION_ASSISTANT,
         icon: MessageSquare,
       },

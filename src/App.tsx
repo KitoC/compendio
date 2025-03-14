@@ -1,9 +1,8 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AuthenticatedLayout from "@/components/layout/AuthenticatedLayout";
@@ -39,28 +38,33 @@ const AppContent = () => {
             <Route path={ROUTES.AUTH_CALLBACK} element={<AuthCallback />} />
             <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword />} />
             <Route path={ROUTES.RESET_PASSWORD} element={<ResetPassword />} />
-            
+
             {/* Protected routes with sidebar */}
-            <Route path={ROUTES.CONVERSATIONS} element={
-              <AuthenticatedLayout>
-                <Conversations />
-              </AuthenticatedLayout>
-            } />
-            <Route path={ROUTES.CONVERSATION_DETAIL} element={
-              <AuthenticatedLayout>
-                <ConversationDetail />
-              </AuthenticatedLayout>
-            } />
-            <Route path={ROUTES.CONVERSATION_ASSISTANT} element={
-              <AuthenticatedLayout>
-                <ConversationAssistant />
-              </AuthenticatedLayout>
-            } />
-            
+            <Route
+              path={ROUTES.CONVERSATIONS}
+              element={<Navigate to={ROUTES.CONVERSATION_ASSISTANT} />}
+            />
+            <Route
+              path={ROUTES.CONVERSATION_DETAIL}
+              element={
+                <AuthenticatedLayout>
+                  <ConversationDetail />
+                </AuthenticatedLayout>
+              }
+            />
+            <Route
+              path={ROUTES.CONVERSATION_ASSISTANT}
+              element={
+                <AuthenticatedLayout>
+                  <ConversationAssistant />
+                </AuthenticatedLayout>
+              }
+            />
+
             {/* Access request routes */}
             <Route path={ROUTES.REQUEST_ACCESS} element={<RequestAccess />} />
             <Route path={ROUTES.ACCESS_PENDING} element={<AccessPending />} />
-            
+
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
