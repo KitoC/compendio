@@ -10,12 +10,12 @@ import {
   SidebarGroupContent,
   SidebarMenu,
   SidebarSeparator,
-  SidebarFooter
+  SidebarFooter,
+  SidebarTrigger
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Icon } from "@/components/ui/icon";
-import { Message, MessageSquare, User, LogOut, Settings } from "lucide-react";
+import { MessageSquare, User, LogOut, Settings, Menu } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ROUTES } from "@/lib/constants";
 
@@ -40,72 +40,83 @@ const AppSidebar = () => {
   };
 
   return (
-    <Sidebar 
-      defaultState="expanded" 
-      collapsible
-      side="left"
-      onStateChange={(state) => setCollapsed(state === "collapsed")}
-      className="border-r border-border"
-    >
-      <SidebarHeader className="flex items-center">
-        <Avatar className="w-8 h-8 mr-2">
-          <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.username || "User"} />
-          <AvatarFallback>{getInitials()}</AvatarFallback>
-        </Avatar>
-        <div className="flex flex-col text-left">
-          <span className="text-sm font-medium">{profile?.username || user?.email}</span>
-          <span className="text-xs text-muted-foreground">Online</span>
+    <>
+      {/* Show trigger button when sidebar is collapsed */}
+      {collapsed && (
+        <div className="fixed top-4 left-4 z-50">
+          <SidebarTrigger>
+            <Menu className="h-6 w-6" />
+          </SidebarTrigger>
         </div>
-      </SidebarHeader>
+      )}
       
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <Link to={ROUTES.CONVERSATIONS}>
-                <Button 
-                  variant="ghost" 
-                  className={`w-full justify-start ${location.pathname === ROUTES.CONVERSATIONS ? 'bg-accent text-accent-foreground' : ''}`}
-                >
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  Conversations
+      <Sidebar 
+        defaultState="expanded" 
+        collapsible="offcanvas"
+        side="left"
+        onStateChange={(state) => setCollapsed(state === "collapsed")}
+        className="border-r border-border"
+      >
+        <SidebarHeader className="flex items-center">
+          <Avatar className="w-8 h-8 mr-2">
+            <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.username || "User"} />
+            <AvatarFallback>{getInitials()}</AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col text-left">
+            <span className="text-sm font-medium">{profile?.username || user?.email}</span>
+            <span className="text-xs text-muted-foreground">Online</span>
+          </div>
+        </SidebarHeader>
+        
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <Link to={ROUTES.CONVERSATIONS}>
+                  <Button 
+                    variant="ghost" 
+                    className={`w-full justify-start ${location.pathname === ROUTES.CONVERSATIONS ? 'bg-accent text-accent-foreground' : ''}`}
+                  >
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Conversations
+                  </Button>
+                </Link>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+          
+          <SidebarSeparator />
+          
+          <SidebarGroup>
+            <SidebarGroupLabel>Settings</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <Button variant="ghost" className="w-full justify-start">
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
                 </Button>
-              </Link>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                <Button variant="ghost" className="w-full justify-start">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </Button>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
         
-        <SidebarSeparator />
-        
-        <SidebarGroup>
-          <SidebarGroupLabel>Settings</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <Button variant="ghost" className="w-full justify-start">
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </Button>
-              <Button variant="ghost" className="w-full justify-start">
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </Button>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-      
-      <SidebarFooter>
-        <Button 
-          variant="ghost" 
-          className="w-full justify-start text-red-500 hover:text-red-700 hover:bg-red-100"
-          onClick={handleSignOut}
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          Sign Out
-        </Button>
-      </SidebarFooter>
-    </Sidebar>
+        <SidebarFooter>
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start text-red-500 hover:text-red-700 hover:bg-red-100"
+            onClick={handleSignOut}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+          </Button>
+        </SidebarFooter>
+      </Sidebar>
+    </>
   );
 };
 
