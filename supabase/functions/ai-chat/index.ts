@@ -109,21 +109,91 @@ serve(async (req: Request) => {
       );
     }
     
-    // Stream the response
+    // Process the streaming response from OpenAI
+    const transformStream = new TransformStream({
+      async transform(chunk, controller) {
+        try {
+          const text = new TextDecoder().decode(chunk);
+          // Split the text into lines
+          const lines = text.split('\n').filter(line => line.trim() !== '');
+          
+          for (const line of lines) {
+            // Each line starts with "data: " - remove that prefix
+            if (line.startsWith('data: ')) {
+              const data = line.substring(6);
+              
+              // Check if it's the end of the stream
+              if (data === '[DONE]') {
+                return;
+              }
+              
+              try {
+                // Parse the JSON data
+                const parsed = JSON.parse(data);
+                
+                // Extract just the content from the response
+                if (parsed.choices && 
+                    parsed.choices[0] && 
+                    parsed.choices[0].delta && 
+                    parsed.choices[0].delta.content) {
+                  // Send just the content
+                  controller.enqueue(new TextEncoder().encode(parsed.choices[0].delta.content));
+                }
+              } catch (e) {
+                console.error('Error parsing JSON:', e);
+                // If there's an error, just send the raw data
+                controller.enqueue(new TextEncoder().encode(data));
+              }
+            } else {
+              // Just in case there's other data
+              controller.enqueue(new TextEncoder().encode(line));
+            }
+          }
+        } catch (error) {
+          console.error('Error processing chunk:', error);
+          controller.error(error);
+        }
+      }
+    });
+    
     const reader = openaiResponse.body?.getReader();
+    if (!reader) {
+      return new Response(
+        JSON.stringify({ error: "Failed to read response body" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
     const stream = new ReadableStream({
       start(controller) {
-        const push = async () => {
-          const { done, value } = await reader!.read();
+        const pump = async () => {
+          const { done, value } = await reader.read();
           if (done) {
             controller.close();
             return;
           }
-          controller.enqueue(value);
-          push();
+          
+          // Use the transform stream to process the chunk
+          const processedChunk = await new Response(
+            new ReadableStream({
+              start(c) {
+                c.enqueue(value);
+                c.close();
+              }
+            })
+          ).arrayBuffer().then(buf => new Uint8Array(buf));
+          
+          const transformController = {
+            enqueue: (chunk) => controller.enqueue(chunk),
+            error: (err) => controller.error(err),
+          };
+          
+          await transformStream.transformer.transform(processedChunk, transformController);
+          pump();
         };
-        push();
-      },
+        
+        pump();
+      }
     });
     
     return new Response(stream, {
