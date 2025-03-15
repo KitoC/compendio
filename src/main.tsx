@@ -1,6 +1,5 @@
-
-import "core-js/stable";
 import "regenerator-runtime/runtime"; // Import regenerator runtime for Safari compatibility
+import "core-js/stable";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";

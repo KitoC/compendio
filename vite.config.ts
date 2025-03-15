@@ -59,14 +59,25 @@ export default defineConfig(({ mode, command }) => ({
         },
       },
     },
-    // Add target for older browsers
+    // Use a more compatible ES version for older browsers
     target: "es2017",
   },
-  // Add esbuild configuration for transpiling to ES2017
+  // Configure esbuild for optimal Safari support
   esbuild: {
     target: "es2017",
     supported: {
       "top-level-await": true,
+    },
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      target: "es2017",
+      supported: {
+        "top-level-await": true,
+      },
+      define: {
+        global: "globalThis",
+      },
     },
   },
 }));
