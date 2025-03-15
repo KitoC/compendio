@@ -1,4 +1,3 @@
-
 import { forwardRef, useState, KeyboardEvent, useEffect } from "react";
 import { SendHorizontal, X, AudioLines } from "lucide-react";
 import { IconButton } from "../ui/IconButton";
@@ -107,7 +106,7 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
               height: "auto",
               overflowY: "hidden",
               // Fix the TypeScript error by properly typing the CSS variable
-              ["--tw-ring-color" as string]: "transparent"
+              ["--tw-ring-color" as string]: "transparent",
             }}
             onInput={(e) => {
               const target = e.target as HTMLTextAreaElement;
@@ -121,6 +120,7 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
             variant="primary"
             size="lg"
             disabled={disabled}
+            className="h-[40px] w-[40px] min-h-[40px] min-w-[40px]"
             icon={
               !message.length ? (
                 <AudioLines className="h-5 w-5" /> // TODO: Add voice input functionality

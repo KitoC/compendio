@@ -1,4 +1,3 @@
-
 import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -46,8 +45,14 @@ const AppContent = () => {
                 <Route path={ROUTES.INDEX} element={<Index />} />
                 <Route path={ROUTES.AUTH} element={<Auth />} />
                 <Route path={ROUTES.AUTH_CALLBACK} element={<AuthCallback />} />
-                <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword />} />
-                <Route path={ROUTES.RESET_PASSWORD} element={<ResetPassword />} />
+                <Route
+                  path={ROUTES.FORGOT_PASSWORD}
+                  element={<ForgotPassword />}
+                />
+                <Route
+                  path={ROUTES.RESET_PASSWORD}
+                  element={<ResetPassword />}
+                />
 
                 {/* Protected routes with sidebar */}
                 <Route
@@ -66,19 +71,16 @@ const AppContent = () => {
                     </AuthenticatedLayout>
                   }
                 />
-                {/* Add specific predefined alias route */}
-                <Route
-                  path={ROUTES.CONVERSATION_ASSISTANT}
-                  element={
-                    <AuthenticatedLayout>
-                      <ChatPage />
-                    </AuthenticatedLayout>
-                  }
-                />
 
                 {/* Access request routes */}
-                <Route path={ROUTES.REQUEST_ACCESS} element={<RequestAccess />} />
-                <Route path={ROUTES.ACCESS_PENDING} element={<AccessPending />} />
+                <Route
+                  path={ROUTES.REQUEST_ACCESS}
+                  element={<RequestAccess />}
+                />
+                <Route
+                  path={ROUTES.ACCESS_PENDING}
+                  element={<AccessPending />}
+                />
 
                 {/* Catch-all */}
                 <Route path="*" element={<NotFound />} />

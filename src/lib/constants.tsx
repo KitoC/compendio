@@ -1,3 +1,4 @@
+import { BotIcon } from "lucide-react";
 
 export const ROUTES = {
   // Public routes
@@ -6,13 +7,13 @@ export const ROUTES = {
   AUTH_CALLBACK: "/auth/callback",
   FORGOT_PASSWORD: "/auth/forgot-password",
   RESET_PASSWORD: "/auth/reset-password",
-  
+
   // Protected routes
   DASHBOARD: "/dashboard",
   CONVERSATIONS: "/conversations",
   CONVERSATION: "/conversation", // Base path, will be followed by an ID or alias
   CONVERSATION_ASSISTANT: "/conversation/general-assistant", // Predefined alias for assistant chat
-  
+
   // Tenant management
   REQUEST_ACCESS: "/request-access",
   ACCESS_PENDING: "/access-pending",
@@ -23,11 +24,14 @@ export const API_BASE_URL = `${window.location.protocol}//${window.location.host
 // Sidebar navigation configuration
 export const sidebarItems = [
   {
-    label: "Conversations",
+    label: "My Agents",
     children: [
-      { label: "All Conversations", url: ROUTES.CONVERSATIONS },
-      { label: "Assistant Chat", url: ROUTES.CONVERSATION_ASSISTANT }
+      {
+        label: "General Assistant",
+        url: ROUTES.CONVERSATION_ASSISTANT,
+        icon: <BotIcon />,
+      },
     ],
   },
-  { label: "Dashboard", url: ROUTES.DASHBOARD },
+  // { label: "Dashboard", url: ROUTES.DASHBOARD },
 ];

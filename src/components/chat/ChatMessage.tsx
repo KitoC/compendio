@@ -33,7 +33,7 @@ const ChatMessage: FC<ChatMessageProps> = ({
         </Avatar>
       )} */}
       <div
-        className={clsx("p-2 flex-grow w-full rounded-lg", {
+        className={clsx("px-3 py-[3px] flex-grow w-full rounded-lg", {
           "bg-primary text-primary-foreground": isUser,
           "bg-muted dark:transparent dark:text-white": !isUser,
         })}

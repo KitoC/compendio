@@ -146,10 +146,12 @@ const Auth = () => {
           defaultValue={view}
           onValueChange={(v) => setView(v as "sign-in" | "sign-up")}
         >
-          <TabsList className="grid grid-cols-2 w-full">
-            <TabsTrigger value="sign-in">Sign In</TabsTrigger>
-            <TabsTrigger value="sign-up">Sign Up</TabsTrigger>
-          </TabsList>
+          <div className="px-6">
+            <TabsList className="grid grid-cols-2 w-full py-1">
+              <TabsTrigger value="sign-in">Sign In</TabsTrigger>
+              <TabsTrigger value="sign-up">Sign Up</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="sign-in">
             <form onSubmit={handleEmailSignIn}>
@@ -170,7 +172,7 @@ const Auth = () => {
                     <Label htmlFor="password">Password</Label>
                     <Link
                       to={ROUTES.FORGOT_PASSWORD}
-                      className="text-sm text-primary"
+                      className="text-sm text-primary flex items-center"
                     >
                       Forgot password?
                     </Link>
@@ -239,6 +241,7 @@ const Auth = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
+
                   <Input
                     id="signup-password"
                     type="password"

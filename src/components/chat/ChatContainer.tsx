@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -45,16 +44,19 @@ export const ChatContainer = ({
         // Check if conversation exists by ID or alias
         if (conversationIdOrAlias) {
           // Try to fetch by ID first (for UUID format)
-          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conversationIdOrAlias);
-          
+          const isUuid =
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+              conversationIdOrAlias
+            );
+
           let query = supabase.from("conversations").select("*");
-          
+
           if (isUuid) {
             query = query.eq("id", conversationIdOrAlias);
           } else {
             query = query.eq("alias", conversationIdOrAlias);
           }
-          
+
           const { data, error } = await query.single();
 
           if (error) {
@@ -64,13 +66,13 @@ export const ChatContainer = ({
                 // First check if this ID already exists to prevent duplicate key error
                 const { count, error: countError } = await supabase
                   .from("conversations")
-                  .select("id", { count: 'exact', head: true })
+                  .select("id", { count: "exact", head: true })
                   .eq("id", conversationIdOrAlias);
-                
+
                 if (countError) {
                   throw countError;
                 }
-                
+
                 // Only create with provided UUID if it doesn't exist
                 if (count === 0) {
                   const newConversation = {
@@ -90,16 +92,17 @@ export const ChatContainer = ({
                   if (createError) {
                     // If we hit a duplicate key error, fetch the existing conversation instead
                     if (createError.code === "23505") {
-                      const { data: existingData, error: fetchError } = await supabase
-                        .from("conversations")
-                        .select("*")
-                        .eq("id", conversationIdOrAlias)
-                        .single();
-                      
+                      const { data: existingData, error: fetchError } =
+                        await supabase
+                          .from("conversations")
+                          .select("*")
+                          .eq("id", conversationIdOrAlias)
+                          .single();
+
                       if (fetchError) {
                         throw fetchError;
                       }
-                      
+
                       setConversation(existingData as Conversation);
                     } else {
                       throw createError;
@@ -109,16 +112,17 @@ export const ChatContainer = ({
                   }
                 } else {
                   // If it exists (somehow), fetch it
-                  const { data: existingData, error: fetchError } = await supabase
-                    .from("conversations")
-                    .select("*")
-                    .eq("id", conversationIdOrAlias)
-                    .single();
-                  
+                  const { data: existingData, error: fetchError } =
+                    await supabase
+                      .from("conversations")
+                      .select("*")
+                      .eq("id", conversationIdOrAlias)
+                      .single();
+
                   if (fetchError) {
                     throw fetchError;
                   }
-                  
+
                   setConversation(existingData as Conversation);
                 }
               } else {
@@ -127,7 +131,7 @@ export const ChatContainer = ({
                 const newConversation = {
                   id: newId,
                   alias: conversationIdOrAlias,
-                  title: conversationIdOrAlias.replace(/-/g, ' '),
+                  title: conversationIdOrAlias.replace(/-/g, " "),
                   user_id: user.id,
                   domain: window.location.hostname,
                   tenant_id: tenantId,
@@ -142,16 +146,17 @@ export const ChatContainer = ({
                 if (createError) {
                   // If alias already exists, fetch it instead
                   if (createError.code === "23505") {
-                    const { data: existingData, error: fetchError } = await supabase
-                      .from("conversations")
-                      .select("*")
-                      .eq("alias", conversationIdOrAlias)
-                      .single();
-                    
+                    const { data: existingData, error: fetchError } =
+                      await supabase
+                        .from("conversations")
+                        .select("*")
+                        .eq("alias", conversationIdOrAlias)
+                        .single();
+
                     if (fetchError) {
                       throw fetchError;
                     }
-                    
+
                     setConversation(existingData as Conversation);
                   } else {
                     throw createError;
@@ -169,7 +174,7 @@ export const ChatContainer = ({
         } else {
           // Generate a new conversation ID and redirect
           const newId = uuidv4();
-          navigate(`${ROUTES.CONVERSATION}/${newId}`);
+          // navigate(`${ROUTES.CONVERSATION}/${newId}`);
         }
       } catch (error: any) {
         console.error("Error fetching/creating conversation:", error);
