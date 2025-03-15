@@ -1,5 +1,5 @@
 
-import { useChat } from "@/hooks/useChat";
+import { useChat } from "@/contexts/chat";
 import ChatInput from "./ChatInput";
 import { FormConfig } from "@/types/chat";
 

@@ -2,7 +2,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChatProvider } from "@/hooks/useChat";
+import { ChatProvider } from "@/contexts/chat";
 import ChatMessages from "./ChatMessages";
 import ChatFooter from "./ChatFooter";
 import { supabase } from "@/integrations/supabase/client";

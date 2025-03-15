@@ -4,7 +4,7 @@ import { MessageCircle, X, Expand, Minimize, ArrowLeftFromLine } from "lucide-re
 import { IconButton } from "../ui/IconButton";
 import ChatMessages from "./ChatMessages";
 import ChatFooter from "./ChatFooter";
-import { ChatProvider } from "@/hooks/useChat";
+import { ChatProvider } from "@/contexts/chat";
 import { v4 as uuidv4 } from "uuid";
 import { cn } from "@/lib/utils";
 

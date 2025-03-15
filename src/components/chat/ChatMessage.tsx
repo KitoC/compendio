@@ -1,6 +1,6 @@
 
 import { FC, useRef } from "react";
-import { useChat } from "@/hooks/useChat";
+import { useChat } from "@/contexts/chat";
 import { IMessage, MessageRole } from "@/types/chat";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import clsx from "clsx";
