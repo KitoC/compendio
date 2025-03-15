@@ -1,69 +1,79 @@
-import {
-  atom,
-  useAtom,
-  useSetAtom,
-} from 'jotai'
-import { useCallback } from 'react'
 
-const toastAtom = atom<
-  {
-    id: string
-    title?: string
-    description?: string
-    action?: React.ReactNode
-    duration?: number
-    variant?: 'default' | 'destructive'
-  }[]
->([])
+import React from 'react';
+import { atom, useAtom, useSetAtom } from 'jotai';
+import { useCallback } from 'react';
+
+// Define a type for toast items
+type ToastItem = {
+  id: string;
+  title?: string;
+  description?: string;
+  action?: React.ReactNode;
+  duration?: number;
+  variant?: 'default' | 'destructive';
+};
+
+const toastAtom = atom<ToastItem[]>([]);
 
 function useToast() {
-  const [toasts, setToasts] = useAtom(toastAtom)
+  const [toasts, setToasts] = useAtom(toastAtom);
 
   const addToast = useCallback(
-    (toast: {
-      id: string
-      title?: string
-      description?: string
-      action?: React.ReactNode
-      duration?: number
-      variant?: 'default' | 'destructive'
-    }) => {
-      setToasts((prevToasts) => [...prevToasts, toast])
+    (toast: ToastItem) => {
+      setToasts((prevToasts) => [...prevToasts, toast]);
     },
     [setToasts]
-  )
+  );
 
   const dismissToast = useCallback(
     (id: string) => {
-      setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id))
+      setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id));
     },
     [setToasts]
-  )
+  );
+
+  // Add toast methods directly to the returned object
+  const toast = {
+    success: (message: string, title?: string) => {
+      return showToast({
+        title: title || "Success",
+        description: message,
+      });
+    },
+    error: (message: string, title?: string) => {
+      return showToast({
+        title: title || "Error",
+        description: message,
+        variant: "destructive",
+      });
+    }
+  };
 
   return {
     toasts,
     addToast,
     dismissToast,
-  }
+    toast, // Include toast methods
+  };
 }
 
 function useToastAction() {
-  return useSetAtom(toastAtom)
+  return useSetAtom(toastAtom);
 }
 
-let count = 0
+let count = 0;
 function genId() {
-  return `toast-${count++}`
+  return `toast-${count++}`;
 }
 
 type ToastProps = {
-  id?: string
-  title?: string
-  description?: string
-  action?: React.ReactNode
-  duration?: number
-  variant?: 'default' | 'destructive'
-}
+  id?: string;
+  title?: string;
+  description?: string;
+  action?: React.ReactNode;
+  duration?: number;
+  variant?: 'default' | 'destructive';
+};
 
 function showToast({
   id = genId(),
@@ -82,15 +92,15 @@ function showToast({
     variant,
     promise: new Promise<void>((resolve) => {
       // eslint-disable-next-line @typescript-eslint/no-empty-function
-      let dismiss = () => {}
+      let dismiss = () => {};
 
       function Toast() {
-        const { addToast, dismissToast } = useToast()
+        const { addToast, dismissToast } = useToast();
 
         dismiss = () => {
-          dismissToast(id)
-          resolve()
-        }
+          dismissToast(id);
+          resolve();
+        };
 
         React.useEffect(() => {
           addToast({
@@ -100,30 +110,28 @@ function showToast({
             action,
             duration,
             variant,
-          })
+          });
 
           const timer = setTimeout(() => {
-            dismissToast(id)
-            resolve()
-          }, duration)
+            dismissToast(id);
+            resolve();
+          }, duration);
 
           return () => {
-            clearTimeout(timer)
-          }
-        }, [id, title, description, action, duration, variant, addToast, dismissToast])
+            clearTimeout(timer);
+          };
+        }, [id, title, description, action, duration, variant, addToast, dismissToast]);
 
-        return null
+        return null;
       }
 
-      Toast.displayName = 'Toast'
+      Toast.displayName = 'Toast';
     }),
-  }
+  };
 }
 
-export { useToast, useToastAction, showToast }
-
-// Add a new error toast function to the export
-export const toast = {
+// Export the standalone toast functions for convenience
+const toast = {
   success: (message: string, title?: string) => {
     return showToast({
       title: title || "Success",
@@ -136,5 +144,7 @@ export const toast = {
       description: message,
       variant: "destructive",
     });
-  },
-}
+  }
+};
+
+export { useToast, useToastAction, showToast, toast };
