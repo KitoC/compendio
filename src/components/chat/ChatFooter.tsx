@@ -15,7 +15,7 @@ const ChatFooter = () => {
   }
 
   return (
-    <div className="dark:bg-gray-800 p-2 z-10">
+    <div className="p-2 z-10">
       <ChatInput
         ref={inputRef}
         onSendMessage={handleSendMessage}
@@ -24,5 +24,7 @@ const ChatFooter = () => {
     </div>
   );
 };
+
+ChatFooter.displayName = "ChatFooter";
 
 export default ChatFooter;

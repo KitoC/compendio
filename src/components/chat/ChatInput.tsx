@@ -1,5 +1,5 @@
 import { forwardRef, useState, KeyboardEvent, useEffect } from "react";
-import { Send, Mic, X } from "lucide-react";
+import { SendHorizontal, X, AudioLines } from "lucide-react";
 import { IconButton } from "../ui/IconButton";
 import { CHAT_COMMANDS } from "@/lib/chat-commands";
 import { CommandSuggestions } from "./CommandSuggestions";
@@ -100,11 +100,12 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
             disabled={disabled}
-            className="flex-1 resize-none min-h-[40px] max-h-[120px] py-2 px-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-800 dark:border-gray-600"
+            className="flex-1 resize-none min-h-[40px] max-h-[120px] py-2 px-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-transparent border-none"
             rows={1}
             style={{
               height: "auto",
               overflowY: "hidden",
+              "--tw-ring-color": "transparent",
             }}
             onInput={(e) => {
               const target = e.target as HTMLTextAreaElement;
@@ -118,17 +119,14 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
             variant="primary"
             size="lg"
             disabled={disabled}
-          >
-            {!message.length ? (
-              voiceEnabled ? (
-                <X className="h-5 w-5" />
+            icon={
+              !message.length ? (
+                <AudioLines className="h-5 w-5" /> // TODO: Add voice input functionality
               ) : (
-                <Mic className="h-5 w-5" />
+                <SendHorizontal className="h-5 w-5 -rotate-90" />
               )
-            ) : (
-              <Send className="h-5 w-5" />
-            )}
-          </IconButton>
+            }
+          />
         </div>
       </form>
     );

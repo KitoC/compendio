@@ -1,4 +1,3 @@
-
 import React from "react";
 import { VariantProps, cva } from "class-variance-authority";
 import { Loader2 } from "lucide-react";
@@ -10,10 +9,13 @@ const iconButtonVariants = cva(
     variants: {
       variant: {
         primary: "bg-primary text-primary-foreground hover:bg-primary/90",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/90",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         ghost: "hover:bg-accent hover:text-accent-foreground",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        outline:
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
       },
       size: {
         sm: "h-8 w-8",
@@ -57,9 +59,13 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
     },
     ref
   ) => {
+    console.log("icon", icon);
     return (
       <button
-        className={cn(iconButtonVariants({ variant, size, rounded }), className)}
+        className={cn(
+          iconButtonVariants({ variant, size, rounded }),
+          className
+        )}
         ref={ref}
         disabled={isLoading || disabled}
         {...props}
@@ -69,11 +75,13 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
         ) : externalIcon ? (
           icon
         ) : (
-          <span className={cn({
-            "h-4 w-4": size === "sm",
-            "h-5 w-5": size === "md",
-            "h-6 w-6": size === "lg",
-          })}>
+          <span
+            className={cn("flex items-center justify-center", {
+              "h-4 w-4": size === "sm",
+              "h-5 w-5": size === "md",
+              "h-6 w-6": size === "lg",
+            })}
+          >
             {icon}
           </span>
         )}

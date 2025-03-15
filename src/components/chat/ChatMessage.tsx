@@ -1,4 +1,3 @@
-
 import { FC, useRef } from "react";
 import { useChat } from "@/contexts/chat";
 import { IMessage, MessageRole } from "@/types/chat";
@@ -20,23 +19,23 @@ const ChatMessage: FC<ChatMessageProps> = ({
   const isUser = message.role === "user";
 
   return (
-    <div 
+    <div
       className={clsx("flex mb-4 w-fit", {
         "flex-row-reverse ml-auto": isUser,
         "flex-row": !isUser,
       })}
       ref={messageRef}
     >
-      {!isUser && (
+      {/* {!isUser && (
         <Avatar className="h-10 w-10 mr-3 flex-shrink-0">
           <AvatarImage src="/placeholder.svg" alt="AI" />
           <AvatarFallback>AI</AvatarFallback>
         </Avatar>
-      )}
+      )} */}
       <div
         className={clsx("p-2 flex-grow w-full rounded-lg", {
           "bg-primary text-primary-foreground": isUser,
-          "bg-muted dark:bg-gray-700 dark:text-white": !isUser,
+          "bg-muted dark:transparent dark:text-white": !isUser,
         })}
       >
         <RenderMarkdown
