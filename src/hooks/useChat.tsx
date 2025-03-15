@@ -1,3 +1,4 @@
+
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "@/integrations/supabase/client";
@@ -137,24 +138,24 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
       }));
       
-      // Call the edge function using the correct URL
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-          },
-          body: JSON.stringify({
-            conversation_id: conversationId,
-            messages: formattedMessages
-          }),
-        }
-      );
+      // Call the edge function with the proper URL
+      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
+      
+      const response = await fetch(functionUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        },
+        body: JSON.stringify({
+          conversation_id: conversationId,
+          messages: formattedMessages
+        }),
+      });
       
       if (!response.ok) {
         const errorText = await response.text();
+        console.error(`AI chat error (${response.status}):`, errorText);
         throw new Error(`AI chat error: ${errorText}`);
       }
       
