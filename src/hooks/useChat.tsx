@@ -183,29 +183,42 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         throw new Error(`AI chat error: ${errorText}`);
       }
       
+      // Initialize content variable to collect streamed response
       let content = "";
+      const reader = response.body?.getReader();
       
+      if (!reader) {
+        throw new Error("Failed to get response reader");
+      }
+      
+      // Process the streamed response
       while (true) {
-        const { done, value } = await response.body?.getReader().read();
+        const { done, value } = await reader.read();
         if (done) break;
         
+        // Decode the chunk and add it to our content
         const chunk = new TextDecoder().decode(value);
         content += chunk;
         
+        // Update the message with the current accumulated content
         setMessages((prev) =>
           prev.map((msg) =>
-            msg.id === newMessage.id ? { ...msg, content } : msg
+            msg.id === newMessage.id ? { ...msg, content, loading: true } : msg
           )
         );
+        
+        // Scroll to show the latest content
+        scrollToOptimalPosition();
       }
       
+      // Once streaming is complete, finalize the message
       const finalMessage = {
-        id: newMessage.id,
-        role: MessageRole.ASSISTANT,
+        ...newMessage,
         content,
         loading: false,
       };
       
+      // Save the complete message to the database
       await supabase
         .from("messages")
         .insert({
@@ -218,6 +231,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
           tenant_id: tenantId
         });
       
+      // Update the UI with the final message
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === newMessage.id ? finalMessage : msg

@@ -1,41 +1,15 @@
 
 import { FC, useRef } from "react";
 import { useChat } from "@/hooks/useChat";
-import { IMessage, MessageRole, FormConfig } from "@/types/chat";
+import { IMessage, MessageRole } from "@/types/chat";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import clsx from "clsx";
-import { FormBuilder } from "./FormBuilder";
 import RenderMarkdown from "./RenderMarkdown";
 
 interface ChatMessageProps {
   message: IMessage;
   isLastMessage?: boolean;
 }
-
-const mutateFormConfig = (
-  formConfig: FormConfig,
-  handleSendMessage: (message: string) => void
-) => {
-  return {
-    ...formConfig,
-    buttons: formConfig?.buttons?.map((button) => ({
-      ...button,
-      text: button.text.trim(),
-      onClick: () => {
-        handleSendMessage(button.text);
-      },
-    })),
-    options: formConfig?.options?.map((option) => ({
-      ...option,
-      onClick: () => {
-        handleSendMessage(option.name);
-      },
-    })),
-    onSubmit: (formattedMessage: string) => {
-      handleSendMessage(`${formattedMessage}`);
-    },
-  };
-};
 
 const ChatMessage: FC<ChatMessageProps> = ({
   message,
@@ -44,20 +18,6 @@ const ChatMessage: FC<ChatMessageProps> = ({
   const { handleSendMessage } = useChat();
   const messageRef = useRef<HTMLDivElement>(null);
   const isUser = message.role === "user";
-
-  if (message.role === "form" && isLastMessage) {
-    return (
-      <FormBuilder
-        loading={message.loading}
-        formConfig={mutateFormConfig(
-          message.content as FormConfig,
-          handleSendMessage
-        )}
-      />
-    );
-  }
-
-  if (message.role === "form") return null;
 
   return (
     <div 
