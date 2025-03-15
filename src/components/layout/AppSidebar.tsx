@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -15,15 +15,26 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { sidebarItems } from "@/lib/constants";
+import { ROUTES } from "@/lib/constants";
 import { useSidebar } from "@/components/ui/sidebar/context";
 import { useEffect } from "react";
 import clsx from "clsx";
+import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
 
 const AppSidebar = () => {
   const { user, profile, signOut } = useAuth();
+  const { aiAgents } = useAiAgents();
   const { toggleSidebar } = useSidebar();
 
+  const sidebarItems = [
+    {
+      label: "Agents",
+      children: aiAgents.map((agent) => ({
+        label: agent.human_name || agent.name,
+        url: `${ROUTES.CONVERSATION}/${agent.id}`,
+      })),
+    },
+  ];
   // Listen for custom event to toggle sidebar from the header
   useEffect(() => {
     const handleToggleSidebar = () => {

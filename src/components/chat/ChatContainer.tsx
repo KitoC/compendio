@@ -174,7 +174,7 @@ export const ChatContainer = ({
         } else {
           // Generate a new conversation ID and redirect
           const newId = uuidv4();
-          // navigate(`${ROUTES.CONVERSATION}/${newId}`);
+          navigate(`${ROUTES.CONVERSATION}/${newId}`);
         }
       } catch (error: any) {
         console.error("Error fetching/creating conversation:", error);
