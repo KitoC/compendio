@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -58,8 +59,10 @@ export default defineConfig(({ mode, command }) => ({
         },
       },
     },
+    // Use a more compatible ES version for older browsers
     target: "es2017",
   },
+  // Configure esbuild for optimal Safari support
   esbuild: {
     target: "es2017",
     supported: {
@@ -67,7 +70,6 @@ export default defineConfig(({ mode, command }) => ({
     },
   },
   optimizeDeps: {
-    include: ["regenerator-runtime/runtime"],
     esbuildOptions: {
       target: "es2017",
       supported: {
