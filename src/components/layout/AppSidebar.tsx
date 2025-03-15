@@ -40,8 +40,14 @@ const AppSidebar = () => {
     };
   }, [toggleSidebar]);
   
-  const handleSignOut = async () => {
-    await signOut();
+  const handleSignOut = async (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent default button behavior
+    console.log("Sign out button clicked");
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Error in handleSignOut:", error);
+    }
   };
 
   // Get user initials for avatar fallback

@@ -1,4 +1,5 @@
 
+
 // Define window.__ENV__ type
 interface WindowWithEnv extends Window {
   __ENV__?: {
@@ -31,3 +32,24 @@ export const getSupabaseUrl = () => {
   console.error("Could not find Supabase URL in environment variables or window.__ENV__");
   return "https://zgtukvtbfucrvdpicvxx.supabase.co"; // Fallback to hardcoded URL as last resort
 };
+
+/**
+ * Properly cleans up localStorage items related to Supabase auth
+ * to ensure a complete signout
+ */
+export const cleanupSupabaseAuth = () => {
+  // Clear Supabase-related localStorage items
+  const keysToRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && (key.startsWith('sb-') || key.includes('supabase'))) {
+      keysToRemove.push(key);
+    }
+  }
+
+  // Remove the collected keys
+  keysToRemove.forEach(key => localStorage.removeItem(key));
+  
+  console.log('Cleaned up Supabase auth data from localStorage');
+};
+

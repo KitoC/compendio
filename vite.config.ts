@@ -57,8 +57,6 @@ export default defineConfig(({ mode, command }) => ({
             ? "assets/chat-widget.[hash].js"
             : "assets/[name].[hash].js";
         },
-        // Disable manualChunks to prevent chunking issues
-        manualChunks: undefined
       },
     },
     minify: true,
@@ -72,12 +70,12 @@ export default defineConfig(({ mode, command }) => ({
   },
   optimizeDeps: {
     include: [
-      "regenerator-runtime/runtime", 
-      "react", 
-      "react-dom", 
-      "react-router-dom",
-      "@supabase/supabase-js",
-      "@tanstack/react-query"
+      'regenerator-runtime/runtime', 
+      'react', 
+      'react-dom', 
+      'react-router-dom',
+      '@supabase/supabase-js',
+      '@tanstack/react-query'
     ],
     esbuildOptions: {
       target: "es2017",

@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/lib/constants";
+import { cleanupSupabaseAuth } from "@/utils/supabaseUtils";
 
 interface Profile {
   id: string;
@@ -56,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state change event:", event);
       setSession(session);
       setUser(session?.user ?? null);
 
@@ -135,8 +137,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    navigate(ROUTES.AUTH);
+    console.log("Signing out...");
+    try {
+      // First, sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error("Supabase signOut error:", error);
+        throw error;
+      }
+      
+      // Clean up any remaining auth data in localStorage
+      cleanupSupabaseAuth();
+      
+      // Clear local state
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      setHasTenant(true);
+      setTenantId(null);
+      
+      console.log("Successfully signed out, redirecting to auth page");
+      
+      // Force redirect to auth page
+      navigate(ROUTES.AUTH, { replace: true });
+    } catch (error) {
+      console.error("Error during sign out:", error);
+      // Still try to redirect even if there was an error
+      navigate(ROUTES.AUTH, { replace: true });
+    }
   };
 
   const value = {
@@ -159,3 +188,4 @@ export function useAuth() {
   }
   return context;
 }
+
