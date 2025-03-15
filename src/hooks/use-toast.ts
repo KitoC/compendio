@@ -32,7 +32,7 @@ function useToast() {
     [setToasts]
   );
 
-  // Add toast methods directly to the returned object
+  // Create toast methods
   const toast = {
     success: (message: string, title?: string) => {
       return showToast({
@@ -46,6 +46,10 @@ function useToast() {
         description: message,
         variant: "destructive",
       });
+    },
+    // Added a more generic method for other toast scenarios
+    show: (options: Omit<ToastProps, "id">) => {
+      return showToast(options);
     }
   };
 
@@ -130,7 +134,7 @@ function showToast({
   };
 }
 
-// Export the standalone toast functions for convenience
+// Export standalone toast functions for direct import
 const toast = {
   success: (message: string, title?: string) => {
     return showToast({
@@ -144,6 +148,9 @@ const toast = {
       description: message,
       variant: "destructive",
     });
+  },
+  show: (options: Omit<ToastProps, "id">) => {
+    return showToast(options);
   }
 };
 

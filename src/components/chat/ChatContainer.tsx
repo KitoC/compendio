@@ -173,11 +173,7 @@ export const ChatContainer = ({
         }
       } catch (error: any) {
         console.error("Error fetching/creating conversation:", error);
-        toast({
-          title: "Error",
-          description: error.message || "Failed to load conversation",
-          variant: "destructive",
-        });
+        toast.error(error.message || "Failed to load conversation");
       } finally {
         setLoading(false);
       }

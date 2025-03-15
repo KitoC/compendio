@@ -119,11 +119,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       }
     } catch (error: any) {
       console.error("Error loading messages:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to load messages",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to load messages");
     }
   }, [conversationId, dbMessageToIMessage, toast]);
 
@@ -231,11 +227,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       return finalMessage;
     } catch (error: any) {
       console.error("Error in sendMessageToAI:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to get AI response",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to get AI response");
       
       setMessages((prev) =>
         prev.map((msg) =>
@@ -282,11 +274,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         await sendMessageToAI([...messages, newMessage]);
       } catch (error: any) {
         console.error(error);
-        toast({
-          title: "Error",
-          description: error.message || "Failed to send message",
-          variant: "destructive",
-        });
+        toast.error(error.message || "Failed to send message");
       } finally {
         setIsTyping(false);
       }

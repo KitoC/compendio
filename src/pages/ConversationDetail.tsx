@@ -56,20 +56,12 @@ const ConversationDetail = () => {
       }
 
       if (!participantData || participantData.length === 0) {
-        toast({
-          title: "Access Denied",
-          description: "You are not a participant in this conversation.",
-          variant: "destructive",
-        });
+        toast.error("You are not a participant in this conversation.");
         navigate(ROUTES.CONVERSATIONS);
         return;
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to load conversation",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to load conversation");
       navigate(ROUTES.CONVERSATIONS);
     }
   };
@@ -94,11 +86,7 @@ const ConversationDetail = () => {
         setMessages(typedMessages);
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to load messages",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to load messages");
     } finally {
       setLoading(false);
     }
@@ -127,11 +115,7 @@ const ConversationDetail = () => {
       setMessage("");
       fetchMessages();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to send message",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to send message");
     }
   };
 
