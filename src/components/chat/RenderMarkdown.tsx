@@ -1,3 +1,4 @@
+
 import { FC } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -26,13 +27,18 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
     <div 
       className={`prose-sm max-w-none dark:prose-invert ${
         isStreamedMessage ? "streamed-message" : ""
-      } ${isMobile ? "text-sm" : ""}`}
+      } ${isMobile ? "text-sm" : ""} safari-text-rendering-fix`}
+      style={{
+        // Apply Safari-specific style fixes
+        WebkitTextSizeAdjust: "100%",
+        WebkitFontSmoothing: "antialiased",
+      }}
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
           p: ({ children }) => {
-            return <p className="my-1">{children}</p>;
+            return <p className="my-1 break-words">{children}</p>;
           },
           a: ({ href, children }) => (
             <a
@@ -55,7 +61,7 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
                     isUser
                       ? "bg-primary-foreground/20 text-primary-foreground"
                       : "bg-muted text-muted-foreground"
-                  }`}
+                  } safari-inline-code-fix`}
                   {...props}
                 >
                   {children}
@@ -70,17 +76,18 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
                   isUser
                     ? "bg-primary-foreground/20"
                     : "bg-muted"
-                }`}
+                } safari-code-block-fix`}
+                style={{ WebkitOverflowScrolling: "touch" }}
               >
                 <code className={className}>{children}</code>
               </pre>
             );
           },
           ul: ({ children }) => (
-            <ul className="list-disc pl-4 my-2">{children}</ul>
+            <ul className="list-disc pl-4 my-2 safari-list-fix">{children}</ul>
           ),
           ol: ({ children }) => (
-            <ol className="list-decimal pl-4 my-2">{children}</ol>
+            <ol className="list-decimal pl-4 my-2 safari-list-fix">{children}</ol>
           ),
           li: ({ children }) => <li className="mb-1">{children}</li>,
           blockquote: ({ children }) => (
@@ -89,7 +96,7 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
                 isUser
                   ? "border-primary-foreground/50 bg-primary-foreground/10"
                   : "border-muted bg-muted/50"
-              }`}
+              } safari-blockquote-fix`}
             >
               {children}
             </blockquote>

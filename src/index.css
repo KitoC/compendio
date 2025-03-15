@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
@@ -77,6 +78,33 @@
     @apply bg-background text-foreground font-sans antialiased;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Safari-specific body fixes */
+    position: relative;
+    height: 100%;
+    width: 100%;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Fix for Safari input appearance */
+  input, textarea, select, button {
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 0;
+    font-family: inherit;
+  }
+  
+  /* Ensure proper tap target sizes for mobile Safari */
+  button, [role="button"], a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Fix for Safari flex issues */
+  .flex {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
   }
 }
 
@@ -115,6 +143,39 @@
   .device-screen {
     @apply overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50;
   }
+  
+  /* Safari-specific fixes */
+  .safari-card-fix {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  
+  .safari-overflow-fix {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .safari-text-rendering-fix {
+    text-rendering: optimizeLegibility;
+  }
+  
+  .safari-inline-code-fix {
+    word-break: break-word;
+  }
+  
+  .safari-code-block-fix {
+    -webkit-overflow-scrolling: touch;
+    -webkit-text-size-adjust: 100%;
+  }
+  
+  .safari-list-fix {
+    -webkit-padding-start: 1rem;
+  }
+  
+  .safari-blockquote-fix {
+    -webkit-margin-start: 0;
+  }
 }
 
 @keyframes line-draw {
@@ -140,5 +201,32 @@
   }
   50% {
     transform: translateY(-10px);
+  }
+}
+
+/* Safari-specific keyframes fixes */
+@-webkit-keyframes line-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@-webkit-keyframes scale-in {
+  0% {
+    -webkit-transform: scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    -webkit-transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@-webkit-keyframes rotate-node {
+  0%, 100% {
+    -webkit-transform: translateY(0);
+  }
+  50% {
+    -webkit-transform: translateY(-10px);
   }
 }

@@ -51,7 +51,7 @@ const renderApp = () => {
   }
 };
 
-// Ensure the viewport is properly set for mobile devices
+// Ensure the viewport is properly set for mobile devices and Safari
 const setMobileViewport = () => {
   let viewportMeta = document.querySelector('meta[name="viewport"]');
   if (!viewportMeta) {
@@ -59,7 +59,26 @@ const setMobileViewport = () => {
     viewportMeta.setAttribute('name', 'viewport');
     document.head.appendChild(viewportMeta);
   }
-  viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+  // Add Safari-specific viewport settings
+  viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no');
+  
+  // Add web-app-capable meta tag for iOS Safari
+  let webAppCapableMeta = document.querySelector('meta[name="apple-mobile-web-app-capable"]');
+  if (!webAppCapableMeta) {
+    webAppCapableMeta = document.createElement('meta');
+    webAppCapableMeta.setAttribute('name', 'apple-mobile-web-app-capable');
+    webAppCapableMeta.setAttribute('content', 'yes');
+    document.head.appendChild(webAppCapableMeta);
+  }
+  
+  // Add status bar style for iOS Safari
+  let statusBarMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+  if (!statusBarMeta) {
+    statusBarMeta = document.createElement('meta');
+    statusBarMeta.setAttribute('name', 'apple-mobile-web-app-status-bar-style');
+    statusBarMeta.setAttribute('content', 'black-translucent');
+    document.head.appendChild(statusBarMeta);
+  }
 };
 
 // Execute viewport adjustment and app rendering
