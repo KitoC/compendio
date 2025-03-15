@@ -55,6 +55,15 @@ const AppContent = () => {
                 </AuthenticatedLayout>
               }
             />
+            {/* Add specific predefined alias route */}
+            <Route
+              path={ROUTES.CONVERSATION_ASSISTANT}
+              element={
+                <AuthenticatedLayout>
+                  <ChatPage />
+                </AuthenticatedLayout>
+              }
+            />
 
             {/* Access request routes */}
             <Route path={ROUTES.REQUEST_ACCESS} element={<RequestAccess />} />

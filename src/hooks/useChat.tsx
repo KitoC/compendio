@@ -1,4 +1,3 @@
-
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "@/integrations/supabase/client";
@@ -138,7 +137,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
       }));
       
-      // Call the edge function
+      // Call the edge function using the correct URL
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`,
         {
@@ -189,7 +188,15 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       
       await supabase
         .from("messages")
-        .insert(iMessageToDbMessage(finalMessage, conversationId));
+        .insert({
+          id: finalMessage.id,
+          conversation_id: conversationId,
+          role: finalMessage.role,
+          content: { text: finalMessage.content } as Json,
+          metadata: {} as Json,
+          user_id: user.id,
+          tenant_id: tenantId
+        });
       
       setMessages((prev) =>
         prev.map((msg) =>
@@ -219,7 +226,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     } finally {
       setIsStreaming(false);
     }
-  }, [conversationId, iMessageToDbMessage, toast, user, tenantId]);
+  }, [conversationId, toast, user, tenantId]);
 
   // Handle sending a message
   const handleSendMessage = useCallback(
@@ -240,7 +247,15 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         // Save the user message to the database
         await supabase
           .from("messages")
-          .insert(iMessageToDbMessage(newMessage, conversationId));
+          .insert({
+            id: newMessage.id,
+            conversation_id: conversationId,
+            role: newMessage.role,
+            content: { text: newMessage.content } as Json,
+            metadata: {} as Json,
+            user_id: user.id,
+            tenant_id: tenantId
+          });
         
         // Send the message to the AI
         await sendMessageToAI([...messages, newMessage]);
@@ -255,7 +270,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         setIsTyping(false);
       }
     },
-    [messages, conversationId, iMessageToDbMessage, sendMessageToAI, scrollToOptimalPosition, toast, user, tenantId]
+    [messages, conversationId, sendMessageToAI, scrollToOptimalPosition, toast, user, tenantId]
   );
 
   // Load messages on initial render and subscribe to new messages
