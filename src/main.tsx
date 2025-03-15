@@ -1,3 +1,4 @@
+
 import "core-js/stable";
 import "regenerator-runtime/runtime"; // Import regenerator runtime for Safari compatibility
 import { createRoot } from "react-dom/client";
