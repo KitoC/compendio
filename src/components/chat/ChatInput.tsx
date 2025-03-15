@@ -1,10 +1,8 @@
-
 import { forwardRef, useState, KeyboardEvent, useEffect } from "react";
-import { MessageSquare, Send, Mic, X } from "lucide-react";
+import { Send, Mic, X } from "lucide-react";
 import { IconButton } from "../ui/IconButton";
 import { CHAT_COMMANDS } from "@/lib/chat-commands";
 import { CommandSuggestions } from "./CommandSuggestions";
-import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -17,17 +15,10 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
     const [showCommands, setShowCommands] = useState(false);
     const [commandFilter, setCommandFilter] = useState("");
     const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
-
+    const [voiceEnabled, setVoiceEnabled] = useState(false);
     const filteredCommands = CHAT_COMMANDS.filter((cmd) =>
       cmd.command.toLowerCase().includes(commandFilter.toLowerCase())
     );
-
-    const {
-      transcript,
-      listening,
-      resetTranscript,
-      browserSupportsSpeechRecognition,
-    } = useSpeechRecognition();
 
     useEffect(() => {
       if (message.startsWith("/")) {
@@ -39,28 +30,15 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
       }
     }, [message]);
 
-    const handleSpeechToText = () => {
-      if (listening) {
-        SpeechRecognition.stopListening();
-      } else {
-        SpeechRecognition.startListening();
-      }
-    };
-
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
 
-      if (browserSupportsSpeechRecognition && listening) {
-        handleSpeechToText();
-      }
-
-      if (!message.trim() && !transcript.trim() || disabled) {
+      if (!message.trim() || disabled) {
         return;
       }
 
-      onSendMessage(message.trim() || transcript.trim());
+      onSendMessage(message.trim());
       setMessage("");
-      resetTranscript();
       setShowCommands(false);
     };
 
@@ -117,7 +95,7 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
         <div className="flex gap-2 items-end">
           <textarea
             ref={ref as React.RefObject<HTMLTextAreaElement>}
-            value={message || transcript}
+            value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
@@ -141,8 +119,8 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
             size="lg"
             disabled={disabled}
           >
-            {!message.length && browserSupportsSpeechRecognition ? (
-              listening ? (
+            {!message.length ? (
+              voiceEnabled ? (
                 <X className="h-5 w-5" />
               ) : (
                 <Mic className="h-5 w-5" />
