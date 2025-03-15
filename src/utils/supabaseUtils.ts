@@ -1,5 +1,4 @@
 
-
 // Define window.__ENV__ type
 interface WindowWithEnv extends Window {
   __ENV__?: {
@@ -52,4 +51,3 @@ export const cleanupSupabaseAuth = () => {
   
   console.log('Cleaned up Supabase auth data from localStorage');
 };
-

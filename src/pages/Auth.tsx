@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
@@ -70,6 +71,7 @@ const Auth = () => {
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Sign in attempt with:", { email, password });
 
     if (!email || !password) {
       toast.error("Please enter both email and password");
@@ -78,15 +80,24 @@ const Auth = () => {
 
     try {
       setLoading(true);
+      console.log("Starting sign in process");
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Sign in error:", error);
+        throw error;
+      }
 
-      // Will redirect in useEffect when session is detected
+      console.log("Sign in successful:", data);
+      toast.success("Signed in successfully");
+      
+      // Navigate after successful sign in
+      navigate(ROUTES.CONVERSATION_ASSISTANT, { replace: true });
+      
     } catch (error: any) {
       console.error("Error signing in:", error);
       toast.error(error.message || "Invalid login credentials");
@@ -98,6 +109,7 @@ const Auth = () => {
   const handleOAuthSignIn = async (provider: Provider) => {
     try {
       setLoading(true);
+      console.log(`Starting OAuth sign in with ${provider}`);
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
