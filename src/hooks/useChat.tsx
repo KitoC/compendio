@@ -7,6 +7,26 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Json } from "@/integrations/supabase/types";
 
+// Get the Supabase URL from environment variables or fallback to the URL from window.__ENV__
+const getSupabaseUrl = () => {
+  if (import.meta.env.VITE_SUPABASE_URL) {
+    return import.meta.env.VITE_SUPABASE_URL;
+  }
+  
+  if (typeof window !== 'undefined' && window.__ENV__ && window.__ENV__.VITE_SUPABASE_URL) {
+    return window.__ENV__.VITE_SUPABASE_URL;
+  }
+  
+  // As a last resort, try to extract it from the Supabase client instance
+  const supabaseInstance = supabase as any;
+  if (supabaseInstance && supabaseInstance.supabaseUrl) {
+    return supabaseInstance.supabaseUrl;
+  }
+  
+  console.error("Could not find Supabase URL in environment variables or window.__ENV__");
+  return "https://zgtukvtbfucrvdpicvxx.supabase.co"; // Fallback to hardcoded URL as last resort
+};
+
 export interface ChatContextType {
   messages: IMessage[];
   isTyping: boolean;
@@ -139,10 +159,9 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
       }));
       
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      if (!supabaseUrl) {
-        throw new Error("Supabase URL not found in environment variables");
-      }
+      // Get the Supabase URL using our helper function
+      const supabaseUrl = getSupabaseUrl();
+      console.log("Using Supabase URL:", supabaseUrl);
       
       // Ensure the URL doesn't have a trailing slash
       const baseUrl = supabaseUrl.endsWith('/') ? supabaseUrl.slice(0, -1) : supabaseUrl;
