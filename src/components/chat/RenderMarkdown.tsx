@@ -1,8 +1,8 @@
 
-import React from "react";
+import { FC } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import clsx from "clsx";
+import { MessageRole } from "@/types/chat";
 
 interface RenderMarkdownProps {
   message: string;
@@ -10,152 +10,102 @@ interface RenderMarkdownProps {
   isStreamedMessage?: boolean;
 }
 
-const INDICATOR_PLACEHOLDER = "{{INDICATOR}}";
-
-const RenderMarkdown: React.FC<RenderMarkdownProps> = ({
+const RenderMarkdown: FC<RenderMarkdownProps> = ({
   message,
   isUser,
   isStreamedMessage,
 }) => {
-  const renderChildren = (children: React.ReactNode) => {
-    if (!children) {
-      return null;
-    }
-    const childrenArray = React.Children.toArray(children);
-    if (childrenArray.length === 0) {
-      return null;
-    }
-    const lastChild = childrenArray[childrenArray.length - 1];
-    const hasInsertSpan =
-      typeof lastChild === "string" && lastChild === INDICATOR_PLACEHOLDER;
-    const childrenString = childrenArray.join("");
-    const containsInsertSpan = childrenString.includes(INDICATOR_PLACEHOLDER);
-
-    if (hasInsertSpan || containsInsertSpan) {
-      const processedChildren = childrenArray.map((child) => {
-        if (typeof child === "string") {
-          return child.replace(INDICATOR_PLACEHOLDER, "");
-        }
-        return child;
-      });
-
-      return (
-        <>
-          {processedChildren} <span className="w-2 h-2 bg-current rounded-full inline-block animate-pulse" />
-        </>
-      );
-    }
-
-    return <>{children}</>;
-  };
-
-  const markdownClasses = clsx("prose prose-sm max-w-none dark:prose-invert", {
-    "text-primary-foreground": isUser,
-    "streamed-message": isStreamedMessage,
-  });
+  // Handle case when message is not a string
+  if (typeof message !== "string") {
+    return null;
+  }
 
   return (
-    <div className={markdownClasses}>
+    <div 
+      className={`prose-sm max-w-none dark:prose-invert ${
+        isStreamedMessage ? "streamed-message" : ""
+      }`}
+    >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
           p: ({ children }) => {
-            return <p className="m-0">{renderChildren(children)}</p>;
+            return <p className="my-1">{children}</p>;
           },
           a: ({ href, children }) => (
             <a
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className={clsx("underline", {
-                "text-primary-foreground": isUser,
-                "text-primary": !isUser,
-              })}
+              className={`underline ${
+                isUser ? "text-primary-foreground" : "text-primary"
+              }`}
             >
-              {renderChildren(children)}
+              {children}
             </a>
           ),
-          code: ({ className, children, node, ...props }) => {
+          code: ({ className, children, ...props }) => {
             const isInline = !className;
             if (isInline) {
               return (
                 <code
-                  className={clsx("px-2 py-0.5 rounded text-sm", {
-                    "bg-primary-foreground/20 text-primary-foreground": isUser,
-                    "bg-background text-foreground dark:bg-gray-800": !isUser,
-                  })}
+                  className={`px-1 py-0.5 rounded text-sm ${
+                    isUser
+                      ? "bg-primary-foreground/20 text-primary-foreground"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                  {...props}
                 >
-                  {renderChildren(children)}
+                  {children}
                 </code>
               );
             }
             return (
               <pre
-                className={clsx("p-4 rounded-md my-2 overflow-auto", {
-                  "bg-primary-foreground/20": isUser,
-                  "bg-muted dark:bg-gray-800": !isUser,
-                })}
+                className={`p-4 rounded-md my-2 overflow-auto ${
+                  isUser
+                    ? "bg-primary-foreground/20"
+                    : "bg-muted"
+                }`}
               >
-                <code className={`language-${className} text-sm`}>
-                  {renderChildren(children)}
-                </code>
+                <code className={className}>{children}</code>
               </pre>
             );
           },
           ul: ({ children }) => (
-            <ul
-              className="list-disc pl-4 my-2"
-            >
-              {renderChildren(children)}
-            </ul>
+            <ul className="list-disc pl-4 my-2">{children}</ul>
           ),
           ol: ({ children }) => (
-            <ol
-              className="list-decimal pl-4 my-2"
-            >
-              {renderChildren(children)}
-            </ol>
+            <ol className="list-decimal pl-4 my-2">{children}</ol>
           ),
-          li: ({ children }) => (
-            <li className="mb-1">
-              {renderChildren(children)}
-            </li>
-          ),
+          li: ({ children }) => <li className="mb-1">{children}</li>,
           blockquote: ({ children }) => (
             <blockquote
-              className={clsx("border-l-4 pl-3 my-2", {
-                "border-primary-foreground/50 bg-primary-dark": isUser,
-                "border-muted-foreground bg-muted dark:bg-gray-800": !isUser,
-              })}
+              className={`border-l-4 pl-3 my-2 ${
+                isUser
+                  ? "border-primary-foreground/50 bg-primary-foreground/10"
+                  : "border-muted bg-muted/50"
+              }`}
             >
-              {renderChildren(children)}
+              {children}
             </blockquote>
           ),
           h1: ({ children }) => (
-            <h1
-              className="text-xl font-bold my-2"
-            >
-              {renderChildren(children)}
-            </h1>
+            <h1 className="text-xl font-bold my-2">{children}</h1>
           ),
           h2: ({ children }) => (
-            <h2
-              className="text-lg font-bold my-2"
-            >
-              {renderChildren(children)}
-            </h2>
+            <h2 className="text-lg font-bold my-2">{children}</h2>
           ),
           h3: ({ children }) => (
-            <h3
-              className="text-base font-bold my-2"
-            >
-              {renderChildren(children)}
-            </h3>
+            <h3 className="text-base font-bold my-2">{children}</h3>
           ),
         }}
       >
-        {isStreamedMessage ? message + INDICATOR_PLACEHOLDER : message}
+        {message}
       </ReactMarkdown>
+      {isStreamedMessage && (
+        <span className="inline-block h-2 w-2 rounded-full bg-current animate-pulse ml-1" />
+      )}
     </div>
   );
 };
