@@ -57,12 +57,14 @@ export default defineConfig(({ mode, command }) => ({
             ? "assets/chat-widget.[hash].js"
             : "assets/[name].[hash].js";
         },
-        // Configure chunk splitting
+        // Configure improved chunk splitting
         manualChunks: (id) => {
-          // Create separate chunks for big dependencies
+          // Create separate chunks for React and React DOM to ensure they are correctly bundled together
           if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
+              return 'vendor-react'; // Bundle React and React DOM together
+            }
             if (id.includes('@supabase')) return 'vendor-supabase';
-            if (id.includes('react-dom')) return 'vendor-react-dom';
             if (id.includes('react-router')) return 'vendor-react-router';
             if (id.includes('@tanstack')) return 'vendor-tanstack';
             if (id.includes('@radix-ui')) return 'vendor-radix';
@@ -86,7 +88,7 @@ export default defineConfig(({ mode, command }) => ({
     },
   },
   optimizeDeps: {
-    include: ["regenerator-runtime/runtime"],
+    include: ["regenerator-runtime/runtime", "react", "react-dom"],
     esbuildOptions: {
       target: "es2017",
       supported: {

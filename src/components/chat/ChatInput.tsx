@@ -1,3 +1,4 @@
+
 import { forwardRef, useState, KeyboardEvent, useEffect } from "react";
 import { SendHorizontal, X, AudioLines } from "lucide-react";
 import { IconButton } from "../ui/IconButton";
@@ -105,7 +106,8 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
             style={{
               height: "auto",
               overflowY: "hidden",
-              "--tw-ring-color": "transparent",
+              // Fix the TypeScript error by properly typing the CSS variable
+              ["--tw-ring-color" as string]: "transparent"
             }}
             onInput={(e) => {
               const target = e.target as HTMLTextAreaElement;
