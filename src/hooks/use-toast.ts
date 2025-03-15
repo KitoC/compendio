@@ -15,56 +15,7 @@ type ToastItem = {
 
 const toastAtom = atom<ToastItem[]>([]);
 
-function useToast() {
-  const [toasts, setToasts] = useAtom(toastAtom);
-
-  const addToast = useCallback(
-    (toast: ToastItem) => {
-      setToasts((prevToasts) => [...prevToasts, toast]);
-    },
-    [setToasts]
-  );
-
-  const dismissToast = useCallback(
-    (id: string) => {
-      setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id));
-    },
-    [setToasts]
-  );
-
-  // Create toast methods
-  const toast = {
-    success: (message: string, title?: string) => {
-      return showToast({
-        title: title || "Success",
-        description: message,
-      });
-    },
-    error: (message: string, title?: string) => {
-      return showToast({
-        title: title || "Error",
-        description: message,
-        variant: "destructive",
-      });
-    },
-    // Added a more generic method for other toast scenarios
-    show: (options: Omit<ToastProps, "id">) => {
-      return showToast(options);
-    }
-  };
-
-  return {
-    toasts,
-    addToast,
-    dismissToast,
-    toast, // Include toast methods
-  };
-}
-
-function useToastAction() {
-  return useSetAtom(toastAtom);
-}
-
+// Create a standalone showToast function
 let count = 0;
 function genId() {
   return `toast-${count++}`;
@@ -79,6 +30,7 @@ type ToastProps = {
   variant?: 'default' | 'destructive';
 };
 
+// Standalone showToast function that doesn't use React hooks
 function showToast({
   id = genId(),
   title,
@@ -134,7 +86,7 @@ function showToast({
   };
 }
 
-// Export standalone toast functions for direct import
+// Create standalone toast object before useToast to avoid circular references
 const toast = {
   success: (message: string, title?: string) => {
     return showToast({
@@ -153,5 +105,34 @@ const toast = {
     return showToast(options);
   }
 };
+
+function useToast() {
+  const [toasts, setToasts] = useAtom(toastAtom);
+
+  const addToast = useCallback(
+    (toast: ToastItem) => {
+      setToasts((prevToasts) => [...prevToasts, toast]);
+    },
+    [setToasts]
+  );
+
+  const dismissToast = useCallback(
+    (id: string) => {
+      setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id));
+    },
+    [setToasts]
+  );
+
+  return {
+    toasts,
+    addToast,
+    dismissToast,
+    toast, // Include reference to the standalone toast object
+  };
+}
+
+function useToastAction() {
+  return useSetAtom(toastAtom);
+}
 
 export { useToast, useToastAction, showToast, toast };
