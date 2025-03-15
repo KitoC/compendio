@@ -61,26 +61,66 @@ export const ChatContainer = ({
             if (error.code === "PGRST116") {
               // No rows found - create a new conversation
               if (isUuid) {
-                // Create with the provided UUID
-                const newConversation = {
-                  id: conversationIdOrAlias,
-                  title: "New Conversation",
-                  user_id: user.id,
-                  domain: window.location.hostname,
-                  tenant_id: tenantId,
-                  created_at: new Date().toISOString(),
-                  updated_at: new Date().toISOString(),
-                };
-
-                const { error: createError } = await supabase
+                // First check if this ID already exists to prevent duplicate key error
+                const { count, error: countError } = await supabase
                   .from("conversations")
-                  .insert(newConversation);
-
-                if (createError) {
-                  throw createError;
+                  .select("id", { count: 'exact', head: true })
+                  .eq("id", conversationIdOrAlias);
+                
+                if (countError) {
+                  throw countError;
                 }
+                
+                // Only create with provided UUID if it doesn't exist
+                if (count === 0) {
+                  const newConversation = {
+                    id: conversationIdOrAlias,
+                    title: "New Conversation",
+                    user_id: user.id,
+                    domain: window.location.hostname,
+                    tenant_id: tenantId,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                  };
 
-                setConversation(newConversation as Conversation);
+                  const { error: createError } = await supabase
+                    .from("conversations")
+                    .insert(newConversation);
+
+                  if (createError) {
+                    // If we hit a duplicate key error, fetch the existing conversation instead
+                    if (createError.code === "23505") {
+                      const { data: existingData, error: fetchError } = await supabase
+                        .from("conversations")
+                        .select("*")
+                        .eq("id", conversationIdOrAlias)
+                        .single();
+                      
+                      if (fetchError) {
+                        throw fetchError;
+                      }
+                      
+                      setConversation(existingData as Conversation);
+                    } else {
+                      throw createError;
+                    }
+                  } else {
+                    setConversation(newConversation as Conversation);
+                  }
+                } else {
+                  // If it exists (somehow), fetch it
+                  const { data: existingData, error: fetchError } = await supabase
+                    .from("conversations")
+                    .select("*")
+                    .eq("id", conversationIdOrAlias)
+                    .single();
+                  
+                  if (fetchError) {
+                    throw fetchError;
+                  }
+                  
+                  setConversation(existingData as Conversation);
+                }
               } else {
                 // Create a new conversation with a generated ID but requested alias
                 const newId = uuidv4();
@@ -100,10 +140,25 @@ export const ChatContainer = ({
                   .insert(newConversation);
 
                 if (createError) {
-                  throw createError;
+                  // If alias already exists, fetch it instead
+                  if (createError.code === "23505") {
+                    const { data: existingData, error: fetchError } = await supabase
+                      .from("conversations")
+                      .select("*")
+                      .eq("alias", conversationIdOrAlias)
+                      .single();
+                    
+                    if (fetchError) {
+                      throw fetchError;
+                    }
+                    
+                    setConversation(existingData as Conversation);
+                  } else {
+                    throw createError;
+                  }
+                } else {
+                  setConversation(newConversation as Conversation);
                 }
-
-                setConversation(newConversation as Conversation);
               }
             } else {
               throw error;
@@ -117,7 +172,7 @@ export const ChatContainer = ({
           navigate(`${ROUTES.CONVERSATION}/${newId}`);
         }
       } catch (error: any) {
-        console.error("Error fetching conversation:", error);
+        console.error("Error fetching/creating conversation:", error);
         toast({
           title: "Error",
           description: error.message || "Failed to load conversation",
