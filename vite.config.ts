@@ -11,7 +11,18 @@ export default defineConfig(({ mode, command }) => ({
     port: 8080,
   },
   plugins: [
-    react(),
+    react({
+      // Add SWC options to ensure compatibility with older browsers like Safari
+      swcOptions: {
+        jsc: {
+          target: "es2015", // Target ES2015 for better browser compatibility
+          parser: {
+            syntax: "typescript",
+            tsx: true,
+          },
+        },
+      },
+    }),
     mode === 'development' &&
     componentTagger(),
   ].filter(Boolean),
@@ -50,6 +61,8 @@ export default defineConfig(({ mode, command }) => ({
             : 'assets/[name].[hash].js';
         }
       }
-    }
+    },
+    // Add target for older browsers
+    target: 'es2015',
   }
 }));

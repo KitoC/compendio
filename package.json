@@ -68,6 +68,7 @@
     "react-speech-recognition": "^3.10.0",
     "react-use": "^17.6.0",
     "recharts": "^2.12.7",
+    "regenerator-runtime": "^0.14.0",
     "remark-gfm": "^4.0.1",
     "socket.io-client": "^4.8.1",
     "sonner": "^1.5.0",
