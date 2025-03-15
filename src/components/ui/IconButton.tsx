@@ -59,7 +59,6 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
     },
     ref
   ) => {
-    console.log("icon", icon);
     return (
       <button
         className={cn(

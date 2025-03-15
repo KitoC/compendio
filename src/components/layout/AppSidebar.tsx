@@ -31,7 +31,7 @@ const AppSidebar = () => {
       label: "Agents",
       children: aiAgents.map((agent) => ({
         label: agent.human_name || agent.name,
-        url: `${ROUTES.CONVERSATION}/${agent.id}`,
+        url: `${ROUTES.CONVERSATION}/${agent.name}`,
       })),
     },
   ];
@@ -50,7 +50,6 @@ const AppSidebar = () => {
 
   const handleSignOut = async (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent default button behavior
-    console.log("Sign out button clicked");
     try {
       await signOut();
     } catch (error) {
