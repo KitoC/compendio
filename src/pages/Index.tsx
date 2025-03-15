@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,10 @@ import Footer from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
 import { MessageSquare } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
+
+// This value will change with each build
+const BUILD_TIMESTAMP = new Date().toISOString();
+
 const Index: React.FC = () => {
   const { user } = useAuth();
 
@@ -47,6 +52,13 @@ const Index: React.FC = () => {
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 All the tools you need to manage jobs, quotes, scheduling and
                 client relationships in one easy platform.
+              </p>
+            </div>
+
+            {/* Build indicator - will show when the page was last built */}
+            <div className="text-center mb-8 p-2 bg-gray-100 rounded-md">
+              <p className="text-xs text-gray-500">
+                Latest build: {BUILD_TIMESTAMP}
               </p>
             </div>
 
