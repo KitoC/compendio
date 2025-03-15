@@ -2,6 +2,8 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { AlertCircle } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Props {
   children: ReactNode;
@@ -11,21 +13,82 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+  errorInfo: ErrorInfo | null;
 }
+
+// Create a mobile-friendly fallback UI component
+const ErrorFallback = ({ error, resetErrorBoundary }: { 
+  error: Error | null; 
+  resetErrorBoundary: () => void;
+}) => {
+  const isMobile = useIsMobile();
+  
+  return (
+    <Card className={`w-full ${isMobile ? 'max-w-[95%]' : 'max-w-md'} mx-auto mt-8`}>
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <AlertCircle className="h-5 w-5 text-destructive" />
+          <CardTitle>Something went wrong</CardTitle>
+        </div>
+        <CardDescription>
+          An error occurred while rendering this view
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="bg-muted p-4 rounded-md overflow-auto max-h-48">
+          <p className="text-destructive font-mono text-sm">
+            {error?.toString()}
+          </p>
+        </div>
+      </CardContent>
+      <CardFooter className="flex flex-col gap-2">
+        <Button 
+          onClick={resetErrorBoundary}
+          className="w-full"
+          variant="default"
+        >
+          Try again
+        </Button>
+        <Button 
+          onClick={() => {
+            window.location.href = '/';
+          }}
+          className="w-full"
+          variant="outline"
+        >
+          Go to Home Page
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+};
 
 class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
-    error: null
+    error: null,
+    errorInfo: null
   };
 
   public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    return { hasError: true, error, errorInfo: null };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("Uncaught error:", error, errorInfo);
+    this.setState({
+      error,
+      errorInfo
+    });
   }
+
+  public resetErrorBoundary = () => {
+    this.setState({
+      hasError: false,
+      error: null,
+      errorInfo: null
+    });
+  };
 
   public render() {
     if (this.state.hasError) {
@@ -34,32 +97,10 @@ class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <Card className="w-full max-w-md mx-auto mt-8">
-          <CardHeader>
-            <CardTitle>Something went wrong</CardTitle>
-            <CardDescription>
-              An error occurred while rendering this view
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md overflow-auto max-h-48">
-              <p className="text-red-500 font-mono text-sm">
-                {this.state.error?.toString()}
-              </p>
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button 
-              onClick={() => {
-                this.setState({ hasError: false, error: null });
-                window.location.href = '/';
-              }}
-              className="w-full"
-            >
-              Go to Home Page
-            </Button>
-          </CardFooter>
-        </Card>
+        <ErrorFallback 
+          error={this.state.error} 
+          resetErrorBoundary={this.resetErrorBoundary} 
+        />
       );
     }
 

@@ -1,8 +1,7 @@
-
 import { FC } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { MessageRole } from "@/types/chat";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface RenderMarkdownProps {
   message: string;
@@ -15,8 +14,11 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
   isUser,
   isStreamedMessage,
 }) => {
+  const isMobile = useIsMobile();
+  
   // Handle case when message is not a string
   if (typeof message !== "string") {
+    console.warn("RenderMarkdown received non-string message:", message);
     return null;
   }
 
@@ -24,7 +26,7 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
     <div 
       className={`prose-sm max-w-none dark:prose-invert ${
         isStreamedMessage ? "streamed-message" : ""
-      }`}
+      } ${isMobile ? "text-sm" : ""}`}
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
@@ -63,6 +65,8 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
             return (
               <pre
                 className={`p-4 rounded-md my-2 overflow-auto ${
+                  isMobile ? "text-xs" : ""
+                } ${
                   isUser
                     ? "bg-primary-foreground/20"
                     : "bg-muted"
