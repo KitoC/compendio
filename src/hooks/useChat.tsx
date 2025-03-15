@@ -1,3 +1,4 @@
+
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "@/integrations/supabase/client";
@@ -76,6 +77,8 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     if (!conversationId) return;
 
     try {
+      console.log("Loading messages for conversation ID:", conversationId);
+      
       const { data, error } = await supabase
         .from("messages")
         .select("*")
@@ -87,9 +90,15 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       }
 
       if (data) {
-        setMessages(data.map(msg => dbMessageToIMessage(msg)));
+        console.log(`Found ${data.length} messages for conversation ${conversationId}`);
+        const parsedMessages = data.map(msg => dbMessageToIMessage(msg));
+        setMessages(parsedMessages);
+        
+        // Scroll to bottom after messages load
+        setTimeout(scrollToOptimalPosition, 100);
       }
     } catch (error: any) {
+      console.error("Error loading messages:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to load messages",
@@ -131,6 +140,11 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       }));
       
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      if (!supabaseUrl) {
+        throw new Error("Supabase URL not found in environment variables");
+      }
+      
+      // Ensure the URL doesn't have a trailing slash
       const baseUrl = supabaseUrl.endsWith('/') ? supabaseUrl.slice(0, -1) : supabaseUrl;
       const functionUrl = `${baseUrl}/functions/v1/ai-chat`;
       
@@ -215,8 +229,9 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       return null;
     } finally {
       setIsStreaming(false);
+      setTimeout(scrollToOptimalPosition, 100);
     }
-  }, [conversationId, toast, user, tenantId]);
+  }, [conversationId, toast, user, tenantId, scrollToOptimalPosition]);
 
   const handleSendMessage = useCallback(
     async (content: string, role: MessageRole = MessageRole.USER) => {
