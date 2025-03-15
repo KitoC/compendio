@@ -1,4 +1,3 @@
-
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,7 +40,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
   const { toast } = useToast();
   const { user, tenantId } = useAuth();
   
-  // Convert database message to IMessage format
   const dbMessageToIMessage = useCallback((dbMessage: any): IMessage => {
     return {
       id: dbMessage.id,
@@ -54,13 +52,11 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     };
   }, []);
 
-  // Convert IMessage to database message format
   const iMessageToDbMessage = useCallback((message: IMessage, convId: string) => {
     if (!tenantId) {
       throw new Error("No tenant ID available. Please ensure you are authenticated.");
     }
     
-    // Format content as JSON-compatible object
     const content: Json = typeof message.content === 'string' 
       ? { text: message.content } 
       : message.content as Json;
@@ -76,7 +72,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     };
   }, [user, tenantId]);
 
-  // Load messages from the database
   const loadMessages = useCallback(async () => {
     if (!conversationId) return;
 
@@ -103,7 +98,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     }
   }, [conversationId, dbMessageToIMessage, toast]);
 
-  // Scroll to optimal position
   const scrollToOptimalPosition = useCallback(
     ({ behavior = "smooth" }: { behavior?: ScrollBehavior } = {}) => {
       if (messagesContainerRef.current) {
@@ -117,7 +111,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     []
   );
 
-  // Send message to AI
   const sendMessageToAI = useCallback(async (messagesToSend: IMessage[]) => {
     if (!conversationId || !user || !tenantId) return null;
     
@@ -132,14 +125,16 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     setMessages((prev) => [...prev, newMessage]);
     
     try {
-      // Format messages for OpenAI
       const formattedMessages = messagesToSend.map(msg => ({
         role: msg.role,
         content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
       }));
       
-      // Call the edge function with the proper URL
-      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const baseUrl = supabaseUrl.endsWith('/') ? supabaseUrl.slice(0, -1) : supabaseUrl;
+      const functionUrl = `${baseUrl}/functions/v1/ai-chat`;
+      
+      console.log("Calling AI chat function at:", functionUrl);
       
       const response = await fetch(functionUrl, {
         method: "POST",
@@ -159,19 +154,15 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         throw new Error(`AI chat error: ${errorText}`);
       }
       
-      const reader = response.body?.getReader();
       let content = "";
       
-      // Handle streaming response
       while (true) {
-        if (!reader) break;
-        const { done, value } = await reader.read();
+        const { done, value } = await response.body?.getReader().read();
         if (done) break;
         
         const chunk = new TextDecoder().decode(value);
         content += chunk;
         
-        // Update the message with new content
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === newMessage.id ? { ...msg, content } : msg
@@ -179,7 +170,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         );
       }
       
-      // Save the final assistant message to the database
       const finalMessage = {
         id: newMessage.id,
         role: MessageRole.ASSISTANT,
@@ -214,7 +204,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         variant: "destructive",
       });
       
-      // Update the message to show error
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === newMessage.id
@@ -229,7 +218,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     }
   }, [conversationId, toast, user, tenantId]);
 
-  // Handle sending a message
   const handleSendMessage = useCallback(
     async (content: string, role: MessageRole = MessageRole.USER) => {
       if (!content.trim() || !conversationId || !user || !tenantId) return;
@@ -245,7 +233,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       setTimeout(scrollToOptimalPosition, 100);
       
       try {
-        // Save the user message to the database
         await supabase
           .from("messages")
           .insert({
@@ -258,7 +245,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
             tenant_id: tenantId
           });
         
-        // Send the message to the AI
         await sendMessageToAI([...messages, newMessage]);
       } catch (error: any) {
         console.error(error);
@@ -274,13 +260,11 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     [messages, conversationId, sendMessageToAI, scrollToOptimalPosition, toast, user, tenantId]
   );
 
-  // Load messages on initial render and subscribe to new messages
   useEffect(() => {
     if (!conversationId) return;
     
     loadMessages();
     
-    // Subscribe to new messages
     const channel = supabase
       .channel("messages-channel")
       .on(
@@ -293,7 +277,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         },
         (payload) => {
           const newMessage = dbMessageToIMessage(payload.new);
-          // Only add if it's not already in the messages array
           setMessages((prev) => {
             if (!prev.some(msg => msg.id === newMessage.id)) {
               return [...prev, newMessage];
@@ -309,15 +292,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     };
   }, [conversationId, dbMessageToIMessage, loadMessages]);
 
-  // Auto focus on input and scroll to bottom when messages change
-  useEffect(() => {
-    if (!isTyping) {
-      inputRef.current?.focus();
-      setTimeout(scrollToOptimalPosition, 100);
-    }
-  }, [isTyping, messages, scrollToOptimalPosition]);
-
-  // Return the userId from the auth context
   const userId = user?.id || "";
 
   return {
