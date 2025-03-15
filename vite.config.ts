@@ -57,28 +57,11 @@ export default defineConfig(({ mode, command }) => ({
             ? "assets/chat-widget.[hash].js"
             : "assets/[name].[hash].js";
         },
-        // Configure improved chunk splitting
-        manualChunks: (id) => {
-          // Create separate chunks for React and React DOM to ensure they are correctly bundled together
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
-              return 'vendor-react'; // Bundle React and React DOM together
-            }
-            if (id.includes('@supabase')) return 'vendor-supabase';
-            if (id.includes('react-router')) return 'vendor-react-router';
-            if (id.includes('@tanstack')) return 'vendor-tanstack';
-            if (id.includes('@radix-ui')) return 'vendor-radix';
-            return 'vendor'; // other dependencies
-          }
-          
-          // Split app code by main directories
-          if (id.includes('/src/pages/')) return 'pages';
-          if (id.includes('/src/components/')) return 'components';
-          if (id.includes('/src/hooks/')) return 'hooks';
-          if (id.includes('/src/contexts/')) return 'contexts';
-        },
+        // Disable manualChunks to prevent chunking issues
+        manualChunks: undefined
       },
     },
+    minify: true,
     target: "es2017",
   },
   esbuild: {
@@ -88,7 +71,14 @@ export default defineConfig(({ mode, command }) => ({
     },
   },
   optimizeDeps: {
-    include: ["regenerator-runtime/runtime", "react", "react-dom"],
+    include: [
+      "regenerator-runtime/runtime", 
+      "react", 
+      "react-dom", 
+      "react-router-dom",
+      "@supabase/supabase-js",
+      "@tanstack/react-query"
+    ],
     esbuildOptions: {
       target: "es2017",
       supported: {
