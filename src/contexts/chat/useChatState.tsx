@@ -63,11 +63,13 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         // Scroll to bottom after messages load
         setTimeout(() => scrollToOptimalPosition({ behavior: "instant" }), 100);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error loading messages:", error);
-      toast.error(error.message || "Failed to load messages");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to load messages"
+      );
     }
-  }, [conversationId, toast]);
+  }, [conversationId, toast, scrollToOptimalPosition]);
 
   const handleSendMessage = useCallback(
     async (content: string, role: MessageRole = MessageRole.USER) => {
@@ -98,10 +100,12 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
 
         // Create a placeholder message for the AI response
         const aiMessage = createAIMessage();
+
         setMessages((prev) => [...prev, aiMessage]);
 
         // Send messages to AI and handle streaming response
         await sendMessageToAI({
+          messageId: aiMessage.id,
           messagesToSend: [...messages, newMessage],
           conversationId,
           agentId: currentAgent?.id || "",
@@ -125,9 +129,11 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
             );
           },
         });
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Error in handleSendMessage:", error);
-        toast.error(error.message || "Failed to send message");
+        toast.error(
+          error instanceof Error ? error.message : "Failed to send message"
+        );
 
         // Update the AI message to show the error
         setMessages((prev) =>
@@ -147,9 +153,16 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         setTimeout(scrollToOptimalPosition, 100);
       }
     },
-    [messages, conversationId, scrollToOptimalPosition, toast, user, tenantId]
+    [
+      messages,
+      conversationId,
+      scrollToOptimalPosition,
+      toast,
+      user,
+      tenantId,
+      currentAgent,
+    ]
   );
-
   useEffect(() => {
     if (!conversationId) return;
 

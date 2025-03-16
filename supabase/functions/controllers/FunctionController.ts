@@ -1,6 +1,7 @@
 import type SupabaseService from "../shared/services/SupabaseService";
+import type { IFunction, IFunctionCall } from "../../../src/types/aiAgents";
 
-const mockFunctions = [
+const mockFunctions: IFunction[] = [
   {
     name: "get_current_price_items",
     parameters: {},
@@ -158,8 +159,8 @@ const mockFunctions = [
 
 class FunctionController {
   private supabaseService: SupabaseService | null;
-  private markup: any;
-  private functionsMap: any;
+  private markup: { [key: string]: unknown };
+  private functionsMap: { [key: string]: IFunction };
 
   constructor() {
     this.supabaseService = null;
@@ -175,7 +176,7 @@ class FunctionController {
     this.supabaseService = supabaseService;
   }
 
-  async executeFunction(fnCall) {
+  async executeFunction(fnCall: IFunctionCall): Promise<object | undefined> {
     const fn = this.functionsMap[fnCall.name];
 
     if (!fn) {
@@ -184,16 +185,20 @@ class FunctionController {
 
     switch (fn.type) {
       case "markup":
-        return console.log("SENDING MARKUP");
+        console.log("SENDING MARKUP");
+        return;
 
       case "form":
-        return console.log("SENDING FORM");
+        console.log("SENDING FORM");
+        return;
 
       case "retrieval":
-        return console.log("SENDING RETRIEVAL");
+        console.log("SENDING RETRIEVAL");
+        return;
 
       case "function":
-        return console.log("SENDING FUNCTION");
+        console.log("SENDING FUNCTION");
+        return;
 
       default:
         throw new Error(`Function ${fnCall.name} not found`);
@@ -209,8 +214,8 @@ class FunctionController {
       .from("configs")
       .select("*");
 
-    return mockFunctions.map((func: any) => {
-      const { markup, _type, ...rest } = func;
+    return mockFunctions.map((func: IFunction) => {
+      const { markup, type, ...rest } = func;
 
       if (markup) {
         this.markup[rest.name] = markup;

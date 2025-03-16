@@ -1,7 +1,7 @@
 import {
   createClient,
   SupabaseClient,
-  // @ts-ignore
+  // @ts-expect-error - Supabase client is not typed
 } from "https://esm.sh/@supabase/supabase-js@2.8.0";
 
 // CORS headers for cross-origin requests
@@ -27,7 +27,6 @@ class SupabaseService {
   private authHeader: string | null;
 
   constructor() {
-    this._supabase;
     this.authHeader = null;
   }
 
@@ -65,7 +64,7 @@ class SupabaseService {
     return new Response(null, { headers: corsHeaders });
   }
 
-  sendJsonResponse(data: any, status: number) {
+  sendJsonResponse(data: object, status: number) {
     return new Response(JSON.stringify(data), {
       status,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

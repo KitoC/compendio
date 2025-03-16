@@ -1,4 +1,11 @@
 
 project_id = "zgtukvtbfucrvdpicvxx"
+
 [functions.ai-chat]
+verify_jwt = false
+
+[functions.ai-chat-v2]
+verify_jwt = false
+
+[functions.wss-functions]
 verify_jwt = false

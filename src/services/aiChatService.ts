@@ -3,20 +3,85 @@ import { IMessage } from "@/types/chat";
 import { Json } from "@/integrations/supabase/types";
 import { v4 as uuidv4 } from "uuid";
 import { callSupabaseFunction } from "./supabaseFunctionServices";
+import { streamResponse } from "@/utils/streamResponse";
+
+const streamAiResponse = async ({
+  endpoint,
+  args,
+  onUpdate,
+  onFunctionCall,
+}: {
+  endpoint: string;
+  args: object;
+  onUpdate: (content: object) => void;
+  onFunctionCall: (functionCall: object) => void;
+}) => {
+  const response = await callSupabaseFunction(endpoint, args);
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`AI chat error (${response.status}):`, errorText);
+    throw new Error(`AI chat error: ${errorText}`);
+  }
+
+  // Initialize content variable to collect streamed response
+
+  let content = "";
+  let functionCalled = false;
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break; // Exit loop when stream is complete
+
+    buffer += decoder.decode(value, { stream: true });
+
+    // Process JSON messages line-by-line
+    const parts = buffer.split("\n");
+    buffer = parts.pop(); // Keep incomplete chunk in buffer
+
+    for (const part of parts) {
+      if (part.trim()) {
+        try {
+          const { text, function_call } = JSON.parse(part);
+
+          if (text) {
+            content = text;
+            onUpdate(text);
+          }
+
+          if (function_call && !functionCalled) {
+            onFunctionCall(function_call);
+            functionCalled = true;
+          }
+        } catch (e) {
+          console.error("Error parsing JSON:", e);
+        }
+      }
+    }
+  }
+
+  return content;
+};
 /**
  * Sends a message to the AI and streams the response
  */
 
 interface SendMessageToAIProps {
+  messageId: string;
   messagesToSend: IMessage[];
   conversationId: string;
   agentId: string;
   userId: string | undefined;
   tenantId: string | undefined;
-  onUpdate: (content: string) => void;
+  onUpdate: (message: IMessage) => void;
   onComplete: (message: IMessage) => Promise<void>;
 }
 export const sendMessageToAI = async ({
+  messageId,
   messagesToSend,
   conversationId,
   agentId,
@@ -36,42 +101,33 @@ export const sendMessageToAI = async ({
           : JSON.stringify(msg.content),
     }));
 
-    const response = await callSupabaseFunction("ai-chat", {
-      conversation_id: conversationId,
-      messages: formattedMessages,
-      agent_id: agentId,
+    const id = messageId;
+
+    const content = await streamAiResponse({
+      endpoint: "ai-chat",
+      args: {
+        conversation_id: conversationId,
+        messages: formattedMessages,
+        agent_id: agentId,
+      },
+      onUpdate,
+      onFunctionCall: async (functionCall) => {
+        const response = await callSupabaseFunction("wss-functions", {
+          conversation_id: conversationId,
+          agent_id: agentId,
+          messages: formattedMessages,
+          function_call: functionCall,
+        });
+
+        const data = await response.json();
+
+        console.log("functionCall", data);
+      },
     });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`AI chat error (${response.status}):`, errorText);
-      throw new Error(`AI chat error: ${errorText}`);
-    }
-
-    // Initialize content variable to collect streamed response
-    let content = "";
-    const reader = response.body?.getReader();
-
-    if (!reader) {
-      throw new Error("Failed to get response reader");
-    }
-
-    // Process the streamed response
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      // Decode the chunk and add it to our content
-      const chunk = new TextDecoder().decode(value);
-      content += chunk;
-
-      // Update the UI with the current content
-      onUpdate(content);
-    }
 
     // Once streaming is complete, save the message to the database
     const finalMessage: IMessage = {
-      id: messagesToSend[messagesToSend.length - 1].id,
+      id,
       role: "assistant",
       content,
       loading: false,
@@ -92,7 +148,7 @@ export const sendMessageToAI = async ({
     await onComplete(finalMessage);
 
     return finalMessage;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in sendMessageToAI:", error);
     throw error;
   }

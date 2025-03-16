@@ -11,3 +11,27 @@ export interface IAiAgent {
   created_at: string;
   updated_at: string;
 }
+
+export interface IFunction {
+  name: string;
+  parameters?: object;
+  description: string;
+  markup?: object;
+  type: string;
+}
+
+export interface IOpenAiFunction {
+  name: string;
+  description: string;
+  parameters: object;
+}
+
+export interface IFunctionCall {
+  name: string;
+  arguments: object;
+}
+
+export interface IContext {
+  functions: Partial<IFunction>[];
+  session: string;
+}

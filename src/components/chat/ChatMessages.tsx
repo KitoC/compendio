@@ -1,4 +1,3 @@
-
 import { useChat } from "@/contexts/chat";
 import ChatMessage from "./ChatMessage";
 
@@ -10,7 +9,7 @@ const ChatMessages = () => {
   );
 
   return (
-    <div 
+    <div
       className="flex-1 p-4 overflow-y-auto scroll-smooth space-y-4"
       ref={messagesContainerRef}
     >
@@ -23,10 +22,7 @@ const ChatMessages = () => {
             data-user-message={message.role === "user" ? "true" : "false"}
             className="animate-fadeIn"
           >
-            <ChatMessage
-              message={message}
-              isLastMessage={isLastMessage}
-            />
+            <ChatMessage message={message} isLastMessage={isLastMessage} />
           </div>
         );
       })}

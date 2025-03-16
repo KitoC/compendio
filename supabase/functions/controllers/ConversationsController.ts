@@ -1,10 +1,10 @@
-// @ts-ignore
+// @ts-expect-error - Supabase client is not typed
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.8.0";
 
 class ConversationsController {
   private supabase: SupabaseClient | null;
   private userId: string | null;
-  private user: any | null;
+  private user: object | null;
 
   constructor() {
     this.supabase = null;

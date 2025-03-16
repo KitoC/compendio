@@ -1,7 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getSupabaseFunctionsUrl } from "@/utils/supabaseUtils";
 
-export const callSupabaseFunction = async (functionName: string, body: any) => {
+export const callSupabaseFunction = async (
+  functionName: string,
+  body: object
+) => {
   const functionUrl = getSupabaseFunctionsUrl();
 
   console.log("Calling AI chat function at:", functionUrl);

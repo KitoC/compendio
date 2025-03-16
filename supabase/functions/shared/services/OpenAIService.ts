@@ -1,15 +1,34 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-
+import type { IMessage } from "../../../../src/types/chat.ts";
+import type {
+  IFunctionCall,
+  IOpenAiFunction,
+} from "../../../../src/types/aiAgents.ts";
 const OPEN_AI_URL = "https://api.openai.com";
 
 const ENDPOINTS = {
   COMPLETIONS: `${OPEN_AI_URL}/v1/chat/completions`,
 };
 
+interface ICallOpenAIChatCompletionParams {
+  messages: Partial<IMessage>[];
+  model?: string;
+  stream?: boolean;
+  functions?: IOpenAiFunction[];
+  options?: object;
+}
+
+interface IStreamMessage {
+  type: string;
+  text: string;
+  function_call?: IFunctionCall;
+}
+
+type IFunctionCallHandler = (fn: IFunctionCall) => Promise<object | undefined>;
+
 class OpenAIService {
   private apiKey: string;
   private headers: Record<string, string>;
-  private self = this; // Assign this for use in event handlers
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
@@ -25,7 +44,7 @@ class OpenAIService {
     stream = true,
     functions = undefined,
     options = {},
-  }) {
+  }: ICallOpenAIChatCompletionParams) {
     try {
       const response = await fetch(ENDPOINTS.COMPLETIONS, {
         method: "POST",
@@ -56,11 +75,11 @@ class OpenAIService {
    */
   processStreamChunk(chunk: Uint8Array): {
     content: string;
-    functionCall: any | null;
+    functionCall: IFunctionCall | null;
   } {
     const text = new TextDecoder().decode(chunk);
     let content = "";
-    let functionCall: any | null = null;
+    let functionCall: IFunctionCall | null = null;
 
     const lines = text.split("\n").filter((line) => line.trim() !== "");
 
@@ -103,38 +122,51 @@ class OpenAIService {
     requestArgs,
     onFunctionCall,
   }: {
-    requestArgs: {
-      messages: any;
-      model?: string;
-      stream?: boolean;
-      functions?: any;
-    };
-    onFunctionCall: (fn: { name: string; arguments: any }) => Promise<any>;
+    requestArgs: ICallOpenAIChatCompletionParams;
+    onFunctionCall: IFunctionCallHandler;
   }): Promise<ReadableStream<Uint8Array>> {
-    const self = this; // Assign self reference
-    const response = await self.callOpenAIChatCompletion(requestArgs);
+    const response = await this.callOpenAIChatCompletion(requestArgs);
 
     const reader = response.body?.getReader();
     if (!reader) {
       throw new Error("Failed to get response reader");
     }
 
+    const message: IStreamMessage = {
+      type: "message",
+      text: "",
+      function_call: undefined,
+    };
+
     return new ReadableStream({
-      async start(controller) {
-        let functionCallDetected: { name: string; arguments: any } | null =
-          null;
-        let functionResult: any = null;
+      start: async (controller) => {
+        let functionCallDetected: IFunctionCall | null = null;
+        let functionResult: unknown | null = null;
+
+        const encoder = new TextEncoder();
+
+        const enqueueContent = (content: string) => {
+          if (content) {
+            message.text += content;
+
+            const jsonResponse =
+              JSON.stringify({
+                ...message,
+                text: message.text,
+              }) + "\n";
+
+            controller.enqueue(encoder.encode(jsonResponse));
+          }
+        };
 
         // First streaming pass (read initial response)
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
-          const { content, functionCall } = self.processStreamChunk(value);
+          const { content, functionCall } = this.processStreamChunk(value);
 
-          if (content) {
-            controller.enqueue(new TextEncoder().encode(content));
-          }
+          enqueueContent(content);
 
           if (functionCall && !functionCallDetected) {
             functionCallDetected = functionCall;
@@ -148,32 +180,39 @@ class OpenAIService {
           return;
         }
 
-        console.log("🔹 Function call detected:", functionCallDetected);
-        functionResult = onFunctionCall(functionCallDetected);
-
-        if (!functionResult) {
-          console.error("⚠️ Function execution returned null!");
-          controller.close();
-          return;
+        if (functionCallDetected) {
+          console.log("🔹 Function call detected:", functionCallDetected);
+          functionResult = await onFunctionCall(functionCallDetected);
         }
 
         console.log("🔹 Function result --> ", functionResult);
+
         // Append function response as a new message
-        const updatedMessages = [
+        const updatedMessages: Partial<IMessage & { name: string }>[] = [
           ...requestArgs.messages,
-          { role: "assistant", content: "" },
           {
+            role: "system",
+            content: "You have called the function. Respond accordingly",
+          },
+        ];
+
+        if (functionResult) {
+          updatedMessages.push({
             role: "function",
             name: functionCallDetected.name,
             content: JSON.stringify(functionResult),
-          },
-        ];
+          });
+        }
+
+        if (functionCallDetected) {
+          message.function_call = functionCallDetected;
+        }
 
         console.log("🔹 Resuming stream with function response...");
 
         // Call OpenAI again with updated messages
-        const resumedResponse = await self.callOpenAIChatCompletion({
-          messages: updatedMessages,
+        const resumedResponse = await this.callOpenAIChatCompletion({
+          messages: updatedMessages as IMessage[],
           model: requestArgs.model,
           stream: true,
         });
@@ -189,11 +228,9 @@ class OpenAIService {
           const { done, value } = await resumedReader.read();
           if (done) break;
 
-          const { content, functionCall } = self.processStreamChunk(value);
+          const { content, functionCall } = this.processStreamChunk(value);
 
-          if (content) {
-            controller.enqueue(new TextEncoder().encode(content));
-          }
+          enqueueContent(content);
         }
 
         controller.close();

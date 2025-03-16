@@ -1,16 +1,37 @@
-// @ts-ignore
-import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.8.0";
+// @ts-expect-error - Supabase client is not typed
+import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.8.0";
 import type SupabaseService from "../shared/services/SupabaseService";
 import type FunctionController from "./FunctionController";
+import type {
+  IAiAgent,
+  IContext,
+  IOpenAiFunction,
+} from "../../../src/types/aiAgents";
+import type OpenAIService from "../shared/services/OpenAIService";
+import type { IMessage } from "../../../src/types/chat";
 
 const TABLE_NAME = "ai_agents";
+
+const defaultAgent: IAiAgent = {
+  id: "default",
+  name: "Default Agent",
+  human_name: "Default Agent",
+  responsibility: "Default Agent",
+  enabled: true,
+  prompt: "",
+  model: "gpt-4o-mini",
+  avatar_url: "",
+  tenant_id: "",
+  created_at: "",
+  updated_at: "",
+};
 
 class AgentController {
   private supabase: SupabaseClient | null;
   private supabaseService: SupabaseService;
   private functionController: FunctionController;
-  private agents: any[];
-  private openAiService: any;
+  private agents: IAiAgent[];
+  private openAiService: OpenAIService;
 
   constructor() {
     this.supabase = null;
@@ -44,7 +65,7 @@ class AgentController {
   async getAgentById(agentId: string) {
     const agent = this.agents.find((agent) => agent.id === agentId);
 
-    return agent;
+    return agent || defaultAgent;
   }
 
   async setDependenciesAndGetAgents({
@@ -53,7 +74,7 @@ class AgentController {
     functionController,
   }: {
     supabaseService: SupabaseService;
-    openAiService: any;
+    openAiService: OpenAIService;
     functionController: FunctionController;
   }) {
     this.supabaseService = supabaseService;
@@ -64,7 +85,7 @@ class AgentController {
     return this.getAgents();
   }
 
-  async buildAgentPrompt(agentId: string, context: any) {
+  async buildAgentPrompt(agentId: string, context: IContext) {
     const { functions, session } = context;
     const { prompt, human_name, name } = await this.getAgentById(agentId);
 
@@ -91,17 +112,20 @@ class AgentController {
     return interpolatedPrompt;
   }
 
-  async talkToAgent(messages: any[], agentId: string) {
+  async talkToAgent(messages: IMessage[], agentId: string) {
     const { prompt, model = "gpt-4o-mini" } = await this.getAgentById(agentId);
 
-    const functions = await this.functionController.getFunctions();
-    const agentPrompt = await this.buildAgentPrompt(agentId, { functions });
+    const functions =
+      (await this.functionController.getFunctions()) as IOpenAiFunction[];
+    const agentPrompt = await this.buildAgentPrompt(agentId, {
+      functions,
+      session: "",
+    });
 
     try {
       const LAST_N = 10; // TODO: make this dynamic
 
       const stream = await this.openAiService.streamAndCallFunction({
-        supabaseService: this.supabaseService,
         onFunctionCall: (functionCall) =>
           this.functionController.executeFunction(functionCall),
         requestArgs: {
