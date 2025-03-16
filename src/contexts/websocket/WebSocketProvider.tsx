@@ -27,17 +27,37 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
     connectWebSocket();
 
     // Setup connection status handlers
-    const removeOpenHandler = websocketService.onOpen(() => setIsConnected(true));
-    const removeCloseHandler = websocketService.onClose(() => setIsConnected(false));
+    const removeOpenHandler = websocketService.onOpen(() => {
+      console.log("WebSocket connected in provider");
+      setIsConnected(true);
+    });
+    
+    const removeCloseHandler = websocketService.onClose(() => {
+      console.log("WebSocket disconnected in provider");
+      setIsConnected(false);
+    });
+    
     const removeErrorHandler = websocketService.onError((error) => {
       console.error("WebSocket error in provider:", error);
       setIsConnected(false);
     });
 
+    // Setup network status event listeners to handle reconnection when network changes
+    const handleOnline = () => {
+      console.log("Network connection restored, reconnecting WebSocket");
+      if (!websocketService.isConnected()) {
+        connectWebSocket();
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+
     return () => {
       removeOpenHandler();
       removeCloseHandler();
       removeErrorHandler();
+      window.removeEventListener('online', handleOnline);
+      
       // Note: We do NOT disconnect the WebSocket here to keep it persistent
     };
   }, [user]);

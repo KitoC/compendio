@@ -3,6 +3,7 @@
 interface WindowWithEnv extends Window {
   __ENV__?: {
     VITE_SUPABASE_URL?: string;
+    VITE_SUPABASE_FUNCTIONS_URL?: string;
   };
   supabase?: {
     supabaseUrl?: string;
@@ -32,9 +33,13 @@ export const getSupabaseUrl = () => {
     return windowWithEnv.supabase.supabaseUrl;
   }
 
-  // If we're in development mode (localhost), use a mock URL that will be enough
-  // for WebSocket connections during development
-  if (window.location.hostname === 'localhost' || window.location.hostname.includes('lovableproject.com')) {
+  // If we're in development mode (localhost), use a default local URL
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://127.0.0.1:54321';
+  }
+
+  // For lovableproject.com dev environments
+  if (window.location.hostname.includes('lovableproject.com')) {
     return 'https://zgtukvtbfucrvdpicvxx.supabase.co';
   }
 
@@ -48,12 +53,30 @@ export const getSupabaseUrl = () => {
  * Gets the Supabase functions URL from environment variables or fallback
  */
 export const getSupabaseFunctionsUrl = (version: string = "v1") => {
-  let baseUrl = getSupabaseUrl();
-
+  // First try to get the Functions URL directly
   if (import.meta.env.VITE_SUPABASE_FUNCTIONS_URL) {
-    baseUrl = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL;
+    const baseUrl = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL;
+    return `${baseUrl}/functions/${version}`;
   }
 
+  // Safely access window.__ENV__ with type casting
+  const windowWithEnv = window as WindowWithEnv;
+  if (
+    typeof window !== "undefined" &&
+    windowWithEnv.__ENV__ &&
+    windowWithEnv.__ENV__.VITE_SUPABASE_FUNCTIONS_URL
+  ) {
+    const baseUrl = windowWithEnv.__ENV__.VITE_SUPABASE_FUNCTIONS_URL;
+    return `${baseUrl}/functions/${version}`;
+  }
+
+  // If we're in development mode (localhost), use a default local URL
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return `http://127.0.0.1:54321/functions/${version}`;
+  }
+
+  // Fallback to using the Supabase URL if we couldn't find a specific Functions URL
+  let baseUrl = getSupabaseUrl();
   return `${baseUrl}/functions/${version}`;
 };
 

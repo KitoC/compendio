@@ -1,226 +1,216 @@
 
-import { supabase } from "@/integrations/supabase/client";
 import { getSupabaseFunctionsUrl } from "@/utils/supabaseUtils";
+import { supabase } from "@/integrations/supabase/client";
 
-export type WebSocketMessageType = 
-  | 'echo'
-  | 'agent.typing'
-  | 'agent.response'
-  | 'conversation.update'
-  | 'notification'
-  | 'error'
-  | 'chat.message';
-
+// Type definitions
 export interface WebSocketMessage {
-  type: WebSocketMessageType;
+  type: string;
   [key: string]: any;
 }
 
 class WebSocketService {
   private socket: WebSocket | null = null;
-  private isConnecting: boolean = false;
-  private messageQueue: any[] = [];
-  private reconnectAttempts: number = 0;
-  private maxReconnectAttempts: number = 5;
-  private reconnectTimeout: number = 1000;
-  private intentionalDisconnect: boolean = false;
-  private messageHandlers: Array<(message: WebSocketMessage) => void> = [];
-  private openHandlers: Array<() => void> = [];
-  private closeHandlers: Array<() => void> = [];
-  private errorHandlers: Array<(error: Event) => void> = [];
-  private authToken: string | null = null;
+  private messageListeners: ((message: WebSocketMessage) => void)[] = [];
+  private openListeners: (() => void)[] = [];
+  private closeListeners: (() => void)[] = [];
+  private errorListeners: ((error: Event) => void)[] = [];
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private isReconnecting = false;
+  private reconnectBackoff = 1000; // Start with 1 second, will increase exponentially
+
+  // Check if the WebSocket is currently connected
+  public isConnected(): boolean {
+    return !!this.socket && this.socket.readyState === WebSocket.OPEN;
+  }
 
   // Connect to the WebSocket server
-  public async connect(): Promise<WebSocket> {
-    // If already connected, return the existing socket
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      return this.socket;
+  public async connect(): Promise<void> {
+    // Don't try to connect if already connected or connecting
+    if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) {
+      console.log("WebSocket is already connected or connecting");
+      return;
     }
 
-    // If currently connecting, wait for the connection to complete
-    if (this.isConnecting) {
-      return new Promise((resolve) => {
-        const checkInterval = setInterval(() => {
-          if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-            clearInterval(checkInterval);
-            resolve(this.socket);
-          }
-        }, 100);
-      });
+    // Clear any existing reconnection attempt
+    if (this.reconnectTimeoutId) {
+      clearTimeout(this.reconnectTimeoutId);
+      this.reconnectTimeoutId = null;
     }
-
-    this.isConnecting = true;
-    this.intentionalDisconnect = false;
 
     try {
-      // Get authentication token
-      const { data: { session } } = await supabase.auth.getSession();
-      this.authToken = session?.access_token || null;
+      const session = await supabase.auth.getSession();
+      const accessToken = session.data?.session?.access_token;
 
-      if (!this.authToken) {
-        throw new Error('No authentication token available');
+      // Get the WebSocket URL from the supabase utils
+      const baseUrl = getSupabaseFunctionsUrl();
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      
+      // Convert HTTP/HTTPS URL to WebSocket URL
+      let wsUrl = baseUrl.replace(/^https?:\/\//, `${wsProtocol}//`) + '/ai-chat';
+      
+      // If we have an access token, add it as a query parameter
+      if (accessToken) {
+        wsUrl += `?token=${accessToken}`;
       }
-
-      // Create WebSocket connection
-      const wsUrl = getSupabaseFunctionsUrl().replace('https://', 'wss://') + '/ai-chat';
+      
+      console.log(`Connecting to WebSocket at: ${wsUrl}`);
+      
       this.socket = new WebSocket(wsUrl);
-
+      
       this.socket.onopen = () => {
-        console.log('WebSocket connection established');
-        this.isConnecting = false;
+        console.log("WebSocket connection established");
         this.reconnectAttempts = 0;
-        
-        // Send any queued messages
-        while (this.messageQueue.length > 0) {
-          const message = this.messageQueue.shift();
-          this.emit(message);
-        }
-        
-        // Notify all registered open handlers
-        this.openHandlers.forEach(handler => handler());
+        this.reconnectBackoff = 1000; // Reset backoff time on successful connection
+        this.isReconnecting = false;
+        this.openListeners.forEach(listener => listener());
       };
-
+      
       this.socket.onmessage = (event) => {
         try {
-          const message = JSON.parse(event.data) as WebSocketMessage;
-          console.log('WebSocket message received:', message);
-          
-          // Notify all registered message handlers
-          this.messageHandlers.forEach(handler => {
-            try {
-              handler(message);
-            } catch (error) {
-              console.error('Error in message handler:', error);
-            }
-          });
+          const data = JSON.parse(event.data);
+          console.log("WebSocket message received:", data);
+          this.messageListeners.forEach(listener => listener(data));
         } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
+          console.error("Error parsing WebSocket message:", error);
         }
       };
-
+      
       this.socket.onclose = (event) => {
-        console.log('WebSocket connection closed', event.code, event.reason);
-        this.socket = null;
-        this.isConnecting = false;
+        console.log(`WebSocket connection closed`, event.code, event.reason);
+        this.closeListeners.forEach(listener => listener());
         
-        // Notify all registered close handlers
-        this.closeHandlers.forEach(handler => handler());
-        
-        // Only attempt to reconnect if:
-        // 1. Not intentionally disconnected
-        // 2. We haven't exceeded max attempts
-        // 3. The close wasn't due to an authentication issue (code 4001)
-        // 4. The browser isn't offline
-        if (!this.intentionalDisconnect && 
-            this.reconnectAttempts < this.maxReconnectAttempts && 
-            event.code !== 4001 &&
-            navigator.onLine) {
-          
-          this.reconnectAttempts++;
-          console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
-          
-          // Use exponential backoff for reconnection
-          const delay = this.reconnectTimeout * Math.pow(1.5, this.reconnectAttempts - 1);
-          
-          setTimeout(() => {
-            // Check if we're still online before attempting to reconnect
-            if (navigator.onLine) {
-              this.connect().catch(err => {
-                console.error('Reconnection failed:', err);
-              });
-            }
-          }, delay);
-        } else if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-          console.log('Max reconnection attempts reached, giving up');
+        // Only attempt to reconnect if we're not already in the process and we have network connection
+        if (!this.isReconnecting && navigator.onLine && this.reconnectAttempts < this.maxReconnectAttempts) {
+          this.attemptReconnect();
         }
       };
-
+      
       this.socket.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        console.error("WebSocket error:", error);
+        this.errorListeners.forEach(listener => listener(error));
         
-        // Notify all registered error handlers
-        this.errorHandlers.forEach(handler => handler(error));
+        // Socket errors often lead to closure, but we'll handle reconnect in onclose
       };
-
-      return this.socket;
     } catch (error) {
-      console.error('Error connecting to WebSocket:', error);
-      this.isConnecting = false;
+      console.error("Error connecting to WebSocket:", error);
       throw error;
     }
   }
 
-  // Send a message to the server
-  public emit(message: any): void {
-    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-      this.messageQueue.push(message);
-      
-      if (!this.isConnecting && navigator.onLine) {
-        this.connect().catch(err => {
-          console.error('Connection attempt failed:', err);
-        });
-      }
-      return;
-    }
-
-    try {
-      this.socket.send(typeof message === 'string' ? message : JSON.stringify(message));
-    } catch (error) {
-      console.error('Error sending WebSocket message:', error);
-      this.messageQueue.push(message);
-    }
-  }
-
-  // Listen for messages of a specific type
-  public listen(handler: (message: WebSocketMessage) => void): () => void {
-    this.messageHandlers.push(handler);
-    // Return a function to remove this handler
-    return () => {
-      this.messageHandlers = this.messageHandlers.filter(h => h !== handler);
-    };
-  }
-
-  // Listen for connection open events
-  public onOpen(handler: () => void): () => void {
-    this.openHandlers.push(handler);
-    return () => {
-      this.openHandlers = this.openHandlers.filter(h => h !== handler);
-    };
-  }
-
-  // Listen for connection close events
-  public onClose(handler: () => void): () => void {
-    this.closeHandlers.push(handler);
-    return () => {
-      this.closeHandlers = this.closeHandlers.filter(h => h !== handler);
-    };
-  }
-
-  // Listen for connection error events
-  public onError(handler: (error: Event) => void): () => void {
-    this.errorHandlers.push(handler);
-    return () => {
-      this.errorHandlers = this.errorHandlers.filter(h => h !== handler);
-    };
-  }
-
-  // Check if connected
-  public isConnected(): boolean {
-    return this.socket !== null && this.socket.readyState === WebSocket.OPEN;
-  }
-
-  // Disconnect from the server
+  // Disconnect from the WebSocket server
   public disconnect(): void {
-    this.intentionalDisconnect = true;
-    
     if (this.socket) {
       this.socket.close();
       this.socket = null;
     }
     
-    this.isConnecting = false;
-    this.messageQueue = [];
-    this.reconnectAttempts = 0;
+    // Clear any pending reconnect attempts
+    if (this.reconnectTimeoutId) {
+      clearTimeout(this.reconnectTimeoutId);
+      this.reconnectTimeoutId = null;
+    }
+    
+    this.isReconnecting = false;
+  }
+
+  private attemptReconnect(): void {
+    if (this.isReconnecting) return;
+    
+    this.isReconnecting = true;
+    this.reconnectAttempts++;
+    
+    // Use exponential backoff for retry timing
+    const reconnectDelay = Math.min(30000, this.reconnectBackoff * Math.pow(2, this.reconnectAttempts - 1));
+    
+    console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts}) in ${reconnectDelay/1000} seconds...`);
+    
+    this.reconnectTimeoutId = setTimeout(async () => {
+      // Only proceed if we're online
+      if (navigator.onLine) {
+        try {
+          await this.connect();
+        } catch (error) {
+          console.error("Reconnection attempt failed:", error);
+          // If still not connected and we have attempts left, try again
+          if (!this.isConnected() && this.reconnectAttempts < this.maxReconnectAttempts) {
+            this.isReconnecting = false;
+            this.attemptReconnect();
+          } else if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+            console.error("Maximum reconnection attempts reached. Please refresh the page.");
+            this.isReconnecting = false;
+          }
+        }
+      } else {
+        console.log("Network offline, delaying reconnection attempt");
+        this.isReconnecting = false;
+        
+        // Add event listener for online status to trigger reconnect
+        const onlineListener = () => {
+          window.removeEventListener('online', onlineListener);
+          if (!this.isConnected() && this.reconnectAttempts < this.maxReconnectAttempts) {
+            this.attemptReconnect();
+          }
+        };
+        window.addEventListener('online', onlineListener);
+      }
+    }, reconnectDelay);
+  }
+
+  // Send a message to the WebSocket server
+  public emit(message: any): void {
+    if (!this.isConnected()) {
+      console.warn("Cannot send message, WebSocket is not connected");
+      throw new Error("WebSocket is not connected");
+    }
+    
+    try {
+      this.socket!.send(JSON.stringify(message));
+    } catch (error) {
+      console.error("Error sending WebSocket message:", error);
+      throw error;
+    }
+  }
+
+  // Listen for messages from the WebSocket server
+  public listen(handler: (message: WebSocketMessage) => void): () => void {
+    this.messageListeners.push(handler);
+    
+    // Return a function to remove this listener
+    return () => {
+      this.messageListeners = this.messageListeners.filter(listener => listener !== handler);
+    };
+  }
+
+  // Register an event handler for when the connection opens
+  public onOpen(handler: () => void): () => void {
+    this.openListeners.push(handler);
+    
+    // Return a function to remove this listener
+    return () => {
+      this.openListeners = this.openListeners.filter(listener => listener !== handler);
+    };
+  }
+
+  // Register an event handler for when the connection closes
+  public onClose(handler: () => void): () => void {
+    this.closeListeners.push(handler);
+    
+    // Return a function to remove this listener
+    return () => {
+      this.closeListeners = this.closeListeners.filter(listener => listener !== handler);
+    };
+  }
+
+  // Register an event handler for when an error occurs
+  public onError(handler: (error: Event) => void): () => void {
+    this.errorListeners.push(handler);
+    
+    // Return a function to remove this listener
+    return () => {
+      this.errorListeners = this.errorListeners.filter(listener => listener !== handler);
+    };
   }
 }
 
