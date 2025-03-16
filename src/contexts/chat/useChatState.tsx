@@ -1,3 +1,4 @@
+
 import { useState, useRef, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { IMessage, MessageRole } from "@/types/chat";
@@ -22,7 +23,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
   const [isTyping, setIsTyping] = useState(false);
   const { aiAgents } = useAiAgents();
   const params = useParams();
-  const { isConnected, addMessageHandler } = useWebSocket();
+  const { isConnected, addMessageHandler, sendMessage } = useWebSocket();
 
   const currentAgent = aiAgents.find((agent) => agent.name === params.id);
 
@@ -134,7 +135,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
 
       // Notify WebSocket that we're sending a message
       if (isConnected) {
-        const { sendMessage } = useWebSocket();
         sendMessage({
           type: 'chat.message',
           conversationId,
@@ -210,7 +210,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         setTimeout(scrollToOptimalPosition, 100);
       }
     },
-    [messages, conversationId, scrollToOptimalPosition, toast, user, tenantId, currentAgent, isConnected, useWebSocket]
+    [messages, conversationId, scrollToOptimalPosition, toast, user, tenantId, currentAgent, isConnected, sendMessage]
   );
 
   useEffect(() => {
