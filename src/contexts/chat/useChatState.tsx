@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { IMessage, MessageRole } from "@/types/chat";
@@ -23,7 +22,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
   const [isTyping, setIsTyping] = useState(false);
   const { aiAgents } = useAiAgents();
   const params = useParams();
-  const { isConnected, addMessageHandler, sendMessage } = useWebSocket();
+  const { isConnected, emit, listen, sendNotification } = useWebSocket();
 
   const currentAgent = aiAgents.find((agent) => agent.name === params.id);
 
@@ -78,12 +77,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     }
   }, [conversationId, toast, scrollToOptimalPosition]);
 
-  // Send a notification through the WebSocket context
-  const sendNotification = useCallback((title: string, message: string, level: 'info' | 'success' | 'warning' | 'error' = 'info') => {
-    const { sendNotification } = useWebSocket();
-    sendNotification(title, message, level);
-  }, [useWebSocket]);
-
   // Handle WebSocket messages
   useEffect(() => {
     const handleWebSocketMessage = (message: WebSocketMessage) => {
@@ -106,17 +99,17 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
           break;
         
         default:
-          // Other message types are handled by the WebSocketProvider
+          // Other message types are handled elsewhere
           break;
       }
     };
     
     // Register handler and get cleanup function
-    const removeHandler = addMessageHandler(handleWebSocketMessage);
+    const removeHandler = listen(handleWebSocketMessage);
     
     // Clean up when component unmounts
     return () => removeHandler();
-  }, [conversationId, loadMessages, addMessageHandler]);
+  }, [conversationId, loadMessages, listen]);
 
   const handleSendMessage = useCallback(
     async (content: string, role: MessageRole = MessageRole.USER) => {
@@ -135,7 +128,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
 
       // Notify WebSocket that we're sending a message
       if (isConnected) {
-        sendMessage({
+        emit({
           type: 'chat.message',
           conversationId,
           agentId: currentAgent?.id || "",
@@ -210,7 +203,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         setTimeout(scrollToOptimalPosition, 100);
       }
     },
-    [messages, conversationId, scrollToOptimalPosition, toast, user, tenantId, currentAgent, isConnected, sendMessage]
+    [messages, conversationId, scrollToOptimalPosition, toast, user, tenantId, currentAgent, isConnected, emit]
   );
 
   useEffect(() => {

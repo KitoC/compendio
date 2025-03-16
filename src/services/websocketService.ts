@@ -8,18 +8,12 @@ export type WebSocketMessageType =
   | 'agent.response'
   | 'conversation.update'
   | 'notification'
-  | 'error';
+  | 'error'
+  | 'chat.message';
 
 export interface WebSocketMessage {
   type: WebSocketMessageType;
   [key: string]: any;
-}
-
-export interface WebSocketConnectionOptions {
-  onOpen?: () => void;
-  onMessage?: (message: WebSocketMessage) => void;
-  onClose?: () => void;
-  onError?: (error: Event) => void;
 }
 
 class WebSocketService {
@@ -29,24 +23,13 @@ class WebSocketService {
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
   private reconnectTimeout: number = 1000;
-  private options: WebSocketConnectionOptions = {};
   private intentionalDisconnect: boolean = false;
   private messageHandlers: Array<(message: WebSocketMessage) => void> = [];
   private openHandlers: Array<() => void> = [];
   private closeHandlers: Array<() => void> = [];
   private errorHandlers: Array<(error: Event) => void> = [];
 
-  // Initialize with basic handlers that maintain connection lists
-  constructor() {
-    // Set default empty handlers to avoid null checks
-    this.options = {
-      onOpen: () => {},
-      onMessage: () => {},
-      onClose: () => {},
-      onError: () => {},
-    };
-  }
-
+  // Connect to the WebSocket server
   public async connect(): Promise<WebSocket> {
     // If already connected, return the existing socket
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
@@ -89,7 +72,7 @@ class WebSocketService {
         // Send any queued messages
         while (this.messageQueue.length > 0) {
           const message = this.messageQueue.shift();
-          this.send(message);
+          this.emit(message);
         }
         
         // Notify all registered open handlers
@@ -144,7 +127,8 @@ class WebSocketService {
     }
   }
 
-  public send(message: any): void {
+  // Send a message to the server
+  public emit(message: any): void {
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
       this.messageQueue.push(message);
       
@@ -164,18 +148,8 @@ class WebSocketService {
     }
   }
 
-  public sendNotification(title: string, message: string, level: 'info' | 'success' | 'warning' | 'error' = 'info'): void {
-    this.send({
-      type: 'notification',
-      title,
-      message,
-      level,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  // Add a message handler that will receive all WebSocket messages
-  public addMessageHandler(handler: (message: WebSocketMessage) => void): () => void {
+  // Listen for messages of a specific type
+  public listen(handler: (message: WebSocketMessage) => void): () => void {
     this.messageHandlers.push(handler);
     // Return a function to remove this handler
     return () => {
@@ -183,30 +157,36 @@ class WebSocketService {
     };
   }
 
-  // Add an open handler that will be called when the WebSocket opens
-  public addOpenHandler(handler: () => void): () => void {
+  // Listen for connection open events
+  public onOpen(handler: () => void): () => void {
     this.openHandlers.push(handler);
     return () => {
       this.openHandlers = this.openHandlers.filter(h => h !== handler);
     };
   }
 
-  // Add a close handler that will be called when the WebSocket closes
-  public addCloseHandler(handler: () => void): () => void {
+  // Listen for connection close events
+  public onClose(handler: () => void): () => void {
     this.closeHandlers.push(handler);
     return () => {
       this.closeHandlers = this.closeHandlers.filter(h => h !== handler);
     };
   }
 
-  // Add an error handler that will be called when the WebSocket has an error
-  public addErrorHandler(handler: (error: Event) => void): () => void {
+  // Listen for connection error events
+  public onError(handler: (error: Event) => void): () => void {
     this.errorHandlers.push(handler);
     return () => {
       this.errorHandlers = this.errorHandlers.filter(h => h !== handler);
     };
   }
 
+  // Check if connected
+  public isConnected(): boolean {
+    return this.socket !== null && this.socket.readyState === WebSocket.OPEN;
+  }
+
+  // Disconnect from the server
   public disconnect(): void {
     this.intentionalDisconnect = true;
     
@@ -218,10 +198,6 @@ class WebSocketService {
     this.isConnecting = false;
     this.messageQueue = [];
     this.reconnectAttempts = 0;
-  }
-
-  public isConnected(): boolean {
-    return this.socket !== null && this.socket.readyState === WebSocket.OPEN;
   }
 }
 

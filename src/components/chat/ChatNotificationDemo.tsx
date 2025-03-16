@@ -5,14 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWebSocket } from "@/contexts/websocket";
 import { WebSocketMessage } from "@/services/websocketService";
+import { NotificationLevel } from "@/services/notificationService";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 
 const ChatNotificationDemo = () => {
   const [title, setTitle] = useState("Test Notification");
   const [message, setMessage] = useState("This is a test notification");
-  const [level, setLevel] = useState<"info" | "success" | "warning" | "error">("info");
-  const { isConnected, sendNotification, addMessageHandler, addOpenHandler, addCloseHandler } = useWebSocket();
+  const [level, setLevel] = useState<NotificationLevel>("info");
+  const { isConnected, sendNotification, listen } = useWebSocket();
   const { toast } = useToast();
 
   // Set up WebSocket event handlers
@@ -28,22 +29,14 @@ const ChatNotificationDemo = () => {
       }
     };
 
-    // Register handlers
-    const removeMessageHandler = addMessageHandler(handleMessage);
-    const removeOpenHandler = addOpenHandler(() => {
-      console.log("WebSocket connected");
-    });
-    const removeCloseHandler = addCloseHandler(() => {
-      console.log("WebSocket disconnected");
-    });
+    // Register message handler
+    const removeMessageHandler = listen(handleMessage);
 
-    // Cleanup handlers when component unmounts
+    // Cleanup handler when component unmounts
     return () => {
       removeMessageHandler();
-      removeOpenHandler();
-      removeCloseHandler();
     };
-  }, [addMessageHandler, addOpenHandler, addCloseHandler, toast]);
+  }, [listen, toast]);
 
   const handleSendNotification = () => {
     if (!isConnected) {
@@ -82,7 +75,7 @@ const ChatNotificationDemo = () => {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
         />
-        <Select value={level} onValueChange={(value) => setLevel(value as any)}>
+        <Select value={level} onValueChange={(value) => setLevel(value as NotificationLevel)}>
           <SelectTrigger>
             <SelectValue placeholder="Notification Level" />
           </SelectTrigger>

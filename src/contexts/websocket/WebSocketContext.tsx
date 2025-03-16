@@ -1,20 +1,18 @@
 
 import { createContext, useContext } from "react";
 import { WebSocketMessage } from "@/services/websocketService";
+import { NotificationLevel } from "@/services/notificationService";
 
 export interface WebSocketContextType {
   // Connection status
   isConnected: boolean;
   
-  // Send methods
-  sendMessage: (message: any) => void;
-  sendNotification: (title: string, message: string, level?: 'info' | 'success' | 'warning' | 'error') => void;
+  // Core WebSocket methods
+  emit: (message: any) => void;
+  listen: (handler: (message: WebSocketMessage) => void) => () => void;
   
-  // Add handler methods - each returns a function to remove the handler
-  addMessageHandler: (handler: (message: WebSocketMessage) => void) => () => void;
-  addOpenHandler: (handler: () => void) => () => void;
-  addCloseHandler: (handler: () => void) => () => void;
-  addErrorHandler: (handler: (error: Event) => void) => () => void;
+  // Notification method (kept for backward compatibility)
+  sendNotification: (title: string, message: string, level?: NotificationLevel) => void;
 }
 
 export const WebSocketContext = createContext<WebSocketContextType | null>(null);
