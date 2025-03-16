@@ -29,10 +29,15 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
     // Setup connection status handlers
     const removeOpenHandler = websocketService.onOpen(() => setIsConnected(true));
     const removeCloseHandler = websocketService.onClose(() => setIsConnected(false));
+    const removeErrorHandler = websocketService.onError((error) => {
+      console.error("WebSocket error in provider:", error);
+      setIsConnected(false);
+    });
 
     return () => {
       removeOpenHandler();
       removeCloseHandler();
+      removeErrorHandler();
       // Note: We do NOT disconnect the WebSocket here to keep it persistent
     };
   }, [user]);

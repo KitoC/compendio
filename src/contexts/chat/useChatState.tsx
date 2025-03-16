@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { IMessage, MessageRole } from "@/types/chat";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { v4 as uuidv4 } from "uuid";
 import { sendMessageToAI } from "@/services/aiChatService";
@@ -12,6 +12,7 @@ import { useParams } from "react-router-dom";
 import { usePrevious } from "react-use";
 import { WebSocketMessage } from "@/services/websocketService";
 import { useWebSocket } from "@/contexts/websocket";
+import { notificationService } from "@/services/notificationService";
 
 interface UseChatOptions {
   conversationId: string;
@@ -28,7 +29,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const { toast } = useToast();
   const { user, tenantId } = useAuth();
   const previousMessages = usePrevious(messages);
 
@@ -69,13 +69,13 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       }
     } catch (error: any) {
       console.error("Error loading messages:", error);
-      toast({
+      toast.show({
         title: "Error",
         description: error.message || "Failed to load messages",
         variant: "destructive"
       });
     }
-  }, [conversationId, toast, scrollToOptimalPosition]);
+  }, [conversationId, scrollToOptimalPosition]);
 
   // Handle WebSocket messages
   useEffect(() => {
@@ -180,7 +180,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         });
       } catch (error: any) {
         console.error("Error in handleSendMessage:", error);
-        toast({
+        toast.show({
           title: "Error",
           description: error.message || "Failed to send message",
           variant: "destructive"
@@ -203,7 +203,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         setTimeout(scrollToOptimalPosition, 100);
       }
     },
-    [messages, conversationId, scrollToOptimalPosition, toast, user, tenantId, currentAgent, isConnected, emit]
+    [messages, conversationId, scrollToOptimalPosition, user, tenantId, currentAgent, isConnected, emit]
   );
 
   useEffect(() => {

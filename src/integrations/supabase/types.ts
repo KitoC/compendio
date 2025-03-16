@@ -71,6 +71,7 @@ export type Database = {
           created_at: string | null
           deleted_at: string | null
           description: string | null
+          enabled_for: Json
           id: string
           name: string
           parameters: Json
@@ -84,6 +85,7 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           description?: string | null
+          enabled_for: Json
           id?: string
           name: string
           parameters: Json
@@ -97,6 +99,7 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           description?: string | null
+          enabled_for?: Json
           id?: string
           name?: string
           parameters?: Json

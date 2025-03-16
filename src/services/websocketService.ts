@@ -28,6 +28,7 @@ class WebSocketService {
   private openHandlers: Array<() => void> = [];
   private closeHandlers: Array<() => void> = [];
   private errorHandlers: Array<(error: Event) => void> = [];
+  private authToken: string | null = null;
 
   // Connect to the WebSocket server
   public async connect(): Promise<WebSocket> {
@@ -54,9 +55,9 @@ class WebSocketService {
     try {
       // Get authentication token
       const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
+      this.authToken = session?.access_token || null;
 
-      if (!token) {
+      if (!this.authToken) {
         throw new Error('No authentication token available');
       }
 
@@ -85,30 +86,52 @@ class WebSocketService {
           console.log('WebSocket message received:', message);
           
           // Notify all registered message handlers
-          this.messageHandlers.forEach(handler => handler(message));
+          this.messageHandlers.forEach(handler => {
+            try {
+              handler(message);
+            } catch (error) {
+              console.error('Error in message handler:', error);
+            }
+          });
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);
         }
       };
 
-      this.socket.onclose = () => {
-        console.log('WebSocket connection closed');
+      this.socket.onclose = (event) => {
+        console.log('WebSocket connection closed', event.code, event.reason);
         this.socket = null;
         this.isConnecting = false;
         
         // Notify all registered close handlers
         this.closeHandlers.forEach(handler => handler());
         
-        // Attempt to reconnect only if not intentionally disconnected
-        if (!this.intentionalDisconnect && this.reconnectAttempts < this.maxReconnectAttempts) {
+        // Only attempt to reconnect if:
+        // 1. Not intentionally disconnected
+        // 2. We haven't exceeded max attempts
+        // 3. The close wasn't due to an authentication issue (code 4001)
+        // 4. The browser isn't offline
+        if (!this.intentionalDisconnect && 
+            this.reconnectAttempts < this.maxReconnectAttempts && 
+            event.code !== 4001 &&
+            navigator.onLine) {
+          
           this.reconnectAttempts++;
           console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
           
+          // Use exponential backoff for reconnection
+          const delay = this.reconnectTimeout * Math.pow(1.5, this.reconnectAttempts - 1);
+          
           setTimeout(() => {
-            this.connect().catch(err => {
-              console.error('Reconnection failed:', err);
-            });
-          }, this.reconnectTimeout * this.reconnectAttempts);
+            // Check if we're still online before attempting to reconnect
+            if (navigator.onLine) {
+              this.connect().catch(err => {
+                console.error('Reconnection failed:', err);
+              });
+            }
+          }, delay);
+        } else if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+          console.log('Max reconnection attempts reached, giving up');
         }
       };
 
@@ -132,7 +155,7 @@ class WebSocketService {
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
       this.messageQueue.push(message);
       
-      if (!this.isConnecting) {
+      if (!this.isConnecting && navigator.onLine) {
         this.connect().catch(err => {
           console.error('Connection attempt failed:', err);
         });

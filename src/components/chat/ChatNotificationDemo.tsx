@@ -4,80 +4,72 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWebSocket } from "@/contexts/websocket";
-import { WebSocketMessage } from "@/services/websocketService";
-import { NotificationLevel } from "@/services/notificationService";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
+import { notificationService, NotificationLevel } from "@/services/notificationService";
 
-const ChatNotificationDemo = () => {
-  const [title, setTitle] = useState("Test Notification");
+export default function ChatNotificationDemo() {
   const [message, setMessage] = useState("This is a test notification");
+  const [title, setTitle] = useState("Test Notification");
   const [level, setLevel] = useState<NotificationLevel>("info");
-  const { isConnected, sendNotification, listen } = useWebSocket();
-  const { toast } = useToast();
+  const { isConnected, emit } = useWebSocket();
 
-  // Set up WebSocket event handlers
-  useEffect(() => {
-    const handleMessage = (message: WebSocketMessage) => {
-      if (message.type === "notification") {
-        // Display the notification using toast
-        toast({
-          title: message.title || "Notification",
-          description: message.message,
-          variant: message.level === "error" ? "destructive" : "default",
-        });
-      }
-    };
-
-    // Register message handler
-    const removeMessageHandler = listen(handleMessage);
-
-    // Cleanup handler when component unmounts
-    return () => {
-      removeMessageHandler();
-    };
-  }, [listen, toast]);
-
-  const handleSendNotification = () => {
-    if (!isConnected) {
-      toast({
-        title: "Not Connected",
-        description: "WebSocket is not connected",
-        variant: "destructive",
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      // Send the notification through WebSocket
+      emit({
+        type: "notification",
+        title,
+        message,
+        level,
+        timestamp: new Date().toISOString(),
       });
-      return;
-    }
 
-    sendNotification(title, message, level);
-    toast({
-      title: "Notification Sent",
-      description: "WebSocket notification has been sent",
-    });
+      // Also show a local toast
+      notificationService.showToast("Success", "Notification sent successfully", "success");
+    } catch (error) {
+      console.error("Error sending notification:", error);
+      notificationService.showToast("Error", "Failed to send notification", "error");
+    }
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <span>Status:</span>
-        <Badge variant={isConnected ? "success" : "destructive"}>
-          {isConnected ? "Connected" : "Disconnected"}
-        </Badge>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Connection Status</label>
+        <div className="flex items-center">
+          <div
+            className={`w-3 h-3 rounded-full mr-2 ${
+              isConnected ? "bg-green-500" : "bg-red-500"
+            }`}
+          />
+          <span>{isConnected ? "Connected" : "Disconnected"}</span>
+        </div>
       </div>
 
       <div className="space-y-2">
+        <label className="text-sm font-medium">Title</label>
         <Input
-          placeholder="Notification Title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+          placeholder="Notification title"
         />
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Message</label>
         <Input
-          placeholder="Notification Message"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
+          placeholder="Notification message"
         />
-        <Select value={level} onValueChange={(value) => setLevel(value as NotificationLevel)}>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Level</label>
+        <Select value={level} onValueChange={(value: any) => setLevel(value)}>
           <SelectTrigger>
-            <SelectValue placeholder="Notification Level" />
+            <SelectValue placeholder="Select a level" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="info">Info</SelectItem>
@@ -86,16 +78,11 @@ const ChatNotificationDemo = () => {
             <SelectItem value="error">Error</SelectItem>
           </SelectContent>
         </Select>
-        <Button
-          onClick={handleSendNotification}
-          disabled={!isConnected}
-          className="w-full"
-        >
-          Send Notification
-        </Button>
       </div>
-    </div>
-  );
-};
 
-export default ChatNotificationDemo;
+      <Button type="submit" disabled={!isConnected}>
+        Send Notification
+      </Button>
+    </form>
+  );
+}
