@@ -30,7 +30,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
 
   const scrollToOptimalPosition = useCallback(
     ({ behavior = "smooth" }: { behavior?: ScrollBehavior } = {}) => {
-      console.log("scrollToOptimalPosition", behavior);
       if (messagesContainerRef.current) {
         const container = messagesContainerRef.current;
 
@@ -69,8 +68,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       toast.error(error.message || "Failed to load messages");
     }
   }, [conversationId, toast]);
-
-  console.log("messages", messages);
 
   const handleSendMessage = useCallback(
     async (content: string, role: MessageRole = MessageRole.USER) => {
