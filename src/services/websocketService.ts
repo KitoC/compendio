@@ -31,12 +31,29 @@ class WebSocketService {
   private reconnectTimeout: number = 1000;
   private options: WebSocketConnectionOptions = {};
   private intentionalDisconnect: boolean = false;
+  private messageHandlers: Array<(message: WebSocketMessage) => void> = [];
+  private openHandlers: Array<() => void> = [];
+  private closeHandlers: Array<() => void> = [];
+  private errorHandlers: Array<(error: Event) => void> = [];
 
-  public async connect(options: WebSocketConnectionOptions = {}): Promise<WebSocket> {
+  // Initialize with basic handlers that maintain connection lists
+  constructor() {
+    // Set default empty handlers to avoid null checks
+    this.options = {
+      onOpen: () => {},
+      onMessage: () => {},
+      onClose: () => {},
+      onError: () => {},
+    };
+  }
+
+  public async connect(): Promise<WebSocket> {
+    // If already connected, return the existing socket
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       return this.socket;
     }
 
+    // If currently connecting, wait for the connection to complete
     if (this.isConnecting) {
       return new Promise((resolve) => {
         const checkInterval = setInterval(() => {
@@ -49,7 +66,6 @@ class WebSocketService {
     }
 
     this.isConnecting = true;
-    this.options = options;
     this.intentionalDisconnect = false;
 
     try {
@@ -76,9 +92,8 @@ class WebSocketService {
           this.send(message);
         }
         
-        if (this.options.onOpen) {
-          this.options.onOpen();
-        }
+        // Notify all registered open handlers
+        this.openHandlers.forEach(handler => handler());
       };
 
       this.socket.onmessage = (event) => {
@@ -86,9 +101,8 @@ class WebSocketService {
           const message = JSON.parse(event.data) as WebSocketMessage;
           console.log('WebSocket message received:', message);
           
-          if (this.options.onMessage) {
-            this.options.onMessage(message);
-          }
+          // Notify all registered message handlers
+          this.messageHandlers.forEach(handler => handler(message));
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);
         }
@@ -99,9 +113,8 @@ class WebSocketService {
         this.socket = null;
         this.isConnecting = false;
         
-        if (this.options.onClose) {
-          this.options.onClose();
-        }
+        // Notify all registered close handlers
+        this.closeHandlers.forEach(handler => handler());
         
         // Attempt to reconnect only if not intentionally disconnected
         if (!this.intentionalDisconnect && this.reconnectAttempts < this.maxReconnectAttempts) {
@@ -109,7 +122,7 @@ class WebSocketService {
           console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
           
           setTimeout(() => {
-            this.connect(this.options).catch(err => {
+            this.connect().catch(err => {
               console.error('Reconnection failed:', err);
             });
           }, this.reconnectTimeout * this.reconnectAttempts);
@@ -119,9 +132,8 @@ class WebSocketService {
       this.socket.onerror = (error) => {
         console.error('WebSocket error:', error);
         
-        if (this.options.onError) {
-          this.options.onError(error);
-        }
+        // Notify all registered error handlers
+        this.errorHandlers.forEach(handler => handler(error));
       };
 
       return this.socket;
@@ -137,7 +149,7 @@ class WebSocketService {
       this.messageQueue.push(message);
       
       if (!this.isConnecting) {
-        this.connect(this.options).catch(err => {
+        this.connect().catch(err => {
           console.error('Connection attempt failed:', err);
         });
       }
@@ -160,6 +172,39 @@ class WebSocketService {
       level,
       timestamp: new Date().toISOString()
     });
+  }
+
+  // Add a message handler that will receive all WebSocket messages
+  public addMessageHandler(handler: (message: WebSocketMessage) => void): () => void {
+    this.messageHandlers.push(handler);
+    // Return a function to remove this handler
+    return () => {
+      this.messageHandlers = this.messageHandlers.filter(h => h !== handler);
+    };
+  }
+
+  // Add an open handler that will be called when the WebSocket opens
+  public addOpenHandler(handler: () => void): () => void {
+    this.openHandlers.push(handler);
+    return () => {
+      this.openHandlers = this.openHandlers.filter(h => h !== handler);
+    };
+  }
+
+  // Add a close handler that will be called when the WebSocket closes
+  public addCloseHandler(handler: () => void): () => void {
+    this.closeHandlers.push(handler);
+    return () => {
+      this.closeHandlers = this.closeHandlers.filter(h => h !== handler);
+    };
+  }
+
+  // Add an error handler that will be called when the WebSocket has an error
+  public addErrorHandler(handler: (error: Event) => void): () => void {
+    this.errorHandlers.push(handler);
+    return () => {
+      this.errorHandlers = this.errorHandlers.filter(h => h !== handler);
+    };
   }
 
   public disconnect(): void {

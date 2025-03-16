@@ -1,149 +1,107 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { websocketService } from "@/services/websocketService";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useWebSocket } from "@/contexts/websocket";
+import { WebSocketMessage } from "@/services/websocketService";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 
 const ChatNotificationDemo = () => {
-  const [title, setTitle] = useState('Test Notification');
-  const [message, setMessage] = useState('This is a test notification from the WebSocket service!');
-  const [level, setLevel] = useState<'info' | 'success' | 'warning' | 'error'>('info');
-  const [isConnected, setIsConnected] = useState(false);
+  const [title, setTitle] = useState("Test Notification");
+  const [message, setMessage] = useState("This is a test notification");
+  const [level, setLevel] = useState<"info" | "success" | "warning" | "error">("info");
+  const { isConnected, sendNotification, addMessageHandler, addOpenHandler, addCloseHandler } = useWebSocket();
   const { toast } = useToast();
 
+  // Set up WebSocket event handlers
   useEffect(() => {
-    // Set up WebSocket connection
-    const setupWebSocket = async () => {
-      try {
-        await websocketService.connect({
-          onOpen: () => {
-            setIsConnected(true);
-            console.log('WebSocket connected');
-          },
-          onMessage: (message) => {
-            console.log('WebSocket message received:', message);
-            
-            // Handle notification messages
-            if (message.type === 'notification') {
-              toast({
-                title: message.title,
-                description: message.message,
-                variant: message.level === 'error' ? 'destructive' : 'default',
-              });
-            }
-          },
-          onClose: () => {
-            setIsConnected(false);
-            console.log('WebSocket disconnected');
-          },
-          onError: (error) => {
-            console.error('WebSocket error:', error);
-            setIsConnected(false);
-          }
+    const handleMessage = (message: WebSocketMessage) => {
+      if (message.type === "notification") {
+        // Display the notification using toast
+        toast({
+          title: message.title || "Notification",
+          description: message.message,
+          variant: message.level === "error" ? "destructive" : "default",
         });
-      } catch (error) {
-        console.error('Failed to connect to WebSocket:', error);
       }
     };
 
-    setupWebSocket();
+    // Register handlers
+    const removeMessageHandler = addMessageHandler(handleMessage);
+    const removeOpenHandler = addOpenHandler(() => {
+      console.log("WebSocket connected");
+    });
+    const removeCloseHandler = addCloseHandler(() => {
+      console.log("WebSocket disconnected");
+    });
 
+    // Cleanup handlers when component unmounts
     return () => {
-      websocketService.disconnect();
+      removeMessageHandler();
+      removeOpenHandler();
+      removeCloseHandler();
     };
-  }, [toast]);
+  }, [addMessageHandler, addOpenHandler, addCloseHandler, toast]);
 
   const handleSendNotification = () => {
     if (!isConnected) {
       toast({
-        title: "Not connected",
-        description: "WebSocket is not connected. Please try again later.",
+        title: "Not Connected",
+        description: "WebSocket is not connected",
         variant: "destructive",
       });
       return;
     }
 
-    // Method 1: Using the websocketService directly
-    websocketService.sendNotification(title, message, level);
-    
-    // Method 2: Sending via the WebSocket with a specific command type
-    websocketService.send({
-      type: 'send.notification',
-      title,
-      message,
-      level,
-    });
-    
+    sendNotification(title, message, level);
     toast({
-      title: "Notification sent",
-      description: "The notification has been sent to all connected clients.",
-      variant: "default",
+      title: "Notification Sent",
+      description: "WebSocket notification has been sent",
     });
   };
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>WebSocket Notification Demo</CardTitle>
-        <CardDescription>
-          Send a notification to all connected WebSocket clients
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="title">Notification Title</Label>
-          <Input
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter notification title"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="message">Notification Message</Label>
-          <Input
-            id="message"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Enter notification message"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Notification Level</Label>
-          <RadioGroup value={level} onValueChange={(value) => setLevel(value as any)}>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="info" id="info" />
-              <Label htmlFor="info">Info</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="success" id="success" />
-              <Label htmlFor="success">Success</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="warning" id="warning" />
-              <Label htmlFor="warning">Warning</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="error" id="error" />
-              <Label htmlFor="error">Error</Label>
-            </div>
-          </RadioGroup>
-        </div>
-      </CardContent>
-      <CardFooter>
-        <Button 
-          onClick={handleSendNotification} 
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <span>Status:</span>
+        <Badge variant={isConnected ? "success" : "destructive"}>
+          {isConnected ? "Connected" : "Disconnected"}
+        </Badge>
+      </div>
+
+      <div className="space-y-2">
+        <Input
+          placeholder="Notification Title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <Input
+          placeholder="Notification Message"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+        />
+        <Select value={level} onValueChange={(value) => setLevel(value as any)}>
+          <SelectTrigger>
+            <SelectValue placeholder="Notification Level" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="info">Info</SelectItem>
+            <SelectItem value="success">Success</SelectItem>
+            <SelectItem value="warning">Warning</SelectItem>
+            <SelectItem value="error">Error</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button
+          onClick={handleSendNotification}
           disabled={!isConnected}
           className="w-full"
         >
           Send Notification
         </Button>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 };
 

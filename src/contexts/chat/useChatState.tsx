@@ -10,7 +10,8 @@ import { Json } from "@/integrations/supabase/types";
 import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
 import { useParams } from "react-router-dom";
 import { usePrevious } from "react-use";
-import { websocketService, WebSocketMessage } from "@/services/websocketService";
+import { WebSocketMessage } from "@/services/websocketService";
+import { useWebSocket } from "@/contexts/websocket";
 
 interface UseChatOptions {
   conversationId: string;
@@ -19,9 +20,9 @@ interface UseChatOptions {
 export const useChatState = ({ conversationId }: UseChatOptions) => {
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [wsConnected, setWsConnected] = useState(false);
   const { aiAgents } = useAiAgents();
   const params = useParams();
+  const { isConnected, addMessageHandler } = useWebSocket();
 
   const currentAgent = aiAgents.find((agent) => agent.name === params.id);
 
@@ -76,101 +77,45 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     }
   }, [conversationId, toast, scrollToOptimalPosition]);
 
-  // Send a notification through the WebSocket
+  // Send a notification through the WebSocket context
   const sendNotification = useCallback((title: string, message: string, level: 'info' | 'success' | 'warning' | 'error' = 'info') => {
-    if (websocketService.isConnected()) {
-      websocketService.sendNotification(title, message, level);
-    } else {
-      toast({
-        title: "Error",
-        description: "WebSocket is not connected. Unable to send notification.",
-        variant: "destructive"
-      });
-    }
-  }, [toast]);
+    const { sendNotification } = useWebSocket();
+    sendNotification(title, message, level);
+  }, [useWebSocket]);
 
   // Handle WebSocket messages
-  const handleWebSocketMessage = useCallback((message: WebSocketMessage) => {
-    switch (message.type) {
-      case 'agent.typing':
-        setIsTyping(message.status);
-        break;
-      
-      case 'agent.response':
-        // This would be handled by the regular message stream, 
-        // but we could use it for immediate visual feedback
-        console.log('Agent response via WebSocket:', message);
-        break;
-      
-      case 'conversation.update':
-        if (message.conversation_id === conversationId) {
-          console.log('Conversation updated, refreshing messages');
-          loadMessages();
-        }
-        break;
-      
-      case 'notification':
-        toast({
-          title: message.title || "Notification",
-          description: message.message,
-          variant: message.level === 'error' ? 'destructive' : 'default',
-        });
-        break;
-      
-      case 'error':
-        toast({
-          title: "Error",
-          description: message.message || 'WebSocket error',
-          variant: "destructive"
-        });
-        break;
-      
-      default:
-        console.log('Unhandled WebSocket message type:', message.type);
-    }
-  }, [conversationId, loadMessages, toast]);
-
-  // Set up WebSocket connection
   useEffect(() => {
-    if (!user) return;
-
-    const connectToWebSocket = async () => {
-      try {
-        await websocketService.connect({
-          onOpen: () => {
-            setWsConnected(true);
-            console.log('WebSocket connected');
-            toast({
-              title: "Connected",
-              description: "Real-time updates connected",
-              variant: "default"
-            });
-          },
-          onMessage: handleWebSocketMessage,
-          onClose: () => {
-            setWsConnected(false);
-            console.log('WebSocket disconnected');
-          },
-          onError: (error) => {
-            console.error('WebSocket error:', error);
-            toast({
-              title: "Connection Error",
-              description: "Real-time update connection failed",
-              variant: "destructive"
-            });
+    const handleWebSocketMessage = (message: WebSocketMessage) => {
+      switch (message.type) {
+        case 'agent.typing':
+          setIsTyping(message.status);
+          break;
+        
+        case 'agent.response':
+          // This would be handled by the regular message stream, 
+          // but we could use it for immediate visual feedback
+          console.log('Agent response via WebSocket:', message);
+          break;
+        
+        case 'conversation.update':
+          if (message.conversation_id === conversationId) {
+            console.log('Conversation updated, refreshing messages');
+            loadMessages();
           }
-        });
-      } catch (error) {
-        console.error('Failed to connect to WebSocket:', error);
+          break;
+        
+        default:
+          // Other message types are handled by the WebSocketProvider
+          break;
       }
     };
-
-    connectToWebSocket();
-
-    return () => {
-      websocketService.disconnect();
-    };
-  }, [user, handleWebSocketMessage, toast]);
+    
+    // Register handler and get cleanup function
+    const removeHandler = addMessageHandler(handleWebSocketMessage);
+    
+    // Clean up when component unmounts
+    return () => removeHandler();
+  }, [conversationId, loadMessages, addMessageHandler]);
 
   const handleSendMessage = useCallback(
     async (content: string, role: MessageRole = MessageRole.USER) => {
@@ -188,8 +133,9 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       setTimeout(scrollToOptimalPosition, 100);
 
       // Notify WebSocket that we're sending a message
-      if (websocketService.isConnected()) {
-        websocketService.send({
+      if (isConnected) {
+        const { sendMessage } = useWebSocket();
+        sendMessage({
           type: 'chat.message',
           conversationId,
           agentId: currentAgent?.id || "",
@@ -241,7 +187,11 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         });
       } catch (error: any) {
         console.error("Error in handleSendMessage:", error);
-        toast.error(error.message || "Failed to send message");
+        toast({
+          title: "Error",
+          description: error.message || "Failed to send message",
+          variant: "destructive"
+        });
 
         // Update the AI message to show the error
         setMessages((prev) =>
@@ -260,7 +210,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         setTimeout(scrollToOptimalPosition, 100);
       }
     },
-    [messages, conversationId, scrollToOptimalPosition, toast, user, tenantId, currentAgent]
+    [messages, conversationId, scrollToOptimalPosition, toast, user, tenantId, currentAgent, isConnected, useWebSocket]
   );
 
   useEffect(() => {
@@ -301,7 +251,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     messages,
     isTyping,
     userId,
-    wsConnected,
+    wsConnected: isConnected,
     messagesContainerRef,
     inputRef,
     handleSendMessage,

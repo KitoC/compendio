@@ -65,6 +65,56 @@ export type Database = {
           },
         ]
       }
+      ai_functions: {
+        Row: {
+          config: Json
+          created_at: string | null
+          deleted_at: string | null
+          description: string | null
+          id: string
+          name: string
+          parameters: Json
+          schema: Json
+          tenant_id: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          config: Json
+          created_at?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          parameters: Json
+          schema: Json
+          tenant_id: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          config?: Json
+          created_at?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          parameters?: Json
+          schema?: Json
+          tenant_id?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_ai_functions_tenant"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       configs: {
         Row: {
           config: Json | null
