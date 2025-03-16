@@ -149,7 +149,7 @@ class OpenAIService {
         }
 
         console.log("🔹 Function call detected:", functionCallDetected);
-        functionResult = await onFunctionCall(functionCallDetected);
+        functionResult = onFunctionCall(functionCallDetected);
 
         if (!functionResult) {
           console.error("⚠️ Function execution returned null!");

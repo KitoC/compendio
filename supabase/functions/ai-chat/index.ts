@@ -6,7 +6,7 @@ import OpenAIService from "../shared/services/OpenAIService.ts";
 import AgentController from "../controllers/AgentController.ts";
 import ConversationsController from "../controllers/ConversationsController.ts";
 import SupabaseService from "../shared/services/SupabaseService.ts";
-
+import FunctionController from "../controllers/FunctionController.ts";
 // Environment variables
 const supabaseUrl = getEnvKey("SUPABASE_URL");
 const supabaseAnonKey = getEnvKey("SUPABASE_ANON_KEY");
@@ -15,6 +15,7 @@ const openAiService = new OpenAIService(getEnvKey("OPENAI_API_KEY"));
 const agentController = new AgentController();
 const conversationsController = new ConversationsController();
 const supabaseService = new SupabaseService();
+const functionController = new FunctionController();
 
 /**
  * Main handler for the AI chat edge function
@@ -40,9 +41,14 @@ serve(async (req: Request) => {
     await conversationsController.setDependencies({
       supabase: supabaseService.supabase,
     });
+
+    await functionController.setDependencies({
+      supabaseService,
+    });
     await agentController.setDependenciesAndGetAgents({
       supabaseService,
       openAiService,
+      functionController,
     });
 
     // Validate conversation exists or create it
