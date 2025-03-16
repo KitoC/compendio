@@ -11,6 +11,7 @@ export interface ChatContextType {
   inputRef: React.RefObject<HTMLTextAreaElement>;
   handleSendMessage: (content: string) => Promise<void>;
   conversationId: string;
+  sendNotification: (title: string, message: string, level?: 'info' | 'success' | 'warning' | 'error') => void;
 }
 
 export const ChatContext = createContext<ChatContextType>({
@@ -22,4 +23,5 @@ export const ChatContext = createContext<ChatContextType>({
   inputRef: { current: null },
   handleSendMessage: async () => {},
   conversationId: "",
+  sendNotification: () => {},
 });

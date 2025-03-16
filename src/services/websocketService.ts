@@ -7,6 +7,7 @@ export type WebSocketMessageType =
   | 'agent.typing'
   | 'agent.response'
   | 'conversation.update'
+  | 'notification'
   | 'error';
 
 export interface WebSocketMessage {
@@ -143,6 +144,16 @@ class WebSocketService {
       console.error('Error sending WebSocket message:', error);
       this.messageQueue.push(message);
     }
+  }
+
+  public sendNotification(title: string, message: string, level: 'info' | 'success' | 'warning' | 'error' = 'info'): void {
+    this.send({
+      type: 'notification',
+      title,
+      message,
+      level,
+      timestamp: new Date().toISOString()
+    });
   }
 
   public disconnect(): void {

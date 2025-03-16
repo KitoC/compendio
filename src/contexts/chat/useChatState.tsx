@@ -73,6 +73,15 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     }
   }, [conversationId, toast]);
 
+  // Send a notification through the WebSocket
+  const sendNotification = useCallback((title: string, message: string, level: 'info' | 'success' | 'warning' | 'error' = 'info') => {
+    if (websocketService.isConnected()) {
+      websocketService.sendNotification(title, message, level);
+    } else {
+      toast.error("WebSocket is not connected. Unable to send notification.");
+    }
+  }, [toast]);
+
   // Handle WebSocket messages
   const handleWebSocketMessage = useCallback((message: WebSocketMessage) => {
     switch (message.type) {
@@ -91,6 +100,14 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
           console.log('Conversation updated, refreshing messages');
           loadMessages();
         }
+        break;
+      
+      case 'notification':
+        toast({
+          title: message.title || "Notification",
+          description: message.message,
+          variant: message.level === 'error' ? 'destructive' : 'default',
+        });
         break;
       
       case 'error':
@@ -270,5 +287,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     inputRef,
     handleSendMessage,
     conversationId,
+    sendNotification,
   };
 };

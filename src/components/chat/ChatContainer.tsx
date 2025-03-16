@@ -40,7 +40,8 @@ export const ChatContainer = () => {
         <ChatFooter />
       </div>
       
-      <style jsx>{`
+      <style>
+        {`
         .dot-typing {
           position: relative;
           left: -9999px;
@@ -76,7 +77,8 @@ export const ChatContainer = () => {
             box-shadow: 9984px 0 0 0 currentColor, 9999px 0 0 0 currentColor, 10014px 0 0 0 currentColor;
           }
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };
