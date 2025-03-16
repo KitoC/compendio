@@ -20,11 +20,16 @@ class WebSocketService {
   private isReconnecting = false;
   private reconnectBackoff = 1000; // Start with 1 second, will increase exponentially
   private debugMode = false;
+  private disableReconnect = false;
 
   constructor() {
     // Initialize debug mode from environment variable
     this.debugMode = import.meta.env.VITE_WEBSOCKET_DEBUG === 'true';
+    this.disableReconnect = import.meta.env.VITE_DISABLE_WEBSOCKET_RECONNECT === 'true';
     this.debugLog('WebSocketService initialized with debug mode:', this.debugMode);
+    if (this.disableReconnect) {
+      this.debugLog('WebSocket auto-reconnect is disabled');
+    }
   }
 
   private debugLog(...args: any[]) {
@@ -38,11 +43,21 @@ class WebSocketService {
     return !!this.socket && this.socket.readyState === WebSocket.OPEN;
   }
 
+  // Check if the WebSocket is currently connecting
+  public isConnecting(): boolean {
+    return !!this.socket && this.socket.readyState === WebSocket.CONNECTING;
+  }
+
   // Connect to the WebSocket server
   public async connect(): Promise<void> {
     // Don't try to connect if already connected or connecting
-    if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) {
-      this.debugLog("WebSocket is already connected or connecting");
+    if (this.isConnected()) {
+      this.debugLog("WebSocket is already connected");
+      return;
+    }
+
+    if (this.isConnecting()) {
+      this.debugLog("WebSocket is already connecting");
       return;
     }
 
@@ -53,6 +68,9 @@ class WebSocketService {
     }
 
     try {
+      // First, close any existing socket
+      this.closeExistingSocket();
+
       const session = await supabase.auth.getSession();
       const accessToken = session.data?.session?.access_token;
 
@@ -75,20 +93,10 @@ class WebSocketService {
       
       this.debugLog(`Connecting to WebSocket at: ${wsUrl}`);
       
-      // If there's an existing socket, close it properly first
-      if (this.socket) {
-        try {
-          this.socket.onclose = null; // Remove the onclose handler to prevent reconnection
-          this.socket.close();
-        } catch (err) {
-          this.debugLog("Error closing existing socket:", err);
-        }
-      }
-      
       this.socket = new WebSocket(wsUrl);
       
-      this.socket.onopen = () => {
-        this.debugLog("WebSocket connection established");
+      this.socket.onopen = (event) => {
+        this.debugLog("WebSocket connection established", event);
         this.reconnectAttempts = 0;
         this.reconnectBackoff = 1000; // Reset backoff time on successful connection
         this.isReconnecting = false;
@@ -111,12 +119,15 @@ class WebSocketService {
         
         // Only attempt to reconnect if we're not already in the process and we have network connection
         // and the close wasn't a normal closure
-        if (!this.isReconnecting && navigator.onLine && 
+        if (!this.disableReconnect && !this.isReconnecting && navigator.onLine && 
             this.reconnectAttempts < this.maxReconnectAttempts && 
             event.code !== 1000) { // 1000 is normal closure
+          this.debugLog(`Will try to reconnect - code: ${event.code}`);
           this.attemptReconnect();
         } else if (event.code === 1000) {
           this.debugLog("Normal WebSocket closure - not attempting to reconnect");
+        } else if (this.disableReconnect) {
+          this.debugLog("WebSocket reconnect disabled - not attempting to reconnect");
         }
       };
       
@@ -129,6 +140,33 @@ class WebSocketService {
     } catch (error) {
       console.error("Error connecting to WebSocket:", error);
       throw error;
+    }
+  }
+
+  // Close any existing socket
+  private closeExistingSocket(): void {
+    if (this.socket) {
+      try {
+        // Only add onclose handling if it's not already closed
+        if (this.socket.readyState !== WebSocket.CLOSED && this.socket.readyState !== WebSocket.CLOSING) {
+          // Create a temporary handler to prevent reconnection on this close
+          const originalOnClose = this.socket.onclose;
+          this.socket.onclose = (event) => {
+            this.debugLog("Controlled close of existing socket:", event.code);
+            // Don't trigger reconnect logic on this deliberate close
+          };
+          
+          // Use the clean closure code
+          this.socket.close(1000, "Closing existing connection");
+        } else {
+          this.debugLog("Socket already closed or closing");
+        }
+      } catch (err) {
+        this.debugLog("Error closing existing socket:", err);
+      }
+      
+      // Reset to null after attempt to close
+      this.socket = null;
     }
   }
 

@@ -14,6 +14,8 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
   const { user } = useAuth();
   const [isFirstConnection, setIsFirstConnection] = useState(true);
   const [hasBeenDisconnected, setHasBeenDisconnected] = useState(false);
+  const [connectionAttempts, setConnectionAttempts] = useState(0);
+  const [lastConnectionTime, setLastConnectionTime] = useState(0);
 
   const debugMode = import.meta.env.VITE_WEBSOCKET_DEBUG === 'true';
   const debugLog = (...args: any[]) => {
@@ -27,8 +29,22 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
 
     debugLog("User authenticated, preparing WebSocket connection");
 
+    const now = Date.now();
+    const timeSinceLastAttempt = now - lastConnectionTime;
+    if (timeSinceLastAttempt < 1000 && connectionAttempts > 3) {
+      debugLog("Too many connection attempts in short time, delaying reconnect");
+      const timeoutId = setTimeout(() => {
+        setConnectionAttempts(0);
+        setLastConnectionTime(0);
+      }, 2000);
+      return () => clearTimeout(timeoutId);
+    }
+
     const connectWebSocket = async () => {
       try {
+        setConnectionAttempts(prev => prev + 1);
+        setLastConnectionTime(Date.now());
+        
         const useLocalWebSocket = getUseLocalWebSocket();
         if (useLocalWebSocket) {
           debugLog("Using local WebSocket with remote Supabase");
@@ -41,11 +57,13 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
       }
     };
 
-    if (!websocketService.isConnected() || isFirstConnection || hasBeenDisconnected) {
+    if (!websocketService.isConnected() && !websocketService.isConnecting() && 
+        (isFirstConnection || hasBeenDisconnected)) {
       debugLog("Connecting WebSocket", { 
         isFirstConnection, 
         hasBeenDisconnected,
-        isCurrentlyConnected: websocketService.isConnected()
+        isCurrentlyConnected: websocketService.isConnected(),
+        isCurrentlyConnecting: websocketService.isConnecting()
       });
       connectWebSocket();
       setHasBeenDisconnected(false);
@@ -54,6 +72,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
     const removeOpenHandler = websocketService.onOpen(() => {
       debugLog("WebSocket connected in provider");
       setIsConnected(true);
+      setConnectionAttempts(0);
     });
     
     const removeCloseHandler = websocketService.onClose(() => {
@@ -95,7 +114,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
       
       // Note: We do NOT disconnect the WebSocket here to keep it persistent
     };
-  }, [user, isFirstConnection, hasBeenDisconnected, debugMode]);
+  }, [user, isFirstConnection, hasBeenDisconnected, debugMode, connectionAttempts, lastConnectionTime]);
 
   const contextValue = {
     isConnected,

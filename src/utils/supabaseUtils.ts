@@ -56,9 +56,11 @@ export const getSupabaseUrl = () => {
 export const getSupabaseFunctionsUrl = (version: string = "v1") => {
   // Check if we should use local WebSocket with remote Supabase
   const useLocalWebSocket = getUseLocalWebSocket();
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   
   // If we're using local WebSocket with remote Supabase, always use local URL for functions
-  if (useLocalWebSocket && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+  if (useLocalWebSocket && isLocalhost) {
+    console.log("Using local WebSocket with remote Supabase");
     return `http://127.0.0.1:54321/functions/${version}`;
   }
 
@@ -80,7 +82,7 @@ export const getSupabaseFunctionsUrl = (version: string = "v1") => {
   }
 
   // If we're in development mode (localhost), use a default local URL
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+  if (isLocalhost) {
     return `http://127.0.0.1:54321/functions/${version}`;
   }
 
