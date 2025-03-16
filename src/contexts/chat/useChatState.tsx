@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { IMessage, MessageRole } from "@/types/chat";
@@ -69,16 +68,24 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       }
     } catch (error: any) {
       console.error("Error loading messages:", error);
-      toast.error(error.message || "Failed to load messages");
+      toast({
+        title: "Error",
+        description: error.message || "Failed to load messages",
+        variant: "destructive"
+      });
     }
-  }, [conversationId, toast]);
+  }, [conversationId, toast, scrollToOptimalPosition]);
 
   // Send a notification through the WebSocket
   const sendNotification = useCallback((title: string, message: string, level: 'info' | 'success' | 'warning' | 'error' = 'info') => {
     if (websocketService.isConnected()) {
       websocketService.sendNotification(title, message, level);
     } else {
-      toast.error("WebSocket is not connected. Unable to send notification.");
+      toast({
+        title: "Error",
+        description: "WebSocket is not connected. Unable to send notification.",
+        variant: "destructive"
+      });
     }
   }, [toast]);
 
@@ -111,7 +118,11 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         break;
       
       case 'error':
-        toast.error(message.message || 'WebSocket error');
+        toast({
+          title: "Error",
+          description: message.message || 'WebSocket error',
+          variant: "destructive"
+        });
         break;
       
       default:
@@ -129,7 +140,11 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
           onOpen: () => {
             setWsConnected(true);
             console.log('WebSocket connected');
-            toast.success('Real-time updates connected');
+            toast({
+              title: "Connected",
+              description: "Real-time updates connected",
+              variant: "default"
+            });
           },
           onMessage: handleWebSocketMessage,
           onClose: () => {
@@ -138,7 +153,11 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
           },
           onError: (error) => {
             console.error('WebSocket error:', error);
-            toast.error('Real-time update connection failed');
+            toast({
+              title: "Connection Error",
+              description: "Real-time update connection failed",
+              variant: "destructive"
+            });
           }
         });
       } catch (error) {
@@ -151,7 +170,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     return () => {
       websocketService.disconnect();
     };
-  }, [user, handleWebSocketMessage]);
+  }, [user, handleWebSocketMessage, toast]);
 
   const handleSendMessage = useCallback(
     async (content: string, role: MessageRole = MessageRole.USER) => {

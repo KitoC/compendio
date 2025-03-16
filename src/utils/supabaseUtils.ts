@@ -1,3 +1,4 @@
+
 // Define window.__ENV__ type
 interface WindowWithEnv extends Window {
   __ENV__?: {
@@ -31,6 +32,12 @@ export const getSupabaseUrl = () => {
     return windowWithEnv.supabase.supabaseUrl;
   }
 
+  // If we're in development mode (localhost), use a mock URL that will be enough
+  // for WebSocket connections during development
+  if (window.location.hostname === 'localhost' || window.location.hostname.includes('lovableproject.com')) {
+    return 'https://zgtukvtbfucrvdpicvxx.supabase.co';
+  }
+
   console.error(
     "Could not find Supabase URL in environment variables or window.__ENV__"
   );
@@ -38,7 +45,7 @@ export const getSupabaseUrl = () => {
 };
 
 /**
- * Gets the Supabase URL from environment variables or fallback
+ * Gets the Supabase functions URL from environment variables or fallback
  */
 export const getSupabaseFunctionsUrl = (version: string = "v1") => {
   let baseUrl = getSupabaseUrl();

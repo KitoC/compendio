@@ -30,6 +30,7 @@ class WebSocketService {
   private maxReconnectAttempts: number = 5;
   private reconnectTimeout: number = 1000;
   private options: WebSocketConnectionOptions = {};
+  private intentionalDisconnect: boolean = false;
 
   public async connect(options: WebSocketConnectionOptions = {}): Promise<WebSocket> {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
@@ -49,6 +50,7 @@ class WebSocketService {
 
     this.isConnecting = true;
     this.options = options;
+    this.intentionalDisconnect = false;
 
     try {
       // Get authentication token
@@ -97,18 +99,20 @@ class WebSocketService {
         this.socket = null;
         this.isConnecting = false;
         
-        // Attempt to reconnect
-        if (this.reconnectAttempts < this.maxReconnectAttempts) {
+        if (this.options.onClose) {
+          this.options.onClose();
+        }
+        
+        // Attempt to reconnect only if not intentionally disconnected
+        if (!this.intentionalDisconnect && this.reconnectAttempts < this.maxReconnectAttempts) {
           this.reconnectAttempts++;
           console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
           
           setTimeout(() => {
-            this.connect(this.options);
+            this.connect(this.options).catch(err => {
+              console.error('Reconnection failed:', err);
+            });
           }, this.reconnectTimeout * this.reconnectAttempts);
-        }
-        
-        if (this.options.onClose) {
-          this.options.onClose();
         }
       };
 
@@ -133,7 +137,9 @@ class WebSocketService {
       this.messageQueue.push(message);
       
       if (!this.isConnecting) {
-        this.connect(this.options);
+        this.connect(this.options).catch(err => {
+          console.error('Connection attempt failed:', err);
+        });
       }
       return;
     }
@@ -157,6 +163,8 @@ class WebSocketService {
   }
 
   public disconnect(): void {
+    this.intentionalDisconnect = true;
+    
     if (this.socket) {
       this.socket.close();
       this.socket = null;
