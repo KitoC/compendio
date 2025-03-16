@@ -4,6 +4,7 @@ interface WindowWithEnv extends Window {
   __ENV__?: {
     VITE_SUPABASE_URL?: string;
     VITE_SUPABASE_FUNCTIONS_URL?: string;
+    VITE_USE_LOCAL_WEBSOCKET?: string;
   };
   supabase?: {
     supabaseUrl?: string;
@@ -53,6 +54,14 @@ export const getSupabaseUrl = () => {
  * Gets the Supabase functions URL from environment variables or fallback
  */
 export const getSupabaseFunctionsUrl = (version: string = "v1") => {
+  // Check if we should use local WebSocket with remote Supabase
+  const useLocalWebSocket = getUseLocalWebSocket();
+  
+  // If we're using local WebSocket with remote Supabase, always use local URL for functions
+  if (useLocalWebSocket && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return `http://127.0.0.1:54321/functions/${version}`;
+  }
+
   // First try to get the Functions URL directly
   if (import.meta.env.VITE_SUPABASE_FUNCTIONS_URL) {
     const baseUrl = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL;
@@ -78,6 +87,28 @@ export const getSupabaseFunctionsUrl = (version: string = "v1") => {
   // Fallback to using the Supabase URL if we couldn't find a specific Functions URL
   let baseUrl = getSupabaseUrl();
   return `${baseUrl}/functions/${version}`;
+};
+
+/**
+ * Gets whether to use local WebSocket with remote Supabase
+ */
+export const getUseLocalWebSocket = (): boolean => {
+  // Check environment variable
+  if (import.meta.env.VITE_USE_LOCAL_WEBSOCKET === 'true') {
+    return true;
+  }
+
+  // Check window.__ENV__
+  const windowWithEnv = window as WindowWithEnv;
+  if (
+    typeof window !== "undefined" &&
+    windowWithEnv.__ENV__ &&
+    windowWithEnv.__ENV__.VITE_USE_LOCAL_WEBSOCKET === 'true'
+  ) {
+    return true;
+  }
+
+  return false;
 };
 
 /**

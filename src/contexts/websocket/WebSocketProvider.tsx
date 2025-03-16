@@ -3,6 +3,7 @@ import { WebSocketContext } from "./WebSocketContext";
 import { websocketService, WebSocketMessage } from "@/services/websocketService";
 import { notificationService } from "@/services/notificationService";
 import { useAuth } from "@/hooks/useAuth";
+import { getUseLocalWebSocket } from "@/utils/supabaseUtils";
 
 interface WebSocketProviderProps {
   children: ReactNode;
@@ -11,6 +12,7 @@ interface WebSocketProviderProps {
 export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
   const [isConnected, setIsConnected] = useState(websocketService.isConnected());
   const { user } = useAuth();
+  const [isFirstConnection, setIsFirstConnection] = useState(true);
 
   useEffect(() => {
     if (!user) return;
@@ -18,13 +20,22 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
     // Initialize connection when user is authenticated
     const connectWebSocket = async () => {
       try {
+        const useLocalWebSocket = getUseLocalWebSocket();
+        if (useLocalWebSocket) {
+          console.log("WebSocketProvider: Using local WebSocket with remote Supabase");
+        }
+        
         await websocketService.connect();
+        setIsFirstConnection(false);
       } catch (error) {
         console.error("Failed to connect to WebSocket:", error);
       }
     };
 
-    connectWebSocket();
+    // Only connect if not already connected or if it's the first connection attempt
+    if (!websocketService.isConnected() || isFirstConnection) {
+      connectWebSocket();
+    }
 
     // Setup connection status handlers
     const removeOpenHandler = websocketService.onOpen(() => {
@@ -60,7 +71,7 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
       
       // Note: We do NOT disconnect the WebSocket here to keep it persistent
     };
-  }, [user]);
+  }, [user, isFirstConnection]);
 
   const contextValue = {
     isConnected,

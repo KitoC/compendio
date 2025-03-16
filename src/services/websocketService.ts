@@ -1,5 +1,5 @@
 
-import { getSupabaseFunctionsUrl } from "@/utils/supabaseUtils";
+import { getSupabaseFunctionsUrl, getUseLocalWebSocket } from "@/utils/supabaseUtils";
 import { supabase } from "@/integrations/supabase/client";
 
 // Type definitions
@@ -49,6 +49,11 @@ class WebSocketService {
       
       // Convert HTTP/HTTPS URL to WebSocket URL
       let wsUrl = baseUrl.replace(/^https?:\/\//, `${wsProtocol}//`) + '/ai-chat';
+      
+      // If we're using local WebSocket with remote Supabase, log it
+      if (getUseLocalWebSocket()) {
+        console.log("Using local WebSocket with remote Supabase");
+      }
       
       // If we have an access token, add it as a query parameter
       if (accessToken) {
