@@ -9,6 +9,7 @@ import { dbMessageToIMessage, createAIMessage } from "@/utils/chatMessageUtils";
 import { Json } from "@/integrations/supabase/types";
 import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
 import { useParams } from "react-router-dom";
+import { usePrevious } from "react-use";
 interface UseChatOptions {
   conversationId: string;
 }
@@ -25,6 +26,22 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
   const { user, tenantId } = useAuth();
+  const previousMessages = usePrevious(messages);
+
+  const scrollToOptimalPosition = useCallback(
+    ({ behavior = "smooth" }: { behavior?: ScrollBehavior } = {}) => {
+      console.log("scrollToOptimalPosition", behavior);
+      if (messagesContainerRef.current) {
+        const container = messagesContainerRef.current;
+
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior,
+        });
+      }
+    },
+    []
+  );
 
   const loadMessages = useCallback(async () => {
     if (!conversationId) return;
@@ -45,7 +62,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         setMessages(parsedMessages);
 
         // Scroll to bottom after messages load
-        setTimeout(scrollToOptimalPosition, 100);
+        setTimeout(() => scrollToOptimalPosition({ behavior: "instant" }), 100);
       }
     } catch (error: any) {
       console.error("Error loading messages:", error);
@@ -53,18 +70,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     }
   }, [conversationId, toast]);
 
-  const scrollToOptimalPosition = useCallback(
-    ({ behavior = "smooth" }: { behavior?: ScrollBehavior } = {}) => {
-      if (messagesContainerRef.current) {
-        const container = messagesContainerRef.current;
-        container.scrollTo({
-          top: container.scrollHeight,
-          behavior,
-        });
-      }
-    },
-    []
-  );
+  console.log("messages", messages);
 
   const handleSendMessage = useCallback(
     async (content: string, role: MessageRole = MessageRole.USER) => {
