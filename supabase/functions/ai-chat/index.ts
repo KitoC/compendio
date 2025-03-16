@@ -41,7 +41,7 @@ serve(async (req: Request) => {
       supabase: supabaseService.supabase,
     });
     await agentController.setDependenciesAndGetAgents({
-      supabase: supabaseService.supabase,
+      supabaseService,
       openAiService,
     });
 
@@ -49,13 +49,7 @@ serve(async (req: Request) => {
     await conversationsController.validateOrCreateConversation(conversation_id);
 
     // Call OpenAI API
-    let openaiResponse = await agentController.talkToAgent(messages, agent_id);
-
-    // Process the streaming response
-    return supabaseService.streamResponse({
-      externalReader: () => openaiResponse.body?.getReader(),
-      processStreamChunk: (chunk) => openAiService.processStreamChunk(chunk),
-    });
+    return agentController.talkToAgent(messages, agent_id);
   } catch (error) {
     console.error("Error in AI chat function:", error);
 

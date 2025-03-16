@@ -1,10 +1,11 @@
 // @ts-ignore
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.8.0";
-
+import type SupabaseService from "../shared/services/SupabaseService";
 const TABLE_NAME = "ai_agents";
 
 class AgentController {
   private supabase: SupabaseClient | null;
+  private supabaseService: SupabaseService;
   private agents: any[];
   private openAiService: any;
   constructor() {
@@ -43,13 +44,14 @@ class AgentController {
   }
 
   async setDependenciesAndGetAgents({
-    supabase,
+    supabaseService,
     openAiService,
   }: {
-    supabase: SupabaseClient;
+    supabaseService: SupabaseService;
     openAiService: any;
   }) {
-    this.supabase = supabase;
+    this.supabaseService = supabaseService;
+    this.supabase = supabaseService.supabase;
     this.openAiService = openAiService;
 
     return this.getAgents();
@@ -61,18 +63,30 @@ class AgentController {
     try {
       const LAST_N = 10; // TODO: make this dynamic
 
-      const response = await this.openAiService.callOpenAIChatCompletion({
-        messages: [
-          {
-            role: "system",
-            content: prompt || "", // TODO: add default prompt here at some stage
-          },
-          ...messages.slice(Math.max(messages.length - LAST_N, 0)),
-        ],
-        model,
+      const stream = await this.openAiService.streamAndCallFunction({
+        supabaseService: this.supabaseService,
+        onFunctionCall: (functionName: string, functionArgs: any) => {
+          console.log("Function called:", functionName, functionArgs);
+          return "The round hole of the earth is empty";
+        },
+        requestArgs: {
+          messages: [
+            {
+              content: prompt || "", // TODO: add default prompt here at some stage
+            },
+            ...messages.slice(Math.max(messages.length - LAST_N, 0)),
+          ],
+          model,
+          functions: [
+            {
+              name: "foo",
+              description: "Call the foo",
+            },
+          ],
+        },
       });
 
-      return response;
+      return this.supabaseService.sendStreamResponse(stream);
     } catch (error) {
       console.error("Error calling OpenAI:", error);
       throw error;
