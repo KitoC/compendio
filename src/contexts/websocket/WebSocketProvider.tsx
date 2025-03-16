@@ -13,16 +13,25 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
   const [isConnected, setIsConnected] = useState(websocketService.isConnected());
   const { user } = useAuth();
   const [isFirstConnection, setIsFirstConnection] = useState(true);
+  const [hasBeenDisconnected, setHasBeenDisconnected] = useState(false);
+
+  const debugMode = import.meta.env.VITE_WEBSOCKET_DEBUG === 'true';
+  const debugLog = (...args: any[]) => {
+    if (debugMode) {
+      console.log('[WebSocketProvider Debug]', ...args);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
 
-    // Initialize connection when user is authenticated
+    debugLog("User authenticated, preparing WebSocket connection");
+
     const connectWebSocket = async () => {
       try {
         const useLocalWebSocket = getUseLocalWebSocket();
         if (useLocalWebSocket) {
-          console.log("WebSocketProvider: Using local WebSocket with remote Supabase");
+          debugLog("Using local WebSocket with remote Supabase");
         }
         
         await websocketService.connect();
@@ -32,46 +41,61 @@ export const WebSocketProvider = ({ children }: WebSocketProviderProps) => {
       }
     };
 
-    // Only connect if not already connected or if it's the first connection attempt
-    if (!websocketService.isConnected() || isFirstConnection) {
+    if (!websocketService.isConnected() || isFirstConnection || hasBeenDisconnected) {
+      debugLog("Connecting WebSocket", { 
+        isFirstConnection, 
+        hasBeenDisconnected,
+        isCurrentlyConnected: websocketService.isConnected()
+      });
       connectWebSocket();
+      setHasBeenDisconnected(false);
     }
 
-    // Setup connection status handlers
     const removeOpenHandler = websocketService.onOpen(() => {
-      console.log("WebSocket connected in provider");
+      debugLog("WebSocket connected in provider");
       setIsConnected(true);
     });
     
     const removeCloseHandler = websocketService.onClose(() => {
-      console.log("WebSocket disconnected in provider");
+      debugLog("WebSocket disconnected in provider");
       setIsConnected(false);
+      setHasBeenDisconnected(true);
     });
     
     const removeErrorHandler = websocketService.onError((error) => {
       console.error("WebSocket error in provider:", error);
       setIsConnected(false);
+      setHasBeenDisconnected(true);
     });
 
-    // Setup network status event listeners to handle reconnection when network changes
     const handleOnline = () => {
-      console.log("Network connection restored, reconnecting WebSocket");
+      debugLog("Network connection restored, reconnecting WebSocket");
       if (!websocketService.isConnected()) {
         connectWebSocket();
       }
     };
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && !websocketService.isConnected()) {
+        debugLog("Page became visible, checking WebSocket connection");
+        connectWebSocket();
+      }
+    };
+
     window.addEventListener('online', handleOnline);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
+      debugLog("Cleaning up WebSocket event handlers");
       removeOpenHandler();
       removeCloseHandler();
       removeErrorHandler();
       window.removeEventListener('online', handleOnline);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       
       // Note: We do NOT disconnect the WebSocket here to keep it persistent
     };
-  }, [user, isFirstConnection]);
+  }, [user, isFirstConnection, hasBeenDisconnected, debugMode]);
 
   const contextValue = {
     isConnected,

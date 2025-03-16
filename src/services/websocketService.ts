@@ -19,6 +19,19 @@ class WebSocketService {
   private reconnectTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private isReconnecting = false;
   private reconnectBackoff = 1000; // Start with 1 second, will increase exponentially
+  private debugMode = false;
+
+  constructor() {
+    // Initialize debug mode from environment variable
+    this.debugMode = import.meta.env.VITE_WEBSOCKET_DEBUG === 'true';
+    this.debugLog('WebSocketService initialized with debug mode:', this.debugMode);
+  }
+
+  private debugLog(...args: any[]) {
+    if (this.debugMode) {
+      console.log('[WebSocket Debug]', ...args);
+    }
+  }
 
   // Check if the WebSocket is currently connected
   public isConnected(): boolean {
@@ -29,7 +42,7 @@ class WebSocketService {
   public async connect(): Promise<void> {
     // Don't try to connect if already connected or connecting
     if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) {
-      console.log("WebSocket is already connected or connecting");
+      this.debugLog("WebSocket is already connected or connecting");
       return;
     }
 
@@ -52,7 +65,7 @@ class WebSocketService {
       
       // If we're using local WebSocket with remote Supabase, log it
       if (getUseLocalWebSocket()) {
-        console.log("Using local WebSocket with remote Supabase");
+        this.debugLog("Using local WebSocket with remote Supabase");
       }
       
       // If we have an access token, add it as a query parameter
@@ -60,12 +73,22 @@ class WebSocketService {
         wsUrl += `?token=${accessToken}`;
       }
       
-      console.log(`Connecting to WebSocket at: ${wsUrl}`);
+      this.debugLog(`Connecting to WebSocket at: ${wsUrl}`);
+      
+      // If there's an existing socket, close it properly first
+      if (this.socket) {
+        try {
+          this.socket.onclose = null; // Remove the onclose handler to prevent reconnection
+          this.socket.close();
+        } catch (err) {
+          this.debugLog("Error closing existing socket:", err);
+        }
+      }
       
       this.socket = new WebSocket(wsUrl);
       
       this.socket.onopen = () => {
-        console.log("WebSocket connection established");
+        this.debugLog("WebSocket connection established");
         this.reconnectAttempts = 0;
         this.reconnectBackoff = 1000; // Reset backoff time on successful connection
         this.isReconnecting = false;
@@ -75,7 +98,7 @@ class WebSocketService {
       this.socket.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log("WebSocket message received:", data);
+          this.debugLog("WebSocket message received:", data);
           this.messageListeners.forEach(listener => listener(data));
         } catch (error) {
           console.error("Error parsing WebSocket message:", error);
@@ -83,12 +106,17 @@ class WebSocketService {
       };
       
       this.socket.onclose = (event) => {
-        console.log(`WebSocket connection closed`, event.code, event.reason);
+        this.debugLog(`WebSocket connection closed`, event.code, event.reason);
         this.closeListeners.forEach(listener => listener());
         
         // Only attempt to reconnect if we're not already in the process and we have network connection
-        if (!this.isReconnecting && navigator.onLine && this.reconnectAttempts < this.maxReconnectAttempts) {
+        // and the close wasn't a normal closure
+        if (!this.isReconnecting && navigator.onLine && 
+            this.reconnectAttempts < this.maxReconnectAttempts && 
+            event.code !== 1000) { // 1000 is normal closure
           this.attemptReconnect();
+        } else if (event.code === 1000) {
+          this.debugLog("Normal WebSocket closure - not attempting to reconnect");
         }
       };
       
@@ -107,7 +135,8 @@ class WebSocketService {
   // Disconnect from the WebSocket server
   public disconnect(): void {
     if (this.socket) {
-      this.socket.close();
+      // Use the clean closure code
+      this.socket.close(1000, "Normal closure");
       this.socket = null;
     }
     
@@ -129,7 +158,7 @@ class WebSocketService {
     // Use exponential backoff for retry timing
     const reconnectDelay = Math.min(30000, this.reconnectBackoff * Math.pow(2, this.reconnectAttempts - 1));
     
-    console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts}) in ${reconnectDelay/1000} seconds...`);
+    this.debugLog(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts}) in ${reconnectDelay/1000} seconds...`);
     
     this.reconnectTimeoutId = setTimeout(async () => {
       // Only proceed if we're online
@@ -148,7 +177,7 @@ class WebSocketService {
           }
         }
       } else {
-        console.log("Network offline, delaying reconnection attempt");
+        this.debugLog("Network offline, delaying reconnection attempt");
         this.isReconnecting = false;
         
         // Add event listener for online status to trigger reconnect
