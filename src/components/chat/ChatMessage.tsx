@@ -1,3 +1,4 @@
+
 import { FC, useRef } from "react";
 import { useChat } from "@/contexts/chat";
 import { IMessage, MessageRole } from "@/types/chat";
@@ -14,9 +15,10 @@ const ChatMessage: FC<ChatMessageProps> = ({
   message,
   isLastMessage = false,
 }) => {
-  const { handleSendMessage } = useChat();
+  const { handleSendMessage, isTyping } = useChat();
   const messageRef = useRef<HTMLDivElement>(null);
   const isUser = message.role === "user";
+  const isTypeIndicator = message.role === MessageRole.ASSISTANT && message.loading && isLastMessage && isTyping;
 
   return (
     <div
@@ -26,25 +28,25 @@ const ChatMessage: FC<ChatMessageProps> = ({
       })}
       ref={messageRef}
     >
-      {/* {!isUser && (
-        <Avatar className="h-10 w-10 mr-3 flex-shrink-0">
-          <AvatarImage src="/placeholder.svg" alt="AI" />
-          <AvatarFallback>AI</AvatarFallback>
-        </Avatar>
-      )} */}
       <div
         className={clsx("px-3 py-[3px] flex-grow w-full rounded-lg", {
           "bg-primary text-primary-foreground": isUser,
           "bg-muted dark:transparent dark:text-white": !isUser,
         })}
       >
-        <RenderMarkdown
-          message={(message.content as string) || ""}
-          isUser={isUser}
-          isStreamedMessage={
-            message.role === MessageRole.ASSISTANT && message.loading
-          }
-        />
+        {isTypeIndicator ? (
+          <div className="flex items-center h-6">
+            <span className="dot-typing"></span>
+          </div>
+        ) : (
+          <RenderMarkdown
+            message={(message.content as string) || ""}
+            isUser={isUser}
+            isStreamedMessage={
+              message.role === MessageRole.ASSISTANT && message.loading
+            }
+          />
+        )}
       </div>
     </div>
   );

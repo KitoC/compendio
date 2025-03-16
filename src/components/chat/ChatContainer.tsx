@@ -1,220 +1,82 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { ChatProvider } from "@/contexts/chat";
+
+import { useChat } from "@/hooks/useChat";
 import ChatMessages from "./ChatMessages";
 import ChatFooter from "./ChatFooter";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { v4 as uuidv4 } from "uuid";
-import { Conversation } from "@/types/chat";
-import { Card } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
-import { ROUTES } from "@/lib/constants";
+import { Badge } from "@/components/ui/badge";
+import { WifiIcon, WifiOffIcon } from "lucide-react";
 
-interface ChatContainerProps {
-  conversationId?: string;
-  className?: string;
-}
-
-export const ChatContainer = ({
-  conversationId: propConversationId,
-  className,
-}: ChatContainerProps) => {
-  const { id: paramId } = useParams<{ id: string }>();
-  const [conversation, setConversation] = useState<Conversation | null>(null);
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
-  const { user, tenantId } = useAuth();
-  const navigate = useNavigate();
-
-  // Use the ID from props or URL params
-  const conversationIdOrAlias = propConversationId || paramId;
-
-  useEffect(() => {
-    const fetchOrCreateConversation = async () => {
-      if (!user || !tenantId) {
-        return;
-      }
-
-      setLoading(true);
-
-      try {
-        // Check if conversation exists by ID or alias
-        if (conversationIdOrAlias) {
-          // Try to fetch by ID first (for UUID format)
-          const isUuid =
-            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-              conversationIdOrAlias
-            );
-
-          let query = supabase.from("conversations").select("*");
-
-          if (isUuid) {
-            query = query.eq("id", conversationIdOrAlias);
-          } else {
-            query = query.eq("alias", conversationIdOrAlias);
-          }
-
-          const { data, error } = await query.single();
-
-          if (error) {
-            if (error.code === "PGRST116") {
-              // No rows found - create a new conversation
-              if (isUuid) {
-                // First check if this ID already exists to prevent duplicate key error
-                const { count, error: countError } = await supabase
-                  .from("conversations")
-                  .select("id", { count: "exact", head: true })
-                  .eq("id", conversationIdOrAlias);
-
-                if (countError) {
-                  throw countError;
-                }
-
-                // Only create with provided UUID if it doesn't exist
-                if (count === 0) {
-                  const newConversation = {
-                    id: conversationIdOrAlias,
-                    title: "New Conversation",
-                    user_id: user.id,
-                    domain: window.location.hostname,
-                    tenant_id: tenantId,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                  };
-
-                  const { error: createError } = await supabase
-                    .from("conversations")
-                    .insert(newConversation);
-
-                  if (createError) {
-                    // If we hit a duplicate key error, fetch the existing conversation instead
-                    if (createError.code === "23505") {
-                      const { data: existingData, error: fetchError } =
-                        await supabase
-                          .from("conversations")
-                          .select("*")
-                          .eq("id", conversationIdOrAlias)
-                          .single();
-
-                      if (fetchError) {
-                        throw fetchError;
-                      }
-
-                      setConversation(existingData as Conversation);
-                    } else {
-                      throw createError;
-                    }
-                  } else {
-                    setConversation(newConversation as Conversation);
-                  }
-                } else {
-                  // If it exists (somehow), fetch it
-                  const { data: existingData, error: fetchError } =
-                    await supabase
-                      .from("conversations")
-                      .select("*")
-                      .eq("id", conversationIdOrAlias)
-                      .single();
-
-                  if (fetchError) {
-                    throw fetchError;
-                  }
-
-                  setConversation(existingData as Conversation);
-                }
-              } else {
-                // Create a new conversation with a generated ID but requested alias
-                const newId = uuidv4();
-                const newConversation = {
-                  id: newId,
-                  alias: conversationIdOrAlias,
-                  title: conversationIdOrAlias.replace(/-/g, " "),
-                  user_id: user.id,
-                  domain: window.location.hostname,
-                  tenant_id: tenantId,
-                  created_at: new Date().toISOString(),
-                  updated_at: new Date().toISOString(),
-                };
-
-                const { error: createError } = await supabase
-                  .from("conversations")
-                  .insert(newConversation);
-
-                if (createError) {
-                  // If alias already exists, fetch it instead
-                  if (createError.code === "23505") {
-                    const { data: existingData, error: fetchError } =
-                      await supabase
-                        .from("conversations")
-                        .select("*")
-                        .eq("alias", conversationIdOrAlias)
-                        .single();
-
-                    if (fetchError) {
-                      throw fetchError;
-                    }
-
-                    setConversation(existingData as Conversation);
-                  } else {
-                    throw createError;
-                  }
-                } else {
-                  setConversation(newConversation as Conversation);
-                }
-              }
-            } else {
-              throw error;
-            }
-          } else {
-            setConversation(data as Conversation);
-          }
-        } else {
-          // Generate a new conversation ID and redirect
-          const newId = uuidv4();
-          navigate(`${ROUTES.CONVERSATION}/${newId}`);
-        }
-      } catch (error: any) {
-        console.error("Error fetching/creating conversation:", error);
-        toast.error(error.message || "Failed to load conversation");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrCreateConversation();
-  }, [conversationIdOrAlias, user, tenantId, navigate, toast]);
-
-  if (loading) {
-    return (
-      <Card className="flex items-center justify-center p-8 h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-2">Loading conversation...</p>
-      </Card>
-    );
-  }
-
-  if (!conversationIdOrAlias || !user || !tenantId) {
-    return (
-      <Card className="flex flex-col items-center justify-center p-8 h-full">
-        <p className="mb-4">No conversation selected or you need to sign in.</p>
-        <Button onClick={() => navigate(ROUTES.CONVERSATIONS)}>
-          Back to Conversations
-        </Button>
-      </Card>
-    );
-  }
-
+export const ChatContainer = () => {
+  const { isTyping, wsConnected } = useChat();
+  
   return (
-    <ChatProvider conversationId={conversation?.id || ""}>
-      <div className={`flex flex-col h-full bg-background ${className}`}>
-        <div className="flex-1 overflow-hidden flex flex-col">
-          <ChatMessages />
-          <ChatFooter />
+    <div className="flex flex-col h-full bg-background border rounded-lg shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-2 border-b">
+        <h2 className="text-xl font-semibold">Conversation</h2>
+        <div className="flex items-center gap-2">
+          {wsConnected ? (
+            <Badge variant="outline" className="flex items-center gap-1 bg-green-50 text-green-700 border-green-200">
+              <WifiIcon className="h-3 w-3" />
+              <span>Connected</span>
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="flex items-center gap-1 bg-gray-50 text-gray-500 border-gray-200">
+              <WifiOffIcon className="h-3 w-3" />
+              <span>Offline</span>
+            </Badge>
+          )}
         </div>
       </div>
-    </ChatProvider>
+      
+      <ChatMessages />
+      
+      <div className="border-t">
+        {isTyping && (
+          <div className="p-2 text-sm text-muted-foreground">
+            <span className="inline-block">
+              <span className="dot-typing"></span>
+            </span>
+          </div>
+        )}
+        <ChatFooter />
+      </div>
+      
+      <style jsx>{`
+        .dot-typing {
+          position: relative;
+          left: -9999px;
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background-color: currentColor;
+          color: currentColor;
+          box-shadow: 9984px 0 0 0 currentColor, 9999px 0 0 0 currentColor, 10014px 0 0 0 currentColor;
+          animation: dot-typing 1.5s infinite linear;
+        }
+        
+        @keyframes dot-typing {
+          0% {
+            box-shadow: 9984px 0 0 0 currentColor, 9999px 0 0 0 currentColor, 10014px 0 0 0 currentColor;
+          }
+          16.667% {
+            box-shadow: 9984px -10px 0 0 currentColor, 9999px 0 0 0 currentColor, 10014px 0 0 0 currentColor;
+          }
+          33.333% {
+            box-shadow: 9984px 0 0 0 currentColor, 9999px 0 0 0 currentColor, 10014px 0 0 0 currentColor;
+          }
+          50% {
+            box-shadow: 9984px 0 0 0 currentColor, 9999px -10px 0 0 currentColor, 10014px 0 0 0 currentColor;
+          }
+          66.667% {
+            box-shadow: 9984px 0 0 0 currentColor, 9999px 0 0 0 currentColor, 10014px 0 0 0 currentColor;
+          }
+          83.333% {
+            box-shadow: 9984px 0 0 0 currentColor, 9999px 0 0 0 currentColor, 10014px -10px 0 0 currentColor;
+          }
+          100% {
+            box-shadow: 9984px 0 0 0 currentColor, 9999px 0 0 0 currentColor, 10014px 0 0 0 currentColor;
+          }
+        }
+      `}</style>
+    </div>
   );
 };

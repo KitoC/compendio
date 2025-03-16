@@ -1,3 +1,4 @@
+
 // @ts-ignore
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
@@ -17,16 +18,97 @@ const conversationsController = new ConversationsController();
 const supabaseService = new SupabaseService();
 const functionController = new FunctionController();
 
+// WebSocket connections store
+const connections = new Map();
+
 /**
  * Main handler for the AI chat edge function
  */
 serve(async (req: Request) => {
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return supabaseService.sendPreflightResponse();
+  const upgradeHeader = req.headers.get("upgrade") || "";
+  
+  // Handle WebSocket connection
+  if (upgradeHeader.toLowerCase() === "websocket") {
+    const { socket, response } = Deno.upgradeWebSocket(req);
+    
+    // Generate a unique connection ID
+    const connectionId = crypto.randomUUID();
+    
+    console.log(`WebSocket connection established: ${connectionId}`);
+    
+    // Save the connection
+    connections.set(connectionId, socket);
+    
+    // Handle incoming messages
+    socket.onmessage = async (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log(`Received message from client ${connectionId}:`, data);
+        
+        // Echo back the message for testing
+        socket.send(JSON.stringify({
+          type: "echo",
+          data: data,
+          timestamp: new Date().toISOString(),
+        }));
+        
+        // Simulate agent processing
+        if (data.type === "chat.message") {
+          // Send typing indicator
+          socket.send(JSON.stringify({
+            type: "agent.typing",
+            agentId: data.agentId || "default",
+            status: true,
+          }));
+          
+          // Simulate processing delay
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          
+          // Send response
+          socket.send(JSON.stringify({
+            type: "agent.response",
+            agentId: data.agentId || "default",
+            message: `Response to your message: "${data.message}"`,
+            timestamp: new Date().toISOString(),
+          }));
+          
+          // Turn off typing indicator
+          socket.send(JSON.stringify({
+            type: "agent.typing",
+            agentId: data.agentId || "default",
+            status: false,
+          }));
+        }
+      } catch (error) {
+        console.error(`Error processing WebSocket message: ${error}`);
+        socket.send(JSON.stringify({
+          type: "error",
+          message: error.message,
+        }));
+      }
+    };
+    
+    // Handle disconnection
+    socket.onclose = () => {
+      console.log(`WebSocket connection closed: ${connectionId}`);
+      connections.delete(connectionId);
+    };
+    
+    // Handle errors
+    socket.onerror = (error) => {
+      console.error(`WebSocket error for ${connectionId}:`, error);
+    };
+    
+    return response;
   }
-
+  
+  // Handle regular HTTP requests
   try {
+    // Handle CORS preflight requests
+    if (req.method === "OPTIONS") {
+      return supabaseService.sendPreflightResponse();
+    }
+
     const { conversation_id, agent_id, messages } = await req.json();
 
     supabaseService.checkAuthHeaderPresent(req);
@@ -35,8 +117,6 @@ serve(async (req: Request) => {
       url: supabaseUrl,
       key: supabaseAnonKey,
     });
-
-    // Initialize Supabase client with the user's JWT
 
     await conversationsController.setDependencies({
       supabase: supabaseService.supabase,
@@ -53,6 +133,18 @@ serve(async (req: Request) => {
 
     // Validate conversation exists or create it
     await conversationsController.validateOrCreateConversation(conversation_id);
+
+    // Broadcast to all connected clients that a new message was received
+    for (const [id, socket] of connections.entries()) {
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+          type: "conversation.update",
+          conversation_id,
+          agent_id,
+          timestamp: new Date().toISOString(),
+        }));
+      }
+    }
 
     // Call OpenAI API
     return agentController.talkToAgent(messages, agent_id);

@@ -1,3 +1,4 @@
+
 import { useState, useRef, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { IMessage, MessageRole } from "@/types/chat";
@@ -10,6 +11,8 @@ import { Json } from "@/integrations/supabase/types";
 import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
 import { useParams } from "react-router-dom";
 import { usePrevious } from "react-use";
+import { websocketService, WebSocketMessage } from "@/services/websocketService";
+
 interface UseChatOptions {
   conversationId: string;
 }
@@ -17,6 +20,7 @@ interface UseChatOptions {
 export const useChatState = ({ conversationId }: UseChatOptions) => {
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [wsConnected, setWsConnected] = useState(false);
   const { aiAgents } = useAiAgents();
   const params = useParams();
 
@@ -69,6 +73,69 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     }
   }, [conversationId, toast]);
 
+  // Handle WebSocket messages
+  const handleWebSocketMessage = useCallback((message: WebSocketMessage) => {
+    switch (message.type) {
+      case 'agent.typing':
+        setIsTyping(message.status);
+        break;
+      
+      case 'agent.response':
+        // This would be handled by the regular message stream, 
+        // but we could use it for immediate visual feedback
+        console.log('Agent response via WebSocket:', message);
+        break;
+      
+      case 'conversation.update':
+        if (message.conversation_id === conversationId) {
+          console.log('Conversation updated, refreshing messages');
+          loadMessages();
+        }
+        break;
+      
+      case 'error':
+        toast.error(message.message || 'WebSocket error');
+        break;
+      
+      default:
+        console.log('Unhandled WebSocket message type:', message.type);
+    }
+  }, [conversationId, loadMessages, toast]);
+
+  // Set up WebSocket connection
+  useEffect(() => {
+    if (!user) return;
+
+    const connectToWebSocket = async () => {
+      try {
+        await websocketService.connect({
+          onOpen: () => {
+            setWsConnected(true);
+            console.log('WebSocket connected');
+            toast.success('Real-time updates connected');
+          },
+          onMessage: handleWebSocketMessage,
+          onClose: () => {
+            setWsConnected(false);
+            console.log('WebSocket disconnected');
+          },
+          onError: (error) => {
+            console.error('WebSocket error:', error);
+            toast.error('Real-time update connection failed');
+          }
+        });
+      } catch (error) {
+        console.error('Failed to connect to WebSocket:', error);
+      }
+    };
+
+    connectToWebSocket();
+
+    return () => {
+      websocketService.disconnect();
+    };
+  }, [user, handleWebSocketMessage]);
+
   const handleSendMessage = useCallback(
     async (content: string, role: MessageRole = MessageRole.USER) => {
       if (!content.trim() || !conversationId || !user || !tenantId) return;
@@ -83,6 +150,17 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       setMessages((prev) => [...prev, newMessage]);
       setIsTyping(true);
       setTimeout(scrollToOptimalPosition, 100);
+
+      // Notify WebSocket that we're sending a message
+      if (websocketService.isConnected()) {
+        websocketService.send({
+          type: 'chat.message',
+          conversationId,
+          agentId: currentAgent?.id || "",
+          message: content,
+          userId: user.id
+        });
+      }
 
       try {
         // Save the user message to the database
@@ -143,11 +221,10 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         );
       } finally {
         setIsTyping(false);
-
         setTimeout(scrollToOptimalPosition, 100);
       }
     },
-    [messages, conversationId, scrollToOptimalPosition, toast, user, tenantId]
+    [messages, conversationId, scrollToOptimalPosition, toast, user, tenantId, currentAgent]
   );
 
   useEffect(() => {
@@ -188,6 +265,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     messages,
     isTyping,
     userId,
+    wsConnected,
     messagesContainerRef,
     inputRef,
     handleSendMessage,
