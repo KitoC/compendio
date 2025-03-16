@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 import { getSupabaseUrl } from '@/utils/supabaseUtils';
 
+// Always use the configured Supabase URL (can be local or remote)
 const SUPABASE_URL = getSupabaseUrl();
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpndHVrdnRiZnVjcnZkcGljdnh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgxMDQ3NzQsImV4cCI6MjA1MzY4MDc3NH0.3xvkpYoRUFhdVYa2GylvfmxGp-XYrpsdfausI4JqiQk";
 

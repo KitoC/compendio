@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { IMessage, MessageRole } from "@/types/chat";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { v4 as uuidv4 } from "uuid";
 import { sendMessageToAI } from "@/services/aiChatService";
@@ -10,6 +10,10 @@ import { Json } from "@/integrations/supabase/types";
 import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
 import { useParams } from "react-router-dom";
 import { usePrevious } from "react-use";
+import { WebSocketMessage } from "@/services/websocketService";
+import { useWebSocket } from "@/contexts/websocket";
+import { notificationService } from "@/services/notificationService";
+
 interface UseChatOptions {
   conversationId: string;
 }
@@ -19,12 +23,12 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
   const [isTyping, setIsTyping] = useState(false);
   const { aiAgents } = useAiAgents();
   const params = useParams();
+  const { isConnected, emit, listen, sendNotification } = useWebSocket();
 
   const currentAgent = aiAgents.find((agent) => agent.name === params.id);
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const { toast } = useToast();
   const { user, tenantId } = useAuth();
   const previousMessages = usePrevious(messages);
 
@@ -65,9 +69,47 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       }
     } catch (error: any) {
       console.error("Error loading messages:", error);
-      toast.error(error.message || "Failed to load messages");
+      toast.show({
+        title: "Error",
+        description: error.message || "Failed to load messages",
+        variant: "destructive"
+      });
     }
-  }, [conversationId, toast]);
+  }, [conversationId, scrollToOptimalPosition]);
+
+  // Handle WebSocket messages
+  useEffect(() => {
+    const handleWebSocketMessage = (message: WebSocketMessage) => {
+      switch (message.type) {
+        case 'agent.typing':
+          setIsTyping(message.status);
+          break;
+        
+        case 'agent.response':
+          // This would be handled by the regular message stream, 
+          // but we could use it for immediate visual feedback
+          console.log('Agent response via WebSocket:', message);
+          break;
+        
+        case 'conversation.update':
+          if (message.conversation_id === conversationId) {
+            console.log('Conversation updated, refreshing messages');
+            loadMessages();
+          }
+          break;
+        
+        default:
+          // Other message types are handled elsewhere
+          break;
+      }
+    };
+    
+    // Register handler and get cleanup function
+    const removeHandler = listen(handleWebSocketMessage);
+    
+    // Clean up when component unmounts
+    return () => removeHandler();
+  }, [conversationId, loadMessages, listen]);
 
   const handleSendMessage = useCallback(
     async (content: string, role: MessageRole = MessageRole.USER) => {
@@ -83,6 +125,17 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       setMessages((prev) => [...prev, newMessage]);
       setIsTyping(true);
       setTimeout(scrollToOptimalPosition, 100);
+
+      // Notify WebSocket that we're sending a message
+      if (isConnected) {
+        emit({
+          type: 'chat.message',
+          conversationId,
+          agentId: currentAgent?.id || "",
+          message: content,
+          userId: user.id
+        });
+      }
 
       try {
         // Save the user message to the database
@@ -127,7 +180,11 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         });
       } catch (error: any) {
         console.error("Error in handleSendMessage:", error);
-        toast.error(error.message || "Failed to send message");
+        toast.show({
+          title: "Error",
+          description: error.message || "Failed to send message",
+          variant: "destructive"
+        });
 
         // Update the AI message to show the error
         setMessages((prev) =>
@@ -143,11 +200,10 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         );
       } finally {
         setIsTyping(false);
-
         setTimeout(scrollToOptimalPosition, 100);
       }
     },
-    [messages, conversationId, scrollToOptimalPosition, toast, user, tenantId]
+    [messages, conversationId, scrollToOptimalPosition, user, tenantId, currentAgent, isConnected, emit]
   );
 
   useEffect(() => {
@@ -188,9 +244,11 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     messages,
     isTyping,
     userId,
+    wsConnected: isConnected,
     messagesContainerRef,
     inputRef,
     handleSendMessage,
     conversationId,
+    sendNotification,
   };
 };
