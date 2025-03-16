@@ -1,4 +1,5 @@
-import { lazy, Suspense } from "react";
+
+import { lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,6 +10,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import AuthenticatedLayout from "@/components/layout/AuthenticatedLayout";
 import { ROUTES } from "@/lib/constants";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { WebSocketProvider } from "@/contexts/websocket";
 
 // Loading component
 const LoadingFallback = () => (
@@ -30,63 +32,65 @@ const ChatPage = lazy(() => import("./pages/ChatPage"));
 
 const queryClient = new QueryClient();
 
-// Separate routes into public and protected
+// Root component that sets up our application
 const AppContent = () => {
   return (
     <ErrorBoundary>
       <ThemeProvider>
         <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <Suspense fallback={<LoadingFallback />}>
-              <Routes>
-                {/* Public routes */}
-                <Route path={ROUTES.INDEX} element={<Index />} />
-                <Route path={ROUTES.AUTH} element={<Auth />} />
-                <Route path={ROUTES.AUTH_CALLBACK} element={<AuthCallback />} />
-                <Route
-                  path={ROUTES.FORGOT_PASSWORD}
-                  element={<ForgotPassword />}
-                />
-                <Route
-                  path={ROUTES.RESET_PASSWORD}
-                  element={<ResetPassword />}
-                />
+          <WebSocketProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <Suspense fallback={<LoadingFallback />}>
+                <Routes>
+                  {/* Public routes */}
+                  <Route path={ROUTES.INDEX} element={<Index />} />
+                  <Route path={ROUTES.AUTH} element={<Auth />} />
+                  <Route path={ROUTES.AUTH_CALLBACK} element={<AuthCallback />} />
+                  <Route
+                    path={ROUTES.FORGOT_PASSWORD}
+                    element={<ForgotPassword />}
+                  />
+                  <Route
+                    path={ROUTES.RESET_PASSWORD}
+                    element={<ResetPassword />}
+                  />
 
-                {/* Protected routes with sidebar */}
-                <Route
-                  path={ROUTES.CONVERSATIONS}
-                  element={
-                    <AuthenticatedLayout>
-                      <ChatPage />
-                    </AuthenticatedLayout>
-                  }
-                />
-                <Route
-                  path={`${ROUTES.CONVERSATION}/:id`}
-                  element={
-                    <AuthenticatedLayout>
-                      <ChatPage />
-                    </AuthenticatedLayout>
-                  }
-                />
+                  {/* Protected routes with sidebar */}
+                  <Route
+                    path={ROUTES.CONVERSATIONS}
+                    element={
+                      <AuthenticatedLayout>
+                        <ChatPage />
+                      </AuthenticatedLayout>
+                    }
+                  />
+                  <Route
+                    path={`${ROUTES.CONVERSATION}/:id`}
+                    element={
+                      <AuthenticatedLayout>
+                        <ChatPage />
+                      </AuthenticatedLayout>
+                    }
+                  />
 
-                {/* Access request routes */}
-                <Route
-                  path={ROUTES.REQUEST_ACCESS}
-                  element={<RequestAccess />}
-                />
-                <Route
-                  path={ROUTES.ACCESS_PENDING}
-                  element={<AccessPending />}
-                />
+                  {/* Access request routes */}
+                  <Route
+                    path={ROUTES.REQUEST_ACCESS}
+                    element={<RequestAccess />}
+                  />
+                  <Route
+                    path={ROUTES.ACCESS_PENDING}
+                    element={<AccessPending />}
+                  />
 
-                {/* Catch-all */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </TooltipProvider>
+                  {/* Catch-all */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </TooltipProvider>
+          </WebSocketProvider>
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
