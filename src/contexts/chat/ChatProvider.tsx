@@ -7,7 +7,7 @@ export const ChatProvider: React.FC<{
   children: React.ReactNode;
   conversationId: string;
 }> = ({ children, conversationId }) => {
-  const chatState = useChatState(conversationId);
+  const chatState = useChatState({ conversationId });
   
   return (
     <ChatContext.Provider value={chatState}>

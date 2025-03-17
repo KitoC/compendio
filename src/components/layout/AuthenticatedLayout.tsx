@@ -1,5 +1,4 @@
-
-import { ReactNode, useEffect, Suspense } from "react";
+import { ReactNode, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import AppSidebar from "./AppSidebar";
@@ -9,7 +8,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AiAgentsProvider } from "@/contexts/AiAgents/AiAgentsProvider";
-import { PageLoading } from "@/components/ui/page-loading";
 
 interface AuthenticatedLayoutProps {
   children: ReactNode;
@@ -39,31 +37,11 @@ const AuthenticatedLayout = ({ children }: AuthenticatedLayoutProps) => {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen w-full">
-        <SidebarProvider>
-          <div className="flex flex-col min-h-screen w-full">
-            {isMobile && (
-              <header className="sticky top-0 z-40 flex items-center h-14 px-4 border-b bg-background">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="mr-2"
-                  disabled
-                >
-                  <Menu className="h-5 w-5" />
-                  <span className="sr-only">Toggle menu</span>
-                </Button>
-                <div className="flex-1"></div>
-              </header>
-            )}
-            <div className="flex flex-1 min-h-0">
-              <div className="w-[var(--sidebar-width)] bg-sidebar animate-pulse"></div>
-              <main className="flex-1 overflow-auto">
-                <PageLoading />
-              </main>
-            </div>
-          </div>
-        </SidebarProvider>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-lg">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -100,11 +78,7 @@ const AuthenticatedLayout = ({ children }: AuthenticatedLayoutProps) => {
           )}
           <div className="flex flex-1 min-h-0">
             <AppSidebar />
-            <main className="flex-1 overflow-auto">
-              <Suspense fallback={<PageLoading />}>
-                {children}
-              </Suspense>
-            </main>
+            <main className="flex-1 overflow-auto">{children}</main>
           </div>
         </div>
       </SidebarProvider>

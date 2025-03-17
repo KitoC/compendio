@@ -65,59 +65,6 @@ export type Database = {
           },
         ]
       }
-      ai_functions: {
-        Row: {
-          config: Json
-          created_at: string | null
-          deleted_at: string | null
-          description: string | null
-          enabled_for: Json
-          id: string
-          name: string
-          parameters: Json
-          schema: Json
-          tenant_id: string
-          type: string
-          updated_at: string | null
-        }
-        Insert: {
-          config: Json
-          created_at?: string | null
-          deleted_at?: string | null
-          description?: string | null
-          enabled_for: Json
-          id?: string
-          name: string
-          parameters: Json
-          schema: Json
-          tenant_id: string
-          type: string
-          updated_at?: string | null
-        }
-        Update: {
-          config?: Json
-          created_at?: string | null
-          deleted_at?: string | null
-          description?: string | null
-          enabled_for?: Json
-          id?: string
-          name?: string
-          parameters?: Json
-          schema?: Json
-          tenant_id?: string
-          type?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_ai_functions_tenant"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       configs: {
         Row: {
           config: Json | null
@@ -128,7 +75,6 @@ export type Database = {
           name: string | null
           tenant_id: string
           updated_at: string | null
-          user_id: string | null
         }
         Insert: {
           config?: Json | null
@@ -139,7 +85,6 @@ export type Database = {
           name?: string | null
           tenant_id: string
           updated_at?: string | null
-          user_id?: string | null
         }
         Update: {
           config?: Json | null
@@ -150,7 +95,6 @@ export type Database = {
           name?: string | null
           tenant_id?: string
           updated_at?: string | null
-          user_id?: string | null
         }
         Relationships: [
           {
@@ -837,12 +781,6 @@ export type Database = {
         }
         Returns: undefined
       }
-      is_super_admin: {
-        Args: {
-          _user_id: string
-        }
-        Returns: boolean
-      }
       ivfflat_bit_support: {
         Args: {
           "": unknown
@@ -977,12 +915,7 @@ export type Database = {
       }
     }
     Enums: {
-      user_role_type:
-        | "admin"
-        | "member"
-        | "guest"
-        | "super-admin"
-        | "tenant-owner"
+      user_role_type: "admin" | "member" | "guest"
     }
     CompositeTypes: {
       [_ in never]: never

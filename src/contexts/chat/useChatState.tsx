@@ -1,164 +1,209 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { Message } from "@/types/message";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { IMessage, MessageRole } from "@/types/chat";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { v4 as uuidv4 } from "uuid";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { aiChatService } from "@/services/aiChatService";
-import { nanoid } from "nanoid";
+import { sendMessageToAI } from "@/services/aiChatService";
+import { dbMessageToIMessage, createAIMessage } from "@/utils/chatMessageUtils";
+import { Json } from "@/integrations/supabase/types";
+import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
+import { useParams } from "react-router-dom";
+import { usePrevious } from "react-use";
+interface UseChatOptions {
+  conversationId: string;
+}
 
-export const useChatState = (conversationId: string) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isProcessing, setIsProcessing] = useState(false);
+export const useChatState = ({ conversationId }: UseChatOptions) => {
+  const [messages, setMessages] = useState<IMessage[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const { aiAgents } = useAiAgents();
+  const params = useParams();
+
+  const currentAgent = aiAgents.find((agent) => agent.name === params.id);
+
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const { user, tenantId } = useAuth();
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const { toast } = useToast();
+  const { user, tenantId } = useAuth();
+  const previousMessages = usePrevious(messages);
 
-  useEffect(() => {
-    const fetchMessages = async () => {
-      if (!conversationId || !user) return;
-      
-      setIsLoading(true);
-      
-      try {
-        const { data, error } = await supabase
-          .from("messages")
-          .select("*")
-          .eq("conversation_id", conversationId)
-          .order("created_at", { ascending: true });
+  const scrollToOptimalPosition = useCallback(
+    ({ behavior = "smooth" }: { behavior?: ScrollBehavior } = {}) => {
+      if (messagesContainerRef.current) {
+        const container = messagesContainerRef.current;
 
-        if (error) {
-          throw error;
-        }
-
-        if (data) {
-          const typedMessages: Message[] = data;
-          setMessages(typedMessages);
-        }
-      } catch (error: any) {
-        console.error("Error fetching messages:", error);
-        toast.error(error.message || "Failed to load messages");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchMessages();
-  }, [conversationId, user, toast]);
-
-  const scrollToBottom = useCallback(() => {
-    messagesContainerRef.current?.scroll({
-      top: messagesContainerRef.current.scrollHeight,
-      behavior: "smooth",
-    });
-  }, []);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
-
-  const addMessage = useCallback(
-    async (content: string) => {
-      if (!conversationId || !user || !tenantId) return;
-
-      const newMessage: Message = {
-        id: uuidv4(),
-        conversation_id: conversationId,
-        user_id: user.id,
-        role: "user",
-        content: { text: content },
-        metadata: {},
-        tenant_id: tenantId,
-        created_at: new Date().toISOString(),
-      };
-
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
-      scrollToBottom();
-
-      try {
-        const { error } = await supabase.from("messages").insert([newMessage]);
-
-        if (error) {
-          throw error;
-        }
-      } catch (error: any) {
-        toast.error(error.message || "Failed to send message");
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior,
+        });
       }
     },
-    [conversationId, user, tenantId, scrollToBottom, toast]
+    []
   );
 
-  const processMessageWithAI = useCallback(
-    async (messageContent: string) => {
-      if (!conversationId || !user || !tenantId) return;
+  const loadMessages = useCallback(async () => {
+    if (!conversationId) return;
 
-      setIsProcessing(true);
-      const userMessageId = nanoid();
+    try {
+      const { data, error } = await supabase
+        .from("messages")
+        .select("*")
+        .eq("conversation_id", conversationId)
+        .order("created_at", { ascending: true });
 
-      const userMessage: Message = {
-        id: userMessageId,
-        conversation_id: conversationId,
-        user_id: user.id,
-        role: "user",
-        content: { text: messageContent },
-        metadata: {},
-        tenant_id: tenantId,
-        created_at: new Date().toISOString(),
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        const parsedMessages = data.map((msg) => dbMessageToIMessage(msg));
+        setMessages(parsedMessages);
+
+        // Scroll to bottom after messages load
+        setTimeout(() => scrollToOptimalPosition({ behavior: "instant" }), 100);
+      }
+    } catch (error: unknown) {
+      console.error("Error loading messages:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to load messages"
+      );
+    }
+  }, [conversationId, toast, scrollToOptimalPosition]);
+
+  const handleSendMessage = useCallback(
+    async (content: string, role: MessageRole = MessageRole.USER) => {
+      if (!content.trim() || !conversationId || !user || !tenantId) return;
+
+      const newMessage: IMessage = {
+        id: uuidv4(),
+        role,
+        content,
       };
 
-      setMessages((prevMessages) => [...prevMessages, userMessage]);
-      scrollToBottom();
+      // Add the user message to the UI
+      setMessages((prev) => [...prev, newMessage]);
+      setIsTyping(true);
+      setTimeout(scrollToOptimalPosition, 100);
 
       try {
-        const aiResponse = await aiChatService({
-          conversationId,
-          message: messageContent,
-          userId: user.id,
-          tenantId,
+        // Save the user message to the database
+        await supabase.from("messages").insert({
+          id: newMessage.id,
+          conversation_id: conversationId,
+          role: newMessage.role,
+          content: { text: newMessage.content } as Json,
+          metadata: {} as Json,
+          user_id: user.id,
+          tenant_id: tenantId,
         });
 
-        const aiMessage: Message = {
-          id: uuidv4(),
-          conversation_id: conversationId,
-          user_id: "ai",
-          role: "assistant",
-          content: { text: aiResponse },
-          metadata: {},
-          tenant_id: tenantId,
-          created_at: new Date().toISOString(),
-        };
+        // Create a placeholder message for the AI response
+        const aiMessage = createAIMessage();
 
-        setMessages((prevMessages) => [...prevMessages, aiMessage]);
-        scrollToBottom();
+        setMessages((prev) => [...prev, aiMessage]);
 
-        try {
-          const { error } = await supabase.from("messages").insert([aiMessage]);
-
-          if (error) {
-            throw error;
-          }
-        } catch (error: any) {
-          toast.error(error.message || "Failed to save AI message");
-        }
-      } catch (error: any) {
-        setMessages((prevMessages) =>
-          prevMessages.filter((msg) => msg.id !== userMessageId)
+        // Send messages to AI and handle streaming response
+        await sendMessageToAI({
+          messageId: aiMessage.id,
+          messagesToSend: [...messages, newMessage],
+          conversationId,
+          agentId: currentAgent?.id || "",
+          userId: user.id,
+          tenantId,
+          // Update callback - updates the UI as content streams in
+          onUpdate: (streamedContent) => {
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === aiMessage.id
+                  ? { ...msg, content: streamedContent, loading: true }
+                  : msg
+              )
+            );
+            scrollToOptimalPosition();
+          },
+          // Complete callback - updates UI when streaming is done
+          onComplete: async (finalMessage) => {
+            setMessages((prev) =>
+              prev.map((msg) => (msg.id === aiMessage.id ? finalMessage : msg))
+            );
+          },
+        });
+      } catch (error: unknown) {
+        console.error("Error in handleSendMessage:", error);
+        toast.error(
+          error instanceof Error ? error.message : "Failed to send message"
         );
-        toast.error(error.message || "Failed to process message with AI");
+
+        // Update the AI message to show the error
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.role === MessageRole.ASSISTANT && msg.loading
+              ? {
+                  ...msg,
+                  content: "Sorry, I encountered an error. Please try again.",
+                  loading: false,
+                }
+              : msg
+          )
+        );
       } finally {
-        setIsProcessing(false);
+        setIsTyping(false);
+
+        setTimeout(scrollToOptimalPosition, 100);
       }
     },
-    [conversationId, user, tenantId, scrollToBottom, toast]
+    [
+      messages,
+      conversationId,
+      scrollToOptimalPosition,
+      toast,
+      user,
+      tenantId,
+      currentAgent,
+    ]
   );
+  useEffect(() => {
+    if (!conversationId) return;
+
+    loadMessages();
+
+    const channel = supabase
+      .channel("messages-channel")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const newMessage = dbMessageToIMessage(payload.new);
+          setMessages((prev) => {
+            if (!prev.some((msg) => msg.id === newMessage.id)) {
+              return [...prev, newMessage];
+            }
+            return prev;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [conversationId, loadMessages]);
+
+  const userId = user?.id || "";
 
   return {
     messages,
-    isLoading,
-    isProcessing,
+    isTyping,
+    userId,
     messagesContainerRef,
-    addMessage,
-    processMessageWithAI,
+    inputRef,
+    handleSendMessage,
+    conversationId,
   };
 };

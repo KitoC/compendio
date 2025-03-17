@@ -1,26 +1,15 @@
 
 import { createContext } from "react";
-import { Message } from "@/types/message";
+import { IMessage } from "@/types/chat";
 
-interface ChatContextProps {
-  messages: Message[];
-  isLoading: boolean;
-  isProcessing: boolean;
-  isTyping?: boolean;
-  inputRef?: React.RefObject<HTMLTextAreaElement>;
+export interface ChatContextType {
+  messages: IMessage[];
+  isTyping: boolean;
+  userId: string;
   messagesContainerRef: React.RefObject<HTMLDivElement>;
-  addMessage: (content: string) => Promise<void>;
-  processMessageWithAI: (messageContent: string) => Promise<void>;
-  handleSendMessage?: (message: string) => void;
+  inputRef: React.RefObject<HTMLTextAreaElement>;
+  handleSendMessage: (message: string) => void;
+  conversationId: string;
 }
 
-export const ChatContext = createContext<ChatContextProps>({
-  messages: [],
-  isLoading: false,
-  isProcessing: false,
-  isTyping: false,
-  messagesContainerRef: { current: null },
-  addMessage: async () => {},
-  processMessageWithAI: async () => {},
-  handleSendMessage: () => {},
-});
+export const ChatContext = createContext<ChatContextType | undefined>(undefined);
