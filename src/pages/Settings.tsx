@@ -66,7 +66,10 @@ const Settings = () => {
 
   // Navigate to the first tab if none is selected
   useEffect(() => {
-    const shouldRedirect = !tabs.find((tab) => tab.url === location.pathname);
+    const shouldRedirect = !tabs.find((tab) =>
+      location.pathname.includes(tab.url)
+    );
+
     if (shouldRedirect && visibleTabs.length > 0) {
       navigate(visibleTabs[0].url, { replace: true });
     }
