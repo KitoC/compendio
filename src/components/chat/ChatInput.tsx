@@ -1,21 +1,23 @@
+
 import { forwardRef, useState, KeyboardEvent, useEffect } from "react";
-import { SendHorizontal, X, AudioLines } from "lucide-react";
+import { SendHorizontal, X } from "lucide-react";
 import { IconButton } from "../ui/IconButton";
 import { CHAT_COMMANDS } from "@/lib/chat-commands";
 import { CommandSuggestions } from "./CommandSuggestions";
+import VoiceChatToggle from "./VoiceChatToggle";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   disabled?: boolean;
+  agentId?: string;
 }
 
 const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
-  ({ onSendMessage, disabled }, ref) => {
+  ({ onSendMessage, disabled, agentId }, ref) => {
     const [message, setMessage] = useState("");
     const [showCommands, setShowCommands] = useState(false);
     const [commandFilter, setCommandFilter] = useState("");
     const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
-    const [voiceEnabled, setVoiceEnabled] = useState(false);
     const filteredCommands = CHAT_COMMANDS.filter((cmd) =>
       cmd.command.toLowerCase().includes(commandFilter.toLowerCase())
     );
@@ -79,6 +81,12 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
       }
     };
 
+    const handleVoiceMessage = (voiceMessage: string) => {
+      if (voiceMessage.trim()) {
+        onSendMessage(voiceMessage.trim());
+      }
+    };
+
     return (
       <form
         onSubmit={handleSubmit}
@@ -115,19 +123,23 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
             }}
           />
 
+          <VoiceChatToggle 
+            agentId={agentId}
+            onMessageReceived={handleVoiceMessage}
+            voiceConfig={{
+              languageCode: "en-US",
+              name: "en-US-Standard-C",
+              ssmlGender: "FEMALE"
+            }}
+          />
+
           <IconButton
             type="submit"
             variant="primary"
             size="lg"
             disabled={disabled}
             className="h-[40px] w-[40px] min-h-[40px] min-w-[40px]"
-            icon={
-              !message.length ? (
-                <AudioLines className="h-5 w-5" /> // TODO: Add voice input functionality
-              ) : (
-                <SendHorizontal className="h-5 w-5 -rotate-90" />
-              )
-            }
+            icon={<SendHorizontal className="h-5 w-5 -rotate-90" />}
           />
         </div>
       </form>

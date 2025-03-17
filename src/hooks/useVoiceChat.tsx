@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,35 +15,28 @@ interface GoogleCloudVoiceConfig {
 interface UseVoiceChatOptions {
   agentId?: string;  // Optional agent ID to specify which AI agent to talk to
   onMessageReceived?: (message: string) => void;  // Callback for when a message is received
-  autoStart?: boolean; // Whether to start listening automatically
   voiceConfig?: GoogleCloudVoiceConfig; // Google Cloud TTS voice configuration
 }
 
 // Return type of the hook
 interface UseVoiceChatReturn {
-  isListening: boolean;  // Whether the microphone is currently listening
   isAgentSpeaking: boolean;  // Whether the agent is currently speaking
-  toggle: () => Promise<void>;  // Toggle voice chat on/off
-  start: () => Promise<void>;  // Start voice chat
-  stop: () => void;  // Stop voice chat
   lastMessage: string | null;  // Last message received from the agent
-  lastUserMessage: string | null;  // Last message sent by the user
   errorMessage: string | null;  // Any error message
   clearError: () => void;  // Clear the error message
+  sendMessageToAgent: (message: string) => Promise<void>; // Send message to agent
 }
 
 /**
  * Hook for voice communication with AI agents using Google Cloud Text-to-Speech
  * 
- * Usage:
+ * Usage with react-speech-recognition:
  * ```
  * const { 
- *   isListening,
  *   isAgentSpeaking,
- *   toggle,
  *   lastMessage,
- *   lastUserMessage,
- *   errorMessage
+ *   errorMessage,
+ *   sendMessageToAgent
  * } = useVoiceChat({
  *   agentId: "agent-id-here",
  *   onMessageReceived: (message) => console.log("New message:", message),
@@ -59,7 +52,6 @@ export const useVoiceChat = (options: UseVoiceChatOptions = {}): UseVoiceChatRet
   const { 
     agentId, 
     onMessageReceived, 
-    autoStart = false, 
     voiceConfig = {
       languageCode: "en-US",
       name: "en-US-Standard-C",
@@ -68,66 +60,15 @@ export const useVoiceChat = (options: UseVoiceChatOptions = {}): UseVoiceChatRet
   } = options;
   
   // State
-  const [isListening, setIsListening] = useState<boolean>(false);
   const [isAgentSpeaking, setIsAgentSpeaking] = useState<boolean>(false);
   const [lastMessage, setLastMessage] = useState<string | null>(null);
-  const [lastUserMessage, setLastUserMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   // Refs
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioQueueRef = useRef<Array<string>>([]);
   const { user, tenantId } = useAuth();
-
-  // Initialize the speech recognition API
-  const initSpeechRecognition = useCallback(() => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      setErrorMessage("Speech recognition is not supported in this browser.");
-      return false;
-    }
-
-    // Create a speech recognition instance
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognitionRef.current = new SpeechRecognition();
-    
-    // Configure the speech recognition
-    recognitionRef.current.continuous = true;
-    recognitionRef.current.interimResults = true;
-    recognitionRef.current.lang = 'en-US';
-    
-    // Set up event handlers
-    recognitionRef.current.onstart = () => {
-      console.log("Speech recognition started");
-      setIsListening(true);
-    };
-    
-    recognitionRef.current.onend = () => {
-      console.log("Speech recognition ended");
-      setIsListening(false);
-    };
-    
-    recognitionRef.current.onerror = (event) => {
-      console.error("Speech recognition error", event.error);
-      setErrorMessage(`Speech recognition error: ${event.error}`);
-      setIsListening(false);
-    };
-    
-    recognitionRef.current.onresult = (event) => {
-      const transcript = Array.from(event.results)
-        .map(result => result[0].transcript)
-        .join(' ');
-      
-      // Only send complete sentences
-      if (event.results[0].isFinal) {
-        setLastUserMessage(transcript);
-        sendMessageToAgent(transcript);
-      }
-    };
-    
-    return true;
-  }, []);
 
   // Function to send a message to the AI agent
   const sendMessageToAgent = useCallback(async (message: string) => {
@@ -232,98 +173,24 @@ export const useVoiceChat = (options: UseVoiceChatOptions = {}): UseVoiceChatRet
     }
   }, [speakWithBrowserSynthesis]);
 
-  // Start voice chat
-  const start = useCallback(async () => {
-    if (isListening) return; // Already listening
-    
-    // Initialize speech recognition if needed
-    if (!recognitionRef.current) {
-      const initialized = initSpeechRecognition();
-      if (!initialized) return;
-    }
-    
-    try {
-      recognitionRef.current.start();
-      toast.success("Voice chat activated");
-    } catch (error) {
-      console.error("Error starting speech recognition", error);
-      setErrorMessage(`Error starting speech recognition: ${error.message}`);
-    }
-  }, [isListening, initSpeechRecognition]);
-
-  // Stop voice chat
-  const stop = useCallback(() => {
-    if (!isListening) return; // Not listening
-    
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-        toast.info("Voice chat deactivated");
-      } catch (error) {
-        console.error("Error stopping speech recognition", error);
-      }
-    }
-    
-    // Stop any ongoing speech
-    if (speechSynthesisRef.current && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-      setIsAgentSpeaking(false);
-    }
-    
-    // Clear audio queue
-    audioQueueRef.current = [];
-  }, [isListening]);
-
-  // Toggle voice chat on/off
-  const toggle = useCallback(async () => {
-    if (isListening) {
-      stop();
-    } else {
-      await start();
-    }
-  }, [isListening, start, stop]);
-
   // Clear error message
   const clearError = useCallback(() => {
     setErrorMessage(null);
   }, []);
 
-  // Auto-start if enabled
-  useEffect(() => {
-    if (autoStart) {
-      start();
-    }
-
-    // Cleanup on unmount
-    return () => {
-      stop();
-      
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
-    };
-  }, [autoStart, start, stop]);
-
-  // Return the hook's API
+  // Return the hook's API (simplified from previous version)
   return {
-    isListening,
     isAgentSpeaking,
-    toggle,
-    start,
-    stop,
     lastMessage,
-    lastUserMessage,
     errorMessage,
-    clearError
+    clearError,
+    sendMessageToAgent
   };
 };
 
-// TypeScript definitions for Speech Recognition API
-// These are needed because TypeScript doesn't include these by default
+// TypeScript definitions for Audio API
 declare global {
   interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
     AudioContext: typeof AudioContext;
     webkitAudioContext: typeof AudioContext;
   }
