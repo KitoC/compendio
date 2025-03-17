@@ -6,7 +6,7 @@ import OpenAIService from "../shared/services/OpenAIService.ts";
 import SupabaseService from "../shared/services/SupabaseService.ts";
 
 // Environment variables
-const ELEVEN_LABS_API_KEY = Deno.env.get("ELEVEN_LABS_API_KEY");
+const GOOGLE_CLOUD_API_KEY = Deno.env.get("GOOGLE_CLOUD_API_KEY");
 const supabaseUrl = getEnvKey("SUPABASE_URL");
 const supabaseAnonKey = getEnvKey("SUPABASE_ANON_KEY");
 
@@ -27,7 +27,7 @@ serve(async (req: Request) => {
   }
 
   try {
-    const { message, agent_id, tenant_id, user_id } = await req.json();
+    const { message, agent_id, tenant_id, user_id, voice_config } = await req.json();
 
     // Basic validation
     if (!message) {
@@ -113,42 +113,41 @@ serve(async (req: Request) => {
       },
     ]);
 
-    // Generate speech from text if ElevenLabs API key is available
+    // Generate speech from text if Google Cloud API key is available
     let audioContent = null;
-    if (ELEVEN_LABS_API_KEY) {
+    if (GOOGLE_CLOUD_API_KEY) {
       try {
-        // Default voice: Alloy
-        const voice = "Alloy";
+        // Configure Google Cloud TTS
+        const { languageCode = "en-US", name = "en-US-Standard-C", ssmlGender = "FEMALE" } = voice_config || {};
         
-        const speechResponse = await fetch(
-          `https://api.elevenlabs.io/v1/text-to-speech/${voice}`,
+        const ttsResponse = await fetch(
+          `https://texttospeech.googleapis.com/v1/text:synthesize?key=${GOOGLE_CLOUD_API_KEY}`,
           {
             method: "POST",
             headers: {
-              "xi-api-key": ELEVEN_LABS_API_KEY,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              text: textResponse,
-              model_id: "eleven_multilingual_v2",
-              voice_settings: {
-                stability: 0.5,
-                similarity_boost: 0.5,
+              input: { text: textResponse },
+              voice: {
+                languageCode,
+                name,
+                ssmlGender,
+              },
+              audioConfig: {
+                audioEncoding: "MP3",
               },
             }),
           }
         );
 
-        if (speechResponse.ok) {
-          const arrayBuffer = await speechResponse.arrayBuffer();
-          const base64Audio = btoa(
-            String.fromCharCode(...new Uint8Array(arrayBuffer))
-          );
-          audioContent = base64Audio;
+        if (ttsResponse.ok) {
+          const ttsData = await ttsResponse.json();
+          audioContent = ttsData.audioContent; // Already in base64 format
         } else {
           console.error(
-            "ElevenLabs API error:",
-            await speechResponse.text()
+            "Google Cloud TTS API error:",
+            await ttsResponse.text()
           );
         }
       } catch (error) {

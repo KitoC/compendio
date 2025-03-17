@@ -4,11 +4,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 
+// Google Cloud TTS voice configuration
+interface GoogleCloudVoiceConfig {
+  languageCode?: string;  // e.g., "en-US", "fr-FR"
+  name?: string;          // e.g., "en-US-Standard-C"
+  ssmlGender?: string;    // "MALE", "FEMALE", or "NEUTRAL"
+}
+
 // Configuration options for the voice chat hook
 interface UseVoiceChatOptions {
   agentId?: string;  // Optional agent ID to specify which AI agent to talk to
   onMessageReceived?: (message: string) => void;  // Callback for when a message is received
   autoStart?: boolean; // Whether to start listening automatically
+  voiceConfig?: GoogleCloudVoiceConfig; // Google Cloud TTS voice configuration
 }
 
 // Return type of the hook
@@ -25,7 +33,7 @@ interface UseVoiceChatReturn {
 }
 
 /**
- * Hook for voice communication with AI agents
+ * Hook for voice communication with AI agents using Google Cloud Text-to-Speech
  * 
  * Usage:
  * ```
@@ -38,12 +46,26 @@ interface UseVoiceChatReturn {
  *   errorMessage
  * } = useVoiceChat({
  *   agentId: "agent-id-here",
- *   onMessageReceived: (message) => console.log("New message:", message)
+ *   onMessageReceived: (message) => console.log("New message:", message),
+ *   voiceConfig: {
+ *     languageCode: "en-US",
+ *     name: "en-US-Wavenet-F",
+ *     ssmlGender: "FEMALE"
+ *   }
  * });
  * ```
  */
 export const useVoiceChat = (options: UseVoiceChatOptions = {}): UseVoiceChatReturn => {
-  const { agentId, onMessageReceived, autoStart = false } = options;
+  const { 
+    agentId, 
+    onMessageReceived, 
+    autoStart = false, 
+    voiceConfig = {
+      languageCode: "en-US",
+      name: "en-US-Standard-C",
+      ssmlGender: "FEMALE"
+    }
+  } = options;
   
   // State
   const [isListening, setIsListening] = useState<boolean>(false);
@@ -121,7 +143,8 @@ export const useVoiceChat = (options: UseVoiceChatOptions = {}): UseVoiceChatRet
           message,
           agent_id: agentId,
           tenant_id: tenantId,
-          user_id: user.id
+          user_id: user.id,
+          voice_config: voiceConfig
         }
       });
       
@@ -145,7 +168,7 @@ export const useVoiceChat = (options: UseVoiceChatOptions = {}): UseVoiceChatRet
       console.error("Error sending message to agent", error);
       setErrorMessage(`Error sending message to agent: ${error.message}`);
     }
-  }, [user, tenantId, agentId, onMessageReceived]);
+  }, [user, tenantId, agentId, onMessageReceived, voiceConfig]);
 
   // Play audio response from the server
   const playAudioResponse = useCallback(async (base64Audio: string) => {

@@ -1,6 +1,6 @@
 
 import { useVoiceChat } from "@/hooks/useVoiceChat";
-import { Mic, MicOff, Volume2, Loader2 } from "lucide-react";
+import { Mic, MicOff, Volume2 } from "lucide-react";
 import { IconButton } from "../ui/IconButton";
 import { useEffect } from "react";
 import { toast } from "sonner";
@@ -8,13 +8,38 @@ import { toast } from "sonner";
 interface VoiceChatToggleProps {
   agentId?: string;
   onMessageReceived?: (message: string) => void;
+  voiceConfig?: {
+    languageCode?: string;
+    name?: string;
+    ssmlGender?: string;
+  };
 }
 
 /**
  * A simple toggle button component for voice chat functionality
- * This is just an example of how to use the useVoiceChat hook
+ * 
+ * Usage:
+ * ```
+ * <VoiceChatToggle 
+ *   agentId="your-agent-id" 
+ *   onMessageReceived={(msg) => console.log(msg)}
+ *   voiceConfig={{
+ *     languageCode: "en-US",
+ *     name: "en-US-Wavenet-F",
+ *     ssmlGender: "FEMALE"
+ *   }}
+ * />
+ * ```
  */
-const VoiceChatToggle = ({ agentId, onMessageReceived }: VoiceChatToggleProps) => {
+const VoiceChatToggle = ({ 
+  agentId, 
+  onMessageReceived,
+  voiceConfig = {
+    languageCode: "en-US",
+    name: "en-US-Standard-C",
+    ssmlGender: "FEMALE"
+  }
+}: VoiceChatToggleProps) => {
   const {
     isListening,
     isAgentSpeaking,
@@ -24,7 +49,8 @@ const VoiceChatToggle = ({ agentId, onMessageReceived }: VoiceChatToggleProps) =
     clearError
   } = useVoiceChat({
     agentId,
-    onMessageReceived
+    onMessageReceived,
+    voiceConfig
   });
 
   // Show error toast if there's an error
