@@ -27,6 +27,9 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const RequestAccess = lazy(() => import("./pages/RequestAccess"));
 const AccessPending = lazy(() => import("./pages/AccessPending"));
 const ChatPage = lazy(() => import("./pages/ChatPage"));
+const Settings = lazy(() => import("./pages/Settings"));
+const AppearanceSettings = lazy(() => import("./pages/settings/AppearanceSettings"));
+const AgentsSettings = lazy(() => import("./pages/settings/AgentsSettings"));
 
 const queryClient = new QueryClient();
 
@@ -75,6 +78,14 @@ const router = createBrowserRouter([
         children: [
           { path: ROUTES.CONVERSATIONS, element: <ChatPage /> },
           { path: `${ROUTES.CONVERSATION}/:id`, element: <ChatPage /> },
+          { 
+            path: ROUTES.SETTINGS, 
+            element: <Settings />,
+            children: [
+              { path: "appearance", element: <AppearanceSettings /> },
+              { path: "agents", element: <AgentsSettings /> },
+            ] 
+          },
         ],
       },
       
