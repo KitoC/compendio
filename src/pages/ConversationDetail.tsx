@@ -1,10 +1,9 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import AuthRequired from "@/components/AuthRequired";
@@ -19,7 +18,6 @@ const ConversationDetail = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [conversation, setConversation] = useState<any>(null);
-  const { toast } = useToast();
   const { user, tenantId } = useAuth();
   const navigate = useNavigate();
 
@@ -29,13 +27,13 @@ const ConversationDetail = () => {
     try {
       // Query by ID or alias based on the format
       let query = supabase.from("conversations").select("*");
-      
+
       if (isUuid(id)) {
         query = query.eq("id", id);
       } else {
         query = query.eq("alias", id);
       }
-      
+
       const { data, error } = await query.single();
 
       if (error) {
@@ -126,7 +124,7 @@ const ConversationDetail = () => {
   useEffect(() => {
     if (conversation?.id) {
       fetchMessages();
-      
+
       // Subscribe to new messages for this conversation
       const subscription = supabase
         .channel("messages-channel")

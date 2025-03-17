@@ -8,7 +8,7 @@ import AuthRequired from "@/components/AuthRequired";
 import Navbar from "@/components/Navbar";
 import { ROUTES } from "@/lib/constants";
 import { Conversation } from "@/types/chat";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 
 const Conversations = () => {
@@ -60,7 +60,9 @@ const Conversations = () => {
         tenant_id: tenantId,
       };
 
-      const { error } = await supabase.from("conversations").insert([newConversation]);
+      const { error } = await supabase
+        .from("conversations")
+        .insert([newConversation]);
 
       if (error) {
         throw error;
@@ -76,7 +78,10 @@ const Conversations = () => {
 
   const deleteConversation = async (id: string) => {
     try {
-      const { error } = await supabase.from("conversations").delete().eq("id", id);
+      const { error } = await supabase
+        .from("conversations")
+        .delete()
+        .eq("id", id);
 
       if (error) {
         throw error;
@@ -103,16 +108,25 @@ const Conversations = () => {
               {loading ? (
                 <p>Loading conversations...</p>
               ) : conversations.length === 0 ? (
-                <p>No conversations yet. Start one by clicking the button below.</p>
+                <p>
+                  No conversations yet. Start one by clicking the button below.
+                </p>
               ) : (
                 <div className="grid gap-4">
                   {conversations.map((conversation) => (
-                    <Card key={conversation.id} className="border-2 border-primary">
+                    <Card
+                      key={conversation.id}
+                      className="border-2 border-primary"
+                    >
                       <CardContent className="flex items-center justify-between">
                         <a href={`${ROUTES.CONVERSATION}/${conversation.id}`}>
                           {conversation.title || "Conversation"}
                         </a>
-                        <Button variant="destructive" size="sm" onClick={() => deleteConversation(conversation.id)}>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => deleteConversation(conversation.id)}
+                        >
                           Delete
                         </Button>
                       </CardContent>

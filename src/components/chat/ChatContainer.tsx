@@ -5,7 +5,7 @@ import { ChatProvider } from "@/contexts/chat";
 import ChatMessages from "./ChatMessages";
 import ChatFooter from "./ChatFooter";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { v4 as uuidv4 } from "uuid";
 import { Conversation } from "@/types/chat";
@@ -25,7 +25,6 @@ export const ChatContainer = ({
   const { id: paramId } = useParams<{ id: string }>();
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
   const { user, tenantId } = useAuth();
   const navigate = useNavigate();
 

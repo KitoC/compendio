@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { IMessage, MessageRole } from "@/types/chat";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { v4 as uuidv4 } from "uuid";
 import { sendMessageToAI } from "@/services/aiChatService";
@@ -10,6 +10,7 @@ import { Json } from "@/integrations/supabase/types";
 import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
 import { useParams } from "react-router-dom";
 import { usePrevious } from "react-use";
+
 interface UseChatOptions {
   conversationId: string;
 }
@@ -24,7 +25,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const { toast } = useToast();
   const { user, tenantId } = useAuth();
   const previousMessages = usePrevious(messages);
 
@@ -102,6 +102,8 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         const aiMessage = createAIMessage();
 
         setMessages((prev) => [...prev, aiMessage]);
+
+        toast.success("Message saved");
 
         // Send messages to AI and handle streaming response
         await sendMessageToAI({
