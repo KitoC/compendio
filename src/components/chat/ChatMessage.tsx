@@ -1,3 +1,4 @@
+
 import { FC, useRef } from "react";
 import { useChat } from "@/contexts/chat";
 import { FormConfig, IMessage, MessageRole } from "@/types/chat";
@@ -31,12 +32,6 @@ const ChatMessage: FC<ChatMessageProps> = ({
       })}
       ref={messageRef}
     >
-      {/* {!isUser && (
-        <Avatar className="h-10 w-10 mr-3 flex-shrink-0">
-          <AvatarImage src="/placeholder.svg" alt="AI" />
-          <AvatarFallback>AI</AvatarFallback>
-        </Avatar>
-      )} */}
       <div
         className={clsx("px-3 py-[3px] flex-grow w-full rounded-lg", {
           "bg-primary text-primary-foreground": isUser,

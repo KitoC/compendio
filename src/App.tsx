@@ -1,8 +1,9 @@
+
 import { lazy, Suspense } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AuthenticatedLayout from "@/components/layout/AuthenticatedLayout";
@@ -29,74 +30,64 @@ const ChatPage = lazy(() => import("./pages/ChatPage"));
 
 const queryClient = new QueryClient();
 
-// Separate routes into public and protected
-const AppContent = () => {
-  return (
-    <ErrorBoundary>
-      <ThemeProvider>
-        <AuthProvider>
-          <TooltipProvider>
-            <Sonner />
-            <Suspense fallback={<LoadingFallback />}>
-              <Routes>
-                {/* Public routes */}
-                <Route path={ROUTES.INDEX} element={<Index />} />
-                <Route path={ROUTES.AUTH} element={<Auth />} />
-                <Route path={ROUTES.AUTH_CALLBACK} element={<AuthCallback />} />
-                <Route
-                  path={ROUTES.FORGOT_PASSWORD}
-                  element={<ForgotPassword />}
-                />
-                <Route
-                  path={ROUTES.RESET_PASSWORD}
-                  element={<ResetPassword />}
-                />
+// Root layout for authenticated routes
+const AuthenticatedRoot = () => (
+  <AuthenticatedLayout>
+    <Outlet />
+  </AuthenticatedLayout>
+);
 
-                {/* Protected routes with sidebar */}
-                <Route
-                  path={ROUTES.CONVERSATIONS}
-                  element={
-                    <AuthenticatedLayout>
-                      <ChatPage />
-                    </AuthenticatedLayout>
-                  }
-                />
-                <Route
-                  path={`${ROUTES.CONVERSATION}/:id`}
-                  element={
-                    <AuthenticatedLayout>
-                      <ChatPage />
-                    </AuthenticatedLayout>
-                  }
-                />
+// Root layout with providers
+const Root = () => (
+  <ErrorBoundary>
+    <ThemeProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Sonner />
+          <Suspense fallback={<LoadingFallback />}>
+            <Outlet />
+          </Suspense>
+        </TooltipProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  </ErrorBoundary>
+);
 
-                {/* Access request routes */}
-                <Route
-                  path={ROUTES.REQUEST_ACCESS}
-                  element={<RequestAccess />}
-                />
-                <Route
-                  path={ROUTES.ACCESS_PENDING}
-                  element={<AccessPending />}
-                />
-
-                {/* Catch-all */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </TooltipProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </ErrorBoundary>
-  );
-};
+// Create router with routes
+const router = createBrowserRouter([
+  {
+    element: <Root />,
+    children: [
+      // Public routes
+      { path: ROUTES.INDEX, element: <Index /> },
+      { path: ROUTES.AUTH, element: <Auth /> },
+      { path: ROUTES.AUTH_CALLBACK, element: <AuthCallback /> },
+      { path: ROUTES.FORGOT_PASSWORD, element: <ForgotPassword /> },
+      { path: ROUTES.RESET_PASSWORD, element: <ResetPassword /> },
+      
+      // Access request routes
+      { path: ROUTES.REQUEST_ACCESS, element: <RequestAccess /> },
+      { path: ROUTES.ACCESS_PENDING, element: <AccessPending /> },
+      
+      // Protected routes with authenticated layout
+      {
+        element: <AuthenticatedRoot />,
+        children: [
+          { path: ROUTES.CONVERSATIONS, element: <ChatPage /> },
+          { path: `${ROUTES.CONVERSATION}/:id`, element: <ChatPage /> },
+        ],
+      },
+      
+      // Catch-all
+      { path: "*", element: <NotFound /> },
+    ],
+  },
+]);
 
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
+      <RouterProvider router={router} />
     </QueryClientProvider>
   </ErrorBoundary>
 );

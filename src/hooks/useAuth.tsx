@@ -39,7 +39,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -52,7 +51,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
@@ -78,7 +76,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkTenantAccess = async (userId: string) => {
     try {
-      // Check if user has pending request
       const { data: pendingRequest } = await supabase
         .from("tenant_requests")
         .select("*")
@@ -91,7 +88,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Check if user is assigned to any tenant
       const { data: tenantUser } = await supabase
         .from("tenant_users")
         .select("tenant_id")
@@ -138,7 +134,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     console.log("Signing out...");
     try {
-      // First, sign out from Supabase
       const { error } = await supabase.auth.signOut();
 
       if (error) {
@@ -146,10 +141,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
 
-      // Clean up any remaining auth data in localStorage
       cleanupSupabaseAuth();
 
-      // Clear local state
       setSession(null);
       setUser(null);
       setProfile(null);
@@ -158,11 +151,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       console.log("Successfully signed out, redirecting to auth page");
 
-      // Force redirect to auth page
       navigate(ROUTES.AUTH, { replace: true });
     } catch (error) {
       console.error("Error during sign out:", error);
-      // Still try to redirect even if there was an error
       navigate(ROUTES.AUTH, { replace: true });
     }
   };

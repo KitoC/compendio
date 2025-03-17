@@ -71,7 +71,7 @@
     "react-icons": "^4.12.0",
     "react-markdown": "^10.1.0",
     "react-resizable-panels": "^2.1.3",
-    "react-router-dom": "^6.26.2",
+    "react-router-dom": "^7.3.0",
     "react-use": "^17.6.0",
     "recharts": "^2.12.7",
     "regenerator-runtime": "^0.14.1",
