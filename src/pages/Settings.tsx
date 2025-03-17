@@ -16,7 +16,6 @@ const Settings = () => {
   const [isRoleLoading, setIsRoleLoading] = useState(true);
   const location = useLocation();
 
-  console.log("tenantId", tenantId);
   // Fetch user role from Supabase
   useEffect(() => {
     console.log("FETCHING USER ROLE");

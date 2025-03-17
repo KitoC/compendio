@@ -17,7 +17,7 @@ const ChatMessage: FC<ChatMessageProps> = ({ message, functionalMessages }) => {
   return (
     <>
       <div
-        className={clsx("flex flex-col gap-1 mb-4 w-fit", {
+        className={clsx("flex flex-col gap-1 mb-4 w-fit max-w-[85%]", {
           "flex-row-reverse ml-auto": isUser,
           "flex-row": !isUser,
         })}

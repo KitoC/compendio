@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,59 +6,26 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
-
+import { useUserSettings } from "@/contexts/UserSettingsProvider";
 const AppearanceSettings = () => {
-  const { user } = useAuth();
-  const [theme, setTheme] = useState<string>("system");
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, tenantId } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    const fetchUserConfig = async () => {
-      if (!user) return;
-
-      try {
-        const { data, error } = await supabase
-          .from("configs")
-          .select("config")
-          .eq("domain", "appearance")
-          .eq("user_id", user.id)
-          .single();
-
-        if (error && error.code !== "PGRST116") {
-          throw error;
-        }
-
-        if (data) {
-          setTheme(data.config.theme || "system");
-        }
-      } catch (error) {
-        console.error("Error fetching user config:", error);
-        toast.error("Failed to load appearance settings");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchUserConfig();
-  }, [user]);
+  const { theme, setTheme, isLoading } = useUserSettings();
 
   const handleSaveAppearance = async () => {
     if (!user) return;
 
     setIsSaving(true);
     try {
-      const { error } = await supabase
-        .from("configs")
-        .upsert(
-          {
-            domain: "appearance",
-            user_id: user.id,
-            tenant_id: user.tenant_id,
-            config: { theme },
-          },
-          { onConflict: "domain, user_id" }
-        );
+      const { error } = await supabase.from("configs").upsert(
+        {
+          name: "appearance",
+          user_id: user.id,
+          tenant_id: tenantId,
+          config: { theme },
+        },
+        { onConflict: "user_id, tenant_id, name" }
+      );
 
       if (error) throw error;
       toast.success("Appearance settings saved");
