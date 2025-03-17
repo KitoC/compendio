@@ -20,11 +20,7 @@ export const useAiAgentsState = () => {
 
       setAiAgents(data || []);
     } catch (error: any) {
-      toast({
-        title: "Error fetching AI agents",
-        description: error.message || "An unknown error occurred",
-        variant: "destructive",
-      });
+      toast.error(error.message || "An unknown error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -46,18 +42,11 @@ export const useAiAgentsState = () => {
 
         setAiAgents((prevAgents) => [...prevAgents, data]);
         
-        toast({
-          title: "AI agent created",
-          description: `${agent.name} has been created successfully`,
-        });
+        toast.success(`${agent.name} has been created successfully`);
         
         return data;
       } catch (error: any) {
-        toast({
-          title: "Error creating AI agent",
-          description: error.message || "An unknown error occurred",
-          variant: "destructive",
-        });
+        toast.error(error.message || "An unknown error occurred");
         return null;
       } finally {
         setIsLoading(false);
@@ -88,18 +77,11 @@ export const useAiAgentsState = () => {
           prevAgents.map((agent) => (agent.id === id ? data : agent))
         );
         
-        toast({
-          title: "AI agent updated",
-          description: `${data.name} has been updated successfully`,
-        });
+        toast.success(`${data.name} has been updated successfully`);
         
         return data;
       } catch (error: any) {
-        toast({
-          title: "Error updating AI agent",
-          description: error.message || "An unknown error occurred",
-          variant: "destructive",
-        });
+        toast.error(error.message || "An unknown error occurred");
         return null;
       } finally {
         setIsLoading(false);
@@ -127,18 +109,11 @@ export const useAiAgentsState = () => {
           prevAgents.filter((agent) => agent.id !== id)
         );
         
-        toast({
-          title: "AI agent deleted",
-          description: agentToDelete ? `${agentToDelete.name} has been deleted` : "Agent has been deleted",
-        });
+        toast.success(agentToDelete ? `${agentToDelete.name} has been deleted` : "Agent has been deleted");
         
         return true;
       } catch (error: any) {
-        toast({
-          title: "Error deleting AI agent",
-          description: error.message || "An unknown error occurred",
-          variant: "destructive",
-        });
+        toast.error(error.message || "An unknown error occurred");
         return false;
       } finally {
         setIsLoading(false);

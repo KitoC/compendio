@@ -59,15 +59,13 @@ const Settings = () => {
   });
 
   const handleCreateSubmit = async (values: AgentFormValues) => {
-    // Add tenant_id to the agent
-    if (user?.tenant_id) {
-      await createAiAgent({
-        ...values,
-        tenant_id: user.tenant_id,
-      });
-      setIsCreateDialogOpen(false);
-      createForm.reset();
-    }
+    // Create the agent with all required fields
+    await createAiAgent({
+      ...values,
+      tenant_id: user?.tenant_id || "", // Use empty string as fallback
+    });
+    setIsCreateDialogOpen(false);
+    createForm.reset();
   };
 
   const handleEditSubmit = async (values: AgentFormValues) => {
@@ -186,13 +184,13 @@ const Settings = () => {
                       <FormLabel>Prompt</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="You are {{AI_NAME}}, an AI assistant that..." 
+                          placeholder="You are an AI assistant that..." 
                           className="min-h-[120px]" 
                           {...field} 
                         />
                       </FormControl>
                       <FormDescription>
-                        The system prompt for the agent. You can use {{AI_NAME}}, {{FUNCTIONS}}, and {{SESSION}} variables.
+                        The system prompt for the agent. You can use template variables in double curly braces.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -410,7 +408,7 @@ const Settings = () => {
                       <Textarea className="min-h-[120px]" {...field} />
                     </FormControl>
                     <FormDescription>
-                      The system prompt for the agent. You can use {{AI_NAME}}, {{FUNCTIONS}}, and {{SESSION}} variables.
+                      The system prompt for the agent. You can use template variables in double curly braces.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
