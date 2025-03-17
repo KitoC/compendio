@@ -1,3 +1,4 @@
+
 import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -27,6 +28,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const RequestAccess = lazy(() => import("./pages/RequestAccess"));
 const AccessPending = lazy(() => import("./pages/AccessPending"));
 const ChatPage = lazy(() => import("./pages/ChatPage"));
+const Settings = lazy(() => import("./pages/Settings"));
 
 const queryClient = new QueryClient();
 
@@ -68,6 +70,14 @@ const AppContent = () => {
                   element={
                     <AuthenticatedLayout>
                       <ChatPage />
+                    </AuthenticatedLayout>
+                  }
+                />
+                <Route
+                  path={ROUTES.SETTINGS}
+                  element={
+                    <AuthenticatedLayout>
+                      <Settings />
                     </AuthenticatedLayout>
                   }
                 />

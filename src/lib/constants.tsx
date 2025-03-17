@@ -1,4 +1,5 @@
-import { BotIcon } from "lucide-react";
+
+import { BotIcon, Settings } from "lucide-react";
 
 export const ROUTES = {
   // Public routes
@@ -13,6 +14,7 @@ export const ROUTES = {
   CONVERSATIONS: "/conversations",
   CONVERSATION: "/conversation", // Base path, will be followed by an ID or alias
   CONVERSATION_ASSISTANT: "/conversation/general-assistant", // Predefined alias for assistant chat
+  SETTINGS: "/settings",
 
   // Tenant management
   REQUEST_ACCESS: "/request-access",
@@ -30,6 +32,16 @@ export const sidebarItems = [
         label: "General Assistant",
         url: ROUTES.CONVERSATION_ASSISTANT,
         icon: <BotIcon />,
+      },
+    ],
+  },
+  {
+    label: "Management",
+    children: [
+      {
+        label: "Settings",
+        url: ROUTES.SETTINGS,
+        icon: <Settings />,
       },
     ],
   },

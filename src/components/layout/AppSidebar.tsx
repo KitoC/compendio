@@ -1,3 +1,4 @@
+
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -13,9 +14,9 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { ROUTES } from "@/lib/constants";
+import { ROUTES, sidebarItems } from "@/lib/constants";
 import { useSidebar } from "@/components/ui/sidebar/context";
 import { useEffect } from "react";
 import clsx from "clsx";
@@ -26,7 +27,8 @@ const AppSidebar = () => {
   const { aiAgents } = useAiAgents();
   const { toggleSidebar } = useSidebar();
 
-  const sidebarItems = [
+  // Combine configured items with dynamic AI agents
+  const allSidebarItems = [
     {
       label: "Agents",
       children: aiAgents.map((agent) => ({
@@ -34,7 +36,9 @@ const AppSidebar = () => {
         url: `${ROUTES.CONVERSATION}/${agent.name}`,
       })),
     },
+    ...sidebarItems.filter((item) => item.label !== "My Agents"),
   ];
+
   // Listen for custom event to toggle sidebar from the header
   useEffect(() => {
     const handleToggleSidebar = () => {
@@ -116,18 +120,20 @@ const AppSidebar = () => {
       </SidebarHeader>
 
       <SidebarContent>
-        {sidebarItems.map((section, index) => (
-          <div key={section.label}>
-            {index > 0 && <SidebarSeparator />}
-            <SidebarGroup>
-              <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {section.children && renderSidebarItems(section.children)}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </div>
+        {allSidebarItems.map((section, index) => (
+          section.children && section.children.length > 0 ? (
+            <div key={section.label}>
+              {index > 0 && <SidebarSeparator />}
+              <SidebarGroup>
+                <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {renderSidebarItems(section.children)}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </div>
+          ) : null
         ))}
       </SidebarContent>
 
