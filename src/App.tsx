@@ -1,3 +1,4 @@
+
 import { lazy, Suspense } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -31,6 +32,7 @@ const AppearanceSettings = lazy(
   () => import("./pages/settings/AppearanceSettings")
 );
 const AgentsSettings = lazy(() => import("./pages/settings/AgentsSettings"));
+const AgentDetail = lazy(() => import("./pages/settings/AgentDetail"));
 
 const queryClient = new QueryClient();
 
@@ -87,6 +89,7 @@ const router = createBrowserRouter([
             children: [
               { path: "appearance", element: <AppearanceSettings /> },
               { path: "agents", element: <AgentsSettings /> },
+              { path: "agents/:id", element: <AgentDetail /> },
             ],
           },
         ],

@@ -123,7 +123,7 @@ export type Database = {
           config: Json | null
           created_at: string
           deleted_at: string | null
-          domain: string
+          domain: string | null
           id: string
           name: string | null
           tenant_id: string
@@ -134,7 +134,7 @@ export type Database = {
           config?: Json | null
           created_at?: string
           deleted_at?: string | null
-          domain: string
+          domain?: string | null
           id?: string
           name?: string | null
           tenant_id: string
@@ -145,7 +145,7 @@ export type Database = {
           config?: Json | null
           created_at?: string
           deleted_at?: string | null
-          domain?: string
+          domain?: string | null
           id?: string
           name?: string | null
           tenant_id?: string

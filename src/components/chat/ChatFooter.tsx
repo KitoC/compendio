@@ -1,3 +1,4 @@
+
 import "regenerator-runtime/runtime"; // Import regenerator runtime for Safari compatibility
 import "core-js/stable";
 import { useChat } from "@/contexts/chat";

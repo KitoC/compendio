@@ -1,4 +1,6 @@
+
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -10,30 +12,28 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { IAiAgent } from "@/types/aiAgents";
 import { PlusCircle, Pencil, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ROUTES } from "@/lib/constants";
 
 const AgentsSettings = () => {
   const { user, tenantId } = useAuth();
+  const navigate = useNavigate();
   const [agents, setAgents] = useState<IAiAgent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentAgent, setCurrentAgent] = useState<Partial<IAiAgent> | null>(
-    null
-  );
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [agentToDelete, setAgentToDelete] = useState<string | null>(null);
 
   const fetchAgents = async () => {
     if (!user) return;
@@ -60,66 +60,27 @@ const AgentsSettings = () => {
     fetchAgents();
   }, [user]);
 
-  const handleEditAgent = (agent: IAiAgent) => {
-    setCurrentAgent(agent);
-    setIsDialogOpen(true);
+  const handleEditAgent = (agentId: string) => {
+    navigate(`${ROUTES.SETTINGS}/agents/${agentId}`);
   };
 
   const handleCreateAgent = () => {
-    setCurrentAgent({
-      name: "",
-      human_name: "",
-      responsibility: "",
-      prompt: "",
-      model: "gpt-4o-mini",
-      enabled: true,
-      tenant_id: tenantId || "",
-    });
-    setIsDialogOpen(true);
+    navigate(`${ROUTES.SETTINGS}/agents/new`);
   };
 
-  const handleSaveAgent = async () => {
-    if (!currentAgent || !user) return;
-
-    setIsSubmitting(true);
-    try {
-      const isNewAgent = !currentAgent.id;
-      const agentData = {
-        ...currentAgent,
-        tenant_id: tenantId,
-      } as IAiAgent;
-
-      let result;
-      if (isNewAgent) {
-        result = await supabase.from("ai_agents").insert([agentData]);
-      } else {
-        result = await supabase
-          .from("ai_agents")
-          .update(agentData)
-          .eq("id", currentAgent.id);
-      }
-
-      if (result.error) throw result.error;
-
-      toast.success(`Agent ${isNewAgent ? "created" : "updated"} successfully`);
-      setIsDialogOpen(false);
-      fetchAgents();
-    } catch (error) {
-      console.error("Error saving agent:", error);
-      toast.error(`Failed to ${currentAgent.id ? "update" : "create"} agent`);
-    } finally {
-      setIsSubmitting(false);
-    }
+  const openDeleteDialog = (agentId: string) => {
+    setAgentToDelete(agentId);
+    setDeleteDialogOpen(true);
   };
 
-  const handleDeleteAgent = async (agentId: string) => {
-    if (!confirm("Are you sure you want to delete this agent?")) return;
+  const handleDeleteAgent = async () => {
+    if (!agentToDelete) return;
 
     try {
       const { error } = await supabase
         .from("ai_agents")
         .delete()
-        .eq("id", agentId);
+        .eq("id", agentToDelete);
 
       if (error) throw error;
 
@@ -128,6 +89,9 @@ const AgentsSettings = () => {
     } catch (error) {
       console.error("Error deleting agent:", error);
       toast.error("Failed to delete agent");
+    } finally {
+      setDeleteDialogOpen(false);
+      setAgentToDelete(null);
     }
   };
 
@@ -193,7 +157,7 @@ const AgentsSettings = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleEditAgent(agent)}
+                      onClick={() => handleEditAgent(agent.id)}
                     >
                       <Pencil size={16} />
                       <span className="sr-only">Edit</span>
@@ -201,7 +165,7 @@ const AgentsSettings = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDeleteAgent(agent.id)}
+                      onClick={() => openDeleteDialog(agent.id)}
                     >
                       <Trash2 size={16} />
                       <span className="sr-only">Delete</span>
@@ -214,112 +178,24 @@ const AgentsSettings = () => {
         </Table>
       )}
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
-              {currentAgent?.id ? "Edit Agent" : "Create New Agent"}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Internal Name</Label>
-                <Input
-                  id="name"
-                  value={currentAgent?.name || ""}
-                  onChange={(e) =>
-                    setCurrentAgent((prev) => ({
-                      ...prev!,
-                      name: e.target.value,
-                    }))
-                  }
-                  placeholder="e.g. sales_assistant"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="human_name">Display Name</Label>
-                <Input
-                  id="human_name"
-                  value={currentAgent?.human_name || ""}
-                  onChange={(e) =>
-                    setCurrentAgent((prev) => ({
-                      ...prev!,
-                      human_name: e.target.value,
-                    }))
-                  }
-                  placeholder="e.g. Sales Assistant"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="responsibility">Responsibility</Label>
-              <Input
-                id="responsibility"
-                value={currentAgent?.responsibility || ""}
-                onChange={(e) =>
-                  setCurrentAgent((prev) => ({
-                    ...prev!,
-                    responsibility: e.target.value,
-                  }))
-                }
-                placeholder="e.g. Helps with sales inquiries"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="model">Model</Label>
-              <Input
-                id="model"
-                value={currentAgent?.model || "gpt-4o-mini"}
-                onChange={(e) =>
-                  setCurrentAgent((prev) => ({
-                    ...prev!,
-                    model: e.target.value,
-                  }))
-                }
-                placeholder="e.g. gpt-4o-mini"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="prompt">System Prompt</Label>
-              <Textarea
-                id="prompt"
-                rows={5}
-                value={currentAgent?.prompt || ""}
-                onChange={(e) =>
-                  setCurrentAgent((prev) => ({
-                    ...prev!,
-                    prompt: e.target.value,
-                  }))
-                }
-                placeholder="Enter the system prompt for this agent"
-              />
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="enabled"
-                checked={currentAgent?.enabled}
-                onCheckedChange={(checked) =>
-                  setCurrentAgent((prev) => ({ ...prev!, enabled: checked }))
-                }
-              />
-              <Label htmlFor="enabled">Active</Label>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveAgent} disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : "Save"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              agent and all related data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteAgent} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
