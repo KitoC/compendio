@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { getEnvKey } from "../shared/utils/env.ts";
@@ -14,8 +13,9 @@ const openAiService = new OpenAIService(getEnvKey("OPENAI_API_KEY"));
 const supabaseService = new SupabaseService();
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 serve(async (req: Request) => {
@@ -27,7 +27,8 @@ serve(async (req: Request) => {
   }
 
   try {
-    const { message, agent_id, tenant_id, user_id, voice_config } = await req.json();
+    const { message, agent_id, tenant_id, user_id, voice_config } =
+      await req.json();
 
     // Basic validation
     if (!message) {
@@ -72,7 +73,7 @@ serve(async (req: Request) => {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${getEnvKey("OPENAI_API_KEY")}`,
+        Authorization: `Bearer ${getEnvKey("OPENAI_API_KEY")}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -115,28 +116,26 @@ serve(async (req: Request) => {
 
     // Generate speech from text if Google Cloud API key is available
     let audioContent = null;
+
     if (GOOGLE_CLOUD_API_KEY) {
       try {
-        // Configure Google Cloud TTS
-        const { languageCode = "en-US", name = "en-US-Standard-C", ssmlGender = "FEMALE" } = voice_config || {};
-        
         const ttsResponse = await fetch(
           `https://texttospeech.googleapis.com/v1/text:synthesize?key=${GOOGLE_CLOUD_API_KEY}`,
           {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
+            // TODO: MAKE CONFIGURABLE
             body: JSON.stringify({
-              input: { text: textResponse },
-              voice: {
-                languageCode,
-                name,
-                ssmlGender,
-              },
               audioConfig: {
-                audioEncoding: "MP3",
+                audioEncoding: "LINEAR16",
+                effectsProfileId: ["small-bluetooth-speaker-class-device"],
+                pitch: 0,
+                speakingRate: 1,
               },
+              input: {
+                text: textResponse,
+              },
+              voice: { languageCode: "en-AU", name: "en-AU-Chirp3-HD-Puck" },
             }),
           }
         );
@@ -156,10 +155,13 @@ serve(async (req: Request) => {
     }
 
     // Return both text and audio
-    return supabaseService.sendJsonResponse({
-      text: textResponse,
-      audioContent,
-    });
+    return supabaseService.sendJsonResponse(
+      {
+        text: textResponse,
+        audioContent,
+      },
+      200
+    );
   } catch (error) {
     console.error("Error in voice-chat function:", error);
     return supabaseService.sendJsonResponse(

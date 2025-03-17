@@ -117,6 +117,7 @@ export default {
         "line-draw": "line-draw 2s ease-out forwards",
         "scale-in": "scale-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards",
         "rotate-node": "rotate-node 10s ease-in-out infinite",
+        wiggle: "wiggle 1s ease-in-out infinite",
       },
       stroke: {
         dasharray: {

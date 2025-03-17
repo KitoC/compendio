@@ -1,10 +1,18 @@
-
 import { forwardRef, useState, KeyboardEvent, useEffect } from "react";
-import { SendHorizontal, X } from "lucide-react";
+import {
+  AudioLines,
+  Mic,
+  MicOff,
+  SendHorizontal,
+  X,
+  Activity,
+} from "lucide-react";
 import { IconButton } from "../ui/IconButton";
 import { CHAT_COMMANDS } from "@/lib/chat-commands";
 import { CommandSuggestions } from "./CommandSuggestions";
-import VoiceChatToggle from "./VoiceChatToggle";
+import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
+import useVoiceToggle from "./useVoiceToggle";
+import clsx from "clsx";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -12,15 +20,66 @@ interface ChatInputProps {
   agentId?: string;
 }
 
+const AudioVisualizer = ({
+  isAgentSpeaking,
+  listening,
+}: {
+  listening: boolean;
+  isAgentSpeaking: boolean;
+}) => {
+  return (
+    <div
+      className={clsx(
+        "w-14 h-14 rounded-full bg-primary flex items-center justify-center",
+        {
+          "voice-listening": listening,
+          "agent-talking": isAgentSpeaking,
+        }
+      )}
+    >
+      {isAgentSpeaking && (
+        <div className="absolute  bg-primary h-2/3 w-2/3 rounded-full z-[-1] animate-ping" />
+      )}
+
+      {!isAgentSpeaking && <AudioLines className={clsx({})} />}
+      {isAgentSpeaking && <Activity className="" />}
+    </div>
+  );
+};
+const buttonWrapperClass =
+  "bg-white dark:bg-gray-700 rounded-full p-2 border border-gray-200 dark:border-slate-600 border-b-0 rounded-b-none border-r-0 border-l-0";
+
 const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
   ({ onSendMessage, disabled, agentId }, ref) => {
     const [message, setMessage] = useState("");
     const [showCommands, setShowCommands] = useState(false);
+    const [isVoiceMode, setIsVoiceMode] = useState(false);
     const [commandFilter, setCommandFilter] = useState("");
     const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
     const filteredCommands = CHAT_COMMANDS.filter((cmd) =>
       cmd.command.toLowerCase().includes(commandFilter.toLowerCase())
     );
+    const { currentAgent } = useAiAgents();
+
+    const handleVoiceMessage = (voiceMessage: string) => {
+      if (voiceMessage.trim()) {
+        onSendMessage(voiceMessage.trim());
+      }
+    };
+
+    const {
+      listening,
+      transcript,
+      startListening,
+      closeVoiceMode,
+      toggleMute,
+      isMuted,
+      isAgentSpeaking,
+    } = useVoiceToggle(currentAgent?.id, handleVoiceMessage, {
+      languageCode: "en-US",
+      name: "en-US-Standard-C",
+      ssmlGender: "FEMALE",
+    });
 
     useEffect(() => {
       if (message.startsWith("/")) {
@@ -36,6 +95,7 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
       e.preventDefault();
 
       if (!message.trim() || disabled) {
+        setIsVoiceMode(true);
         return;
       }
 
@@ -81,16 +141,10 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
       }
     };
 
-    const handleVoiceMessage = (voiceMessage: string) => {
-      if (voiceMessage.trim()) {
-        onSendMessage(voiceMessage.trim());
-      }
-    };
-
     return (
       <form
         onSubmit={handleSubmit}
-        className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-none rounded-lg shadow-sm p-3"
+        className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-slate-600 rounded-lg shadow-sm p-3 "
       >
         {showCommands && (
           <CommandSuggestions
@@ -100,47 +154,110 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
             selectedIndex={selectedCommandIndex}
           />
         )}
-        <div className="flex gap-2 items-end">
-          <textarea
-            ref={ref as React.RefObject<HTMLTextAreaElement>}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a message..."
-            disabled={disabled}
-            className="flex-1 resize-none min-h-[40px] max-h-[120px] py-2 px-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-transparent border-none"
-            rows={1}
-            style={{
-              height: "auto",
-              overflowY: "hidden",
-              // Fix the TypeScript error by properly typing the CSS variable
-              ["--tw-ring-color" as string]: "transparent",
-            }}
-            onInput={(e) => {
-              const target = e.target as HTMLTextAreaElement;
-              target.style.height = "auto";
-              target.style.height = `${Math.min(target.scrollHeight, 120)}px`;
-            }}
-          />
+        <div
+          className={clsx(
+            "flex gap-2 items-end transition-all duration-300 relative",
+            isVoiceMode && "justify-center"
+          )}
+        >
+          {!isVoiceMode && (
+            <textarea
+              ref={ref as React.RefObject<HTMLTextAreaElement>}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type a message..."
+              disabled={disabled}
+              className="flex-1 resize-none min-h-[40px] max-h-[120px] py-2 px-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-transparent border-none"
+              rows={1}
+              style={{
+                height: "auto",
+                overflowY: "hidden",
+                // Fix the TypeScript error by properly typing the CSS variable
+                ["--tw-ring-color" as string]: "transparent",
+              }}
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = "auto";
+                target.style.height = `${Math.min(target.scrollHeight, 120)}px`;
+              }}
+            />
+          )}
 
-          <VoiceChatToggle 
-            agentId={agentId}
-            onMessageReceived={handleVoiceMessage}
-            voiceConfig={{
-              languageCode: "en-US",
-              name: "en-US-Standard-C",
-              ssmlGender: "FEMALE"
-            }}
-          />
-
-          <IconButton
-            type="submit"
-            variant="primary"
-            size="lg"
-            disabled={disabled}
-            className="h-[40px] w-[40px] min-h-[40px] min-w-[40px]"
-            icon={<SendHorizontal className="h-5 w-5 -rotate-90" />}
-          />
+          {isVoiceMode && (
+            <div
+              className={clsx("flex items-center flex-col gap-2", {
+                "top-[-40px] relative ": isVoiceMode,
+              })}
+            >
+              <div className="flex items-center gap-2">
+                <div className={buttonWrapperClass}>
+                  <IconButton
+                    onClick={toggleMute}
+                    variant={!isMuted ? "secondary" : "destructive"}
+                    size="sm"
+                    className="rounded-full h-[40px] w-[40px] min-h-[40px] min-w-[40px]"
+                    icon={
+                      !isMuted ? (
+                        <Mic className="h-5 w-5" />
+                      ) : (
+                        <MicOff className="h-5 w-5" />
+                      )
+                    }
+                    aria-label={
+                      !isMuted ? "Mute microphone" : "Unmute microphone"
+                    }
+                    title={!isMuted ? "Mute microphone" : "Unmute microphone"}
+                  />
+                </div>
+                <div className={buttonWrapperClass}>
+                  <AudioVisualizer
+                    listening={listening}
+                    isAgentSpeaking={isAgentSpeaking}
+                  />
+                </div>
+                <div className={buttonWrapperClass}>
+                  <IconButton
+                    onClick={(e) => {
+                      setIsVoiceMode(false);
+                      closeVoiceMode(e);
+                    }}
+                    variant="secondary"
+                    size="sm"
+                    disabled={disabled}
+                    className="h-[40px] w-[40px] min-h-[40px] min-w-[40px]"
+                    icon={<X className="h-5 w-5" />}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">{transcript}</p>
+            </div>
+          )}
+          {!isVoiceMode && (
+            <IconButton
+              onClick={(e) => {
+                if (isVoiceMode) {
+                  setIsVoiceMode(false);
+                  closeVoiceMode(e);
+                } else {
+                  setIsVoiceMode(true);
+                  startListening(e);
+                }
+              }}
+              type={isVoiceMode ? "button" : "submit"}
+              variant="primary"
+              size="lg"
+              disabled={disabled}
+              className="h-[40px] w-[40px] min-h-[40px] min-w-[40px]"
+              icon={
+                message.length > 0 ? (
+                  <SendHorizontal className="h-5 w-5 -rotate-90" />
+                ) : (
+                  <AudioLines className="h-5 w-5" />
+                )
+              }
+            />
+          )}
         </div>
       </form>
     );

@@ -18,9 +18,9 @@ const iconButtonVariants = cva(
           "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
       },
       size: {
-        sm: "h-8 w-8",
-        md: "h-10 w-10",
-        lg: "h-12 w-12",
+        sm: "h-8 w-8 min-h-8 min-w-8",
+        md: "h-10 w-10 min-h-10 min-w-10",
+        lg: "h-12 w-12 min-h-12 min-w-12",
       },
       rounded: {
         true: "rounded-full",
@@ -76,9 +76,9 @@ export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
         ) : (
           <span
             className={cn("flex items-center justify-center", {
-              "h-4 w-4": size === "sm",
-              "h-5 w-5": size === "md",
-              "h-6 w-6": size === "lg",
+              "h-4 w-4 min-h-4 min-w-4": size === "sm",
+              "h-5 w-5 min-h-5 min-w-5": size === "md",
+              "h-6 w-6 min-h-6 min-w-6": size === "lg",
             })}
           >
             {icon}

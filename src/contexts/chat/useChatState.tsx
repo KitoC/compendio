@@ -15,10 +15,8 @@ interface UseChatOptions {
 export const useChatState = ({ conversationId }: UseChatOptions) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const { aiAgents } = useAiAgents();
+  const { currentAgent } = useAiAgents();
   const params = useParams();
-
-  const currentAgent = aiAgents.find((agent) => agent.name === params.id);
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);

@@ -185,19 +185,19 @@ class FunctionController {
 
     switch (fn.type) {
       case "markup":
-        console.log("SENDING MARKUP");
+        // console.log("SENDING MARKUP");
         return fn;
 
       case "form":
-        console.log("SENDING FORM");
+        // console.log("SENDING FORM");
         return fn;
 
       case "retrieval":
-        console.log("SENDING RETRIEVAL");
+        // console.log("SENDING RETRIEVAL");
         return fn;
 
       case "function":
-        console.log("SENDING FUNCTION");
+        // console.log("SENDING FUNCTION");
         return fn;
 
       default:

@@ -1,38 +1,38 @@
-
 import { useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { callSupabaseFunction } from "@/services/supabaseFunctionServices";
 
 // Google Cloud TTS voice configuration
 interface GoogleCloudVoiceConfig {
-  languageCode?: string;  // e.g., "en-US", "fr-FR"
-  name?: string;          // e.g., "en-US-Standard-C"
-  ssmlGender?: string;    // "MALE", "FEMALE", or "NEUTRAL"
+  languageCode?: string; // e.g., "en-US", "fr-FR"
+  name?: string; // e.g., "en-US-Standard-C"
+  ssmlGender?: string; // "MALE", "FEMALE", or "NEUTRAL"
 }
 
 // Configuration options for the voice chat hook
 interface UseVoiceChatOptions {
-  agentId?: string;  // Optional agent ID to specify which AI agent to talk to
-  onMessageReceived?: (message: string) => void;  // Callback for when a message is received
+  agentId?: string; // Optional agent ID to specify which AI agent to talk to
+  onMessageReceived?: (message: string) => void; // Callback for when a message is received
   voiceConfig?: GoogleCloudVoiceConfig; // Google Cloud TTS voice configuration
 }
 
 // Return type of the hook
 interface UseVoiceChatReturn {
-  isAgentSpeaking: boolean;  // Whether the agent is currently speaking
-  lastMessage: string | null;  // Last message received from the agent
-  errorMessage: string | null;  // Any error message
-  clearError: () => void;  // Clear the error message
+  isAgentSpeaking: boolean; // Whether the agent is currently speaking
+  lastMessage: string | null; // Last message received from the agent
+  errorMessage: string | null; // Any error message
+  clearError: () => void; // Clear the error message
   sendMessageToAgent: (message: string) => Promise<void>; // Send message to agent
 }
 
 /**
  * Hook for voice communication with AI agents using Google Cloud Text-to-Speech
- * 
+ *
  * Usage with react-speech-recognition:
  * ```
- * const { 
+ * const {
  *   isAgentSpeaking,
  *   lastMessage,
  *   errorMessage,
@@ -48,97 +48,60 @@ interface UseVoiceChatReturn {
  * });
  * ```
  */
-export const useVoiceChat = (options: UseVoiceChatOptions = {}): UseVoiceChatReturn => {
-  const { 
-    agentId, 
-    onMessageReceived, 
+export const useVoiceChat = (
+  options: UseVoiceChatOptions = {}
+): UseVoiceChatReturn => {
+  const {
+    agentId,
+    onMessageReceived,
     voiceConfig = {
       languageCode: "en-US",
       name: "en-US-Standard-C",
-      ssmlGender: "FEMALE"
-    }
+      ssmlGender: "FEMALE",
+    },
   } = options;
-  
+
   // State
   const [isAgentSpeaking, setIsAgentSpeaking] = useState<boolean>(false);
   const [lastMessage, setLastMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  
+
   // Refs
   const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioQueueRef = useRef<Array<string>>([]);
   const { user, tenantId } = useAuth();
 
-  // Function to send a message to the AI agent
-  const sendMessageToAgent = useCallback(async (message: string) => {
-    if (!user || !tenantId || !agentId) {
-      setErrorMessage("Missing user, tenant, or agent information");
-      return;
-    }
-    
-    try {
-      // Call the voice processing edge function
-      const { data, error } = await supabase.functions.invoke('voice-chat', {
-        body: {
-          message,
-          agent_id: agentId,
-          tenant_id: tenantId,
-          user_id: user.id,
-          voice_config: voiceConfig
-        }
-      });
-      
-      if (error) throw error;
-      
-      const { text, audioContent } = data;
-      
-      // Update last message and trigger callback
-      setLastMessage(text);
-      if (onMessageReceived) onMessageReceived(text);
-      
-      // Play audio response if available
-      if (audioContent) {
-        await playAudioResponse(audioContent);
-      } else {
-        // Fallback to browser's speech synthesis if no audio content is returned
-        speakWithBrowserSynthesis(text);
-      }
-      
-    } catch (error) {
-      console.error("Error sending message to agent", error);
-      setErrorMessage(`Error sending message to agent: ${error.message}`);
-    }
-  }, [user, tenantId, agentId, onMessageReceived, voiceConfig]);
-
-  // Play audio response from the server
   const playAudioResponse = useCallback(async (base64Audio: string) => {
     try {
       setIsAgentSpeaking(true);
-      
+
       // Convert base64 to ArrayBuffer
       const binaryString = atob(base64Audio);
       const bytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
         bytes[i] = binaryString.charCodeAt(i);
       }
-      
+
       // Create audio context if needed
       if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        audioContextRef.current = new (window.AudioContext ||
+          window.webkitAudioContext)();
       }
-      
+
       // Decode audio data and play it
-      const audioBuffer = await audioContextRef.current.decodeAudioData(bytes.buffer);
+      const audioBuffer = await audioContextRef.current.decodeAudioData(
+        bytes.buffer
+      );
       const source = audioContextRef.current.createBufferSource();
       source.buffer = audioBuffer;
       source.connect(audioContextRef.current.destination);
-      
+
       source.onended = () => {
         setIsAgentSpeaking(false);
         playNextInQueue();
       };
-      
+
       source.start(0);
     } catch (error) {
       console.error("Error playing audio response", error);
@@ -149,21 +112,72 @@ export const useVoiceChat = (options: UseVoiceChatOptions = {}): UseVoiceChatRet
 
   // Use browser's speech synthesis as fallback
   const speakWithBrowserSynthesis = useCallback((text: string) => {
-    if (!('speechSynthesis' in window)) {
+    if (!("speechSynthesis" in window)) {
       console.warn("Speech synthesis not supported");
       return;
     }
-    
+
     setIsAgentSpeaking(true);
-    
+
     speechSynthesisRef.current = new SpeechSynthesisUtterance(text);
     speechSynthesisRef.current.onend = () => {
       setIsAgentSpeaking(false);
       playNextInQueue();
     };
-    
+
     window.speechSynthesis.speak(speechSynthesisRef.current);
   }, []);
+
+  // Function to send a message to the AI agent
+  const sendMessageToAgent = useCallback(
+    async (message: string) => {
+      if (!user || !tenantId || !agentId) {
+        setErrorMessage("Missing user, tenant, or agent information");
+        return;
+      }
+
+      try {
+        // Call the voice processing edge function
+        const response = await callSupabaseFunction("voice-chat", {
+          message,
+          agent_id: agentId,
+          tenant_id: tenantId,
+          user_id: user.id,
+          voice_config: voiceConfig,
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`AI chat error (${response.status}):`, errorText);
+          throw new Error(`AI chat error: ${errorText}`);
+        }
+        const responseJson = await response.json();
+
+        const { text, audioContent } = responseJson;
+
+        if (!audioContent && !text)
+          throw new Error("No data returned from voice chat");
+
+        // Update last message and trigger callback
+        setLastMessage(text);
+        if (onMessageReceived) onMessageReceived(text);
+
+        // Play audio response if available
+        if (audioContent) {
+          await playAudioResponse(audioContent);
+        } else {
+          // Fallback to browser's speech synthesis if no audio content is returned
+          speakWithBrowserSynthesis(text);
+        }
+      } catch (error) {
+        console.error("Error sending message to agent", error);
+        setErrorMessage(`Error sending message to agent: ${error.message}`);
+      }
+    },
+    [user, tenantId, agentId, onMessageReceived, voiceConfig]
+  );
+
+  // Play audio response from the server
 
   // Manage audio queue to prevent overlapping speech
   const playNextInQueue = useCallback(() => {
@@ -184,7 +198,7 @@ export const useVoiceChat = (options: UseVoiceChatOptions = {}): UseVoiceChatRet
     lastMessage,
     errorMessage,
     clearError,
-    sendMessageToAgent
+    sendMessageToAgent,
   };
 };
 

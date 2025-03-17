@@ -14,8 +14,6 @@ const ChatMessage: FC<ChatMessageProps> = ({ message, functionalMessages }) => {
   const messageRef = useRef<HTMLDivElement>(null);
   const isUser = message.role === "user";
 
-  console.log({ functionalMessages });
-
   return (
     <>
       <div
@@ -28,7 +26,7 @@ const ChatMessage: FC<ChatMessageProps> = ({ message, functionalMessages }) => {
         <div
           className={clsx("px-3 py-[3px] flex-grow w-full rounded-lg border", {
             "bg-primary text-primary-foreground": isUser,
-            "bg-muted dark:transparent dark:text-white border-slate-700":
+            "bg-muted dark:transparent dark:text-white dark:border-slate-700":
               !isUser,
             "rounded-b-none": functionalMessages.length > 0,
           })}
@@ -48,7 +46,7 @@ const ChatMessage: FC<ChatMessageProps> = ({ message, functionalMessages }) => {
               "p-3 flex-grow w-full rounded-lg border rounded-t-none",
               {
                 "bg-primary text-primary-foreground": isUser,
-                "bg-muted dark:transparent dark:text-white border-slate-700":
+                "bg-muted dark:transparent dark:text-white dark:border-slate-700":
                   !isUser,
               }
             )}

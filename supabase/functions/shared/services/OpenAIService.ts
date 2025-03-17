@@ -185,7 +185,7 @@ class OpenAIService {
           functionResult = await onFunctionCall(functionCallDetected);
         }
 
-        console.log("🔹 Function result --> ", functionResult);
+        console.log("🔹 Function result --> ", JSON.stringify(functionResult));
 
         // Append function response as a new message
         const updatedMessages: Partial<OpenAiMessage & { name: string }>[] = [

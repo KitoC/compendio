@@ -150,6 +150,40 @@
     @apply overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50;
   }
 
+  .voice-listening {
+    @apply dark:bg-slate-600;
+    animation: voice-listening-animation 1.5s ease-in-out infinite;
+    animation-direction: alternate;
+  }
+
+  @keyframes voice-listening-animation {
+    0% {
+      transform: scale(0.95);
+      opacity: 0.95;
+      color: hsl(var(--primary));
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+      background-color: hsl(var(--primary));
+    }
+  }
+
+  .agent-talking {
+    @apply bg-primary;
+    animation: agent-talking-animation 0.5s ease-in-out infinite;
+    animation-direction: alternate;
+  }
+
+  @keyframes agent-talking-animation {
+    75% {
+      transform: scale(0.9);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
   /* Safari-specific fixes */
   .safari-card-fix {
     transform: translateZ(0);

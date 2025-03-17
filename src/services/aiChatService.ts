@@ -126,7 +126,7 @@ export const sendMessageToAI = async ({
         });
 
         const data = await response.json();
-        console.log({ data });
+
         const functionCallMessage = {
           id: uuidv4(),
           conversation_id: conversationId,

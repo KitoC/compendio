@@ -1,13 +1,10 @@
-
 import "regenerator-runtime/runtime"; // Import regenerator runtime for Safari compatibility
 import "core-js/stable";
 import { useChat } from "@/contexts/chat";
 import ChatInput from "./ChatInput";
 
 const ChatFooter = () => {
-  const { messages, isTyping, inputRef, handleSendMessage, agentId } = useChat();
-
-  const lastMessage = messages[messages.length - 1];
+  const { messages, isTyping, inputRef, handleSendMessage } = useChat();
 
   return (
     <div className="p-2 z-10">
@@ -15,7 +12,6 @@ const ChatFooter = () => {
         ref={inputRef}
         onSendMessage={handleSendMessage}
         disabled={isTyping}
-        agentId={agentId}
       />
     </div>
   );

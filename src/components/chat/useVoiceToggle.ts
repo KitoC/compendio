@@ -17,31 +17,16 @@ interface VoiceChatToggleProps {
   };
 }
 
-/**
- * A toggle button component for voice chat functionality using React Speech Recognition
- *
- * Usage:
- * ```
- * <VoiceChatToggle
- *   agentId="your-agent-id"
- *   onMessageReceived={(msg) => console.log(msg)}
- *   voiceConfig={{
- *     languageCode: "en-US",
- *     name: "en-US-Standard-C",
- *     ssmlGender: "FEMALE"
- *   }}
- * />
- * ```
- */
-const VoiceChatToggle = ({
+const useVoiceToggle = (
   agentId,
   onMessageReceived,
   voiceConfig = {
     languageCode: "en-US",
     name: "en-US-Standard-C",
     ssmlGender: "FEMALE",
-  },
-}: VoiceChatToggleProps) => {
+  }
+) => {
+  const [isMuted, setIsMuted] = useState(false);
   const { isAgentSpeaking, errorMessage, clearError, sendMessageToAgent } =
     useVoiceChat({
       agentId,
@@ -58,6 +43,7 @@ const VoiceChatToggle = ({
     resetTranscript,
     browserSupportsSpeechRecognition,
     isMicrophoneAvailable,
+    ...rest
   } = useSpeechRecognition({
     clearTranscriptOnListen: true,
     commands: [
@@ -93,7 +79,9 @@ const VoiceChatToggle = ({
     }
   }, [errorMessage, clearError]);
 
-  const toggle = async () => {
+  const toggle = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e?.preventDefault();
+
     if (listening) {
       SpeechRecognition.stopListening();
       resetTranscript();
@@ -110,39 +98,53 @@ const VoiceChatToggle = ({
       }
     }
   };
+  const startListening = async () => {
+    try {
+      await SpeechRecognition.startListening({
+        continuous: true,
+        language: voiceConfig.languageCode,
+      });
+    } catch (error) {
+      toast.error(
+        "Failed to start voice recognition. Please check microphone permissions."
+      );
+    }
+  };
 
-  return (
-    <div className="flex items-center gap-2">
-      {isAgentSpeaking && (
-        <div className="flex items-center text-primary">
-          <Volume2 className="h-4 w-4 animate-pulse mr-1" />
-          <span className="text-xs">Speaking...</span>
-        </div>
-      )}
+  const closeVoiceMode = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
 
-      {listening && transcript && (
-        <div className="text-xs text-muted-foreground max-w-[150px] truncate">
-          {transcript}
-        </div>
-      )}
+    SpeechRecognition.stopListening();
+    resetTranscript();
+  };
 
-      <IconButton
-        onClick={toggle}
-        variant={listening ? "destructive" : "primary"}
-        size="sm"
-        className="rounded-full"
-        icon={
-          listening ? (
-            <MicOff className="h-4 w-4" />
-          ) : (
-            <Mic className="h-4 w-4" />
-          )
-        }
-        aria-label={listening ? "Stop voice chat" : "Start voice chat"}
-        title={listening ? "Stop voice chat" : "Start voice chat"}
-      />
-    </div>
-  );
+  const toggleMute = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
+    const nextIsMuted = !isMuted;
+    setIsMuted(nextIsMuted);
+
+    if (nextIsMuted) {
+      SpeechRecognition.stopListening();
+      resetTranscript();
+    } else {
+      await SpeechRecognition.startListening({
+        continuous: true,
+        language: voiceConfig.languageCode,
+      });
+    }
+  };
+
+  return {
+    isAgentSpeaking,
+    listening,
+    transcript,
+    toggle,
+    closeVoiceMode,
+    toggleMute,
+    isMuted,
+    startListening,
+  };
 };
 
-export default VoiceChatToggle;
+export default useVoiceToggle;
