@@ -1,22 +1,21 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,23 +26,25 @@ import { IAiAgent } from "@/types/aiAgents";
 import { PlusCircle, Pencil, Trash2 } from "lucide-react";
 
 const AgentsSettings = () => {
-  const { user } = useAuth();
+  const { user, tenantId } = useAuth();
   const [agents, setAgents] = useState<IAiAgent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentAgent, setCurrentAgent] = useState<Partial<IAiAgent> | null>(null);
+  const [currentAgent, setCurrentAgent] = useState<Partial<IAiAgent> | null>(
+    null
+  );
 
   const fetchAgents = async () => {
     if (!user) return;
 
     try {
       setIsLoading(true);
-      
+
       const { data, error } = await supabase
         .from("ai_agents")
         .select("*")
-        .eq("tenant_id", user.tenant_id);
+        .eq("tenant_id", tenantId);
 
       if (error) throw error;
       setAgents(data || []);
@@ -72,25 +73,25 @@ const AgentsSettings = () => {
       prompt: "",
       model: "gpt-4o-mini",
       enabled: true,
-      tenant_id: user?.tenant_id || "",
+      tenant_id: tenantId || "",
     });
     setIsDialogOpen(true);
   };
 
   const handleSaveAgent = async () => {
     if (!currentAgent || !user) return;
-    
+
     setIsSubmitting(true);
     try {
       const isNewAgent = !currentAgent.id;
       const agentData = {
         ...currentAgent,
-        tenant_id: user.tenant_id,
-      };
+        tenant_id: tenantId,
+      } as IAiAgent;
 
       let result;
       if (isNewAgent) {
-        result = await supabase.from("ai_agents").insert(agentData);
+        result = await supabase.from("ai_agents").insert([agentData]);
       } else {
         result = await supabase
           .from("ai_agents")
@@ -99,7 +100,7 @@ const AgentsSettings = () => {
       }
 
       if (result.error) throw result.error;
-      
+
       toast.success(`Agent ${isNewAgent ? "created" : "updated"} successfully`);
       setIsDialogOpen(false);
       fetchAgents();
@@ -113,7 +114,7 @@ const AgentsSettings = () => {
 
   const handleDeleteAgent = async (agentId: string) => {
     if (!confirm("Are you sure you want to delete this agent?")) return;
-    
+
     try {
       const { error } = await supabase
         .from("ai_agents")
@@ -121,7 +122,7 @@ const AgentsSettings = () => {
         .eq("id", agentId);
 
       if (error) throw error;
-      
+
       toast.success("Agent deleted successfully");
       fetchAgents();
     } catch (error) {
@@ -177,7 +178,13 @@ const AgentsSettings = () => {
                 <TableCell>{agent.human_name || agent.name}</TableCell>
                 <TableCell>{agent.model}</TableCell>
                 <TableCell>
-                  <span className={`inline-flex px-2 py-1 rounded-full text-xs ${agent.enabled ? "bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-400" : "bg-red-100 text-red-800 dark:bg-red-800/30 dark:text-red-400"}`}>
+                  <span
+                    className={`inline-flex px-2 py-1 rounded-full text-xs ${
+                      agent.enabled
+                        ? "bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-400"
+                        : "bg-red-100 text-red-800 dark:bg-red-800/30 dark:text-red-400"
+                    }`}
+                  >
                     {agent.enabled ? "Active" : "Inactive"}
                   </span>
                 </TableCell>
@@ -221,7 +228,12 @@ const AgentsSettings = () => {
                 <Input
                   id="name"
                   value={currentAgent?.name || ""}
-                  onChange={(e) => setCurrentAgent(prev => ({ ...prev!, name: e.target.value }))}
+                  onChange={(e) =>
+                    setCurrentAgent((prev) => ({
+                      ...prev!,
+                      name: e.target.value,
+                    }))
+                  }
                   placeholder="e.g. sales_assistant"
                 />
               </div>
@@ -230,48 +242,70 @@ const AgentsSettings = () => {
                 <Input
                   id="human_name"
                   value={currentAgent?.human_name || ""}
-                  onChange={(e) => setCurrentAgent(prev => ({ ...prev!, human_name: e.target.value }))}
+                  onChange={(e) =>
+                    setCurrentAgent((prev) => ({
+                      ...prev!,
+                      human_name: e.target.value,
+                    }))
+                  }
                   placeholder="e.g. Sales Assistant"
                 />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="responsibility">Responsibility</Label>
               <Input
                 id="responsibility"
                 value={currentAgent?.responsibility || ""}
-                onChange={(e) => setCurrentAgent(prev => ({ ...prev!, responsibility: e.target.value }))}
+                onChange={(e) =>
+                  setCurrentAgent((prev) => ({
+                    ...prev!,
+                    responsibility: e.target.value,
+                  }))
+                }
                 placeholder="e.g. Helps with sales inquiries"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="model">Model</Label>
               <Input
                 id="model"
                 value={currentAgent?.model || "gpt-4o-mini"}
-                onChange={(e) => setCurrentAgent(prev => ({ ...prev!, model: e.target.value }))}
+                onChange={(e) =>
+                  setCurrentAgent((prev) => ({
+                    ...prev!,
+                    model: e.target.value,
+                  }))
+                }
                 placeholder="e.g. gpt-4o-mini"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="prompt">System Prompt</Label>
               <Textarea
                 id="prompt"
                 rows={5}
                 value={currentAgent?.prompt || ""}
-                onChange={(e) => setCurrentAgent(prev => ({ ...prev!, prompt: e.target.value }))}
+                onChange={(e) =>
+                  setCurrentAgent((prev) => ({
+                    ...prev!,
+                    prompt: e.target.value,
+                  }))
+                }
                 placeholder="Enter the system prompt for this agent"
               />
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <Switch
                 id="enabled"
                 checked={currentAgent?.enabled}
-                onCheckedChange={(checked) => setCurrentAgent(prev => ({ ...prev!, enabled: checked }))}
+                onCheckedChange={(checked) =>
+                  setCurrentAgent((prev) => ({ ...prev!, enabled: checked }))
+                }
               />
               <Label htmlFor="enabled">Active</Label>
             </div>

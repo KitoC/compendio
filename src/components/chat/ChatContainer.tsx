@@ -175,7 +175,7 @@ export const ChatContainer = ({
           const newId = uuidv4();
           navigate(`${ROUTES.CONVERSATION}/${newId}`);
         }
-      } catch (error: any) {
+      } catch (error) {
         console.error("Error fetching/creating conversation:", error);
         toast.error(error.message || "Failed to load conversation");
       } finally {
@@ -184,7 +184,7 @@ export const ChatContainer = ({
     };
 
     fetchOrCreateConversation();
-  }, [conversationIdOrAlias, user, tenantId, navigate, toast]);
+  }, [conversationIdOrAlias, user, tenantId, navigate]);
 
   if (loading) {
     return (
@@ -208,7 +208,9 @@ export const ChatContainer = ({
 
   return (
     <ChatProvider conversationId={conversation?.id || ""}>
-      <div className={`flex flex-col h-full bg-background ${className}`}>
+      <div
+        className={`flex flex-col h-full overflow-hidden bg-background ${className}`}
+      >
         <div className="flex-1 overflow-hidden flex flex-col">
           <ChatMessages />
           <ChatFooter />

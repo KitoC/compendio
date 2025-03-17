@@ -20,6 +20,33 @@ import { useSidebar } from "@/components/ui/sidebar/context";
 import { useEffect } from "react";
 import clsx from "clsx";
 import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
+import { Settings } from "lucide-react";
+
+interface SidebarItemOrGroup {
+  label: string;
+  url?: string;
+  icon?: React.ReactNode;
+  children?: SidebarItemOrGroup[];
+}
+
+const SidebarItem = (item: SidebarItemOrGroup) => {
+  return (
+    <SidebarMenuItem key={item.label}>
+      <NavLink
+        to={item.url}
+        className={({ isActive, isPending }) => {
+          return clsx(
+            "pr-2 pl-3 w-full flex items-center gap-2 min-h-fit py-1 rounded",
+            isActive && "bg-muted"
+          );
+        }}
+      >
+        {item.icon && item.icon}
+        <span>{item.label}</span>
+      </NavLink>
+    </SidebarMenuItem>
+  );
+};
 
 const AppSidebar = () => {
   const { user, profile, signOut } = useAuth();
@@ -33,6 +60,13 @@ const AppSidebar = () => {
         label: agent.human_name || agent.name,
         url: `${ROUTES.CONVERSATION}/${agent.name}`,
       })),
+    },
+  ];
+  const footerItems = [
+    {
+      label: "Settings",
+      url: ROUTES.SETTINGS,
+      icon: <Settings />,
     },
   ];
   // Listen for custom event to toggle sidebar from the header
@@ -72,25 +106,40 @@ const AppSidebar = () => {
   const renderSidebarItems = (items) => {
     return items.map((item) => {
       if (item.url) {
-        return (
-          <SidebarMenuItem key={item.label}>
-            <NavLink
-              to={item.url}
-              className={({ isActive, isPending }) => {
-                return clsx(
-                  "pr-2 pl-3 w-full flex items-center gap-2 min-h-fit py-1 rounded",
-                  isActive && "bg-muted"
-                );
-              }}
-            >
-              {item.icon && item.icon}
-              <span>{item.label}</span>
-            </NavLink>
-          </SidebarMenuItem>
-        );
+        return <SidebarItem key={item.label} {...item} />;
       }
       return null;
     });
+  };
+
+  const renderItems = (items) => {
+    return items.map((section, index) => (
+      <div key={section.label}>
+        {index > 0 && <SidebarSeparator />}
+
+        {section.children?.length ? (
+          <SidebarGroup>
+            {section.children?.length && (
+              <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
+            )}
+
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {section.children && renderSidebarItems(section.children)}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ) : (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarItem key={section.label} {...section} />
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+      </div>
+    ));
   };
 
   return (
@@ -115,23 +164,10 @@ const AppSidebar = () => {
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
-        {sidebarItems.map((section, index) => (
-          <div key={section.label}>
-            {index > 0 && <SidebarSeparator />}
-            <SidebarGroup>
-              <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {section.children && renderSidebarItems(section.children)}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </div>
-        ))}
-      </SidebarContent>
+      <SidebarContent>{renderItems(sidebarItems)}</SidebarContent>
 
       <SidebarFooter>
+        {renderItems(footerItems)}
         <Button
           variant="ghost"
           className="w-full justify-start text-red-500 hover:text-red-700 hover:bg-red-100"
