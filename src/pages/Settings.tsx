@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { PlusCircle } from "lucide-react";
 import { useAiAgents } from "@/contexts/AiAgents";
 import { Button } from "@/components/ui/button";
@@ -17,9 +17,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { IAiAgent } from "@/types/aiAgents";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
-import { useAppearance } from "@/contexts/Appearance";
-import { AppearanceSettings } from "@/types/user";
-import { toast } from "@/components/ui/use-toast";
 
 // Form schema for agent creation/editing
 const agentFormSchema = z.object({
@@ -61,11 +58,16 @@ const defaultAgentValues: AgentFormValues = {
   enabled: true,
 };
 
+const defaultAppearanceValues: AppearanceFormValues = {
+  theme: "system",
+  fontSize: "medium",
+  accentColor: "blue",
+  borderRadius: "medium",
+};
+
 const Settings = () => {
   const { aiAgents, isLoading, createAiAgent, updateAiAgent, deleteAiAgent } = useAiAgents();
   const { user } = useAuth();
-  const { appearance, updateAppearance } = useAppearance();
-  
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<IAiAgent | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -84,7 +86,7 @@ const Settings = () => {
 
   const appearanceForm = useForm<AppearanceFormValues>({
     resolver: zodResolver(appearanceFormSchema),
-    defaultValues: appearance as AppearanceFormValues,
+    defaultValues: defaultAppearanceValues,
   });
 
   const handleCreateSubmit = async (values: AgentFormValues) => {
@@ -97,7 +99,7 @@ const Settings = () => {
       responsibility: values.responsibility,
       prompt: values.prompt,
       model: values.model,
-      avatar_url: values.avatar_url || "",
+      avatar_url: values.avatar_url,
       enabled: values.enabled,
       tenant_id: user.tenant_id,
     });
@@ -141,23 +143,16 @@ const Settings = () => {
   };
 
   const handleAppearanceSubmit = (values: AppearanceFormValues) => {
-    // Update global appearance settings
-    updateAppearance(values);
-    toast({
-      title: "Appearance settings saved",
-      description: "Your appearance preferences have been updated.",
-    });
+    console.log("Appearance settings:", values);
+    // Here you would typically save these settings to localStorage or backend
+    // For now, we'll just show a success message
+    // TODO: Implement actual appearance settings saving
   };
 
   // Generate avatar fallback from name
   const getAvatarFallback = (name: string) => {
     return name.substring(0, 2).toUpperCase();
   };
-
-  // Reset the appearance form when the appearance context changes
-  useEffect(() => {
-    appearanceForm.reset(appearance);
-  }, [appearance, appearanceForm]);
 
   return (
     <div className="container py-10">
@@ -717,4 +712,3 @@ const Settings = () => {
 };
 
 export default Settings;
-
