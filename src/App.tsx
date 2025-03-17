@@ -11,13 +11,7 @@ import AuthenticatedLayout from "@/components/layout/AuthenticatedLayout";
 import { ROUTES } from "@/lib/constants";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { AiAgentsProvider } from "@/contexts/AiAgents";
-
-// Loading component
-const LoadingFallback = () => (
-  <div className="flex items-center justify-center h-screen">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-  </div>
-);
+import { PageLoading } from "@/components/ui/page-loading";
 
 // Lazy loaded pages
 const Index = lazy(() => import("./pages/Index"));
@@ -43,61 +37,86 @@ const AppContent = () => {
             <TooltipProvider>
               <Toaster />
               <Sonner />
-              <Suspense fallback={<LoadingFallback />}>
-                <Routes>
-                  {/* Public routes */}
-                  <Route path={ROUTES.INDEX} element={<Index />} />
-                  <Route path={ROUTES.AUTH} element={<Auth />} />
-                  <Route path={ROUTES.AUTH_CALLBACK} element={<AuthCallback />} />
-                  <Route
-                    path={ROUTES.FORGOT_PASSWORD}
-                    element={<ForgotPassword />}
-                  />
-                  <Route
-                    path={ROUTES.RESET_PASSWORD}
-                    element={<ResetPassword />}
-                  />
+              <Routes>
+                {/* Public routes */}
+                <Route path={ROUTES.INDEX} element={
+                  <Suspense fallback={<div className="flex items-center justify-center h-screen">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                  </div>}>
+                    <Index />
+                  </Suspense>
+                } />
+                <Route path={ROUTES.AUTH} element={
+                  <Suspense fallback={<div className="flex items-center justify-center h-screen">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                  </div>}>
+                    <Auth />
+                  </Suspense>
+                } />
+                <Route path={ROUTES.AUTH_CALLBACK} element={
+                  <Suspense fallback={<div className="flex items-center justify-center h-screen">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                  </div>}>
+                    <AuthCallback />
+                  </Suspense>
+                } />
+                <Route path={ROUTES.FORGOT_PASSWORD} element={
+                  <Suspense fallback={<div className="flex items-center justify-center h-screen">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                  </div>}>
+                    <ForgotPassword />
+                  </Suspense>
+                } />
+                <Route path={ROUTES.RESET_PASSWORD} element={
+                  <Suspense fallback={<div className="flex items-center justify-center h-screen">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                  </div>}>
+                    <ResetPassword />
+                  </Suspense>
+                } />
 
-                  {/* Protected routes with sidebar */}
-                  <Route
-                    path={ROUTES.CONVERSATIONS}
-                    element={
-                      <AuthenticatedLayout>
-                        <ChatPage />
-                      </AuthenticatedLayout>
-                    }
-                  />
-                  <Route
-                    path={`${ROUTES.CONVERSATION}/:id`}
-                    element={
-                      <AuthenticatedLayout>
-                        <ChatPage />
-                      </AuthenticatedLayout>
-                    }
-                  />
-                  <Route
-                    path={ROUTES.SETTINGS}
-                    element={
-                      <AuthenticatedLayout>
-                        <Settings />
-                      </AuthenticatedLayout>
-                    }
-                  />
+                {/* Protected routes with sidebar */}
+                <Route path={ROUTES.CONVERSATIONS} element={
+                  <AuthenticatedLayout>
+                    <ChatPage />
+                  </AuthenticatedLayout>
+                } />
+                <Route path={`${ROUTES.CONVERSATION}/:id`} element={
+                  <AuthenticatedLayout>
+                    <ChatPage />
+                  </AuthenticatedLayout>
+                } />
+                <Route path={ROUTES.SETTINGS} element={
+                  <AuthenticatedLayout>
+                    <Settings />
+                  </AuthenticatedLayout>
+                } />
 
-                  {/* Access request routes */}
-                  <Route
-                    path={ROUTES.REQUEST_ACCESS}
-                    element={<RequestAccess />}
-                  />
-                  <Route
-                    path={ROUTES.ACCESS_PENDING}
-                    element={<AccessPending />}
-                  />
+                {/* Access request routes */}
+                <Route path={ROUTES.REQUEST_ACCESS} element={
+                  <Suspense fallback={<div className="flex items-center justify-center h-screen">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                  </div>}>
+                    <RequestAccess />
+                  </Suspense>
+                } />
+                <Route path={ROUTES.ACCESS_PENDING} element={
+                  <Suspense fallback={<div className="flex items-center justify-center h-screen">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                  </div>}>
+                    <AccessPending />
+                  </Suspense>
+                } />
 
-                  {/* Catch-all */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
+                {/* Catch-all */}
+                <Route path="*" element={
+                  <Suspense fallback={<div className="flex items-center justify-center h-screen">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                  </div>}>
+                    <NotFound />
+                  </Suspense>
+                } />
+              </Routes>
             </TooltipProvider>
           </AiAgentsProvider>
         </AuthProvider>

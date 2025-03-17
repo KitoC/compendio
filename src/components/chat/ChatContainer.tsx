@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { Conversation } from "@/types/chat";
 import { Card } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ChatContainerProps {
   conversationId?: string;
@@ -189,9 +191,26 @@ export const ChatContainer = ({
 
   if (loading) {
     return (
-      <Card className="flex items-center justify-center p-8 h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-2">Loading conversation...</p>
+      <Card className="flex flex-col p-4 h-full">
+        <div className="flex items-center mb-4">
+          <Skeleton className="h-6 w-1/3" />
+        </div>
+        <div className="flex-1 space-y-4 mb-4">
+          <div className="space-y-2">
+            <div className="flex justify-end">
+              <Skeleton className="h-12 w-2/3 rounded-lg" />
+            </div>
+            <div className="flex">
+              <Skeleton className="h-12 w-2/3 rounded-lg" />
+            </div>
+            <div className="flex justify-end">
+              <Skeleton className="h-12 w-1/2 rounded-lg" />
+            </div>
+          </div>
+        </div>
+        <div className="p-2 border rounded-lg">
+          <Skeleton className="h-10 w-full" />
+        </div>
       </Card>
     );
   }
