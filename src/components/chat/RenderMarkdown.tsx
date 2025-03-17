@@ -1,4 +1,3 @@
-
 import { FC } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -16,7 +15,7 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
   isStreamedMessage,
 }) => {
   const isMobile = useIsMobile();
-  
+
   // Handle case when message is not a string
   if (typeof message !== "string") {
     console.warn("RenderMarkdown received non-string message:", message);
@@ -24,7 +23,7 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
   }
 
   return (
-    <div 
+    <div
       className={`prose-sm max-w-none dark:prose-invert ${
         isStreamedMessage ? "streamed-message" : ""
       } ${isMobile ? "text-sm" : ""} safari-text-rendering-fix`}
@@ -38,7 +37,9 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
         remarkPlugins={[remarkGfm]}
         components={{
           p: ({ children }) => {
-            return <p className="my-1 break-words">{children}</p>;
+            return (
+              <p className="my-1 break-words whitespace-pre-line">{children}</p>
+            );
           },
           a: ({ href, children }) => (
             <a
@@ -73,9 +74,7 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
                 className={`p-4 rounded-md my-2 overflow-auto ${
                   isMobile ? "text-xs" : ""
                 } ${
-                  isUser
-                    ? "bg-primary-foreground/20"
-                    : "bg-muted"
+                  isUser ? "bg-primary-foreground/20" : "bg-muted"
                 } safari-code-block-fix`}
                 style={{ WebkitOverflowScrolling: "touch" }}
               >
@@ -87,7 +86,9 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
             <ul className="list-disc pl-4 my-2 safari-list-fix">{children}</ul>
           ),
           ol: ({ children }) => (
-            <ol className="list-decimal pl-4 my-2 safari-list-fix">{children}</ol>
+            <ol className="list-decimal pl-4 my-2 safari-list-fix">
+              {children}
+            </ol>
           ),
           li: ({ children }) => <li className="mb-1">{children}</li>,
           blockquote: ({ children }) => (

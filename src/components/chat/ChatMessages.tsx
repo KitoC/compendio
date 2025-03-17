@@ -4,8 +4,8 @@ import ChatMessage from "./ChatMessage";
 const ChatMessages = () => {
   const { messages, messagesContainerRef } = useChat();
 
-  const filteredMessages = messages.filter(
-    (message) => message.role !== "system"
+  const filteredMessages = messages.filter((message) =>
+    ["user", "assistant"].includes(message.role)
   );
 
   return (
@@ -15,6 +15,9 @@ const ChatMessages = () => {
     >
       {filteredMessages.map((message, index) => {
         const isLastMessage = index === filteredMessages.length - 1;
+        const functionalMessages = messages.filter(
+          (fm) => fm.reply_to === message.id.toString()
+        );
 
         return (
           <div
@@ -22,7 +25,11 @@ const ChatMessages = () => {
             data-user-message={message.role === "user" ? "true" : "false"}
             className="animate-fadeIn"
           >
-            <ChatMessage message={message} isLastMessage={isLastMessage} />
+            <ChatMessage
+              message={message}
+              isLastMessage={isLastMessage}
+              functionalMessages={functionalMessages}
+            />
           </div>
         );
       })}

@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { IMessage } from "@/types/chat";
+import { ChatMessage } from "@/types/chat";
 import { Json } from "@/integrations/supabase/types";
 import { v4 as uuidv4 } from "uuid";
 import { callSupabaseFunction } from "./supabaseFunctionServices";
@@ -14,7 +14,7 @@ const streamAiResponse = async ({
 }: {
   endpoint: string;
   args: object;
-  onUpdate: (content: object) => void;
+  onUpdate: (content: string) => void;
   onFunctionCall: (functionCall: object) => void;
 }) => {
   const response = await callSupabaseFunction(endpoint, args);
@@ -73,16 +73,16 @@ const streamAiResponse = async ({
 
 interface SendMessageToAIProps {
   messageId: string;
-  messagesToSend: IMessage[];
+  messagesToSend: ChatMessage[];
   conversationId: string;
   agentId: string;
   userId: string | undefined;
   tenantId: string | undefined;
-  onUpdate: (message: IMessage) => void;
-  onComplete: (message: IMessage) => Promise<void>;
+  onUpdate: (message: string) => void;
+  onComplete: (message: ChatMessage) => Promise<void>;
   onFunctionCall: (functionCall: {
     response: object;
-    message: IMessage;
+    message: ChatMessage;
   }) => void;
 }
 export const sendMessageToAI = async ({
@@ -95,7 +95,7 @@ export const sendMessageToAI = async ({
   onUpdate,
   onComplete,
   onFunctionCall,
-}: SendMessageToAIProps): Promise<IMessage | null> => {
+}: SendMessageToAIProps): Promise<ChatMessage | null> => {
   if (!conversationId || !userId || !tenantId) return null;
 
   try {
@@ -126,47 +126,40 @@ export const sendMessageToAI = async ({
         });
 
         const data = await response.json();
-
-        onFunctionCall({
-          response: data,
-          message: {
-            id: uuidv4(),
-            role: MessageRole.FORM,
-            content: data.markup.config,
-            loading: false,
-          },
-        });
-
-        await supabase.from("messages").insert({
+        console.log({ data });
+        const functionCallMessage = {
           id: uuidv4(),
           conversation_id: conversationId,
           role: MessageRole.FORM,
-          content: data.markup.config as Json,
-          metadata: {} as Json,
+          content: data.markup.config,
+          metadata: {},
           user_id: userId,
           tenant_id: tenantId,
+          reply_to: messageId,
+        };
+
+        onFunctionCall({
+          response: data,
+          message: functionCallMessage,
         });
+
+        await supabase.from("messages").insert([functionCallMessage]);
       },
     });
 
     // Once streaming is complete, save the message to the database
-    const finalMessage: IMessage = {
+    const finalMessage: ChatMessage = {
       id,
       role: "assistant",
-      content,
-      loading: false,
+      conversation_id: conversationId,
+      content: { text: content },
+      metadata: {},
+      user_id: userId,
+      tenant_id: tenantId,
     };
 
     // Save the complete message to the database
-    await supabase.from("messages").insert({
-      id: uuidv4(),
-      conversation_id: conversationId,
-      role: finalMessage.role,
-      content: { text: finalMessage.content } as Json,
-      metadata: {} as Json,
-      user_id: userId,
-      tenant_id: tenantId,
-    });
+    await supabase.from("messages").insert([finalMessage]);
 
     // Call the onComplete callback
     await onComplete(finalMessage);

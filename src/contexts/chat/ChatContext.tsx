@@ -1,9 +1,8 @@
-
 import { createContext } from "react";
-import { IMessage } from "@/types/chat";
+import { ChatMessage } from "@/types/chat";
 
 export interface ChatContextType {
-  messages: IMessage[];
+  messages: ChatMessage[];
   isTyping: boolean;
   userId: string;
   messagesContainerRef: React.RefObject<HTMLDivElement>;
@@ -12,4 +11,6 @@ export interface ChatContextType {
   conversationId: string;
 }
 
-export const ChatContext = createContext<ChatContextType | undefined>(undefined);
+export const ChatContext = createContext<ChatContextType | undefined>(
+  undefined
+);

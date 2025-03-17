@@ -8,7 +8,7 @@ import type {
   IOpenAiFunction,
 } from "../../../src/types/aiAgents";
 import type OpenAIService from "../shared/services/OpenAIService";
-import type { IMessage } from "../../../src/types/chat";
+import type { ChatMessage, OpenAiRole } from "../../../src/types/chat";
 
 const TABLE_NAME = "ai_agents";
 
@@ -114,7 +114,7 @@ class AgentController {
     return interpolatedPrompt;
   }
 
-  async talkToAgent(messages: IMessage[], agentId: string) {
+  async talkToAgent(messages: ChatMessage[], agentId: string) {
     const { prompt, model = "gpt-4o-mini" } = await this.getAgentById(agentId);
 
     const functions =
@@ -130,7 +130,12 @@ class AgentController {
       const cleanedMessages = [
         ...(agentPrompt ? [{ role: "system", content: agentPrompt }] : []),
         ...messages.slice(Math.max(messages.length - LAST_N, 0)),
-      ].filter((message) => VALID_ROLES.includes(message?.role));
+      ]
+        .filter((message) => VALID_ROLES.includes(message?.role))
+        .map((message) => ({
+          role: message.role as OpenAiRole,
+          content: message.content as string,
+        }));
 
       const stream = await this.openAiService.streamAndCallFunction({
         onFunctionCall: (functionCall) =>

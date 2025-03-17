@@ -2,24 +2,18 @@ import "regenerator-runtime/runtime"; // Import regenerator runtime for Safari c
 import "core-js/stable";
 import { useChat } from "@/contexts/chat";
 import ChatInput from "./ChatInput";
-import { FormConfig } from "@/types/chat";
 
 const ChatFooter = () => {
   const { messages, isTyping, inputRef, handleSendMessage } = useChat();
 
   const lastMessage = messages[messages.length - 1];
-  const formConfig = lastMessage?.content as FormConfig;
-
-  if (lastMessage?.role === "form" && formConfig?.hideChatInput) {
-    return null;
-  }
 
   return (
     <div className="p-2 z-10">
       <ChatInput
         ref={inputRef}
         onSendMessage={handleSendMessage}
-        disabled={isTyping || formConfig?.disableChatInput}
+        disabled={isTyping}
       />
     </div>
   );

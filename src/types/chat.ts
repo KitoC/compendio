@@ -1,18 +1,23 @@
-
 export enum MessageRole {
   SYSTEM = "system",
   USER = "user",
   ASSISTANT = "assistant",
-  FORM = "form"
+  FORM = "form",
+  FUNCTION = "function",
+  QUICK_REPLY = "quick-reply",
+  OPTIONS = "options",
 }
 
-export interface IMessage {
-  id: string;
-  role: MessageRole | string;
-  content: string | object;
-  createdAt?: string;
-  loading?: boolean;
-}
+export type OpenAiRole =
+  | MessageRole.ASSISTANT
+  | MessageRole.USER
+  | MessageRole.SYSTEM
+  | MessageRole.FUNCTION;
+
+export type OpenAiMessage = {
+  content: string;
+  role: OpenAiRole;
+};
 
 export interface ChatMessage {
   id: string;
@@ -21,36 +26,13 @@ export interface ChatMessage {
   role: MessageRole | string;
   content: {
     text?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   created_at?: string;
   loading?: boolean;
-}
-
-export interface FormConfig {
-  fields?: Array<{
-    name: string;
-    label: string;
-    placeholder?: string;
-    type: string;
-  }>;
-  buttons?: Array<{
-    text: string;
-    onClick: () => void;
-  }>;
-  options?: Array<{
-    id: string;
-    name: string;
-    description?: string;
-    onClick: () => void;
-  }>;
-  initialValues?: Record<string, any>;
-  onSubmit: (formattedMessage: string) => void;
-  isInline?: boolean;
-  isMulti?: boolean;
-  hideChatInput?: boolean;
-  disableChatInput?: boolean;
+  reply_to?: string;
+  tenant_id: string;
 }
 
 export interface FormData {

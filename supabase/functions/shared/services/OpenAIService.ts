@@ -1,5 +1,5 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import type { IMessage } from "../../../../src/types/chat.ts";
+import type { OpenAiMessage, OpenAiRole } from "../../../../src/types/chat.ts";
 import type {
   IFunctionCall,
   IOpenAiFunction,
@@ -11,7 +11,7 @@ const ENDPOINTS = {
 };
 
 interface ICallOpenAIChatCompletionParams {
-  messages: Partial<IMessage>[];
+  messages: Partial<OpenAiMessage>[];
   model?: string;
   stream?: boolean;
   functions?: IOpenAiFunction[];
@@ -188,17 +188,17 @@ class OpenAIService {
         console.log("🔹 Function result --> ", functionResult);
 
         // Append function response as a new message
-        const updatedMessages: Partial<IMessage & { name: string }>[] = [
+        const updatedMessages: Partial<OpenAiMessage & { name: string }>[] = [
           ...requestArgs.messages,
           {
-            role: "system",
+            role: "system" as OpenAiRole,
             content: "You have called the function. Respond accordingly",
           },
         ];
 
         if (functionResult) {
           updatedMessages.push({
-            role: "function",
+            role: "function" as OpenAiRole,
             name: functionCallDetected.name,
             content: JSON.stringify(functionResult),
           });
@@ -212,7 +212,7 @@ class OpenAIService {
 
         // Call OpenAI again with updated messages
         const resumedResponse = await this.callOpenAIChatCompletion({
-          messages: updatedMessages as IMessage[],
+          messages: updatedMessages as OpenAiMessage[],
           model: requestArgs.model,
           stream: true,
         });

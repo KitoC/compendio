@@ -1,52 +1,57 @@
-
 import { FC, useRef } from "react";
-import { useChat } from "@/contexts/chat";
-import { FormConfig, IMessage, MessageRole } from "@/types/chat";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ChatMessage as ChatMessageType, MessageRole } from "@/types/chat";
 import clsx from "clsx";
 import RenderMarkdown from "./RenderMarkdown";
-import { FormBuilder } from "./FormBuilder";
+import MarkupBuilder from "./MarkupBuilder";
 
 interface ChatMessageProps {
-  message: IMessage;
+  message: ChatMessageType;
   isLastMessage?: boolean;
+  functionalMessages: ChatMessageType[];
 }
 
-const ChatMessage: FC<ChatMessageProps> = ({
-  message,
-  isLastMessage = false,
-}) => {
-  const { handleSendMessage } = useChat();
+const ChatMessage: FC<ChatMessageProps> = ({ message, functionalMessages }) => {
   const messageRef = useRef<HTMLDivElement>(null);
   const isUser = message.role === "user";
 
-  if (message.role === "form") {
-    return <FormBuilder formConfig={message.content as FormConfig} />;
-  }
+  console.log({ functionalMessages });
 
   return (
-    <div
-      className={clsx("flex mb-4 w-fit", {
-        "flex-row-reverse ml-auto": isUser,
-        "flex-row": !isUser,
-      })}
-      ref={messageRef}
-    >
+    <>
       <div
-        className={clsx("px-3 py-[3px] flex-grow w-full rounded-lg", {
-          "bg-primary text-primary-foreground": isUser,
-          "bg-muted dark:transparent dark:text-white": !isUser,
+        className={clsx("flex flex-col gap-2 mb-4 w-fit", {
+          "flex-row-reverse ml-auto": isUser,
+          "flex-row": !isUser,
         })}
+        ref={messageRef}
       >
-        <RenderMarkdown
-          message={(message.content as string) || ""}
-          isUser={isUser}
-          isStreamedMessage={
-            message.role === MessageRole.ASSISTANT && message.loading
-          }
-        />
+        <div
+          className={clsx("px-3 py-[3px] flex-grow w-full rounded-lg", {
+            "bg-primary text-primary-foreground": isUser,
+            "bg-muted dark:transparent dark:text-white": !isUser,
+          })}
+        >
+          <RenderMarkdown
+            message={message.content.text || ""}
+            isUser={isUser}
+            isStreamedMessage={
+              message.role === MessageRole.ASSISTANT && message.loading
+            }
+          />
+        </div>
+        {functionalMessages.map((fm) => (
+          <div
+            key={fm.id}
+            className={clsx("p-3 flex-grow w-full rounded-lg", {
+              "bg-primary text-primary-foreground": isUser,
+              "bg-muted dark:transparent dark:text-white": !isUser,
+            })}
+          >
+            <MarkupBuilder message={fm} />
+          </div>
+        ))}
       </div>
-    </div>
+    </>
   );
 };
 
