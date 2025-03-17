@@ -7,7 +7,7 @@ const ChatFooter = () => {
   const { messages, isTyping, inputRef, handleSendMessage } = useChat();
 
   return (
-    <div className="p-2 z-10">
+    <div className="z-10">
       <ChatInput
         ref={inputRef}
         onSendMessage={handleSendMessage}

@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChatContainer } from "@/components/chat/ChatContainer";
@@ -18,7 +17,7 @@ const ChatPage = () => {
   }, [id, navigate]);
 
   return (
-    <div className="flex-1 container px-4 py-6 max-w-5xl mx-auto h-[calc(100vh-4rem)]">
+    <div className="flex-1 container px-4 py-0 py-6 max-w-5xl mx-auto h-[calc(100vh-4rem)]">
       <ChatContainer />
     </div>
   );

@@ -10,7 +10,7 @@ const ChatMessages = () => {
 
   return (
     <div
-      className="flex-1 p-4 overflow-y-auto scroll-smooth space-y-4"
+      className="flex-1 px-4 py-6 overflow-y-auto scroll-smooth space-y-4"
       ref={messagesContainerRef}
     >
       {filteredMessages.map((message, index) => {
