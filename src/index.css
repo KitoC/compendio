@@ -1,5 +1,4 @@
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -18,6 +17,7 @@
 
     --primary: 25 95% 53%;
     --primary-foreground: 210 40% 98%;
+    --primary-darker: 25 95% 53%;
 
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
@@ -50,6 +50,7 @@
 
     --primary: 25 95% 53%;
     --primary-foreground: 210 40% 98%;
+    --primary-darker: 25 95% 53%;
 
     --secondary: 217 33% 18%;
     --secondary-foreground: 210 40% 98%;
@@ -87,19 +88,24 @@
   }
 
   /* Fix for Safari input appearance */
-  input, textarea, select, button {
+  input,
+  textarea,
+  select,
+  button {
     -webkit-appearance: none;
     appearance: none;
     border-radius: 0;
     font-family: inherit;
   }
-  
+
   /* Ensure proper tap target sizes for mobile Safari */
-  button, [role="button"], a {
+  button,
+  [role="button"],
+  a {
     min-height: 44px;
     min-width: 44px;
   }
-  
+
   /* Fix for Safari flex issues */
   .flex {
     display: -webkit-box;
@@ -115,7 +121,7 @@
            transition-all duration-300 hover:shadow-xl hover:scale-105 hover:z-10;
     z-index: 5;
   }
-  
+
   .node-line {
     @apply stroke-primary/30 stroke-[1.5px] opacity-80 fill-none absolute z-0 
            transition-all duration-300;
@@ -123,27 +129,27 @@
     stroke-dashoffset: 1000;
     animation: line-draw 2s ease-out forwards;
   }
-  
+
   .glass-card {
     @apply bg-white/80 backdrop-blur-md border border-white/30 shadow-lg;
   }
-  
+
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
   }
-  
+
   .device-frame {
     @apply relative rounded-[3rem] border-[14px] border-gray-900 overflow-hidden shadow-2xl;
   }
-  
+
   .device-notch {
     @apply absolute top-0 left-1/2 -translate-x-1/2 h-7 w-40 bg-gray-900 rounded-b-3xl z-10;
   }
-  
+
   .device-screen {
     @apply overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50;
   }
-  
+
   /* Safari-specific fixes */
   .safari-card-fix {
     transform: translateZ(0);
@@ -151,28 +157,28 @@
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
   }
-  
+
   .safari-overflow-fix {
     -webkit-overflow-scrolling: touch;
   }
-  
+
   .safari-text-rendering-fix {
     text-rendering: optimizeLegibility;
   }
-  
+
   .safari-inline-code-fix {
     word-break: break-word;
   }
-  
+
   .safari-code-block-fix {
     -webkit-overflow-scrolling: touch;
     -webkit-text-size-adjust: 100%;
   }
-  
+
   .safari-list-fix {
     -webkit-padding-start: 1rem;
   }
-  
+
   .safari-blockquote-fix {
     -webkit-margin-start: 0;
   }
@@ -196,7 +202,8 @@
 }
 
 @keyframes rotate-node {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -223,7 +230,8 @@
 }
 
 @-webkit-keyframes rotate-node {
-  0%, 100% {
+  0%,
+  100% {
     -webkit-transform: translateY(0);
   }
   50% {

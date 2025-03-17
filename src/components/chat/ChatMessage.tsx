@@ -19,16 +19,18 @@ const ChatMessage: FC<ChatMessageProps> = ({ message, functionalMessages }) => {
   return (
     <>
       <div
-        className={clsx("flex flex-col gap-2 mb-4 w-fit", {
+        className={clsx("flex flex-col gap-1 mb-4 w-fit", {
           "flex-row-reverse ml-auto": isUser,
           "flex-row": !isUser,
         })}
         ref={messageRef}
       >
         <div
-          className={clsx("px-3 py-[3px] flex-grow w-full rounded-lg", {
+          className={clsx("px-3 py-[3px] flex-grow w-full rounded-lg border", {
             "bg-primary text-primary-foreground": isUser,
-            "bg-muted dark:transparent dark:text-white": !isUser,
+            "bg-muted dark:transparent dark:text-white border-slate-700":
+              !isUser,
+            "rounded-b-none": functionalMessages.length > 0,
           })}
         >
           <RenderMarkdown
@@ -42,10 +44,14 @@ const ChatMessage: FC<ChatMessageProps> = ({ message, functionalMessages }) => {
         {functionalMessages.map((fm) => (
           <div
             key={fm.id}
-            className={clsx("p-3 flex-grow w-full rounded-lg", {
-              "bg-primary text-primary-foreground": isUser,
-              "bg-muted dark:transparent dark:text-white": !isUser,
-            })}
+            className={clsx(
+              "p-3 flex-grow w-full rounded-lg border rounded-t-none",
+              {
+                "bg-primary text-primary-foreground": isUser,
+                "bg-muted dark:transparent dark:text-white border-slate-700":
+                  !isUser,
+              }
+            )}
           >
             <MarkupBuilder message={fm} />
           </div>

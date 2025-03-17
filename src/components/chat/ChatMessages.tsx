@@ -15,9 +15,11 @@ const ChatMessages = () => {
     >
       {filteredMessages.map((message, index) => {
         const isLastMessage = index === filteredMessages.length - 1;
-        const functionalMessages = messages.filter(
-          (fm) => fm.reply_to === message.id.toString()
-        );
+        const functionalMessages = messages.filter((fm) => {
+          const hasResponse = messages.find((m) => m.id === fm.reply_to);
+
+          return fm.reply_to === message.id.toString() && !hasResponse;
+        });
 
         return (
           <div
