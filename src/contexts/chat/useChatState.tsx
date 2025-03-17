@@ -10,6 +10,7 @@ import { Json } from "@/integrations/supabase/types";
 import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
 import { useParams } from "react-router-dom";
 import { usePrevious } from "react-use";
+import { IFunctionCall } from "@/types/aiAgents";
 
 interface UseChatOptions {
   conversationId: string;
@@ -122,7 +123,15 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
                   : msg
               )
             );
+
             scrollToOptimalPosition();
+          },
+          onFunctionCall: ({ response, message }) => {
+            console.log({ response, message });
+
+            if (message) {
+              setMessages((prev) => [...prev, message]);
+            }
           },
           // Complete callback - updates UI when streaming is done
           onComplete: async (finalMessage) => {

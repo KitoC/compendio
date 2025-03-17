@@ -26,6 +26,8 @@ const defaultAgent: IAiAgent = {
   updated_at: "",
 };
 
+const VALID_ROLES = ["user", "assistant", "function", "system"];
+
 class AgentController {
   private supabase: SupabaseClient | null;
   private supabaseService: SupabaseService;
@@ -125,14 +127,16 @@ class AgentController {
     try {
       const LAST_N = 10; // TODO: make this dynamic
 
+      const cleanedMessages = [
+        ...(agentPrompt ? [{ role: "system", content: agentPrompt }] : []),
+        ...messages.slice(Math.max(messages.length - LAST_N, 0)),
+      ].filter((message) => VALID_ROLES.includes(message?.role));
+
       const stream = await this.openAiService.streamAndCallFunction({
         onFunctionCall: (functionCall) =>
           this.functionController.executeFunction(functionCall),
         requestArgs: {
-          messages: [
-            ...(agentPrompt ? [{ role: "system", content: agentPrompt }] : []),
-            ...messages.slice(Math.max(messages.length - LAST_N, 0)),
-          ].filter(Boolean),
+          messages: cleanedMessages,
           model,
           functions,
         },

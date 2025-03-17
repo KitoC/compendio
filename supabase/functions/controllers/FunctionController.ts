@@ -186,19 +186,19 @@ class FunctionController {
     switch (fn.type) {
       case "markup":
         console.log("SENDING MARKUP");
-        return;
+        return fn;
 
       case "form":
         console.log("SENDING FORM");
-        return;
+        return fn;
 
       case "retrieval":
         console.log("SENDING RETRIEVAL");
-        return;
+        return fn;
 
       case "function":
         console.log("SENDING FUNCTION");
-        return;
+        return fn;
 
       default:
         throw new Error(`Function ${fnCall.name} not found`);

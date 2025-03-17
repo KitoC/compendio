@@ -29,38 +29,36 @@ serve(async (req: Request) => {
     const { conversation_id, agent_id, messages, function_call } =
       await req.json();
 
-    // supabaseService.checkAuthHeaderPresent(req);
+    supabaseService.checkAuthHeaderPresent(req);
 
-    // supabaseService.initializeSupabase({
-    //   url: supabaseUrl,
-    //   key: supabaseAnonKey,
-    // });
+    supabaseService.initializeSupabase({
+      url: supabaseUrl,
+      key: supabaseAnonKey,
+    });
 
-    // // Initialize Supabase client with the user's JWT
+    // Initialize Supabase client with the user's JWT
 
-    // await conversationsController.setDependencies({
-    //   supabase: supabaseService.supabase,
-    // });
+    await conversationsController.setDependencies({
+      supabase: supabaseService.supabase,
+    });
 
-    // await functionController.setDependencies({
-    //   supabaseService,
-    // });
-    // await agentController.setDependenciesAndGetAgents({
-    //   supabaseService,
-    //   openAiService,
-    //   functionController,
-    // });
+    await functionController.setDependencies({
+      supabaseService,
+    });
+    await agentController.setDependenciesAndGetAgents({
+      supabaseService,
+      openAiService,
+      functionController,
+    });
 
-    // // Validate conversation exists or create it
-    // await conversationsController.validateOrCreateConversation(conversation_id);
+    await functionController.getFunctions();
 
-    const message = {
-      type: "message",
-      message: "",
-      function_call,
-    };
+    const response = await functionController.executeFunction(function_call);
 
-    return supabaseService.sendJsonResponse(message, 200);
+    return supabaseService.sendJsonResponse(
+      response || { message: "No response from function" },
+      200
+    );
   } catch (error) {
     console.error("Error in AI chat function:", error);
 

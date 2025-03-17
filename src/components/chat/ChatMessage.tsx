@@ -1,9 +1,10 @@
 import { FC, useRef } from "react";
 import { useChat } from "@/contexts/chat";
-import { IMessage, MessageRole } from "@/types/chat";
+import { FormConfig, IMessage, MessageRole } from "@/types/chat";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import clsx from "clsx";
 import RenderMarkdown from "./RenderMarkdown";
+import { FormBuilder } from "./FormBuilder";
 
 interface ChatMessageProps {
   message: IMessage;
@@ -17,6 +18,10 @@ const ChatMessage: FC<ChatMessageProps> = ({
   const { handleSendMessage } = useChat();
   const messageRef = useRef<HTMLDivElement>(null);
   const isUser = message.role === "user";
+
+  if (message.role === "form") {
+    return <FormBuilder formConfig={message.content as FormConfig} />;
+  }
 
   return (
     <div

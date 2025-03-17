@@ -1,10 +1,15 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormConfig, FormData } from "@/types/chat";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 
@@ -21,16 +26,25 @@ interface OptionCardProps {
 
 const OptionCard = ({ option, isSelected, onSelect }: OptionCardProps) => {
   return (
-    <Card 
-      className={`cursor-pointer transition-all ${isSelected ? 'ring-2 ring-primary' : ''}`}
+    <Card
+      className={`cursor-pointer transition-all ${
+        isSelected ? "ring-2 ring-primary" : ""
+      }`}
       onClick={onSelect}
     >
       <CardHeader className="pb-2">
         <CardTitle className="text-lg">{option.name}</CardTitle>
-        {option.description && <CardDescription>{option.description}</CardDescription>}
+        {option.description && (
+          <CardDescription>{option.description}</CardDescription>
+        )}
       </CardHeader>
       <CardFooter>
-        <Button variant={isSelected ? "default" : "outline"} size="sm" onClick={onSelect} className="mt-2">
+        <Button
+          variant={isSelected ? "default" : "outline"}
+          size="sm"
+          onClick={onSelect}
+          className="mt-2"
+        >
           {isSelected ? "Selected" : "Select"}
         </Button>
       </CardFooter>
@@ -93,7 +107,11 @@ export const FormBuilder = ({ formConfig, loading }: FormBuilderProps) => {
           ))}
 
           {formConfig.isMulti && selectedOptions.length > 0 && (
-            <div className={`flex ${formConfig.isInline ? 'justify-end' : 'justify-end'} w-full`}>
+            <div
+              className={`flex ${
+                formConfig.isInline ? "justify-end" : "justify-end"
+              } w-full`}
+            >
               <Button
                 onClick={() =>
                   formConfig.onSubmit(
@@ -113,7 +131,7 @@ export const FormBuilder = ({ formConfig, loading }: FormBuilderProps) => {
           )}
         </div>
       ) : null}
-      
+
       {formConfig?.fields?.length ? (
         <form
           onSubmit={(e) => {
@@ -152,7 +170,7 @@ export const FormBuilder = ({ formConfig, loading }: FormBuilderProps) => {
                   id={field.name}
                   type={field.type}
                   placeholder={field.placeholder}
-                  value={formData[field.name] as string || ''}
+                  value={(formData[field.name] as string) || ""}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                     setFormData({ ...formData, [field.name]: e.target.value });
                   }}
@@ -160,15 +178,23 @@ export const FormBuilder = ({ formConfig, loading }: FormBuilderProps) => {
               </div>
             );
           })}
-          
-          <div className={`flex ${formConfig.isInline ? 'justify-end' : 'justify-end'}`}>
+
+          <div
+            className={`flex ${
+              formConfig.isInline ? "justify-end" : "justify-end"
+            }`}
+          >
             <Button type="submit">Submit</Button>
           </div>
         </form>
       ) : null}
-      
+
       {!formConfig?.fields?.length && !formConfig?.options?.length && (
-        <div className={`flex ${formConfig.isInline ? 'flex-row' : 'flex-col'} gap-2`}>
+        <div
+          className={`flex ${
+            formConfig.isInline ? "flex-row" : "flex-col"
+          } gap-2`}
+        >
           {formConfig?.buttons?.map((button) => (
             <Button key={button.text} onClick={button.onClick}>
               {button.text}

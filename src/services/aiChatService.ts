@@ -3,7 +3,8 @@ import { IMessage } from "@/types/chat";
 import { Json } from "@/integrations/supabase/types";
 import { v4 as uuidv4 } from "uuid";
 import { callSupabaseFunction } from "./supabaseFunctionServices";
-import { streamResponse } from "@/utils/streamResponse";
+import { IFunction } from "@/types/aiAgents";
+import { MessageRole } from "@/types/chat";
 
 const streamAiResponse = async ({
   endpoint,
@@ -79,6 +80,10 @@ interface SendMessageToAIProps {
   tenantId: string | undefined;
   onUpdate: (message: IMessage) => void;
   onComplete: (message: IMessage) => Promise<void>;
+  onFunctionCall: (functionCall: {
+    response: object;
+    message: IMessage;
+  }) => void;
 }
 export const sendMessageToAI = async ({
   messageId,
@@ -89,6 +94,7 @@ export const sendMessageToAI = async ({
   tenantId,
   onUpdate,
   onComplete,
+  onFunctionCall,
 }: SendMessageToAIProps): Promise<IMessage | null> => {
   if (!conversationId || !userId || !tenantId) return null;
 
@@ -121,7 +127,25 @@ export const sendMessageToAI = async ({
 
         const data = await response.json();
 
-        console.log("functionCall", data);
+        onFunctionCall({
+          response: data,
+          message: {
+            id: uuidv4(),
+            role: MessageRole.FORM,
+            content: data.markup.config,
+            loading: false,
+          },
+        });
+
+        await supabase.from("messages").insert({
+          id: uuidv4(),
+          conversation_id: conversationId,
+          role: MessageRole.FORM,
+          content: data.markup.config as Json,
+          metadata: {} as Json,
+          user_id: userId,
+          tenant_id: tenantId,
+        });
       },
     });
 
