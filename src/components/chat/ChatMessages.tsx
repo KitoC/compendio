@@ -2,6 +2,7 @@
 import { useChat } from "@/contexts/chat";
 import ChatMessage from "./ChatMessage";
 import { Skeleton } from "@/components/ui/skeleton";
+import { IMessage } from "@/types/chat";
 
 const ChatMessages = () => {
   const { messages, messagesContainerRef, isLoading } = useChat();
@@ -38,14 +39,22 @@ const ChatMessages = () => {
     >
       {filteredMessages.map((message, index) => {
         const isLastMessage = index === filteredMessages.length - 1;
+        
+        // Convert Message to IMessage format
+        const messageForComponent: IMessage = {
+          id: message.id || "",
+          role: message.role,
+          content: message.content?.text || message.content,
+          createdAt: message.created_at,
+        };
 
         return (
           <div
-            key={message.id}
+            key={message.id || index}
             data-user-message={message.role === "user" ? "true" : "false"}
             className="animate-fadeIn"
           >
-            <ChatMessage message={message} isLastMessage={isLastMessage} />
+            <ChatMessage message={messageForComponent} isLastMessage={isLastMessage} />
           </div>
         );
       })}

@@ -15,7 +15,6 @@ export const useChatState = (conversationId: string) => {
   const { user, tenantId } = useAuth();
   const { toast } = useToast();
 
-  // Fetch messages whenever the conversation ID changes
   useEffect(() => {
     const fetchMessages = async () => {
       if (!conversationId || !user) return;
@@ -34,7 +33,6 @@ export const useChatState = (conversationId: string) => {
         }
 
         if (data) {
-          // Ensure data matches our Message type
           const typedMessages: Message[] = data;
           setMessages(typedMessages);
         }
@@ -98,7 +96,6 @@ export const useChatState = (conversationId: string) => {
       setIsProcessing(true);
       const userMessageId = nanoid();
 
-      // Optimistically add user message
       const userMessage: Message = {
         id: userMessageId,
         conversation_id: conversationId,
@@ -114,7 +111,6 @@ export const useChatState = (conversationId: string) => {
       scrollToBottom();
 
       try {
-        // Call the AI chat service
         const aiResponse = await aiChatService({
           conversationId,
           message: messageContent,
@@ -122,11 +118,10 @@ export const useChatState = (conversationId: string) => {
           tenantId,
         });
 
-        // Add AI message
         const aiMessage: Message = {
           id: uuidv4(),
           conversation_id: conversationId,
-          user_id: "ai", // Or a specific AI user ID if you have one
+          user_id: "ai",
           role: "assistant",
           content: { text: aiResponse },
           metadata: {},
@@ -147,7 +142,6 @@ export const useChatState = (conversationId: string) => {
           toast.error(error.message || "Failed to save AI message");
         }
       } catch (error: any) {
-        // If there was an error with the AI service, remove the user's message
         setMessages((prevMessages) =>
           prevMessages.filter((msg) => msg.id !== userMessageId)
         );

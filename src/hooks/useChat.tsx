@@ -8,4 +8,4 @@ export {
   useChatState
 } from "../contexts/chat";
 
-export type { ChatContextType } from "../contexts/chat/ChatContext";
+// Don't export ChatContextType as it doesn't exist
