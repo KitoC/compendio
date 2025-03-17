@@ -1,3 +1,4 @@
+
 import type SupabaseService from "../shared/services/SupabaseService";
 import type { IFunction, IFunctionCall } from "../../../src/types/aiAgents";
 
@@ -210,10 +211,51 @@ class FunctionController {
       throw new Error("Supabase service not initialized");
     }
 
-    const { data, error } = await this.supabaseService.supabase
-      .from("configs")
-      .select("*");
+    try {
+      // Try to get functions from the database first
+      const { data, error } = await this.supabaseService.supabase
+        .from("ai_functions")
+        .select("id, name, description, type, parameters, markup");
 
+      if (error) {
+        console.error("Error fetching functions:", error);
+        return this.processMockFunctions();
+      }
+
+      if (data && data.length > 0) {
+        // Process functions from the database
+        return data.map((func) => {
+          const { id, name, description, type, parameters, markup } = func;
+          
+          if (markup) {
+            this.markup[name] = markup;
+          }
+
+          this.functionsMap[name] = {
+            name,
+            description,
+            type,
+            parameters: parameters || {},
+            markup: markup || {}
+          };
+
+          return {
+            name,
+            description,
+            parameters: parameters || {}
+          };
+        });
+      } else {
+        // Fall back to mock functions if no data is returned
+        return this.processMockFunctions();
+      }
+    } catch (error) {
+      console.error("Error in getFunctions:", error);
+      return this.processMockFunctions();
+    }
+  }
+
+  private processMockFunctions() {
     return mockFunctions.map((func: IFunction) => {
       const { markup, type, ...rest } = func;
 

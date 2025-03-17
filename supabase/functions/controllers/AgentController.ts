@@ -1,3 +1,4 @@
+
 // @ts-expect-error - Supabase client is not typed
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.8.0";
 import type SupabaseService from "../shared/services/SupabaseService";
@@ -70,6 +71,30 @@ class AgentController {
     return agent || defaultAgent;
   }
 
+  async getAgentFunctions(agentId: string) {
+    if (!this.supabase) {
+      throw new Error("Supabase client not initialized");
+    }
+
+    try {
+      const { data, error } = await this.supabase
+        .from("agent_functions")
+        .select("function_id")
+        .eq("agent_id", agentId);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      // Extract function IDs
+      const functionIds = data.map(item => item.function_id);
+      return functionIds;
+    } catch (error) {
+      console.error("Error fetching agent functions:", error);
+      return [];
+    }
+  }
+
   async setDependenciesAndGetAgents({
     supabaseService,
     openAiService,
@@ -117,8 +142,18 @@ class AgentController {
   async talkToAgent(messages: ChatMessage[], agentId: string) {
     const { prompt, model = "gpt-4o-mini" } = await this.getAgentById(agentId);
 
-    const functions =
-      (await this.functionController.getFunctions()) as IOpenAiFunction[];
+    // Get function IDs associated with this agent
+    const agentFunctionIds = await this.getAgentFunctions(agentId);
+    
+    // Get all available functions
+    const allFunctions = await this.functionController.getFunctions() as IOpenAiFunction[];
+    
+    // Filter functions to only include those associated with this agent
+    // If no specific functions are associated, use all functions
+    const functions = agentFunctionIds.length > 0 
+      ? allFunctions.filter(fn => agentFunctionIds.includes(fn.name))
+      : allFunctions;
+
     const agentPrompt = await this.buildAgentPrompt(agentId, {
       functions,
       session: "",

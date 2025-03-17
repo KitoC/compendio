@@ -13,6 +13,14 @@ import { IAiAgent } from "@/types/aiAgents";
 import { ROUTES } from "@/lib/constants";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
+import FunctionSelector from "@/components/selectors/FunctionSelector";
+
+interface AIFunction {
+  id: string;
+  name: string;
+  description: string;
+  type: string;
+}
 
 const AgentDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -29,10 +37,12 @@ const AgentDetail = () => {
     enabled: true,
     tenant_id: tenantId || "",
   });
+  const [selectedFunctions, setSelectedFunctions] = useState<AIFunction[]>([]);
 
   useEffect(() => {
     if (id !== "new") {
       fetchAgent();
+      fetchAgentFunctions();
     } else {
       setIsLoading(false);
     }
@@ -63,6 +73,42 @@ const AgentDetail = () => {
     }
   };
 
+  const fetchAgentFunctions = async () => {
+    if (!tenantId || !id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("agent_functions")
+        .select(`
+          function_id,
+          ai_functions:function_id (
+            id,
+            name,
+            description,
+            type
+          )
+        `)
+        .eq("agent_id", id)
+        .eq("tenant_id", tenantId);
+
+      if (error) throw error;
+      
+      if (data) {
+        const functions = data.map(item => ({
+          id: item.ai_functions.id,
+          name: item.ai_functions.name,
+          description: item.ai_functions.description,
+          type: item.ai_functions.type
+        }));
+        
+        setSelectedFunctions(functions);
+      }
+    } catch (error) {
+      console.error("Error fetching agent functions:", error);
+      toast.error("Failed to load agent functions");
+    }
+  };
+
   const handleSaveAgent = async () => {
     if (!tenantId || !user) return;
 
@@ -76,7 +122,7 @@ const AgentDetail = () => {
 
       let result;
       if (isNewAgent) {
-        result = await supabase.from("ai_agents").insert([agentData]);
+        result = await supabase.from("ai_agents").insert([agentData]).select();
       } else {
         result = await supabase
           .from("ai_agents")
@@ -185,6 +231,15 @@ const AgentDetail = () => {
                 value={agent?.prompt || ""}
                 onChange={handleInputChange}
                 placeholder="Enter the system prompt for this agent"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>AI Functions</Label>
+              <FunctionSelector 
+                agentId={id || ""}
+                selectedFunctions={selectedFunctions}
+                onFunctionsChange={setSelectedFunctions}
               />
             </div>
 
