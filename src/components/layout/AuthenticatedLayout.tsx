@@ -1,3 +1,4 @@
+
 import { ReactNode, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,6 +9,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AiAgentsProvider } from "@/contexts/AiAgents/AiAgentsProvider";
+import { AppearanceProvider } from "@/contexts/Appearance";
 
 interface AuthenticatedLayoutProps {
   children: ReactNode;
@@ -57,32 +59,34 @@ const AuthenticatedLayout = ({ children }: AuthenticatedLayoutProps) => {
   }
 
   return (
-    <AiAgentsProvider>
-      <SidebarProvider>
-        <div className="flex flex-col min-h-screen w-full">
-          {isMobile && (
-            <header className="sticky top-0 z-40 flex items-center h-14 px-4 border-b bg-background">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="mr-2"
-                onClick={() =>
-                  document.dispatchEvent(new CustomEvent("toggle-sidebar"))
-                }
-              >
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle menu</span>
-              </Button>
-              <div id="page-header-anchor" className="flex-1"></div>
-            </header>
-          )}
-          <div className="flex flex-1 min-h-0">
-            <AppSidebar />
-            <main className="flex-1 overflow-auto">{children}</main>
+    <AppearanceProvider>
+      <AiAgentsProvider>
+        <SidebarProvider>
+          <div className="flex flex-col min-h-screen w-full">
+            {isMobile && (
+              <header className="sticky top-0 z-40 flex items-center h-14 px-4 border-b bg-background">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="mr-2"
+                  onClick={() =>
+                    document.dispatchEvent(new CustomEvent("toggle-sidebar"))
+                  }
+                >
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Toggle menu</span>
+                </Button>
+                <div id="page-header-anchor" className="flex-1"></div>
+              </header>
+            )}
+            <div className="flex flex-1 min-h-0">
+              <AppSidebar />
+              <main className="flex-1 overflow-auto">{children}</main>
+            </div>
           </div>
-        </div>
-      </SidebarProvider>
-    </AiAgentsProvider>
+        </SidebarProvider>
+      </AiAgentsProvider>
+    </AppearanceProvider>
   );
 };
 
