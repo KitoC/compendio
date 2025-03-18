@@ -1,3 +1,4 @@
+
 import { forwardRef, useState, KeyboardEvent, useEffect } from "react";
 import {
   AudioLines,
@@ -218,9 +219,9 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
                 </div>
                 <div className={buttonWrapperClass}>
                   <IconButton
-                    onClick={(e) => {
+                    onClick={() => {
                       setIsVoiceMode(false);
-                      closeVoiceMode(e);
+                      closeVoiceMode();
                     }}
                     variant="secondary"
                     size="sm"
@@ -238,10 +239,10 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
               onClick={(e) => {
                 if (isVoiceMode) {
                   setIsVoiceMode(false);
-                  closeVoiceMode(e);
+                  closeVoiceMode();
                 } else {
                   setIsVoiceMode(true);
-                  startListening(e);
+                  startListening();
                 }
               }}
               type={isVoiceMode ? "button" : "submit"}

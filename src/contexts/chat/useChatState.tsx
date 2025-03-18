@@ -1,3 +1,4 @@
+
 import { useState, useRef, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ChatMessage, MessageRole } from "@/types/chat";
@@ -7,6 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 import { sendMessageToAI } from "@/services/aiChatService";
 import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
 import { useParams } from "react-router-dom";
+import { Json } from "@/integrations/supabase/types";
 
 interface UseChatOptions {
   conversationId: string;
@@ -71,9 +73,9 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       const newMessage: ChatMessage = {
         id: uuidv4(),
         role,
-        content: { text: content },
+        content: { text: content } as Json,
         conversation_id: conversationId,
-        metadata: {},
+        metadata: {} as Json,
         reply_to: undefined,
         user_id: user.id,
         tenant_id: tenantId,
@@ -93,8 +95,8 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
           id: uuidv4(),
           conversation_id: conversationId,
           role: "assistant",
-          content: { text: "" },
-          metadata: {},
+          content: { text: "" } as Json,
+          metadata: {} as Json,
           user_id: user.id,
           tenant_id: tenantId,
         };
@@ -113,7 +115,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
           onUpdate: (text) => {
             setMessages((prev) =>
               prev.map((msg) =>
-                msg.id === aiMessage.id ? { ...msg, content: { text } } : msg
+                msg.id === aiMessage.id ? { ...msg, content: { text } as Json } : msg
               )
             );
 
@@ -145,7 +147,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
                   ...msg,
                   content: {
                     text: "Sorry, I encountered an error. Please try again.",
-                  },
+                  } as Json,
                   loading: false,
                 }
               : msg

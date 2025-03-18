@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { ChatMessage } from "@/types/chat";
 import { Json } from "@/integrations/supabase/types";
@@ -26,7 +27,6 @@ const streamAiResponse = async ({
   }
 
   // Initialize content variable to collect streamed response
-
   let content = "";
   let functionCalled = false;
 
@@ -131,8 +131,8 @@ export const sendMessageToAI = async ({
           id: uuidv4(),
           conversation_id: conversationId,
           role: MessageRole.FORM,
-          content: data.markup.config,
-          metadata: {},
+          content: data.markup.config as Json,
+          metadata: {} as Json,
           user_id: userId,
           tenant_id: tenantId,
           reply_to: messageId,
@@ -152,8 +152,8 @@ export const sendMessageToAI = async ({
       id,
       role: "assistant",
       conversation_id: conversationId,
-      content: { text: content },
-      metadata: {},
+      content: { text: content } as Json,
+      metadata: {} as Json,
       user_id: userId,
       tenant_id: tenantId,
     };

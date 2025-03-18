@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -23,7 +23,6 @@ import {
   Edit, 
   Trash, 
   FileDown, 
-  FileUp, 
   MoreHorizontal,
   Check,
   X
@@ -139,7 +138,7 @@ export const DataManager = ({
     const fetchRecords = async () => {
       setLoading(true);
       try {
-        // Query the dynamic table (using RPC or custom endpoint)
+        // Call the custom function to get table data
         const { data, error } = await supabase.rpc('get_custom_table_data', {
           p_table_name: tableName,
           p_tenant_id: tenantId
@@ -147,7 +146,12 @@ export const DataManager = ({
 
         if (error) throw error;
         
-        setRows(data || []);
+        if (Array.isArray(data)) {
+          setRows(data);
+        } else {
+          console.warn("Unexpected data format:", data);
+          setRows([]);
+        }
       } catch (error: any) {
         console.error("Error fetching records:", error);
         toast.error(error.message || "Failed to load data");
@@ -206,7 +210,7 @@ export const DataManager = ({
     if (!recordToDelete || !tenantId || !tableName) return;
 
     try {
-      // Delete the record from the dynamic table
+      // Delete the record from the dynamic table using the function
       const { error } = await supabase.rpc('delete_custom_table_record', {
         p_table_name: tableName,
         p_record_id: recordToDelete,
