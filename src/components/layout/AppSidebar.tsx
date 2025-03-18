@@ -1,3 +1,4 @@
+
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -21,6 +22,7 @@ import {
   Table2,
   Palette,
   Bot,
+  MailPlus,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ROUTES } from "@/lib/constants";
@@ -105,6 +107,11 @@ const AppSidebar = () => {
           label: "Custom Tables",
           url: ROUTES.SETTINGS_CUSTOM_TABLES,
           icon: <Table2 className="h-4 w-4" />,
+        },
+        {
+          label: "Integrations",
+          url: ROUTES.SETTINGS_INTEGRATIONS,
+          icon: <MailPlus className="h-4 w-4" />,
         },
       ],
     },
