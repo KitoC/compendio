@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect, Suspense } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -79,12 +78,14 @@ const AuthenticatedLayout = ({ children }: AuthenticatedLayoutProps) => {
           )}
           <div className="flex flex-1 min-h-0">
             <AppSidebar />
-            <main className="flex-1 overflow-auto">
-              <Suspense fallback={
-                <div className="flex justify-center items-center h-full p-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                </div>
-              }>
+            <main className="flex-1 overflow-auto h-screen">
+              <Suspense
+                fallback={
+                  <div className="flex justify-center items-center h-full p-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </div>
+                }
+              >
                 {children}
               </Suspense>
             </main>

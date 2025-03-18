@@ -170,7 +170,7 @@ const AgentDetail = () => {
   }
 
   return (
-    <div className="space-y-6 ">
+    <div className="space-y-6 flex flex-col h-full">
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"
@@ -184,7 +184,7 @@ const AgentDetail = () => {
         </h2>
       </div>
 
-      <Card>
+      <Card className="flex-1 overflow-y-auto">
         <CardHeader>
           <CardTitle>Agent Details</CardTitle>
         </CardHeader>
