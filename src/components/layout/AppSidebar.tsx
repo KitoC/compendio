@@ -1,4 +1,3 @@
-
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -14,7 +13,15 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, LogOut, Settings, Users2, Table2, Palette } from "lucide-react";
+import {
+  ArrowLeft,
+  LogOut,
+  Settings,
+  Users2,
+  Table2,
+  Palette,
+  Bot,
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ROUTES } from "@/lib/constants";
 import { useSidebar } from "@/components/ui/sidebar/context";
@@ -61,6 +68,7 @@ const AppSidebar = () => {
   // Define sidebar items for main navigation
   const sidebarItems = [
     {
+      icon: <Bot className="h-4 w-4" />,
       label: "Agents",
       children: aiAgents.map((agent) => ({
         label: agent.human_name || agent.name,
@@ -131,13 +139,25 @@ const AppSidebar = () => {
     };
 
     document.addEventListener("toggle-sidebar", handleToggleSidebar);
-    document.addEventListener("show-settings-sidebar", handleShowSettingsSidebar);
-    document.addEventListener("restore-original-sidebar", handleRestoreOriginalSidebar);
+    document.addEventListener(
+      "show-settings-sidebar",
+      handleShowSettingsSidebar
+    );
+    document.addEventListener(
+      "restore-original-sidebar",
+      handleRestoreOriginalSidebar
+    );
 
     return () => {
       document.removeEventListener("toggle-sidebar", handleToggleSidebar);
-      document.removeEventListener("show-settings-sidebar", handleShowSettingsSidebar);
-      document.removeEventListener("restore-original-sidebar", handleRestoreOriginalSidebar);
+      document.removeEventListener(
+        "show-settings-sidebar",
+        handleShowSettingsSidebar
+      );
+      document.removeEventListener(
+        "restore-original-sidebar",
+        handleRestoreOriginalSidebar
+      );
     };
   }, [toggleSidebar]);
 
@@ -186,7 +206,10 @@ const AppSidebar = () => {
         {section.children?.length ? (
           <SidebarGroup>
             {section.children?.length && (
-              <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
+              <div className="flex items-center px-2 gap-2">
+                {section.icon && section.icon}
+                <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
+              </div>
             )}
 
             <SidebarGroupContent>
@@ -210,7 +233,9 @@ const AppSidebar = () => {
 
   // Select which items to show based on sidebar mode
   const itemsToShow = showSettingsSidebar ? settingsItems : sidebarItems;
-  const footerItemsToShow = showSettingsSidebar ? settingsFooterItems : footerItems;
+  const footerItemsToShow = showSettingsSidebar
+    ? settingsFooterItems
+    : footerItems;
 
   return (
     <Sidebar
