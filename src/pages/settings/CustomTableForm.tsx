@@ -346,7 +346,7 @@ const CustomTableForm = ({
             )}
           />
 
-          <FormField
+          {/* <FormField
             control={form.control}
             name="icon"
             render={({ field }) => (
@@ -361,7 +361,7 @@ const CustomTableForm = ({
                 <FormMessage />
               </FormItem>
             )}
-          />
+          /> */}
 
           <ColumnEditor columns={columns} onChange={setColumns} />
         </form>
