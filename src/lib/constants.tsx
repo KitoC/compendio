@@ -1,4 +1,3 @@
-
 export const ROUTES = {
   INDEX: "/",
   AUTH: "/auth",
@@ -10,8 +9,7 @@ export const ROUTES = {
   CONVERSATIONS: "/conversations",
   CONVERSATION: "/conversation",
   CONVERSATIONS_DETAIL: "/conversations/:id",
-  ASSISTANT_CHAT: "/assistant",
-  CONVERSATION_ASSISTANT: "/assistant",
+  CONVERSATION_ASSISTANT: "/conversations/general-assistant",
   SETTINGS: "/settings",
   SETTINGS_APPEARANCE: "/settings/appearance",
   SETTINGS_AGENTS: "/settings/agents",

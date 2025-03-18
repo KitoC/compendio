@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
@@ -15,20 +14,23 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { Provider } from "@supabase/supabase-js";
-import { toast } from "sonner";
 import { ROUTES } from "@/lib/constants";
+import { useAuth } from "@/hooks/useAuth";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState<"sign-in" | "sign-up">("sign-in");
+
+  const { handleEmailSignIn, handleOAuthSignIn, handleEmailSignUp } = useAuth();
   const navigate = useNavigate();
 
   // Check if user is already authenticated
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
+
       if (data.session) {
         navigate(ROUTES.CONVERSATION_ASSISTANT);
       }
@@ -36,97 +38,6 @@ const Auth = () => {
 
     checkSession();
   }, [navigate]);
-
-  const handleEmailSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!email || !password) {
-      toast.error("Please enter both email and password");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-
-      if (error) throw error;
-
-      toast.success(
-        "Sign-up successful! Please check your email for verification."
-      );
-    } catch (error: any) {
-      console.error("Error signing up:", error);
-      toast.error(error.message || "An error occurred during sign-up");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEmailSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Sign in attempt with:", { email, password });
-
-    if (!email || !password) {
-      toast.error("Please enter both email and password");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      console.log("Starting sign in process");
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        console.error("Sign in error:", error);
-        throw error;
-      }
-
-      console.log("Sign in successful:", data);
-      toast.success("Signed in successfully");
-      
-      // Navigate after successful sign in
-      navigate(ROUTES.CONVERSATION_ASSISTANT, { replace: true });
-      
-    } catch (error: any) {
-      console.error("Error signing in:", error);
-      toast.error(error.message || "Invalid login credentials");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOAuthSignIn = async (provider: Provider) => {
-    try {
-      setLoading(true);
-      console.log(`Starting OAuth sign in with ${provider}`);
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-
-      if (error) throw error;
-
-      // Will redirect from OAuth provider
-    } catch (error: any) {
-      console.error(`Error signing in with ${provider}:`, error);
-      toast.error(error.message || `Failed to sign in with ${provider}`);
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -154,7 +65,12 @@ const Auth = () => {
           </div>
 
           <TabsContent value="sign-in">
-            <form onSubmit={handleEmailSignIn}>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                handleEmailSignIn({ email, password });
+              }}
+            >
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
@@ -226,7 +142,12 @@ const Auth = () => {
           </TabsContent>
 
           <TabsContent value="sign-up">
-            <form onSubmit={handleEmailSignUp}>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                handleEmailSignUp({ email, password });
+              }}
+            >
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>

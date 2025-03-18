@@ -1,20 +1,30 @@
+// NO_CHANGE
+
 import {
   useState,
   useEffect,
   createContext,
   useContext,
   ReactNode,
+  useCallback,
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/lib/constants";
 import { cleanupSupabaseAuth } from "@/utils/supabaseUtils";
+import { toast } from "sonner";
+import { Provider } from "@supabase/supabase-js";
 
 interface Profile {
   id: string;
   username: string | null;
   avatar_url: string | null;
+}
+
+interface SignInParams {
+  email: string;
+  password: string;
 }
 
 interface AuthContextType {
@@ -25,6 +35,9 @@ interface AuthContextType {
   hasTenant: boolean;
   tenantId: string | null;
   signOut: () => Promise<void>;
+  handleEmailSignIn: (params: SignInParams) => Promise<void>;
+  handleEmailSignUp: (params: SignInParams) => Promise<void>;
+  handleOAuthSignIn: (provider: Provider) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,42 +50,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [hasTenant, setHasTenant] = useState(true);
   const [tenantId, setTenantId] = useState<string | null>(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-
-      if (session?.user) {
-        checkTenantAccess(session.user.id);
-        fetchProfile(session.user.id);
-      } else {
-        setIsLoading(false);
-      }
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state change event:", event);
-      setSession(session);
-      setUser(session?.user ?? null);
-
-      if (session?.user) {
-        checkTenantAccess(session.user.id);
-        fetchProfile(session.user.id);
-      } else {
-        setProfile(null);
-        setHasTenant(true);
-        setTenantId(null);
-        setIsLoading(false);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [navigate]);
 
   const checkTenantAccess = async (userId: string) => {
     try {
@@ -105,13 +82,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("Error checking tenant access:", error);
       setHasTenant(false);
       setTenantId(null);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const fetchProfile = async (userId: string) => {
-    setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -131,8 +105,131 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const signInUser = useCallback(async () => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setUser(data.session?.user ?? null);
+
+      if (data.session?.user) {
+        checkTenantAccess(data.session.user.id);
+        fetchProfile(data.session.user.id);
+        setIsLoading(false);
+      }
+    });
+  }, []);
+
+  const handleEmailSignIn = useCallback(
+    async ({ email, password }) => {
+      if (!email || !password) {
+        toast.error("Please enter both email and password");
+        return;
+      }
+      setIsLoading(true);
+
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) {
+          console.error("Sign in error:", error);
+          throw error;
+        }
+
+        await checkTenantAccess(data.session.user.id);
+        await fetchProfile(data.session.user.id);
+
+        toast.success("Signed in successfully");
+
+        // Navigate after successful sign in
+        navigate(ROUTES.CONVERSATION_ASSISTANT, { replace: true });
+      } catch (error) {
+        console.error("Error signing in:", error);
+        toast.error(error.message || "Invalid login credentials");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [navigate]
+  );
+
+  const handleEmailSignUp = useCallback(async ({ email, password }) => {
+    if (!email || !password) {
+      toast.error("Please enter both email and password");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success(
+        "Sign-up successful! Please check your email for verification."
+      );
+    } catch (error) {
+      console.error("Error signing up:", error);
+      toast.error(error.message || "An error occurred during sign-up");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const handleOAuthSignIn = useCallback(async (provider: Provider) => {
+    try {
+      setIsLoading(true);
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) throw error;
+
+      // Will redirect from OAuth provider
+    } catch (error) {
+      console.error(`Error signing in with ${provider}:`, error);
+      toast.error(error.message || `Failed to sign in with ${provider}`);
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    signInUser();
+  }, [signInUser]);
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, supabaseSession) => {
+      setSession(supabaseSession);
+      setUser(supabaseSession?.user ?? null);
+
+      if (!supabaseSession?.user) {
+        setProfile(null);
+        setHasTenant(true);
+        setTenantId(null);
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
   const signOut = async () => {
-    console.log("Signing out...");
     try {
       const { error } = await supabase.auth.signOut();
 
@@ -149,8 +246,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setHasTenant(true);
       setTenantId(null);
 
-      console.log("Successfully signed out, redirecting to auth page");
-
       navigate(ROUTES.AUTH, { replace: true });
     } catch (error) {
       console.error("Error during sign out:", error);
@@ -166,6 +261,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     hasTenant,
     tenantId,
     signOut,
+    handleEmailSignIn,
+    handleOAuthSignIn,
+    handleEmailSignUp,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
