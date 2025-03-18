@@ -1,9 +1,14 @@
+
 import { createContext, useContext } from "react";
 
 export interface UserSettingsContextType {
   theme: string;
   setTheme: (theme: string) => void;
   isLoading: boolean;
+  sidebarConfig: {
+    showSettings: boolean;
+  };
+  updateSidebarConfig: (config: Partial<UserSettingsContextType['sidebarConfig']>) => void;
 }
 
 export const UserSettingsContext = createContext<
