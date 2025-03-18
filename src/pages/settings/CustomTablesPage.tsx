@@ -1,19 +1,30 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Plus, Settings, Trash2, MoreHorizontal } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
-import { ROUTES } from "@/lib/constants";
 import PageLoading from "@/components/PageLoading";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DataTable, Column } from "@/components/ui/data-table";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { PlusCircle, Pencil, Trash2, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { SlidePanel } from "@/components/ui/slide-panel";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import CustomTableForm from "./CustomTableForm";
+import { format } from "date-fns";
 
 interface CustomTable {
   id: string;
@@ -22,240 +33,189 @@ interface CustomTable {
   description: string | null;
   icon: string | null;
   created_at: string;
-  columns?: string; // New field to store column data
+  updated_at: string;
 }
 
 const CustomTablesPage = () => {
-  const { user, tenantId } = useAuth();
+  const { tenantId } = useAuth();
   const [tables, setTables] = useState<CustomTable[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [tableToDelete, setTableToDelete] = useState<string | null>(null);
-  const [editingTable, setEditingTable] = useState<string | null>(null);
-  const [isEditPanelOpen, setIsEditPanelOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [formOpen, setFormOpen] = useState(false);
+  const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user || !tenantId) return;
+    fetchTables();
+  }, [tenantId]);
 
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        // Fetch custom tables
-        const { data: tablesData, error: tablesError } = await supabase
-          .from("custom_table_definitions")
-          .select("*")
-          .eq("tenant_id", tenantId)
-          .is("deleted_at", null)
-          .order("created_at", { ascending: false });
+  const fetchTables = async () => {
+    if (!tenantId) return;
 
-        if (tablesError) throw tablesError;
-        setTables(tablesData || []);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        toast.error("Failed to load custom tables");
-      } finally {
-        setIsLoading(false);
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("custom_table_definitions")
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .is("deleted_at", null)
+        .order("name");
+
+      if (error) {
+        throw error;
       }
-    };
 
-    fetchData();
-  }, [user, tenantId, isEditPanelOpen]);
+      setTables(data || []);
+    } catch (error: any) {
+      console.error("Error fetching tables:", error);
+      toast.error(`Failed to load tables: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCreateTable = () => {
-    setEditingTable(null);
-    setIsEditPanelOpen(true);
+    setSelectedTableId(null);
+    setFormOpen(true);
   };
 
   const handleEditTable = (tableId: string) => {
-    setEditingTable(tableId);
-    setIsEditPanelOpen(true);
+    setSelectedTableId(tableId);
+    setFormOpen(true);
   };
 
-  const confirmDelete = (id: string) => {
-    setTableToDelete(id);
-    setIsDeleteDialogOpen(true);
-  };
+  const handleDeleteTable = async (tableId: string) => {
+    if (!tenantId) return;
 
-  const handleDelete = async () => {
-    if (!tableToDelete || !tenantId) return;
-
-    setIsDeleting(true);
     try {
       const { error } = await supabase
         .from("custom_table_definitions")
         .update({ deleted_at: new Date().toISOString() })
-        .eq("id", tableToDelete)
+        .eq("id", tableId)
         .eq("tenant_id", tenantId);
 
-      if (error) throw error;
-      
-      setTables(tables.filter(table => table.id !== tableToDelete));
+      if (error) {
+        throw error;
+      }
+
       toast.success("Table deleted successfully");
+      await fetchTables();
     } catch (error: any) {
       console.error("Error deleting table:", error);
-      toast.error(error.message || "Failed to delete table");
-    } finally {
-      setIsDeleting(false);
-      setIsDeleteDialogOpen(false);
-      setTableToDelete(null);
+      toast.error(`Failed to delete table: ${error.message}`);
     }
   };
 
-  const tableColumns: Column<CustomTable>[] = [
-    {
-      header: "Name",
-      accessorKey: "display_name",
-      cell: (row) => (
-        <div className="font-medium">{row.display_name}</div>
-      )
-    },
-    {
-      header: "Table Name",
-      accessorKey: "name",
-      cell: (row) => (
-        <code className="px-1 py-0.5 bg-muted rounded text-sm">{row.name}</code>
-      )
-    },
-    {
-      header: "Description",
-      accessorKey: "description",
-      cell: (row) => (
-        <div className="text-muted-foreground truncate max-w-xs">
-          {row.description || "No description"}
-        </div>
-      )
-    },
-    {
-      header: "Actions",
-      cell: (row) => (
-        <div className="flex justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <MoreHorizontal className="h-4 w-4" />
-                <span className="sr-only">Actions</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleEditTable(row.id)}>
-                <Settings className="h-4 w-4 mr-2" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                className="text-destructive"
-                onClick={() => confirmDelete(row.id)}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      ),
-      className: "w-[80px]"
-    }
-  ];
+  const handleFormSubmit = () => {
+    setFormOpen(false);
+    fetchTables();
+  };
 
-  if (isLoading) {
+  if (loading) {
     return <PageLoading />;
   }
 
-  // Prepare the slide panel title based on whether we're editing or creating
-  const slidePanelTitle = editingTable 
-    ? `Editing ${tables.find(t => t.id === editingTable)?.display_name || "Table"}` 
-    : "Create Table";
-
-  // Prepare the footer with Cancel and Save buttons
-  const slidePanelFooter = (
-    <div className="flex justify-end space-x-2">
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => setIsEditPanelOpen(false)}
-      >
-        Cancel
-      </Button>
-      <Button 
-        type="submit"
-        form="table-form"
-        disabled={isDeleting}
-      >
-        Save
-      </Button>
-    </div>
-  );
-
   return (
-    <div className="space-y-6">
+    <div className="container py-6 space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Custom Tables</h2>
-          <p className="text-muted-foreground">
-            Create and manage custom tables for your application.
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold">Custom Tables</h1>
         <Button onClick={handleCreateTable}>
-          <Plus className="h-4 w-4 mr-2" />
+          <PlusCircle className="h-4 w-4 mr-2" />
           New Table
         </Button>
       </div>
-      <Separator />
 
-      <Card>
-        {tables.length === 0 ? (
-          <div className="p-8 text-center">
-            <h3 className="text-lg font-medium mb-2">No custom tables</h3>
-            <p className="text-muted-foreground mb-4">
-              You haven't created any custom tables yet.
-            </p>
-            <Button onClick={handleCreateTable}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Your First Table
-            </Button>
-          </div>
-        ) : (
-          <DataTable
-            data={tables}
-            columns={tableColumns}
-          />
-        )}
-      </Card>
+      {tables.length > 0 ? (
+        <div className="border rounded-md overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead className="w-[100px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {tables.map((table) => (
+                <TableRow key={table.id}>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{table.display_name}</span>
+                      <Badge variant="outline" className="w-fit">
+                        {table.name}
+                      </Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {table.description || "No description"}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {table.created_at ? format(new Date(table.created_at), "MMM d, yyyy") : ""}
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => handleEditTable(table.id)}>
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={() => handleDeleteTable(table.id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center border rounded-lg p-8">
+          <h3 className="text-lg font-medium">No custom tables yet</h3>
+          <p className="text-muted-foreground mt-1">
+            Start by creating your first custom table.
+          </p>
+          <Button className="mt-4" onClick={handleCreateTable}>
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Create Table
+          </Button>
+        </div>
+      )}
 
-      {/* Slide Panel for Creating/Editing */}
       <SlidePanel
-        open={isEditPanelOpen}
-        onOpenChange={setIsEditPanelOpen}
-        title={slidePanelTitle}
-        description={editingTable ? "Update your custom table details" : "Create a new custom table for your application"}
-        footer={slidePanelFooter}
-      >
-        <CustomTableForm
-          tableId={editingTable}
-          onSuccess={() => setIsEditPanelOpen(false)}
-          onCancel={() => setIsEditPanelOpen(false)}
-        />
-      </SlidePanel>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Confirm Delete</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this table? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        title={selectedTableId ? "Edit Table" : "Create New Table"}
+        footer={
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => setFormOpen(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
-              {isDeleting ? "Deleting..." : "Delete"}
+            <Button 
+              type="submit" 
+              form="table-form"
+            >
+              {selectedTableId ? "Save Changes" : "Create Table"}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        }
+      >
+        <CustomTableForm
+          tableId={selectedTableId}
+          onSuccess={handleFormSubmit}
+          onCancel={() => setFormOpen(false)}
+        />
+      </SlidePanel>
     </div>
   );
 };

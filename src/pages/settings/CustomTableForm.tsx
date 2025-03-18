@@ -26,7 +26,7 @@ const tableFormSchema = z.object({
 
 type FormValues = z.infer<typeof tableFormSchema>;
 
-interface CustomTableFormProps {
+export interface CustomTableFormProps {
   tableId: string | null;
   onSuccess?: () => void;
   onCancel?: () => void;
@@ -57,33 +57,46 @@ const CustomTableForm = ({ tableId, onSuccess, onCancel }: CustomTableFormProps)
       }
 
       try {
-        const { data, error } = await supabase
+        // Fetch table definition
+        const { data: tableData, error: tableError } = await supabase
           .from("custom_table_definitions")
           .select("*")
           .eq("id", tableId)
           .eq("tenant_id", tenantId)
           .single();
 
-        if (error) throw error;
+        if (tableError) throw tableError;
         
-        if (data) {
+        if (tableData) {
           form.reset({
-            name: data.name,
-            display_name: data.display_name,
-            description: data.description || "",
-            icon: data.icon || "",
+            name: tableData.name,
+            display_name: tableData.display_name,
+            description: tableData.description || "",
+            icon: tableData.icon || "",
           });
 
-          // Fetch columns if they exist
-          if (data.columns) {
-            try {
-              const columnsData = JSON.parse(data.columns);
-              setColumns(columnsData);
-            } catch (e) {
-              console.error("Error parsing columns data", e);
-              setColumns([]);
-            }
-          }
+          // Fetch table fields/columns
+          const { data: fieldsData, error: fieldsError } = await supabase
+            .from("custom_table_fields")
+            .select("*")
+            .eq("table_id", tableId)
+            .eq("tenant_id", tenantId)
+            .is("deleted_at", null);
+
+          if (fieldsError) throw fieldsError;
+
+          // Map the fields to columns format
+          const mappedColumns: Column[] = fieldsData?.map(field => ({
+            id: field.id,
+            tableFieldId: field.id,
+            name: field.name,
+            type: field.field_type,
+            isPrimary: field.is_unique,
+            isNullable: !field.is_required,
+            defaultValue: field.default_value ? JSON.stringify(field.default_value) : undefined
+          })) || [];
+
+          setColumns(mappedColumns);
         }
       } catch (error) {
         console.error("Error fetching table data:", error);
@@ -101,32 +114,36 @@ const CustomTableForm = ({ tableId, onSuccess, onCancel }: CustomTableFormProps)
 
     setIsSaving(true);
     try {
-      const tableData = {
-        name: values.name,
-        display_name: values.display_name,
-        description: values.description,
-        icon: values.icon,
-        columns: JSON.stringify(columns),
-        updated_at: new Date().toISOString(),
-      };
-
-      if (isEditing && tableId) {
+      let tableId: string;
+      
+      if (isEditing) {
         // Update existing table
-        const { error } = await supabase
+        const { data: updatedTable, error: updateError } = await supabase
           .from("custom_table_definitions")
-          .update(tableData)
-          .eq("id", tableId)
-          .eq("tenant_id", tenantId);
+          .update({
+            display_name: values.display_name,
+            description: values.description,
+            icon: values.icon,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", tableId as string)
+          .eq("tenant_id", tenantId)
+          .select("id")
+          .single();
 
-        if (error) throw error;
-        toast.success("Table updated successfully");
+        if (updateError) throw updateError;
+        tableId = updatedTable.id;
+        
       } else {
         // Create new table
-        const { error } = await supabase
+        const { data: newTable, error: createError } = await supabase
           .from("custom_table_definitions")
           .insert({
             tenant_id: tenantId,
-            ...tableData,
+            name: values.name,
+            display_name: values.display_name,
+            description: values.description,
+            icon: values.icon,
             permissions: {
               system_roles: {
                 create: ["super-admin", "tenant-owner"],
@@ -141,11 +158,99 @@ const CustomTableForm = ({ tableId, onSuccess, onCancel }: CustomTableFormProps)
                 delete: [],
               },
             },
-          });
+          })
+          .select("id")
+          .single();
 
-        if (error) throw error;
-        toast.success("Table created successfully");
+        if (createError) throw createError;
+        tableId = newTable.id;
       }
+
+      // Handle columns (fields)
+      // 1. Update existing fields
+      // 2. Add new fields
+      // 3. Delete removed fields (soft delete)
+      
+      const existingFieldIds = columns
+        .filter(col => col.tableFieldId)
+        .map(col => col.tableFieldId);
+      
+      // For each column in the current state
+      for (const column of columns) {
+        const fieldData = {
+          table_id: tableId,
+          tenant_id: tenantId,
+          name: column.name,
+          display_name: column.name, // Using name as display_name for simplicity
+          field_type: column.type,
+          is_required: !column.isNullable,
+          is_unique: column.isPrimary,
+          default_value: column.defaultValue ? JSON.parse(column.defaultValue) : null,
+          permissions: {
+            system_roles: {
+              read: ["super-admin", "tenant-owner"],
+              write: ["super-admin", "tenant-owner"]
+            },
+            custom_roles: {
+              read: [],
+              write: []
+            }
+          }
+        };
+        
+        if (column.tableFieldId) {
+          // Update existing field
+          const { error: updateFieldError } = await supabase
+            .from("custom_table_fields")
+            .update({
+              ...fieldData,
+              updated_at: new Date().toISOString()
+            })
+            .eq("id", column.tableFieldId)
+            .eq("tenant_id", tenantId);
+            
+          if (updateFieldError) throw updateFieldError;
+        } else {
+          // Create new field
+          const { error: createFieldError } = await supabase
+            .from("custom_table_fields")
+            .insert(fieldData);
+            
+          if (createFieldError) throw createFieldError;
+        }
+      }
+      
+      // If editing, handle deleted fields
+      if (isEditing) {
+        // Get all existing fields for this table
+        const { data: currentFields, error: fieldsError } = await supabase
+          .from("custom_table_fields")
+          .select("id")
+          .eq("table_id", tableId)
+          .eq("tenant_id", tenantId)
+          .is("deleted_at", null);
+          
+        if (fieldsError) throw fieldsError;
+        
+        // Find fields that need to be deleted
+        const currentFieldIds = currentFields.map(f => f.id);
+        const fieldsToDelete = currentFieldIds.filter(id => 
+          !columns.some(col => col.tableFieldId === id)
+        );
+        
+        // Soft delete fields that are no longer in the columns list
+        if (fieldsToDelete.length > 0) {
+          const { error: deleteError } = await supabase
+            .from("custom_table_fields")
+            .update({ deleted_at: new Date().toISOString() })
+            .in("id", fieldsToDelete)
+            .eq("tenant_id", tenantId);
+            
+          if (deleteError) throw deleteError;
+        }
+      }
+
+      toast.success(isEditing ? "Table updated successfully" : "Table created successfully");
 
       // Call onSuccess callback if provided
       if (onSuccess) {

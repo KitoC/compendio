@@ -14,6 +14,8 @@ export interface Column {
   isPrimary: boolean;
   isNullable: boolean;
   defaultValue?: string;
+  // Add field for persisted columns to track if this is a new or existing column
+  tableFieldId?: string;
 }
 
 interface ColumnEditorProps {
