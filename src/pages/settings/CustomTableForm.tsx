@@ -1,13 +1,10 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { ROUTES } from "@/lib/constants";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -28,13 +25,16 @@ const tableFormSchema = z.object({
 
 type FormValues = z.infer<typeof tableFormSchema>;
 
-const CustomTableForm = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+interface CustomTableFormProps {
+  tableId: string | null;
+  onSuccess?: () => void;
+}
+
+const CustomTableForm = ({ tableId, onSuccess }: CustomTableFormProps) => {
+  const isEditing = Boolean(tableId);
   const { user, tenantId } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(isEditing);
   const [isSaving, setIsSaving] = useState(false);
-  const isEditing = id && id !== "new-table";
 
   const form = useForm<FormValues>({
     resolver: zodResolver(tableFormSchema),
@@ -48,7 +48,7 @@ const CustomTableForm = () => {
 
   useEffect(() => {
     const fetchTableData = async () => {
-      if (!user || !tenantId || !isEditing) {
+      if (!user || !tenantId || !tableId) {
         setIsLoading(false);
         return;
       }
@@ -57,7 +57,7 @@ const CustomTableForm = () => {
         const { data, error } = await supabase
           .from("custom_table_definitions")
           .select("*")
-          .eq("id", id)
+          .eq("id", tableId)
           .eq("tenant_id", tenantId)
           .single();
 
@@ -80,14 +80,14 @@ const CustomTableForm = () => {
     };
 
     fetchTableData();
-  }, [user, tenantId, id, isEditing, form]);
+  }, [user, tenantId, tableId, form]);
 
   const onSubmit = async (values: FormValues) => {
     if (!user || !tenantId) return;
 
     setIsSaving(true);
     try {
-      if (isEditing) {
+      if (isEditing && tableId) {
         // Update existing table
         const { error } = await supabase
           .from("custom_table_definitions")
@@ -96,9 +96,9 @@ const CustomTableForm = () => {
             display_name: values.display_name,
             description: values.description,
             icon: values.icon,
-            updated_at: new Date(),
+            updated_at: new Date().toISOString(),
           })
-          .eq("id", id)
+          .eq("id", tableId)
           .eq("tenant_id", tenantId);
 
         if (error) throw error;
@@ -133,8 +133,10 @@ const CustomTableForm = () => {
         toast.success("Table created successfully");
       }
 
-      // Navigate back to the tables list
-      navigate(ROUTES.SETTINGS_CUSTOM_TABLES);
+      // Call onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error: any) {
       console.error("Error saving table:", error);
       toast.error(error.message || "Failed to save table");
@@ -148,105 +150,93 @@ const CustomTableForm = () => {
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <Card>
-        <CardHeader>
-          <CardTitle>{isEditing ? "Edit Table" : "Create New Table"}</CardTitle>
-          <CardDescription>
-            {isEditing 
-              ? "Update the details of your custom table" 
-              : "Create a new custom table for your application"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Table Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="customers" {...field} disabled={isEditing} />
-                    </FormControl>
-                    <p className="text-xs text-muted-foreground">
-                      This will be used as the table name in the database. Use lowercase, underscores, start with a letter.
-                    </p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+    <div className="space-y-6">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Table Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="customers" {...field} disabled={isEditing} />
+                </FormControl>
+                <p className="text-xs text-muted-foreground">
+                  This will be used as the table name in the database.
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-              <FormField
-                control={form.control}
-                name="display_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Display Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Customers" {...field} />
-                    </FormControl>
-                    <p className="text-xs text-muted-foreground">
-                      This is how the table will be displayed in the UI.
-                    </p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <FormField
+            control={form.control}
+            name="display_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Display Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Customers" {...field} />
+                </FormControl>
+                <p className="text-xs text-muted-foreground">
+                  This is how the table will be displayed in the UI.
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Store information about your customers" 
-                        className="min-h-[100px]" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="Store information about your customers" 
+                    className="min-h-[100px]" 
+                    {...field} 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-              <FormField
-                control={form.control}
-                name="icon"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Icon</FormLabel>
-                    <FormControl>
-                      <Input placeholder="users" {...field} />
-                    </FormControl>
-                    <p className="text-xs text-muted-foreground">
-                      Icon name from Lucide icons.
-                    </p>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <FormField
+            control={form.control}
+            name="icon"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Icon</FormLabel>
+                <FormControl>
+                  <Input placeholder="users" {...field} />
+                </FormControl>
+                <p className="text-xs text-muted-foreground">
+                  Icon name from Lucide icons.
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => navigate(ROUTES.SETTINGS_CUSTOM_TABLES)}
-                  disabled={isSaving}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isSaving}>
-                  {isSaving ? "Saving..." : isEditing ? "Update Table" : "Create Table"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onSuccess}
+              disabled={isSaving}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSaving}>
+              {isSaving ? "Saving..." : isEditing ? "Update Table" : "Create Table"}
+            </Button>
+          </div>
+        </form>
+      </Form>
     </div>
   );
 };

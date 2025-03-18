@@ -3,15 +3,18 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, TableProperties, Settings, UsersRound, Trash2 } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Plus, Settings, Trash2, MoreHorizontal } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/lib/constants";
 import PageLoading from "@/components/PageLoading";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DataTable, Column } from "@/components/ui/data-table";
+import { SlidePanel } from "@/components/ui/slide-panel";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import CustomTableForm from "./CustomTableForm";
 
 interface CustomTable {
   id: string;
@@ -22,23 +25,16 @@ interface CustomTable {
   created_at: string;
 }
 
-interface CustomRole {
-  id: string;
-  name: string;
-  description: string | null;
-  created_at: string;
-}
-
 const CustomTablesPage = () => {
   const { user, tenantId } = useAuth();
   const [tables, setTables] = useState<CustomTable[]>([]);
-  const [roles, setRoles] = useState<CustomRole[]>([]);
-  const [activeTab, setActiveTab] = useState("tables");
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{id: string, type: 'table' | 'role'} | null>(null);
+  const [tableToDelete, setTableToDelete] = useState<string | null>(null);
+  const [editingTable, setEditingTable] = useState<string | null>(null);
+  const [isEditPanelOpen, setIsEditPanelOpen] = useState(false);
 
   useEffect(() => {
     if (!user || !tenantId) return;
@@ -56,78 +52,111 @@ const CustomTablesPage = () => {
 
         if (tablesError) throw tablesError;
         setTables(tablesData || []);
-
-        // Fetch custom roles
-        const { data: rolesData, error: rolesError } = await supabase
-          .from("custom_roles")
-          .select("*")
-          .eq("tenant_id", tenantId)
-          .is("deleted_at", null)
-          .order("created_at", { ascending: false });
-
-        if (rolesError) throw rolesError;
-        setRoles(rolesData || []);
       } catch (error) {
         console.error("Error fetching data:", error);
-        toast.error("Failed to load custom tables and roles");
+        toast.error("Failed to load custom tables");
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, [user, tenantId]);
+  }, [user, tenantId, isEditPanelOpen]);
 
   const handleCreateTable = () => {
-    navigate(ROUTES.SETTINGS_CUSTOM_TABLES_NEW);
+    setEditingTable(null);
+    setIsEditPanelOpen(true);
   };
 
-  const handleCreateRole = () => {
-    navigate(ROUTES.SETTINGS_CUSTOM_ROLES_NEW);
+  const handleEditTable = (tableId: string) => {
+    setEditingTable(tableId);
+    setIsEditPanelOpen(true);
   };
 
-  const confirmDelete = (id: string, type: 'table' | 'role') => {
-    setItemToDelete({ id, type });
+  const confirmDelete = (id: string) => {
+    setTableToDelete(id);
     setIsDeleteDialogOpen(true);
   };
 
   const handleDelete = async () => {
-    if (!itemToDelete || !tenantId) return;
+    if (!tableToDelete || !tenantId) return;
 
     setIsDeleting(true);
     try {
-      if (itemToDelete.type === 'table') {
-        const { error } = await supabase
-          .from("custom_table_definitions")
-          .update({ deleted_at: new Date() })
-          .eq("id", itemToDelete.id)
-          .eq("tenant_id", tenantId);
+      const { error } = await supabase
+        .from("custom_table_definitions")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", tableToDelete)
+        .eq("tenant_id", tenantId);
 
-        if (error) throw error;
-        
-        setTables(tables.filter(table => table.id !== itemToDelete.id));
-        toast.success("Table deleted successfully");
-      } else {
-        const { error } = await supabase
-          .from("custom_roles")
-          .update({ deleted_at: new Date() })
-          .eq("id", itemToDelete.id)
-          .eq("tenant_id", tenantId);
-
-        if (error) throw error;
-        
-        setRoles(roles.filter(role => role.id !== itemToDelete.id));
-        toast.success("Role deleted successfully");
-      }
+      if (error) throw error;
+      
+      setTables(tables.filter(table => table.id !== tableToDelete));
+      toast.success("Table deleted successfully");
     } catch (error: any) {
-      console.error("Error deleting item:", error);
-      toast.error(error.message || "Failed to delete item");
+      console.error("Error deleting table:", error);
+      toast.error(error.message || "Failed to delete table");
     } finally {
       setIsDeleting(false);
       setIsDeleteDialogOpen(false);
-      setItemToDelete(null);
+      setTableToDelete(null);
     }
   };
+
+  const tableColumns: Column<CustomTable>[] = [
+    {
+      header: "Name",
+      accessorKey: "display_name",
+      cell: (row) => (
+        <div className="font-medium">{row.display_name}</div>
+      )
+    },
+    {
+      header: "Table Name",
+      accessorKey: "name",
+      cell: (row) => (
+        <code className="px-1 py-0.5 bg-muted rounded text-sm">{row.name}</code>
+      )
+    },
+    {
+      header: "Description",
+      accessorKey: "description",
+      cell: (row) => (
+        <div className="text-muted-foreground truncate max-w-xs">
+          {row.description || "No description"}
+        </div>
+      )
+    },
+    {
+      header: "Actions",
+      cell: (row) => (
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <MoreHorizontal className="h-4 w-4" />
+                <span className="sr-only">Actions</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleEditTable(row.id)}>
+                <Settings className="h-4 w-4 mr-2" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="text-destructive"
+                onClick={() => confirmDelete(row.id)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      ),
+      className: "w-[80px]"
+    }
+  ];
 
   if (isLoading) {
     return <PageLoading />;
@@ -139,151 +168,48 @@ const CustomTablesPage = () => {
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Custom Tables</h2>
           <p className="text-muted-foreground">
-            Create and manage custom tables and user roles.
+            Create and manage custom tables for your application.
           </p>
         </div>
+        <Button onClick={handleCreateTable}>
+          <Plus className="h-4 w-4 mr-2" />
+          New Table
+        </Button>
       </div>
       <Separator />
 
-      <Tabs
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="w-full"
-      >
-        <TabsList className="grid grid-cols-2 w-[400px] mb-4">
-          <TabsTrigger value="tables" className="flex items-center gap-2">
-            <TableProperties className="h-4 w-4" />
-            Tables
-          </TabsTrigger>
-          <TabsTrigger value="roles" className="flex items-center gap-2">
-            <UsersRound className="h-4 w-4" />
-            Roles
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="tables" className="space-y-4">
-          <div className="flex justify-end mb-4">
+      <Card>
+        {tables.length === 0 ? (
+          <div className="p-8 text-center">
+            <h3 className="text-lg font-medium mb-2">No custom tables</h3>
+            <p className="text-muted-foreground mb-4">
+              You haven't created any custom tables yet.
+            </p>
             <Button onClick={handleCreateTable}>
               <Plus className="h-4 w-4 mr-2" />
-              New Table
+              Create Your First Table
             </Button>
           </div>
-          
-          {tables.length === 0 ? (
-            <Card>
-              <CardHeader className="text-center">
-                <CardTitle className="text-xl">No Custom Tables</CardTitle>
-                <CardDescription>
-                  You haven't created any custom tables yet.
-                </CardDescription>
-              </CardHeader>
-              <CardFooter className="flex justify-center pb-6">
-                <Button onClick={handleCreateTable}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Your First Table
-                </Button>
-              </CardFooter>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {tables.map((table) => (
-                <Card key={table.id} className="overflow-hidden">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">{table.display_name}</CardTitle>
-                    <CardDescription className="text-sm truncate">
-                      {table.description || "No description provided"}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="text-sm pb-2">
-                    <p className="text-muted-foreground">
-                      Table name: <code>{table.name}</code>
-                    </p>
-                  </CardContent>
-                  <CardFooter className="flex justify-end border-t pt-4 bg-muted/50">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="mr-2"
-                      onClick={() => navigate(`${ROUTES.SETTINGS_CUSTOM_TABLES}/${table.id}`)}
-                    >
-                      <Settings className="h-4 w-4 mr-2" />
-                      Manage
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="text-destructive"
-                      onClick={() => confirmDelete(table.id, 'table')}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
+        ) : (
+          <DataTable
+            data={tables}
+            columns={tableColumns}
+          />
+        )}
+      </Card>
 
-        <TabsContent value="roles" className="space-y-4">
-          <div className="flex justify-end mb-4">
-            <Button onClick={handleCreateRole}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Role
-            </Button>
-          </div>
-          
-          {roles.length === 0 ? (
-            <Card>
-              <CardHeader className="text-center">
-                <CardTitle className="text-xl">No Custom Roles</CardTitle>
-                <CardDescription>
-                  You haven't created any custom roles yet.
-                </CardDescription>
-              </CardHeader>
-              <CardFooter className="flex justify-center pb-6">
-                <Button onClick={handleCreateRole}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Your First Role
-                </Button>
-              </CardFooter>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {roles.map((role) => (
-                <Card key={role.id} className="overflow-hidden">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">{role.name}</CardTitle>
-                    <CardDescription className="text-sm truncate">
-                      {role.description || "No description provided"}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardFooter className="flex justify-end border-t pt-4 bg-muted/50">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="mr-2"
-                      onClick={() => navigate(`${ROUTES.SETTINGS}/custom-tables/roles/${role.id}`)}
-                    >
-                      <Settings className="h-4 w-4 mr-2" />
-                      Edit
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="text-destructive"
-                      onClick={() => confirmDelete(role.id, 'role')}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+      {/* Slide Panel for Creating/Editing */}
+      <SlidePanel
+        open={isEditPanelOpen}
+        onOpenChange={setIsEditPanelOpen}
+        title={editingTable ? "Edit Table" : "Create Table"}
+        description={editingTable ? "Update your custom table details" : "Create a new custom table for your application"}
+      >
+        <CustomTableForm
+          tableId={editingTable}
+          onSuccess={() => setIsEditPanelOpen(false)}
+        />
+      </SlidePanel>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -291,7 +217,7 @@ const CustomTablesPage = () => {
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this {itemToDelete?.type}? This action cannot be undone.
+              Are you sure you want to delete this table? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
