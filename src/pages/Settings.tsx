@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { AuthRequired } from "@/components/AuthRequired";
+import AuthRequired from "@/components/AuthRequired";
 import PageLoading from "@/components/PageLoading";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";

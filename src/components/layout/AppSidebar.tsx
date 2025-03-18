@@ -14,14 +14,13 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, LogOut, Settings } from "lucide-react";
+import { ArrowLeft, LogOut, Settings, Users2, Table2, Palette } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ROUTES } from "@/lib/constants";
 import { useSidebar } from "@/components/ui/sidebar/context";
 import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
-import { Appearance, Table2, Users2 } from "lucide-react";
 
 interface SidebarItemOrGroup {
   label: string;
@@ -75,7 +74,7 @@ const AppSidebar = () => {
     {
       label: "Settings",
       url: ROUTES.SETTINGS_APPEARANCE,
-      icon: <Settings />,
+      icon: <Settings className="h-4 w-4" />,
     },
   ];
 
@@ -87,7 +86,7 @@ const AppSidebar = () => {
         {
           label: "Appearance",
           url: ROUTES.SETTINGS_APPEARANCE,
-          icon: <Appearance className="h-4 w-4" />,
+          icon: <Palette className="h-4 w-4" />,
         },
         {
           label: "Agents",
@@ -108,7 +107,7 @@ const AppSidebar = () => {
     {
       label: "Back to Main Menu",
       url: ROUTES.CONVERSATIONS,
-      icon: <ArrowLeft />,
+      icon: <ArrowLeft className="h-4 w-4" />,
       onClick: (e) => {
         e.preventDefault();
         document.dispatchEvent(new CustomEvent("restore-original-sidebar"));
