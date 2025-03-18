@@ -1,4 +1,3 @@
-
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -22,7 +21,6 @@ import { useEffect } from "react";
 import clsx from "clsx";
 import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
 import { Settings } from "lucide-react";
-import { useUserSettings } from "@/contexts/UserSettingsProvider";
 
 interface SidebarItemOrGroup {
   label: string;
@@ -54,7 +52,6 @@ const AppSidebar = () => {
   const { user, profile, signOut } = useAuth();
   const { aiAgents } = useAiAgents();
   const { toggleSidebar } = useSidebar();
-  const { sidebarConfig } = useUserSettings();
 
   const sidebarItems = [
     {
@@ -65,16 +62,13 @@ const AppSidebar = () => {
       })),
     },
   ];
-  
-  // Only include settings if showSettings is true in the config
-  const footerItems = sidebarConfig.showSettings ? [
+  const footerItems = [
     {
       label: "Settings",
       url: ROUTES.SETTINGS,
       icon: <Settings />,
     },
-  ] : [];
-  
+  ];
   // Listen for custom event to toggle sidebar from the header
   useEffect(() => {
     const handleToggleSidebar = () => {
@@ -173,7 +167,7 @@ const AppSidebar = () => {
       <SidebarContent>{renderItems(sidebarItems)}</SidebarContent>
 
       <SidebarFooter>
-        {footerItems.length > 0 && renderItems(footerItems)}
+        {renderItems(footerItems)}
         <Button
           variant="ghost"
           className="w-full justify-start text-red-500 hover:text-red-700 hover:bg-red-100"
