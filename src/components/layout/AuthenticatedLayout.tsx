@@ -1,5 +1,6 @@
+
 import { ReactNode, useEffect, Suspense } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import AppSidebar from "./AppSidebar";
 import { ROUTES } from "@/lib/constants";
@@ -10,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { AiAgentsProvider } from "@/contexts/AiAgents/AiAgentsProvider";
 
 interface AuthenticatedLayoutProps {
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 const AuthenticatedLayout = ({ children }: AuthenticatedLayoutProps) => {
@@ -86,7 +87,7 @@ const AuthenticatedLayout = ({ children }: AuthenticatedLayoutProps) => {
                   </div>
                 }
               >
-                {children}
+                {children || <Outlet />}
               </Suspense>
             </main>
           </div>

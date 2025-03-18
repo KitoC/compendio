@@ -356,6 +356,181 @@ export type Database = {
           },
         ]
       }
+      custom_roles: {
+        Row: {
+          created_at: string | null
+          deleted_at: string | null
+          description: string | null
+          id: string
+          name: string
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_roles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_custom_roles_tenant"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_table_definitions: {
+        Row: {
+          created_at: string | null
+          deleted_at: string | null
+          description: string | null
+          display_name: string
+          icon: string | null
+          id: string
+          name: string
+          permissions: Json
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          display_name: string
+          icon?: string | null
+          id?: string
+          name: string
+          permissions?: Json
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          display_name?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          permissions?: Json
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_table_definitions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_custom_table_definitions_tenant"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_table_fields: {
+        Row: {
+          created_at: string | null
+          default_value: Json | null
+          deleted_at: string | null
+          description: string | null
+          display_name: string
+          field_type: string
+          id: string
+          is_required: boolean
+          is_unique: boolean
+          name: string
+          options: Json | null
+          permissions: Json
+          table_id: string
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          default_value?: Json | null
+          deleted_at?: string | null
+          description?: string | null
+          display_name: string
+          field_type: string
+          id?: string
+          is_required?: boolean
+          is_unique?: boolean
+          name: string
+          options?: Json | null
+          permissions?: Json
+          table_id: string
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          default_value?: Json | null
+          deleted_at?: string | null
+          description?: string | null
+          display_name?: string
+          field_type?: string
+          id?: string
+          is_required?: boolean
+          is_unique?: boolean
+          name?: string
+          options?: Json | null
+          permissions?: Json
+          table_id?: string
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_table_fields_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "custom_table_definitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_table_fields_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_custom_table_fields_tenant"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           contact_details: Json
@@ -760,6 +935,58 @@ export type Database = {
         }
         Relationships: []
       }
+      user_custom_roles: {
+        Row: {
+          created_at: string | null
+          custom_role_id: string
+          deleted_at: string | null
+          id: string
+          tenant_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          custom_role_id: string
+          deleted_at?: string | null
+          id?: string
+          tenant_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          custom_role_id?: string
+          deleted_at?: string | null
+          id?: string
+          tenant_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_user_custom_roles_tenant"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_custom_roles_custom_role_id_fkey"
+            columns: ["custom_role_id"]
+            isOneToOne: false
+            referencedRelation: "custom_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_custom_roles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -986,6 +1213,32 @@ export type Database = {
           "": unknown[]
         }
         Returns: number
+      }
+      user_has_custom_role: {
+        Args: {
+          _user_id: string
+          _tenant_id: string
+          _custom_role_id: string
+        }
+        Returns: boolean
+      }
+      user_has_field_permission: {
+        Args: {
+          _user_id: string
+          _tenant_id: string
+          _field_id: string
+          _permission: string
+        }
+        Returns: boolean
+      }
+      user_has_table_permission: {
+        Args: {
+          _user_id: string
+          _tenant_id: string
+          _table_id: string
+          _permission: string
+        }
+        Returns: boolean
       }
       vector_avg: {
         Args: {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, Outlet, useLocation } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
@@ -18,10 +18,8 @@ const Settings = () => {
 
   // Fetch user role from Supabase
   useEffect(() => {
-    console.log("FETCHING USER ROLE");
     const fetchUserRole = async () => {
       if (!user || !hasTenant) return;
-      console.log("user", user);
 
       try {
         const { data, error } = await supabase
@@ -44,20 +42,29 @@ const Settings = () => {
   }, [user, hasTenant, tenantId]);
 
   // Define tabs configuration
-  const tabs = [
-    {
-      id: "appearance",
-      label: "Appearance",
-      url: `${ROUTES.SETTINGS}/appearance`,
-      roles: ["admin", "member", "guest", "super-admin", "tenant-owner"],
-    },
-    {
-      id: "agents",
-      label: "Agents",
-      url: `${ROUTES.SETTINGS}/agents`,
-      roles: ["super-admin", "tenant-owner"],
-    },
-  ];
+  const tabs = useMemo(
+    () => [
+      {
+        id: "appearance",
+        label: "Appearance",
+        url: ROUTES.SETTINGS_APPEARANCE,
+        roles: ["admin", "member", "guest", "super-admin", "tenant-owner"],
+      },
+      {
+        id: "agents",
+        label: "Agents",
+        url: ROUTES.SETTINGS_AGENTS,
+        roles: ["super-admin", "tenant-owner"],
+      },
+      {
+        id: "custom-tables",
+        label: "Custom Tables",
+        url: ROUTES.SETTINGS_CUSTOM_TABLES,
+        roles: ["super-admin", "tenant-owner"],
+      },
+    ],
+    []
+  );
 
   // Filter tabs based on user role
   const visibleTabs = tabs.filter(

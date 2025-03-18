@@ -1,40 +1,21 @@
-
-import { BotIcon, Settings } from "lucide-react";
-
 export const ROUTES = {
-  // Public routes
   INDEX: "/",
   AUTH: "/auth",
   AUTH_CALLBACK: "/auth/callback",
-  FORGOT_PASSWORD: "/auth/forgot-password",
-  RESET_PASSWORD: "/auth/reset-password",
-
-  // Protected routes
-  DASHBOARD: "/dashboard",
-  CONVERSATIONS: "/conversations",
-  CONVERSATION: "/conversation", // Base path, will be followed by an ID or alias
-  CONVERSATION_ASSISTANT: "/conversation/general-assistant", // Predefined alias for assistant chat
-  SETTINGS: "/settings", // Settings page
-
-  // Tenant management
+  FORGOT_PASSWORD: "/forgot-password",
+  RESET_PASSWORD: "/reset-password",
   REQUEST_ACCESS: "/request-access",
   ACCESS_PENDING: "/access-pending",
+  CONVERSATIONS: "/conversations",
+  CONVERSATION: "/conversation",
+  CONVERSATIONS_DETAIL: "/conversations/:id",
+  ASSISTANT_CHAT: "/assistant",
+  CONVERSATION_ASSISTANT: "/assistant",
+  SETTINGS: "/settings",
+  SETTINGS_APPEARANCE: "/settings/appearance",
+  SETTINGS_AGENTS: "/settings/agents",
+  SETTINGS_AGENTS_DETAIL: "/settings/agents/:id",
+  SETTINGS_CUSTOM_TABLES: "/settings/custom-tables",
+  SETTINGS_CUSTOM_TABLES_DETAIL: "/settings/custom-tables/:id",
+  NOT_FOUND: "*",
 };
-
-export const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:3001/api`;
-
-// Sidebar navigation configuration
-export const sidebarItems = [
-  {
-    label: "My Agents",
-    children: [
-      {
-        label: "General Assistant",
-        url: ROUTES.CONVERSATION_ASSISTANT,
-        icon: <BotIcon />,
-      },
-    ],
-  },
-  { label: "Settings", url: ROUTES.SETTINGS, icon: <Settings /> },
-  // { label: "Dashboard", url: ROUTES.DASHBOARD },
-];

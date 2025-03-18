@@ -12,7 +12,7 @@ const ChatPage = () => {
     console.log("id", id);
     if (!id) {
       // If no ID is provided, create a new one and redirect
-      navigate(`${ROUTES.CONVERSATION}/${uuidv4()}`);
+      navigate(ROUTES.CONVERSATIONS_DETAIL.replace(":id", uuidv4()));
     }
   }, [id, navigate]);
 

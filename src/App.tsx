@@ -1,4 +1,3 @@
-
 import { lazy, Suspense } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +9,27 @@ import AuthenticatedLayout from "@/components/layout/AuthenticatedLayout";
 import { ROUTES } from "@/lib/constants";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { UserSettingsProvider } from "@/contexts/UserSettingsProvider";
+
+/**
+ * DEV_NOTE: We are using React Router v7 with the framework mode.
+ * Any changes should preserve this architecture here within the App.tsx file:
+ * - Follow strict React Router v7 documentation for the most part.
+ * - Use the React Router v7 "createBrowserRouter" and "RouterProvider" functions.
+ * - Use the React Router v7 "Outlet" component to render nested routes.
+ * - Use the React Router v7 "useNavigate" hook to navigate between routes.
+ * - Use the React Router v7 "useParams" hook to access route parameters.
+ * - Use the React Router v7 "useLocation" hook to access the current location.
+ * - Use the React Router v7 "useSearchParams" hook to access the current search parameters.
+ * - Use the React Router v7 "useLoaderData" hook to access the data returned by loaders.
+ * - Use the React Router v7 "useActionData" hook to access the data returned by actions.
+ * - Use the React Router v7 "useNavigation" hook to access the navigation object.
+ * - Use the React Router v7 "useSubmit" hook to submit forms.
+ * - Ensure all pages and components are lazy loaded.
+ * - Keep the configuration based pattern for the routes.
+ * - Always use the ROUTES constant for the routes.
+ *
+ * */
+
 // Loading component
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-screen">
@@ -28,6 +48,9 @@ const RequestAccess = lazy(() => import("./pages/RequestAccess"));
 const AccessPending = lazy(() => import("./pages/AccessPending"));
 const ChatPage = lazy(() => import("./pages/ChatPage"));
 const Settings = lazy(() => import("./pages/Settings"));
+const CustomTablesPage = lazy(
+  () => import("./pages/settings/CustomTablesPage")
+);
 const AppearanceSettings = lazy(
   () => import("./pages/settings/AppearanceSettings")
 );
@@ -82,14 +105,24 @@ const router = createBrowserRouter([
         element: <AuthenticatedRoot />,
         children: [
           { path: ROUTES.CONVERSATIONS, element: <ChatPage /> },
-          { path: `${ROUTES.CONVERSATION}/:id`, element: <ChatPage /> },
+          { path: ROUTES.CONVERSATIONS_DETAIL, element: <ChatPage /> },
           {
             path: ROUTES.SETTINGS,
             element: <Settings />,
             children: [
-              { path: "appearance", element: <AppearanceSettings /> },
-              { path: "agents", element: <AgentsSettings /> },
-              { path: "agents/:id", element: <AgentDetail /> },
+              {
+                path: ROUTES.SETTINGS_APPEARANCE,
+                element: <AppearanceSettings />,
+              },
+              {
+                path: ROUTES.SETTINGS_AGENTS,
+                element: <AgentsSettings />,
+              },
+              {
+                path: ROUTES.SETTINGS_CUSTOM_TABLES,
+                element: <CustomTablesPage />,
+              },
+              { path: ROUTES.SETTINGS_AGENTS_DETAIL, element: <AgentDetail /> },
             ],
           },
         ],

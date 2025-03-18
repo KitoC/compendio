@@ -68,7 +68,7 @@ const Conversations = () => {
         throw error;
       }
 
-      navigate(`${ROUTES.CONVERSATION}/${id}`);
+      navigate(ROUTES.CONVERSATIONS_DETAIL.replace(":id", id));
       toast.success("New conversation created");
     } catch (error: any) {
       console.error("Error creating conversation:", error);
@@ -119,7 +119,12 @@ const Conversations = () => {
                       className="border-2 border-primary"
                     >
                       <CardContent className="flex items-center justify-between">
-                        <a href={`${ROUTES.CONVERSATION}/${conversation.id}`}>
+                        <a
+                          href={ROUTES.CONVERSATIONS_DETAIL.replace(
+                            ":id",
+                            conversation.id
+                          )}
+                        >
                           {conversation.title || "Conversation"}
                         </a>
                         <Button
