@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,10 +8,12 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { useUserSettings } from "@/contexts/UserSettingsProvider";
+import { Switch } from "@/components/ui/switch";
+
 const AppearanceSettings = () => {
   const { user, tenantId } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
-  const { theme, setTheme, isLoading } = useUserSettings();
+  const { theme, setTheme, isLoading, sidebarConfig, setSidebarConfig } = useUserSettings();
 
   const handleSaveAppearance = async () => {
     if (!user) return;
@@ -22,7 +25,10 @@ const AppearanceSettings = () => {
           name: "appearance",
           user_id: user.id,
           tenant_id: tenantId,
-          config: { theme },
+          config: { 
+            theme,
+            sidebarConfig
+          },
         },
         { onConflict: "user_id, tenant_id, name" }
       );
@@ -35,6 +41,13 @@ const AppearanceSettings = () => {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleToggleCustomTables = (checked: boolean) => {
+    setSidebarConfig({
+      ...sidebarConfig,
+      showCustomTables: checked,
+    });
   };
 
   if (isLoading) {
@@ -52,7 +65,7 @@ const AppearanceSettings = () => {
 
       <Card>
         <CardContent className="pt-6">
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
               <Label htmlFor="theme" className="text-base">
                 Theme
@@ -75,6 +88,22 @@ const AppearanceSettings = () => {
                   <Label htmlFor="system">System</Label>
                 </div>
               </RadioGroup>
+            </div>
+
+            <div className="pt-4 border-t">
+              <Label htmlFor="sidebar-config" className="text-base">
+                Sidebar Configuration
+              </Label>
+              <div className="mt-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="show-custom-tables">Show Custom Tables in Sidebar</Label>
+                  <Switch
+                    id="show-custom-tables"
+                    checked={sidebarConfig.showCustomTables}
+                    onCheckedChange={handleToggleCustomTables}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>

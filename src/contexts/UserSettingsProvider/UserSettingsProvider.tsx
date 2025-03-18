@@ -1,3 +1,4 @@
+
 import { UserSettingsContext } from "./UserSettingsContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
@@ -7,6 +8,9 @@ import { toast } from "sonner";
 const UserSettingsProvider = ({ children }: { children: React.ReactNode }) => {
   const { user, tenantId } = useAuth();
   const [theme, setTheme] = useState<string>("system");
+  const [sidebarConfig, setSidebarConfig] = useState<{ showCustomTables: boolean }>({
+    showCustomTables: false,
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -27,7 +31,11 @@ const UserSettingsProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         if (data) {
-          setTheme((data.config as { theme: string }).theme || "system");
+          const config = data.config as { theme: string; sidebarConfig?: { showCustomTables: boolean } };
+          setTheme(config.theme || "system");
+          if (config.sidebarConfig) {
+            setSidebarConfig(config.sidebarConfig);
+          }
         }
       } catch (error) {
         console.error("Error fetching user config:", error);
@@ -40,7 +48,15 @@ const UserSettingsProvider = ({ children }: { children: React.ReactNode }) => {
   }, [user, tenantId]);
 
   return (
-    <UserSettingsContext.Provider value={{ theme, setTheme, isLoading }}>
+    <UserSettingsContext.Provider 
+      value={{ 
+        theme, 
+        setTheme, 
+        isLoading, 
+        sidebarConfig, 
+        setSidebarConfig 
+      }}
+    >
       {children}
     </UserSettingsContext.Provider>
   );
