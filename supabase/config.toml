@@ -12,3 +12,6 @@ verify_jwt = false
 
 [functions.wss-functions]
 verify_jwt = false
+
+[functions.custom-table-functions]
+verify_jwt = false

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -114,7 +113,7 @@ const CustomTableDetail = () => {
     fetchTableData();
   }, [user, tenantId, id]);
 
-  const handleSaveField = async (field: TableField, isNew: boolean) => {
+  const saveField = async (field: TableField, isNew: boolean): Promise<void> => {
     if (!user || !tenantId || !id) return;
 
     try {
@@ -145,7 +144,7 @@ const CustomTableDetail = () => {
           setFields([...fields, data as TableField]);
         }
         
-        return data as TableField;
+        return;
       } else {
         // Update existing field
         const { error } = await supabase
@@ -172,7 +171,7 @@ const CustomTableDetail = () => {
             : f
         ));
         
-        return field;
+        return;
       }
     } catch (error: any) {
       console.error("Error saving field:", error);
@@ -199,11 +198,24 @@ const CustomTableDetail = () => {
     }
   };
 
-  const handleReorderFields = async (reorderedFields: TableField[]) => {
-    // For now, just update the local state
-    // In a real implementation, you might want to store order in the database
+  const handleReorderFields = async (reorderedFields: TableField[]): Promise<void> => {
     setFields(reorderedFields);
-    return true;
+    return;
+  };
+
+  const handleFieldsData = (data: any[]): TableField[] => {
+    return data.map(field => ({
+      id: field.id,
+      name: field.name,
+      display_name: field.display_name,
+      description: field.description || "",
+      field_type: field.field_type,
+      is_required: field.is_required,
+      is_unique: field.is_unique,
+      options: field.options ? { ...(field.options as object) } : {},
+      related_table_id: field.related_table_id,
+      relationship_type: field.relationship_type
+    }));
   };
 
   if (isLoading) {
@@ -266,7 +278,7 @@ const CustomTableDetail = () => {
               tableId={id || ''}
               fields={fields}
               availableTables={availableTables.filter(table => table.id !== id)}
-              onSaveField={handleSaveField}
+              onSaveField={saveField}
               onDeleteField={handleDeleteField}
               onReorderFields={handleReorderFields}
             />

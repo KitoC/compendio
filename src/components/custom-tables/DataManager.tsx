@@ -1,47 +1,26 @@
-
 import React, { useState, useEffect } from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+import { useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Plus, Pencil, Trash } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Input as FormInput } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { 
-  Search, 
-  Plus, 
-  Edit, 
-  Trash, 
-  FileDown, 
-  MoreHorizontal,
-  Check,
-  X
-} from "lucide-react";
-import { format } from "date-fns";
-import { Json } from "@/integrations/supabase/types";
+import PageLoading from "@/components/PageLoading";
 
-// Define the type for a custom table field
-interface CustomTableField {
-  id: string;
-  name: string;
-  display_name: string;
-  field_type: string;
-  is_required: boolean;
-  description?: string;
-  options?: any;
-}
+// Define a schema for dynamic form validation
+const formSchema = z.object({
+  // Dynamic schema will be added here based on table fields
+});
 
-// Define the type for a custom table row (records)
+// Update the CustomTableRow type to accept UUID as string or Json
 interface CustomTableRow {
   id: string;
   [key: string]: any;
@@ -50,500 +29,319 @@ interface CustomTableRow {
 interface DataManagerProps {
   tableId: string;
   tableName: string;
-  displayName: string;
-  fields: CustomTableField[];
-  onSuccess?: () => void;
+  fields: any[];
 }
 
-export const DataManager = ({ 
-  tableId, 
-  tableName, 
-  displayName,
-  fields,
-  onSuccess
-}: DataManagerProps) => {
-  const { user, tenantId } = useAuth();
-  const [rows, setRows] = useState<CustomTableRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRows, setSelectedRows] = useState<string[]>([]);
-  const [isRecordDialogOpen, setIsRecordDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<CustomTableRow | null>(null);
-  const [recordToDelete, setRecordToDelete] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
+export const DataManager = ({ tableId, tableName, fields }: DataManagerProps) => {
+  const { tenantId } = useAuth();
+  const [tableData, setTableData] = useState<CustomTableRow[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAddDialogOpen, setAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [rowToDelete, setRowToDelete] = useState<string | null>(null);
+  const [editingRow, setEditingRow] = useState<CustomTableRow | null>(null);
 
-  // Generate a dynamic schema based on the fields
-  const generateFormSchema = () => {
-    const schemaObj: Record<string, any> = {};
-    
-    fields.forEach(field => {
-      let fieldSchema;
-      
-      switch (field.field_type) {
-        case 'text':
-        case 'textarea':
-          fieldSchema = field.is_required 
-            ? z.string().min(1, `${field.display_name} is required`) 
-            : z.string().optional();
-          break;
-        case 'number':
-          fieldSchema = field.is_required 
-            ? z.number().or(z.string().regex(/^\d+$/).transform(Number)) 
-            : z.number().or(z.string().regex(/^\d*$/).transform(val => val ? Number(val) : undefined)).optional();
-          break;
-        case 'email':
-          fieldSchema = field.is_required 
-            ? z.string().email(`Invalid email address`) 
-            : z.string().email(`Invalid email address`).optional();
-          break;
-        case 'boolean':
-          fieldSchema = z.boolean().optional().default(false);
-          break;
-        case 'date':
-          fieldSchema = field.is_required 
-            ? z.date()
-            : z.date().optional();
-          break;
-        case 'select':
-          // For select fields, we need to ensure that the value is one of the available options
-          const options = field.options?.values || [];
-          fieldSchema = field.is_required 
-            ? z.string().refine(val => options.includes(val), `Please select a valid option`) 
-            : z.string().optional();
-          break;
-        default:
-          fieldSchema = field.is_required 
-            ? z.string().min(1, `${field.display_name} is required`) 
-            : z.string().optional();
+  // Dynamically create the form schema based on the fields
+  const dynamicFormSchema = z.object(
+    fields.reduce((acc: any, field: any) => {
+      let fieldSchema: any = z.string().optional();
+
+      if (field.is_required) {
+        fieldSchema = z.string().min(1, `${field.display_name} is required`);
       }
-      
-      schemaObj[field.name] = fieldSchema;
-    });
-    
-    return z.object(schemaObj);
-  };
 
-  const dynamicSchema = generateFormSchema();
-  type FormValues = z.infer<typeof dynamicSchema>;
+      if (field.field_type === "number") {
+        fieldSchema = z.number().optional();
+        if (field.is_required) {
+          fieldSchema = z.number().min(1, `${field.display_name} is required`);
+        }
+      }
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(dynamicSchema),
-    defaultValues: {}
+      if (field.field_type === "boolean") {
+        fieldSchema = z.boolean().optional();
+        if (field.is_required) {
+          fieldSchema = z.boolean().refine(val => val === true, `${field.display_name} is required`);
+        }
+      }
+
+      acc[field.name] = fieldSchema;
+      return acc;
+    }, {})
+  );
+
+  type FormData = z.infer<typeof dynamicFormSchema>;
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    formState: { errors },
+    setValue,
+  } = useForm<FormData>({
+    resolver: zodResolver(dynamicFormSchema),
   });
 
-  // Fetch data when component mounts
   useEffect(() => {
-    if (!tenantId || !tableName) return;
-    
-    const fetchRecords = async () => {
-      setLoading(true);
-      try {
-        // Call the custom function to get table data
-        const { data, error } = await supabase.rpc('get_custom_table_data', {
-          p_table_name: tableName,
-          p_tenant_id: tenantId
-        });
+    loadTableData();
+  }, [tableName, tenantId]);
 
-        if (error) throw error;
-        
-        if (Array.isArray(data)) {
-          const typedData = data as Record<string, any>[];
-          setRows(typedData);
-        } else {
-          console.warn("Unexpected data format:", data);
-          setRows([]);
-        }
-      } catch (error: any) {
-        console.error("Error fetching records:", error);
-        toast.error(error.message || "Failed to load data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRecords();
-  }, [tenantId, tableName]);
-
-  // Open the record dialog for adding or editing a record
-  const openRecordDialog = (record: CustomTableRow | null = null) => {
-    if (record) {
-      setEditingRecord(record);
-      // Reset form with current values
-      const formValues: Record<string, any> = {};
-      
-      fields.forEach(field => {
-        // Convert date strings to Date objects for date fields
-        if (field.field_type === 'date' && record[field.name]) {
-          formValues[field.name] = new Date(record[field.name]);
-        } else {
-          formValues[field.name] = record[field.name];
-        }
-      });
-      
-      form.reset(formValues);
-    } else {
-      setEditingRecord(null);
-      // Reset form with empty values
-      const defaultValues: Record<string, any> = {};
-      
-      fields.forEach(field => {
-        if (field.field_type === 'boolean') {
-          defaultValues[field.name] = false;
-        } else {
-          defaultValues[field.name] = '';
-        }
-      });
-      
-      form.reset(defaultValues);
-    }
-    
-    setIsRecordDialogOpen(true);
-  };
-
-  // Confirm record deletion
-  const confirmDeleteRecord = (recordId: string) => {
-    setRecordToDelete(recordId);
-    setIsDeleteDialogOpen(true);
-  };
-
-  // Delete record
-  const deleteRecord = async () => {
-    if (!recordToDelete || !tenantId || !tableName) return;
-
+  // Fix the setTableData type issue - making sure we convert Json id to string
+  const loadTableData = async () => {
+    setIsLoading(true);
     try {
-      // Delete the record from the dynamic table using the function
-      const { error } = await supabase.rpc('delete_custom_table_record', {
+      const { data, error } = await supabase.rpc("get_custom_table_data", {
         p_table_name: tableName,
-        p_record_id: recordToDelete,
-        p_tenant_id: tenantId
+        p_tenant_id: tenantId,
       });
 
       if (error) throw error;
 
+      // Transform the data to ensure id is a string
+      const typedData = (data || []).map((row: Record<string, any>) => ({
+        ...row,
+        id: row.id?.toString() || '',
+      }));
+
+      setTableData(typedData as CustomTableRow[]);
+    } catch (error: any) {
+      console.error("Error loading table data:", error);
+      toast.error(error.message || "Failed to load table data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const openAddDialog = () => {
+    reset();
+    setAddDialogOpen(true);
+  };
+
+  const closeAddDialog = () => {
+    setAddDialogOpen(false);
+  };
+
+  const openEditDialog = (row: CustomTableRow) => {
+    setEditingRow(row);
+    reset({ ...row } as any); // Type assertion here
+    setEditDialogOpen(true);
+  };
+
+  const closeEditDialog = () => {
+    setEditDialogOpen(false);
+    setEditingRow(null);
+  };
+
+  const confirmDeleteRow = (rowId: string) => {
+    setRowToDelete(rowId);
+    setDeleteDialogOpen(true);
+  };
+
+  const closeDeleteDialog = () => {
+    setDeleteDialogOpen(false);
+    setRowToDelete(null);
+  };
+
+  const deleteRow = async () => {
+    if (!rowToDelete) return;
+
+    try {
+      const { error } = await supabase.rpc("delete_custom_table_record", {
+        p_table_name: tableName,
+        p_row_id: rowToDelete,
+        p_tenant_id: tenantId,
+      });
+
+      if (error) throw error;
+
+      setTableData((prev) => prev.filter((row) => row.id !== rowToDelete));
       toast.success("Record deleted successfully");
-      // Update local state
-      setRows(rows.filter(row => row.id !== recordToDelete));
-      
-      if (onSuccess) onSuccess();
     } catch (error: any) {
       console.error("Error deleting record:", error);
       toast.error(error.message || "Failed to delete record");
     } finally {
-      setIsDeleteDialogOpen(false);
-      setRecordToDelete(null);
+      closeDeleteDialog();
     }
   };
 
-  // Submit record form
-  const onSubmitRecord = async (values: FormValues) => {
-    if (!tenantId || !tableName) return;
-
-    setIsSaving(true);
+  // Fix the type issue in the addRow function
+  const addRow = async (formData: Record<string, any>) => {
     try {
-      // Prepare values to match database expectations
-      const recordValues = { ...values };
-      
-      // Handle date values
-      fields.forEach(field => {
-        if (field.field_type === 'date' && recordValues[field.name]) {
-          recordValues[field.name] = (recordValues[field.name] as Date).toISOString();
-        }
+      const { data, error } = await supabase.rpc("insert_custom_table_record", {
+        p_table_name: tableName,
+        p_tenant_id: tenantId,
+        p_data: formData,
       });
 
-      if (editingRecord) {
-        // Update existing record
-        const { error } = await supabase.rpc('update_custom_table_record', {
-          p_table_name: tableName,
-          p_record_id: editingRecord.id,
-          p_tenant_id: tenantId,
-          p_data: recordValues
-        });
+      if (error) throw error;
 
-        if (error) throw error;
-        
-        toast.success("Record updated successfully");
-        
-        // Update local state
-        setRows(rows.map(row => 
-          row.id === editingRecord.id 
-            ? { ...row, ...recordValues } 
-            : row
-        ));
-      } else {
-        // Create new record
-        const { data, error } = await supabase.rpc('insert_custom_table_record', {
-          p_table_name: tableName,
-          p_tenant_id: tenantId,
-          p_data: recordValues
-        });
-
-        if (error) throw error;
-        
-        toast.success("Record created successfully");
-        
-        // Update local state with the new record (including its ID)
-        if (data && typeof data === 'object' && 'id' in data) {
-          setRows([...rows, { id: data.id, ...recordValues }]);
-        }
-      }
-
-      if (onSuccess) onSuccess();
+      // Make sure we have a string ID
+      const newRowId = data?.id?.toString() || '';
+      const newRow: CustomTableRow = { id: newRowId, ...formData };
       
-      // Close the dialog
-      setIsRecordDialogOpen(false);
+      setTableData((prev) => [...prev, newRow]);
+      
+      toast.success("Record created successfully");
+      setAddDialogOpen(false);
+      reset();
     } catch (error: any) {
-      console.error("Error saving record:", error);
-      toast.error(error.message || "Failed to save record");
-    } finally {
-      setIsSaving(false);
+      console.error("Error creating record:", error);
+      toast.error(error.message || "Failed to create record");
     }
   };
 
-  // Export data to CSV
-  const exportToCsv = () => {
-    if (rows.length === 0) {
-      toast.error("No data to export");
-      return;
-    }
+  const updateRow = async (formData: Record<string, any>) => {
+    if (!editingRow) return;
 
     try {
-      // Create headers row
-      const headers = fields.map(field => field.display_name).join(',');
-      
-      // Create data rows
-      const csvRows = rows.map(row => {
-        return fields.map(field => {
-          const value = row[field.name];
-          
-          // Handle different field types
-          if (value === null || value === undefined) {
-            return '';
-          } else if (typeof value === 'string') {
-            // Escape quotes and wrap in quotes if needed
-            return `"${value.replace(/"/g, '""')}"`;
-          } else if (field.field_type === 'date') {
-            return `"${format(new Date(value), 'yyyy-MM-dd')}"`;
-          } else if (field.field_type === 'boolean') {
-            return value ? 'true' : 'false';
-          } else {
-            return value;
-          }
-        }).join(',');
+      const { error } = await supabase.rpc("update_custom_table_record", {
+        p_table_name: tableName,
+        p_row_id: editingRow.id,
+        p_tenant_id: tenantId,
+        p_data: formData,
       });
-      
-      // Combine headers and rows
-      const csvContent = [headers, ...csvRows].join('\n');
-      
-      // Create a download link
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.setAttribute('href', url);
-      link.setAttribute('download', `${displayName.toLowerCase().replace(/\s+/g, '_')}_data.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      toast.success("Data exported successfully");
-    } catch (error) {
-      console.error("Error exporting data:", error);
-      toast.error("Failed to export data");
+
+      if (error) throw error;
+
+      setTableData((prev) =>
+        prev.map((row) => (row.id === editingRow.id ? { ...row, ...formData } : row))
+      );
+      toast.success("Record updated successfully");
+    } catch (error: any) {
+      console.error("Error updating record:", error);
+      toast.error(error.message || "Failed to update record");
+    } finally {
+      closeEditDialog();
     }
   };
 
-  // Toggle select all rows
-  const toggleSelectAll = () => {
-    if (selectedRows.length === rows.length) {
-      setSelectedRows([]);
-    } else {
-      setSelectedRows(rows.map(row => row.id));
-    }
-  };
-
-  // Toggle select a single row
-  const toggleSelectRow = (rowId: string) => {
-    if (selectedRows.includes(rowId)) {
-      setSelectedRows(selectedRows.filter(id => id !== rowId));
-    } else {
-      setSelectedRows([...selectedRows, rowId]);
-    }
-  };
-
-  // Filter rows based on search term
-  const filteredRows = rows.filter(row => {
-    if (!searchTerm) return true;
-    
-    // Search in all text/string fields
-    return fields.some(field => {
-      if (['text', 'textarea', 'email', 'select'].includes(field.field_type)) {
-        const value = row[field.name];
-        return value && value.toString().toLowerCase().includes(searchTerm.toLowerCase());
-      }
-      return false;
-    });
-  });
-
-  // Render field value based on type
-  const renderFieldValue = (row: CustomTableRow, field: CustomTableField) => {
-    const value = row[field.name];
-    
-    if (value === null || value === undefined) {
-      return <span className="text-muted-foreground">-</span>;
-    }
-    
-    switch (field.field_type) {
-      case 'boolean':
-        return value ? 
-          <Check className="h-4 w-4 text-green-500" /> : 
-          <X className="h-4 w-4 text-red-500" />;
-      case 'date':
-        return format(new Date(value), 'yyyy-MM-dd');
-      default:
-        return value.toString();
-    }
-  };
+  if (isLoading) {
+    return <PageLoading />;
+  }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="relative w-full sm:w-auto flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search records..."
-            className="pl-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Button onClick={() => openRecordDialog()} className="flex-1 sm:flex-auto">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Record
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex-1 sm:flex-auto">
-                <FileDown className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={exportToCsv}>
-                <FileDown className="h-4 w-4 mr-2" />
-                Export to CSV
-              </DropdownMenuItem>
-              {/* Future: Add more export options */}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold">Data Manager</h2>
+        <Button onClick={openAddDialog} className="flex items-center">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Record
+        </Button>
       </div>
 
-      <Card>
-        <CardContent className="p-0 overflow-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">
-                  <Checkbox 
-                    checked={selectedRows.length === rows.length && rows.length > 0}
-                    onCheckedChange={toggleSelectAll}
-                    aria-label="Select all rows"
-                  />
-                </TableHead>
-                {fields.map(field => (
-                  <TableHead key={field.id}>{field.display_name}</TableHead>
+      {tableData.length === 0 ? (
+        <p>No data available.</p>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {fields.map((field) => (
+                <TableHead key={field.name}>{field.display_name}</TableHead>
+              ))}
+              <TableHead className="w-[100px]">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {tableData.map((row) => (
+              <TableRow key={row.id}>
+                {fields.map((field) => (
+                  <TableCell key={field.name}>{row[field.name] != null ? row[field.name].toString() : ''}</TableCell>
                 ))}
-                <TableHead className="text-right">Actions</TableHead>
+                <TableCell className="flex items-center space-x-2">
+                  <Button variant="ghost" size="sm" onClick={() => openEditDialog(row)}>
+                    <Pencil className="h-4 w-4" />
+                    <span className="sr-only">Edit</span>
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => confirmDeleteRow(row.id)}>
+                    <Trash className="h-4 w-4" />
+                    <span className="sr-only">Delete</span>
+                  </Button>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={fields.length + 2} className="text-center py-8">
-                    Loading data...
-                  </TableCell>
-                </TableRow>
-              ) : filteredRows.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={fields.length + 2} className="text-center py-8">
-                    {searchTerm ? "No matching records found" : "No records found"}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredRows.map(row => (
-                  <TableRow key={row.id}>
-                    <TableCell>
-                      <Checkbox 
-                        checked={selectedRows.includes(row.id)}
-                        onCheckedChange={() => toggleSelectRow(row.id)}
-                        aria-label={`Select row ${row.id}`}
-                      />
-                    </TableCell>
-                    {fields.map(field => (
-                      <TableCell key={`${row.id}-${field.id}`}>
-                        {renderFieldValue(row, field)}
-                      </TableCell>
-                    ))}
-                    <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
-                        <Button variant="ghost" size="sm" onClick={() => openRecordDialog(row)}>
-                          <Edit className="h-4 w-4" />
-                          <span className="sr-only">Edit</span>
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => confirmDeleteRecord(row.id)}>
-                          <Trash className="h-4 w-4" />
-                          <span className="sr-only">Delete</span>
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            ))}
+          </TableBody>
+        </Table>
+      )}
 
-      {/* Record Dialog */}
-      <Dialog open={isRecordDialogOpen} onOpenChange={setIsRecordDialogOpen}>
+      {/* Add Record Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>{editingRecord ? "Edit Record" : "Add New Record"}</DialogTitle>
+            <DialogTitle>Add New Record</DialogTitle>
           </DialogHeader>
-
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmitRecord)} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {fields.map(field => (
-                  <FormField
-                    key={field.id}
-                    control={form.control}
-                    name={field.name}
-                    render={({ field: formField }) => (
-                      <FormItem className={field.field_type === 'textarea' ? 'md:col-span-2' : ''}>
-                        <FormLabel>{field.display_name}</FormLabel>
-                        <FormControl>
-                          {renderFormInput(field, formField)}
-                        </FormControl>
-                        {field.description && (
-                          <p className="text-xs text-muted-foreground">{field.description}</p>
-                        )}
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                ))}
-              </div>
-
+          <Form {...{
+            register,
+            handleSubmit,
+            reset,
+            control,
+            formState: { errors },
+            setValue,
+          }}>
+            <form onSubmit={handleSubmit(addRow)} className="space-y-4">
+              {fields.map((field) => (
+                <FormField
+                  key={field.name}
+                  control={control}
+                  name={field.name}
+                  render={({ field: formField }) => (
+                    <FormItem>
+                      <FormLabel>{field.display_name}</FormLabel>
+                      <FormControl>
+                        <FormInput placeholder={field.display_name} {...formField} />
+                      </FormControl>
+                      <FormMessage>{errors[field.name]?.message}</FormMessage>
+                    </FormItem>
+                  )}
+                />
+              ))}
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsRecordDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={closeAddDialog}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSaving}>
-                  {isSaving ? "Saving..." : editingRecord ? "Update Record" : "Add Record"}
+                <Button type="submit">Add Record</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Record Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit Record</DialogTitle>
+          </DialogHeader>
+          <Form {...{
+            register,
+            handleSubmit,
+            reset,
+            control,
+            formState: { errors },
+            setValue,
+          }}>
+            <form onSubmit={handleSubmit(updateRow)} className="space-y-4">
+              {fields.map((field) => (
+                <FormField
+                  key={field.name}
+                  control={control}
+                  name={field.name}
+                  render={({ field: formField }) => (
+                    <FormItem>
+                      <FormLabel>{field.display_name}</FormLabel>
+                      <FormControl>
+                        <FormInput placeholder={field.display_name} {...formField} />
+                      </FormControl>
+                      <FormMessage>{errors[field.name]?.message}</FormMessage>
+                    </FormItem>
+                  )}
+                />
+              ))}
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={closeEditDialog}>
+                  Cancel
                 </Button>
+                <Button type="submit">Update Record</Button>
               </DialogFooter>
             </form>
           </Form>
@@ -551,17 +349,17 @@ export const DataManager = ({
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Confirm Delete</DialogTitle>
           </DialogHeader>
           <p>Are you sure you want to delete this record? This action cannot be undone.</p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+            <Button variant="outline" onClick={closeDeleteDialog}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={deleteRecord}>
+            <Button variant="destructive" onClick={deleteRow}>
               Delete Record
             </Button>
           </DialogFooter>
@@ -570,81 +368,3 @@ export const DataManager = ({
     </div>
   );
 };
-
-// Helper function to render the appropriate form input based on field type
-function renderFormInput(field: CustomTableField, formField: any) {
-  switch (field.field_type) {
-    case 'textarea':
-      return (
-        <Textarea 
-          placeholder={`Enter ${field.display_name.toLowerCase()}`}
-          className="min-h-[100px]"
-          {...formField}
-        />
-      );
-    case 'select':
-      return (
-        <Select
-          onValueChange={formField.onChange}
-          defaultValue={formField.value}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder={`Select ${field.display_name.toLowerCase()}`} />
-          </SelectTrigger>
-          <SelectContent>
-            {(field.options?.values || []).map((option: string) => (
-              <SelectItem key={option} value={option}>
-                {option}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      );
-    case 'boolean':
-      return (
-        <Switch
-          checked={formField.value}
-          onCheckedChange={formField.onChange}
-        />
-      );
-    case 'date':
-      return (
-        <Input
-          type="date"
-          value={formField.value instanceof Date 
-            ? format(formField.value, 'yyyy-MM-dd')
-            : formField.value
-          }
-          onChange={(e) => {
-            const date = e.target.value ? new Date(e.target.value) : undefined;
-            formField.onChange(date);
-          }}
-        />
-      );
-    case 'number':
-      return (
-        <Input
-          type="number"
-          placeholder={`Enter ${field.display_name.toLowerCase()}`}
-          {...formField}
-        />
-      );
-    case 'email':
-      return (
-        <Input
-          type="email"
-          placeholder={`Enter ${field.display_name.toLowerCase()}`}
-          {...formField}
-        />
-      );
-    default:
-      return (
-        <Input
-          placeholder={`Enter ${field.display_name.toLowerCase()}`}
-          {...formField}
-        />
-      );
-  }
-}
-
-export default DataManager;
