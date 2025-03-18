@@ -1,4 +1,5 @@
-import { NavLink } from "react-router-dom";
+
+import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -13,14 +14,14 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { ArrowLeft, LogOut, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ROUTES } from "@/lib/constants";
 import { useSidebar } from "@/components/ui/sidebar/context";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
-import { Settings } from "lucide-react";
+import { Appearance, Table2, Users2 } from "lucide-react";
 
 interface SidebarItemOrGroup {
   label: string;
@@ -52,7 +53,13 @@ const AppSidebar = () => {
   const { user, profile, signOut } = useAuth();
   const { aiAgents } = useAiAgents();
   const { toggleSidebar } = useSidebar();
+  const [showSettingsSidebar, setShowSettingsSidebar] = useState(false);
+  const location = useLocation();
 
+  // Check if we're in settings route
+  const isInSettingsRoute = location.pathname.includes(ROUTES.SETTINGS);
+
+  // Define sidebar items for main navigation
   const sidebarItems = [
     {
       label: "Agents",
@@ -62,25 +69,85 @@ const AppSidebar = () => {
       })),
     },
   ];
+
+  // Define footer items for main navigation
   const footerItems = [
     {
       label: "Settings",
-      url: ROUTES.SETTINGS,
+      url: ROUTES.SETTINGS_APPEARANCE,
       icon: <Settings />,
     },
   ];
-  // Listen for custom event to toggle sidebar from the header
+
+  // Define settings sidebar items
+  const settingsItems = [
+    {
+      label: "Settings",
+      children: [
+        {
+          label: "Appearance",
+          url: ROUTES.SETTINGS_APPEARANCE,
+          icon: <Appearance className="h-4 w-4" />,
+        },
+        {
+          label: "Agents",
+          url: ROUTES.SETTINGS_AGENTS,
+          icon: <Users2 className="h-4 w-4" />,
+        },
+        {
+          label: "Custom Tables",
+          url: ROUTES.SETTINGS_CUSTOM_TABLES,
+          icon: <Table2 className="h-4 w-4" />,
+        },
+      ],
+    },
+  ];
+
+  // Define settings footer items
+  const settingsFooterItems = [
+    {
+      label: "Back to Main Menu",
+      url: ROUTES.CONVERSATIONS,
+      icon: <ArrowLeft />,
+      onClick: (e) => {
+        e.preventDefault();
+        document.dispatchEvent(new CustomEvent("restore-original-sidebar"));
+        setShowSettingsSidebar(false);
+      },
+    },
+  ];
+
+  // Listen for custom events to toggle sidebar from the header
   useEffect(() => {
     const handleToggleSidebar = () => {
       toggleSidebar();
     };
 
+    const handleShowSettingsSidebar = () => {
+      setShowSettingsSidebar(true);
+    };
+
+    const handleRestoreOriginalSidebar = () => {
+      setShowSettingsSidebar(false);
+    };
+
     document.addEventListener("toggle-sidebar", handleToggleSidebar);
+    document.addEventListener("show-settings-sidebar", handleShowSettingsSidebar);
+    document.addEventListener("restore-original-sidebar", handleRestoreOriginalSidebar);
 
     return () => {
       document.removeEventListener("toggle-sidebar", handleToggleSidebar);
+      document.removeEventListener("show-settings-sidebar", handleShowSettingsSidebar);
+      document.removeEventListener("restore-original-sidebar", handleRestoreOriginalSidebar);
     };
   }, [toggleSidebar]);
+
+  // Auto-switch sidebar mode based on current route if not explicitly set
+  useEffect(() => {
+    if (isInSettingsRoute && !showSettingsSidebar) {
+      setShowSettingsSidebar(true);
+    }
+  }, [isInSettingsRoute, showSettingsSidebar]);
 
   const handleSignOut = async (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent default button behavior
@@ -142,6 +209,10 @@ const AppSidebar = () => {
     ));
   };
 
+  // Select which items to show based on sidebar mode
+  const itemsToShow = showSettingsSidebar ? settingsItems : sidebarItems;
+  const footerItemsToShow = showSettingsSidebar ? settingsFooterItems : footerItems;
+
   return (
     <Sidebar
       collapsible="offcanvas"
@@ -164,10 +235,10 @@ const AppSidebar = () => {
         </div>
       </SidebarHeader>
 
-      <SidebarContent>{renderItems(sidebarItems)}</SidebarContent>
+      <SidebarContent>{renderItems(itemsToShow)}</SidebarContent>
 
       <SidebarFooter>
-        {renderItems(footerItems)}
+        {renderItems(footerItemsToShow)}
         <Button
           variant="ghost"
           className="w-full justify-start text-red-500 hover:text-red-700 hover:bg-red-100"
