@@ -8,8 +8,12 @@ import { toast } from "sonner";
 const UserSettingsProvider = ({ children }: { children: React.ReactNode }) => {
   const { user, tenantId } = useAuth();
   const [theme, setTheme] = useState<string>("system");
-  const [sidebarConfig, setSidebarConfig] = useState<{ showCustomTables: boolean }>({
+  const [sidebarConfig, setSidebarConfig] = useState<{ 
+    showCustomTables: boolean;
+    showSettings?: boolean;
+  }>({
     showCustomTables: false,
+    showSettings: true
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -31,7 +35,13 @@ const UserSettingsProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         if (data) {
-          const config = data.config as { theme: string; sidebarConfig?: { showCustomTables: boolean } };
+          const config = data.config as { 
+            theme: string; 
+            sidebarConfig?: { 
+              showCustomTables: boolean;
+              showSettings?: boolean;
+            } 
+          };
           setTheme(config.theme || "system");
           if (config.sidebarConfig) {
             setSidebarConfig(config.sidebarConfig);

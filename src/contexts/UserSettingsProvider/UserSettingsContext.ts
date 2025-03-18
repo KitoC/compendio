@@ -7,8 +7,9 @@ export interface UserSettingsContextType {
   isLoading: boolean;
   sidebarConfig: {
     showCustomTables: boolean;
+    showSettings?: boolean;
   };
-  setSidebarConfig: (config: { showCustomTables: boolean }) => void;
+  setSidebarConfig: (config: { showCustomTables: boolean; showSettings?: boolean }) => void;
 }
 
 export const UserSettingsContext = createContext<
