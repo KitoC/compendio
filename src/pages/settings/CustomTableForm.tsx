@@ -1,24 +1,34 @@
+// NO_CHANGE
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import PageLoading from "@/components/PageLoading";
 import { ColumnEditor, Column } from "@/components/tables/ColumnEditor";
-
+import { Database } from "@/integrations/supabase/types";
 const tableFormSchema = z.object({
   name: z
     .string()
     .min(3, "Table name must be at least 3 characters")
     .max(63, "Table name must be at most 63 characters")
-    .regex(/^[a-z][a-z0-9_]*$/, "Table name must start with a letter and contain only lowercase letters, numbers and underscores"),
+    .regex(
+      /^[a-z][a-z0-9_]*$/,
+      "Table name must start with a letter and contain only lowercase letters, numbers and underscores"
+    ),
   display_name: z.string().min(1, "Display name is required"),
   description: z.string().optional(),
   icon: z.string().optional(),
@@ -32,7 +42,11 @@ export interface CustomTableFormProps {
   onCancel?: () => void;
 }
 
-const CustomTableForm = ({ tableId, onSuccess, onCancel }: CustomTableFormProps) => {
+const CustomTableForm = ({
+  tableId,
+  onSuccess,
+  onCancel,
+}: CustomTableFormProps) => {
   const isEditing = Boolean(tableId);
   const { user, tenantId } = useAuth();
   const [isLoading, setIsLoading] = useState(isEditing);
@@ -66,7 +80,7 @@ const CustomTableForm = ({ tableId, onSuccess, onCancel }: CustomTableFormProps)
           .single();
 
         if (tableError) throw tableError;
-        
+
         if (tableData) {
           form.reset({
             name: tableData.name,
@@ -86,15 +100,18 @@ const CustomTableForm = ({ tableId, onSuccess, onCancel }: CustomTableFormProps)
           if (fieldsError) throw fieldsError;
 
           // Map the fields to columns format
-          const mappedColumns: Column[] = fieldsData?.map(field => ({
-            id: field.id,
-            tableFieldId: field.id,
-            name: field.name,
-            type: field.field_type,
-            isPrimary: field.is_unique,
-            isNullable: !field.is_required,
-            defaultValue: field.default_value ? JSON.stringify(field.default_value) : undefined
-          })) || [];
+          const mappedColumns: Column[] =
+            fieldsData?.map((field) => ({
+              id: field.id,
+              tableFieldId: field.id,
+              name: field.name,
+              type: field.field_type,
+              isPrimary: field.is_unique,
+              isNullable: !field.is_required,
+              defaultValue: field.default_value
+                ? JSON.stringify(field.default_value)
+                : undefined,
+            })) || [];
 
           setColumns(mappedColumns);
         }
@@ -115,7 +132,7 @@ const CustomTableForm = ({ tableId, onSuccess, onCancel }: CustomTableFormProps)
     setIsSaving(true);
     try {
       let tableId: string;
-      
+
       if (isEditing) {
         // Update existing table
         const { data: updatedTable, error: updateError } = await supabase
@@ -133,7 +150,6 @@ const CustomTableForm = ({ tableId, onSuccess, onCancel }: CustomTableFormProps)
 
         if (updateError) throw updateError;
         tableId = updatedTable.id;
-        
       } else {
         // Create new table
         const { data: newTable, error: createError } = await supabase
@@ -167,59 +183,59 @@ const CustomTableForm = ({ tableId, onSuccess, onCancel }: CustomTableFormProps)
       }
 
       // Handle columns (fields)
-      // 1. Update existing fields
-      // 2. Add new fields
-      // 3. Delete removed fields (soft delete)
-      
-      const existingFieldIds = columns
-        .filter(col => col.tableFieldId)
-        .map(col => col.tableFieldId);
-      
       // For each column in the current state
       for (const column of columns) {
+        // Skip columns with empty names
+        if (!column.name.trim()) continue;
+
         const fieldData = {
           table_id: tableId,
           tenant_id: tenantId,
           name: column.name,
           display_name: column.name, // Using name as display_name for simplicity
-          field_type: column.type,
+          field_type:
+            column.type as Database["public"]["Enums"]["field_type_enum"],
           is_required: !column.isNullable,
           is_unique: column.isPrimary,
-          default_value: column.defaultValue ? JSON.parse(column.defaultValue) : null,
+          default_value: column.defaultValue
+            ? JSON.parse(column.defaultValue)
+            : null,
           permissions: {
             system_roles: {
               read: ["super-admin", "tenant-owner"],
-              write: ["super-admin", "tenant-owner"]
+              write: ["super-admin", "tenant-owner"],
             },
             custom_roles: {
               read: [],
-              write: []
-            }
-          }
+              write: [],
+            },
+          },
         };
-        
+
         if (column.tableFieldId) {
           // Update existing field
           const { error: updateFieldError } = await supabase
             .from("custom_table_fields")
             .update({
               ...fieldData,
-              updated_at: new Date().toISOString()
+              field_type:
+                fieldData.field_type as Database["public"]["Enums"]["field_type_enum"],
+              updated_at: new Date().toISOString(),
             })
             .eq("id", column.tableFieldId)
             .eq("tenant_id", tenantId);
-            
+
           if (updateFieldError) throw updateFieldError;
         } else {
           // Create new field
           const { error: createFieldError } = await supabase
             .from("custom_table_fields")
-            .insert(fieldData);
-            
+            .insert([fieldData]);
+
           if (createFieldError) throw createFieldError;
         }
       }
-      
+
       // If editing, handle deleted fields
       if (isEditing) {
         // Get all existing fields for this table
@@ -229,15 +245,15 @@ const CustomTableForm = ({ tableId, onSuccess, onCancel }: CustomTableFormProps)
           .eq("table_id", tableId)
           .eq("tenant_id", tenantId)
           .is("deleted_at", null);
-          
+
         if (fieldsError) throw fieldsError;
-        
+
         // Find fields that need to be deleted
-        const currentFieldIds = currentFields.map(f => f.id);
-        const fieldsToDelete = currentFieldIds.filter(id => 
-          !columns.some(col => col.tableFieldId === id)
+        const currentFieldIds = currentFields.map((f) => f.id);
+        const fieldsToDelete = currentFieldIds.filter(
+          (id) => !columns.some((col) => col.tableFieldId === id)
         );
-        
+
         // Soft delete fields that are no longer in the columns list
         if (fieldsToDelete.length > 0) {
           const { error: deleteError } = await supabase
@@ -245,18 +261,20 @@ const CustomTableForm = ({ tableId, onSuccess, onCancel }: CustomTableFormProps)
             .update({ deleted_at: new Date().toISOString() })
             .in("id", fieldsToDelete)
             .eq("tenant_id", tenantId);
-            
+
           if (deleteError) throw deleteError;
         }
       }
 
-      toast.success(isEditing ? "Table updated successfully" : "Table created successfully");
+      toast.success(
+        isEditing ? "Table updated successfully" : "Table created successfully"
+      );
 
       // Call onSuccess callback if provided
       if (onSuccess) {
         onSuccess();
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error saving table:", error);
       toast.error(error.message || "Failed to save table");
     } finally {
@@ -279,7 +297,11 @@ const CustomTableForm = ({ tableId, onSuccess, onCancel }: CustomTableFormProps)
               <FormItem>
                 <FormLabel>Table Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="customers" {...field} disabled={isEditing} />
+                  <Input
+                    placeholder="customers"
+                    {...field}
+                    disabled={isEditing}
+                  />
                 </FormControl>
                 <p className="text-xs text-muted-foreground">
                   This will be used as the table name in the database.
@@ -313,10 +335,10 @@ const CustomTableForm = ({ tableId, onSuccess, onCancel }: CustomTableFormProps)
               <FormItem>
                 <FormLabel>Description</FormLabel>
                 <FormControl>
-                  <Textarea 
-                    placeholder="Store information about your customers" 
-                    className="min-h-[100px]" 
-                    {...field} 
+                  <Textarea
+                    placeholder="Store information about your customers"
+                    className="min-h-[100px]"
+                    {...field}
                   />
                 </FormControl>
                 <FormMessage />
@@ -341,10 +363,7 @@ const CustomTableForm = ({ tableId, onSuccess, onCancel }: CustomTableFormProps)
             )}
           />
 
-          <ColumnEditor 
-            columns={columns} 
-            onChange={setColumns}
-          />
+          <ColumnEditor columns={columns} onChange={setColumns} />
         </form>
       </Form>
     </div>

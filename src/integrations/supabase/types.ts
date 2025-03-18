@@ -462,7 +462,7 @@ export type Database = {
           deleted_at: string | null
           description: string | null
           display_name: string
-          field_type: string
+          field_type: Database["public"]["Enums"]["field_type_enum"] | null
           id: string
           is_required: boolean
           is_unique: boolean
@@ -479,7 +479,7 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           display_name: string
-          field_type: string
+          field_type?: Database["public"]["Enums"]["field_type_enum"] | null
           id?: string
           is_required?: boolean
           is_unique?: boolean
@@ -496,7 +496,7 @@ export type Database = {
           deleted_at?: string | null
           description?: string | null
           display_name?: string
-          field_type?: string
+          field_type?: Database["public"]["Enums"]["field_type_enum"] | null
           id?: string
           is_required?: boolean
           is_unique?: boolean
@@ -1070,6 +1070,10 @@ export type Database = {
         }
         Returns: Json
       }
+      get_field_types: {
+        Args: Record<PropertyKey, never>
+        Returns: Database["public"]["Enums"]["field_type_enum"][]
+      }
       halfvec_avg: {
         Args: {
           "": number[]
@@ -1317,6 +1321,13 @@ export type Database = {
       }
     }
     Enums: {
+      field_type_enum:
+        | "text"
+        | "integer"
+        | "boolean"
+        | "reference"
+        | "timestamp"
+        | "uuid"
       user_role_type:
         | "admin"
         | "member"

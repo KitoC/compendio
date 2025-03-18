@@ -99,12 +99,13 @@
   }
 
   /* Ensure proper tap target sizes for mobile Safari */
-  button,
+  /* TODO: This is causing issues with the button component, find a better way to handle this later */
+  /* button,
   [role="button"],
   a {
     min-height: 44px;
     min-width: 44px;
-  }
+  } */
 
   /* Fix for Safari flex issues */
   .flex {
