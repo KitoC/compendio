@@ -5,12 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, TableProperties, Settings, UsersRound } from "lucide-react";
+import { Plus, TableProperties, Settings, UsersRound, Trash2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/lib/constants";
 import PageLoading from "@/components/PageLoading";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface CustomTable {
   id: string;
@@ -35,6 +36,9 @@ const CustomTablesPage = () => {
   const [activeTab, setActiveTab] = useState("tables");
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{id: string, type: 'table' | 'role'} | null>(null);
 
   useEffect(() => {
     if (!user || !tenantId) return;
@@ -75,11 +79,54 @@ const CustomTablesPage = () => {
   }, [user, tenantId]);
 
   const handleCreateTable = () => {
-    navigate(`${ROUTES.SETTINGS}/custom-tables/new-table`);
+    navigate(ROUTES.SETTINGS_CUSTOM_TABLES_NEW);
   };
 
   const handleCreateRole = () => {
-    navigate(`${ROUTES.SETTINGS}/custom-tables/new-role`);
+    navigate(ROUTES.SETTINGS_CUSTOM_ROLES_NEW);
+  };
+
+  const confirmDelete = (id: string, type: 'table' | 'role') => {
+    setItemToDelete({ id, type });
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!itemToDelete || !tenantId) return;
+
+    setIsDeleting(true);
+    try {
+      if (itemToDelete.type === 'table') {
+        const { error } = await supabase
+          .from("custom_table_definitions")
+          .update({ deleted_at: new Date() })
+          .eq("id", itemToDelete.id)
+          .eq("tenant_id", tenantId);
+
+        if (error) throw error;
+        
+        setTables(tables.filter(table => table.id !== itemToDelete.id));
+        toast.success("Table deleted successfully");
+      } else {
+        const { error } = await supabase
+          .from("custom_roles")
+          .update({ deleted_at: new Date() })
+          .eq("id", itemToDelete.id)
+          .eq("tenant_id", tenantId);
+
+        if (error) throw error;
+        
+        setRoles(roles.filter(role => role.id !== itemToDelete.id));
+        toast.success("Role deleted successfully");
+      }
+    } catch (error: any) {
+      console.error("Error deleting item:", error);
+      toast.error(error.message || "Failed to delete item");
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+      setItemToDelete(null);
+    }
   };
 
   if (isLoading) {
@@ -157,10 +204,19 @@ const CustomTablesPage = () => {
                       variant="outline" 
                       size="sm" 
                       className="mr-2"
-                      onClick={() => navigate(`${ROUTES.SETTINGS}/custom-tables/${table.id}`)}
+                      onClick={() => navigate(`${ROUTES.SETTINGS_CUSTOM_TABLES}/${table.id}`)}
                     >
                       <Settings className="h-4 w-4 mr-2" />
                       Manage
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="text-destructive"
+                      onClick={() => confirmDelete(table.id, 'table')}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
                     </Button>
                   </CardFooter>
                 </Card>
@@ -210,7 +266,16 @@ const CustomTablesPage = () => {
                       onClick={() => navigate(`${ROUTES.SETTINGS}/custom-tables/roles/${role.id}`)}
                     >
                       <Settings className="h-4 w-4 mr-2" />
-                      Manage
+                      Edit
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="text-destructive"
+                      onClick={() => confirmDelete(role.id, 'role')}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
                     </Button>
                   </CardFooter>
                 </Card>
@@ -219,6 +284,26 @@ const CustomTablesPage = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this {itemToDelete?.type}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
