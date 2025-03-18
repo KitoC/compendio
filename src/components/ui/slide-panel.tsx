@@ -1,6 +1,11 @@
-
-import * as React from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import React, { useEffect } from "react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 interface SlidePanelProps {
@@ -20,25 +25,38 @@ export function SlidePanel({
   description,
   children,
   className,
-  footer
+  footer,
 }: SlidePanelProps) {
+  useEffect(() => {
+    // IMPORTANT: This is a workaround to prevent the Sheet from not removing the pointer events when the sheet is closed
+    if (open) {
+      // Pushing the change to the end of the call stack
+      const timer = setTimeout(() => {
+        document.body.style.pointerEvents = "";
+      }, 0);
+
+      return () => clearTimeout(timer);
+    } else {
+      document.body.style.pointerEvents = "auto";
+    }
+  }, [open]);
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className={cn("w-full sm:max-w-md md:max-w-lg flex flex-col p-0", className)}>
+      <SheetContent
+        className={cn(
+          "w-full sm:max-w-md md:max-w-3xl flex flex-col p-0",
+          className
+        )}
+      >
         {(title || description) && (
           <SheetHeader className="p-6 border-b">
             {title && <SheetTitle>{title}</SheetTitle>}
             {description && <SheetDescription>{description}</SheetDescription>}
           </SheetHeader>
         )}
-        <div className="flex-1 overflow-auto p-6">
-          {children}
-        </div>
-        {footer && (
-          <div className="border-t p-4 mt-auto">
-            {footer}
-          </div>
-        )}
+        <div className="flex-1 overflow-auto p-6">{children}</div>
+        {footer && <div className="border-t p-4 mt-auto">{footer}</div>}
       </SheetContent>
     </Sheet>
   );
