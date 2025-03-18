@@ -28,6 +28,7 @@ import {
   X
 } from "lucide-react";
 import { format } from "date-fns";
+import { Json } from "@/integrations/supabase/types";
 
 // Define the type for a custom table field
 interface CustomTableField {
@@ -147,7 +148,8 @@ export const DataManager = ({
         if (error) throw error;
         
         if (Array.isArray(data)) {
-          setRows(data);
+          const typedData = data as Record<string, any>[];
+          setRows(typedData);
         } else {
           console.warn("Unexpected data format:", data);
           setRows([]);
@@ -281,7 +283,7 @@ export const DataManager = ({
         toast.success("Record created successfully");
         
         // Update local state with the new record (including its ID)
-        if (data && data.id) {
+        if (data && typeof data === 'object' && 'id' in data) {
           setRows([...rows, { id: data.id, ...recordValues }]);
         }
       }

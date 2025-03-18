@@ -53,7 +53,16 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       }
 
       if (data) {
-        setMessages(data as ChatMessage[]);
+        // Map database messages to ChatMessage format
+        const mappedMessages: ChatMessage[] = data.map((msg: any) => ({
+          ...msg,
+          content: typeof msg.content === 'string' 
+            ? { text: msg.content } 
+            : msg.content as Record<string, unknown>,
+          metadata: msg.metadata as Record<string, unknown>
+        }));
+        
+        setMessages(mappedMessages);
 
         // Scroll to bottom after messages load
         setTimeout(() => scrollToOptimalPosition({ behavior: "instant" }), 100);
@@ -73,9 +82,9 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       const newMessage: ChatMessage = {
         id: uuidv4(),
         role,
-        content: { text: content } as Json,
+        content: { text: content },
         conversation_id: conversationId,
-        metadata: {} as Json,
+        metadata: {},
         reply_to: undefined,
         user_id: user.id,
         tenant_id: tenantId,
@@ -88,15 +97,23 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
 
       try {
         // Save the user message to the database
-        await supabase.from("messages").insert([newMessage]);
+        await supabase.from("messages").insert([{
+          id: newMessage.id,
+          role: newMessage.role,
+          content: { text: content } as Json,
+          conversation_id: newMessage.conversation_id,
+          metadata: {} as Json,
+          user_id: newMessage.user_id,
+          tenant_id: newMessage.tenant_id
+        }]);
 
         // Create a placeholder message for the AI response
-        const aiMessage = {
+        const aiMessage: ChatMessage = {
           id: uuidv4(),
           conversation_id: conversationId,
           role: "assistant",
-          content: { text: "" } as Json,
-          metadata: {} as Json,
+          content: { text: "" },
+          metadata: {},
           user_id: user.id,
           tenant_id: tenantId,
         };
@@ -115,7 +132,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
           onUpdate: (text) => {
             setMessages((prev) =>
               prev.map((msg) =>
-                msg.id === aiMessage.id ? { ...msg, content: { text } as Json } : msg
+                msg.id === aiMessage.id ? { ...msg, content: { text } } : msg
               )
             );
 
@@ -142,12 +159,12 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         // Update the AI message to show the error
         setMessages((prev) =>
           prev.map((msg) =>
-            msg.role === MessageRole.ASSISTANT && msg.loading
+            msg.role === MessageRole.ASSISTANT && 'loading' in msg
               ? {
                   ...msg,
                   content: {
                     text: "Sorry, I encountered an error. Please try again.",
-                  } as Json,
+                  },
                   loading: false,
                 }
               : msg
@@ -184,11 +201,20 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
-          const newMessage = payload.new as ChatMessage;
+          const newMessage = payload.new as any;
+          
+          // Format message to match ChatMessage interface
+          const formattedMessage: ChatMessage = {
+            ...newMessage,
+            content: typeof newMessage.content === 'string' 
+              ? { text: newMessage.content } 
+              : newMessage.content as Record<string, unknown>,
+            metadata: newMessage.metadata as Record<string, unknown>
+          };
 
           setMessages((prev) => {
-            if (!prev.some((msg) => msg.id === newMessage.id)) {
-              return [...prev, newMessage];
+            if (!prev.some((msg) => msg.id === formattedMessage.id)) {
+              return [...prev, formattedMessage];
             }
             return prev;
           });

@@ -99,12 +99,13 @@ export const sendMessageToAI = async ({
   if (!conversationId || !userId || !tenantId) return null;
 
   try {
+    // Format messages for the API
     const formattedMessages = messagesToSend.map((msg) => ({
       role: msg.role,
       content:
         typeof msg.content === "string"
           ? msg.content
-          : JSON.stringify(msg.content),
+          : msg.content.text || JSON.stringify(msg.content),
     }));
 
     const id = messageId;
@@ -127,12 +128,12 @@ export const sendMessageToAI = async ({
 
         const data = await response.json();
 
-        const functionCallMessage = {
+        const functionCallMessage: ChatMessage = {
           id: uuidv4(),
           conversation_id: conversationId,
           role: MessageRole.FORM,
-          content: data.markup.config as Json,
-          metadata: {} as Json,
+          content: { config: data.markup.config },
+          metadata: {},
           user_id: userId,
           tenant_id: tenantId,
           reply_to: messageId,
@@ -143,7 +144,18 @@ export const sendMessageToAI = async ({
           message: functionCallMessage,
         });
 
-        await supabase.from("messages").insert([functionCallMessage]);
+        await supabase.from("messages").insert([
+          {
+            id: functionCallMessage.id,
+            conversation_id: functionCallMessage.conversation_id,
+            role: functionCallMessage.role,
+            content: data.markup.config as Json,
+            metadata: {} as Json,
+            user_id: functionCallMessage.user_id,
+            tenant_id: functionCallMessage.tenant_id,
+            reply_to: functionCallMessage.reply_to
+          }
+        ]);
       },
     });
 
@@ -152,14 +164,22 @@ export const sendMessageToAI = async ({
       id,
       role: "assistant",
       conversation_id: conversationId,
-      content: { text: content } as Json,
-      metadata: {} as Json,
+      content: { text: content },
+      metadata: {},
       user_id: userId,
       tenant_id: tenantId,
     };
 
     // Save the complete message to the database
-    await supabase.from("messages").insert([finalMessage]);
+    await supabase.from("messages").insert([{
+      id: finalMessage.id,
+      role: finalMessage.role,
+      conversation_id: finalMessage.conversation_id,
+      content: { text: content } as Json,
+      metadata: {} as Json,
+      user_id: finalMessage.user_id,
+      tenant_id: finalMessage.tenant_id
+    }]);
 
     // Call the onComplete callback
     await onComplete(finalMessage);

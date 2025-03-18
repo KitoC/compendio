@@ -23,8 +23,12 @@ interface TableField {
   field_type: string;
   is_required: boolean;
   is_unique: boolean;
-  related_table_id?: string;
-  relationship_type?: string;
+  options?: {
+    related_table_id?: string;
+    relationship_type?: string;
+    values?: string[];
+    [key: string]: any;
+  };
   created_at: string;
 }
 
@@ -67,12 +71,12 @@ const CustomTableDetail = () => {
           .single();
 
         if (tableError) throw tableError;
-        setTableDetails(tableData);
+        setTableDetails(tableData as TableDetails);
 
         // Fetch all tables (for relationships)
         const { data: allTables, error: allTablesError } = await supabase
           .from("custom_table_definitions")
-          .select("id, name, display_name")
+          .select("id, name, display_name, description, icon, created_at")
           .eq("tenant_id", tenantId)
           .is("deleted_at", null)
           .order("display_name", { ascending: true });
@@ -90,7 +94,14 @@ const CustomTableDetail = () => {
           .order("created_at", { ascending: true });
 
         if (fieldsError) throw fieldsError;
-        setFields(fieldsData || []);
+
+        // Process fields to extract options
+        const processedFields = (fieldsData || []).map(field => ({
+          ...field,
+          options: field.options || {}
+        }));
+
+        setFields(processedFields);
 
       } catch (error) {
         console.error("Error fetching table data:", error);
@@ -121,8 +132,8 @@ const CustomTableDetail = () => {
             is_required: field.is_required,
             is_unique: field.is_unique,
             options: field.field_type === 'relation' 
-              ? { related_table_id: field.related_table_id, relationship_type: field.relationship_type }
-              : null
+              ? { related_table_id: field.options?.related_table_id, relationship_type: field.options?.relationship_type }
+              : field.options
           })
           .select()
           .single();
@@ -131,10 +142,10 @@ const CustomTableDetail = () => {
         
         // Add the new field to the list
         if (data) {
-          setFields([...fields, data]);
+          setFields([...fields, data as TableField]);
         }
         
-        return data;
+        return data as TableField;
       } else {
         // Update existing field
         const { error } = await supabase
@@ -145,8 +156,8 @@ const CustomTableDetail = () => {
             is_required: field.is_required,
             is_unique: field.is_unique,
             options: field.field_type === 'relation' 
-              ? { related_table_id: field.related_table_id, relationship_type: field.relationship_type }
-              : null,
+              ? { related_table_id: field.options?.related_table_id, relationship_type: field.options?.relationship_type }
+              : field.options,
             updated_at: new Date().toISOString()
           })
           .eq("id", field.id)
@@ -253,11 +264,7 @@ const CustomTableDetail = () => {
           <TabsContent value="schema" className="p-6">
             <SchemaBuilder 
               tableId={id || ''}
-              fields={fields.map(field => ({
-                ...field,
-                related_table_id: field.options?.related_table_id,
-                relationship_type: field.options?.relationship_type
-              }))}
+              fields={fields}
               availableTables={availableTables.filter(table => table.id !== id)}
               onSaveField={handleSaveField}
               onDeleteField={handleDeleteField}
@@ -270,10 +277,7 @@ const CustomTableDetail = () => {
               tableId={id || ''}
               tableName={tableDetails.name}
               displayName={tableDetails.display_name}
-              fields={fields.map(field => ({
-                ...field,
-                options: field.options
-              }))}
+              fields={fields}
             />
           </TabsContent>
 
@@ -284,11 +288,7 @@ const CustomTableDetail = () => {
                 const tableFields = table.id === id ? fields : [];
                 return {
                   ...table,
-                  fields: tableFields.map(field => ({
-                    ...field,
-                    related_table_id: field.options?.related_table_id,
-                    relationship_type: field.options?.relationship_type
-                  }))
+                  fields: tableFields
                 };
               })} 
             />
