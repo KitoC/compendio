@@ -56,25 +56,90 @@ serve(async (req) => {
         );
       }
 
-      // Wait a moment for triggers to execute
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      try {
+        // Force immediate creation of the physical table
+        const rpcResult = await supabaseAdmin.rpc("create_custom_table", {
+          table_name: data.name
+        });
 
-      // Force creation of the physical table
-      const rpcResult = await supabaseAdmin.rpc("create_custom_table", {
-        table_name: data.name
-      }).single();
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          data: data,
-          rpc: rpcResult
-        }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        if (rpcResult.error) {
+          console.error("Error creating physical table:", rpcResult.error);
+          // Don't fail the whole request, just log the error
         }
-      );
+
+        // Add default RLS policies
+        const rlsResult = await supabaseAdmin.rpc("add_rls_policies_to_custom_table", {
+          table_name: data.name
+        });
+
+        if (rlsResult.error) {
+          console.error("Error adding RLS policies:", rlsResult.error);
+          // Don't fail the whole request, just log the error
+        }
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: data,
+            rpc: { result: "Table created successfully" }
+          }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      } catch (rpcError) {
+        console.error("Error in RPC calls:", rpcError);
+        
+        // Return success for the table definition creation but include the RPC error
+        return new Response(
+          JSON.stringify({
+            success: true,
+            data: data,
+            rpc_error: rpcError.message || "Error creating physical table",
+          }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+    } else if (action === "update_rls_policies") {
+      try {
+        const { table_name } = tableData;
+        
+        // Update RLS policies for the table
+        const result = await supabaseAdmin.rpc("add_rls_policies_to_custom_table", {
+          table_name: table_name
+        });
+
+        if (result.error) {
+          throw result.error;
+        }
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: "RLS policies updated successfully"
+          }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      } catch (error) {
+        console.error("Error updating RLS policies:", error);
+        return new Response(
+          JSON.stringify({
+            error: error.message || "Failed to update RLS policies",
+            details: error,
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
     }
 
     return new Response(

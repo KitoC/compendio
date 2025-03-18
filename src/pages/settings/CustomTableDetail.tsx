@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -6,12 +7,11 @@ import { ROUTES } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ArrowLeft, Edit, Database, Shield, Table2, Grid, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import PageLoading from "@/components/PageLoading";
 import SchemaBuilder from "@/components/custom-tables/SchemaBuilder";
-import DataManager from "@/components/custom-tables/DataManager";
+import { DataManager } from "@/components/custom-tables/DataManager";
 import RelationshipViewer from "@/components/custom-tables/RelationshipViewer";
 
 interface TableField {
@@ -48,9 +48,6 @@ const CustomTableDetail = () => {
   const [tableDetails, setTableDetails] = useState<TableDetails | null>(null);
   const [fields, setFields] = useState<TableField[]>([]);
   const [activeTab, setActiveTab] = useState("schema");
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [fieldToDelete, setFieldToDelete] = useState<string | null>(null);
   const [availableTables, setAvailableTables] = useState<TableDetails[]>([]);
 
   useEffect(() => {
@@ -95,12 +92,19 @@ const CustomTableDetail = () => {
         if (fieldsError) throw fieldsError;
 
         // Process fields to extract options
-        const processedFields = (fieldsData || []).map(field => ({
-          ...field,
-          options: field.options || {}
-        }));
+        const processedFields = (fieldsData || []).map(field => {
+          // Ensure options is an object
+          const options = typeof field.options === 'object' 
+            ? field.options || {} 
+            : {};
+            
+          return {
+            ...field,
+            options
+          };
+        });
 
-        setFields(processedFields);
+        setFields(processedFields as TableField[]);
 
       } catch (error) {
         console.error("Error fetching table data:", error);
@@ -141,7 +145,13 @@ const CustomTableDetail = () => {
         
         // Add the new field to the list
         if (data) {
-          setFields([...fields, data as TableField]);
+          const newField = {
+            ...data,
+            options: typeof data.options === 'object' ? data.options || {} : {},
+            created_at: new Date().toISOString()
+          } as TableField;
+          
+          setFields([...fields, newField]);
         }
         
         return;

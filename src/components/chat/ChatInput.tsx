@@ -1,9 +1,10 @@
+
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, Mic, MicOff } from "lucide-react";
-import { useChat } from "@/contexts/ChatContext";
+import { useChat } from "@/hooks/useChat";
 import { useVoice } from "@/hooks/useVoice";
 
 interface ChatInputProps {
@@ -28,7 +29,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ className }) => {
     }
   }, [isListening, startListening, stopListening]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
@@ -56,7 +57,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ className }) => {
             "rounded-full text-muted-foreground hover:bg-background-hover hover:text-primary",
             isListening && "bg-primary/10 text-primary"
           )}
-          onClick={() => toggleVoiceMode(true)} // Pass the argument
+          onClick={() => toggleVoiceMode(!isListening)}
           title="Voice mode"
         >
           {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}

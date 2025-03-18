@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -76,7 +77,7 @@ const CustomTablesPage = () => {
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-semibold">Custom Tables</h1>
-        <Button onClick={() => navigate(ROUTES.SETTINGS_CUSTOM_TABLE_NEW)}>
+        <Button onClick={() => navigate(ROUTES.SETTINGS_CUSTOM_TABLES_NEW)}>
           <Plus className="h-4 w-4 mr-2" />
           Add Table
         </Button>
