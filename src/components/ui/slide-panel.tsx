@@ -10,6 +10,7 @@ interface SlidePanelProps {
   description?: string;
   children: React.ReactNode;
   className?: string;
+  footer?: React.ReactNode;
 }
 
 export function SlidePanel({
@@ -18,20 +19,26 @@ export function SlidePanel({
   title,
   description,
   children,
-  className
+  className,
+  footer
 }: SlidePanelProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className={cn("w-full sm:max-w-md md:max-w-lg", className)}>
+      <SheetContent className={cn("w-full sm:max-w-md md:max-w-lg flex flex-col p-0", className)}>
         {(title || description) && (
-          <SheetHeader className="mb-4">
+          <SheetHeader className="p-6 border-b">
             {title && <SheetTitle>{title}</SheetTitle>}
             {description && <SheetDescription>{description}</SheetDescription>}
           </SheetHeader>
         )}
-        <div className="flex flex-col h-full overflow-auto">
+        <div className="flex-1 overflow-auto p-6">
           {children}
         </div>
+        {footer && (
+          <div className="border-t p-4 mt-auto">
+            {footer}
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );

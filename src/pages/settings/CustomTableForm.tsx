@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import PageLoading from "@/components/PageLoading";
+import { ColumnEditor, Column } from "@/components/tables/ColumnEditor";
 
 const tableFormSchema = z.object({
   name: z
@@ -28,13 +29,15 @@ type FormValues = z.infer<typeof tableFormSchema>;
 interface CustomTableFormProps {
   tableId: string | null;
   onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-const CustomTableForm = ({ tableId, onSuccess }: CustomTableFormProps) => {
+const CustomTableForm = ({ tableId, onSuccess, onCancel }: CustomTableFormProps) => {
   const isEditing = Boolean(tableId);
   const { user, tenantId } = useAuth();
   const [isLoading, setIsLoading] = useState(isEditing);
   const [isSaving, setIsSaving] = useState(false);
+  const [columns, setColumns] = useState<Column[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(tableFormSchema),
@@ -70,6 +73,17 @@ const CustomTableForm = ({ tableId, onSuccess }: CustomTableFormProps) => {
             description: data.description || "",
             icon: data.icon || "",
           });
+
+          // Fetch columns if they exist
+          if (data.columns) {
+            try {
+              const columnsData = JSON.parse(data.columns);
+              setColumns(columnsData);
+            } catch (e) {
+              console.error("Error parsing columns data", e);
+              setColumns([]);
+            }
+          }
         }
       } catch (error) {
         console.error("Error fetching table data:", error);
@@ -87,17 +101,20 @@ const CustomTableForm = ({ tableId, onSuccess }: CustomTableFormProps) => {
 
     setIsSaving(true);
     try {
+      const tableData = {
+        name: values.name,
+        display_name: values.display_name,
+        description: values.description,
+        icon: values.icon,
+        columns: JSON.stringify(columns),
+        updated_at: new Date().toISOString(),
+      };
+
       if (isEditing && tableId) {
         // Update existing table
         const { error } = await supabase
           .from("custom_table_definitions")
-          .update({
-            name: values.name,
-            display_name: values.display_name,
-            description: values.description,
-            icon: values.icon,
-            updated_at: new Date().toISOString(),
-          })
+          .update(tableData)
           .eq("id", tableId)
           .eq("tenant_id", tenantId);
 
@@ -109,10 +126,7 @@ const CustomTableForm = ({ tableId, onSuccess }: CustomTableFormProps) => {
           .from("custom_table_definitions")
           .insert({
             tenant_id: tenantId,
-            name: values.name,
-            display_name: values.display_name,
-            description: values.description,
-            icon: values.icon,
+            ...tableData,
             permissions: {
               system_roles: {
                 create: ["super-admin", "tenant-owner"],
@@ -222,19 +236,10 @@ const CustomTableForm = ({ tableId, onSuccess }: CustomTableFormProps) => {
             )}
           />
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onSuccess}
-              disabled={isSaving}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSaving}>
-              {isSaving ? "Saving..." : isEditing ? "Update Table" : "Create Table"}
-            </Button>
-          </div>
+          <ColumnEditor 
+            columns={columns} 
+            onChange={setColumns}
+          />
         </form>
       </Form>
     </div>

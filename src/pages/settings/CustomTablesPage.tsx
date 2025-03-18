@@ -7,7 +7,6 @@ import { Card } from "@/components/ui/card";
 import { Plus, Settings, Trash2, MoreHorizontal } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/lib/constants";
 import PageLoading from "@/components/PageLoading";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -23,13 +22,13 @@ interface CustomTable {
   description: string | null;
   icon: string | null;
   created_at: string;
+  columns?: string; // New field to store column data
 }
 
 const CustomTablesPage = () => {
   const { user, tenantId } = useAuth();
   const [tables, setTables] = useState<CustomTable[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [tableToDelete, setTableToDelete] = useState<string | null>(null);
@@ -162,6 +161,31 @@ const CustomTablesPage = () => {
     return <PageLoading />;
   }
 
+  // Prepare the slide panel title based on whether we're editing or creating
+  const slidePanelTitle = editingTable 
+    ? `Editing ${tables.find(t => t.id === editingTable)?.display_name || "Table"}` 
+    : "Create Table";
+
+  // Prepare the footer with Cancel and Save buttons
+  const slidePanelFooter = (
+    <div className="flex justify-end space-x-2">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => setIsEditPanelOpen(false)}
+      >
+        Cancel
+      </Button>
+      <Button 
+        type="submit"
+        form="table-form"
+        disabled={isDeleting}
+      >
+        Save
+      </Button>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -202,12 +226,14 @@ const CustomTablesPage = () => {
       <SlidePanel
         open={isEditPanelOpen}
         onOpenChange={setIsEditPanelOpen}
-        title={editingTable ? "Edit Table" : "Create Table"}
+        title={slidePanelTitle}
         description={editingTable ? "Update your custom table details" : "Create a new custom table for your application"}
+        footer={slidePanelFooter}
       >
         <CustomTableForm
           tableId={editingTable}
           onSuccess={() => setIsEditPanelOpen(false)}
+          onCancel={() => setIsEditPanelOpen(false)}
         />
       </SlidePanel>
 
