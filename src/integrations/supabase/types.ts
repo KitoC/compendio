@@ -1055,21 +1055,6 @@ export type Database = {
         }
         Returns: string
       }
-      delete_custom_table_record: {
-        Args: {
-          p_table_name: string
-          p_record_id: string
-          p_tenant_id: string
-        }
-        Returns: undefined
-      }
-      get_custom_table_data: {
-        Args: {
-          p_table_name: string
-          p_tenant_id: string
-        }
-        Returns: Json
-      }
       halfvec_avg: {
         Args: {
           "": number[]
@@ -1125,14 +1110,6 @@ export type Database = {
           "": unknown
         }
         Returns: unknown
-      }
-      insert_custom_table_record: {
-        Args: {
-          p_table_name: string
-          p_tenant_id: string
-          p_data: Json
-        }
-        Returns: Json
       }
       insert_user_role: {
         Args: {
@@ -1236,15 +1213,6 @@ export type Database = {
           "": unknown[]
         }
         Returns: number
-      }
-      update_custom_table_record: {
-        Args: {
-          p_table_name: string
-          p_record_id: string
-          p_tenant_id: string
-          p_data: Json
-        }
-        Returns: undefined
       }
       user_has_custom_role: {
         Args: {

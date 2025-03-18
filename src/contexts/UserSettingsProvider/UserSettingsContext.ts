@@ -1,15 +1,9 @@
-
 import { createContext, useContext } from "react";
 
 export interface UserSettingsContextType {
   theme: string;
   setTheme: (theme: string) => void;
   isLoading: boolean;
-  sidebarConfig: {
-    showCustomTables: boolean;
-    showSettings?: boolean;
-  };
-  setSidebarConfig: (config: { showCustomTables: boolean; showSettings?: boolean }) => void;
 }
 
 export const UserSettingsContext = createContext<

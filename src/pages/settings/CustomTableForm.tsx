@@ -96,7 +96,7 @@ const CustomTableForm = () => {
             display_name: values.display_name,
             description: values.description,
             icon: values.icon,
-            updated_at: new Date().toISOString(), // Fix Date type issue
+            updated_at: new Date(),
           })
           .eq("id", id)
           .eq("tenant_id", tenantId);
@@ -104,36 +104,32 @@ const CustomTableForm = () => {
         if (error) throw error;
         toast.success("Table updated successfully");
       } else {
-        // Create new table using the edge function
-        const tableData = {
-          tenant_id: tenantId,
-          name: values.name,
-          display_name: values.display_name,
-          description: values.description,
-          icon: values.icon,
-          permissions: {
-            system_roles: {
-              create: ["super-admin", "tenant-owner"],
-              read: ["super-admin", "tenant-owner"],
-              update: ["super-admin", "tenant-owner"],
-              delete: ["super-admin", "tenant-owner"],
+        // Create new table
+        const { error } = await supabase
+          .from("custom_table_definitions")
+          .insert({
+            tenant_id: tenantId,
+            name: values.name,
+            display_name: values.display_name,
+            description: values.description,
+            icon: values.icon,
+            permissions: {
+              system_roles: {
+                create: ["super-admin", "tenant-owner"],
+                read: ["super-admin", "tenant-owner"],
+                update: ["super-admin", "tenant-owner"],
+                delete: ["super-admin", "tenant-owner"],
+              },
+              custom_roles: {
+                create: [],
+                read: [],
+                update: [],
+                delete: [],
+              },
             },
-            custom_roles: {
-              create: [],
-              read: [],
-              update: [],
-              delete: [],
-            },
-          },
-        };
-        
-        const { data, error } = await supabase.functions.invoke('custom-table-functions', {
-          body: { action: 'create_table', tableData },
-        });
+          });
 
         if (error) throw error;
-        if (data.error) throw new Error(data.error);
-        
         toast.success("Table created successfully");
       }
 

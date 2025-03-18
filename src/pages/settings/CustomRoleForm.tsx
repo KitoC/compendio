@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -80,12 +81,13 @@ const CustomRoleForm = () => {
     setIsSaving(true);
     try {
       if (isEditing) {
+        // Update existing role
         const { error } = await supabase
           .from("custom_roles")
           .update({
             name: values.name,
             description: values.description,
-            updated_at: new Date().toISOString(),
+            updated_at: new Date(),
           })
           .eq("id", id)
           .eq("tenant_id", tenantId);
@@ -93,6 +95,7 @@ const CustomRoleForm = () => {
         if (error) throw error;
         toast.success("Role updated successfully");
       } else {
+        // Create new role
         const { error } = await supabase
           .from("custom_roles")
           .insert({
@@ -105,6 +108,7 @@ const CustomRoleForm = () => {
         toast.success("Role created successfully");
       }
 
+      // Navigate back to the roles list
       navigate(ROUTES.SETTINGS_CUSTOM_TABLES);
     } catch (error: any) {
       console.error("Error saving role:", error);
