@@ -31,7 +31,6 @@ const UserSettingsProvider = ({ children }: { children: React.ReactNode }) => {
         }
       } catch (error) {
         console.error("Error fetching user config:", error);
-        toast.error("Failed to load appearance settings");
       } finally {
         setIsLoading(false);
       }

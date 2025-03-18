@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,7 +10,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { IAiAgent } from "@/types/aiAgents";
 import { ROUTES } from "@/lib/constants";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import FunctionSelector from "@/components/selectors/FunctionSelector";
 
@@ -79,7 +84,8 @@ const AgentDetail = () => {
     try {
       const { data, error } = await supabase
         .from("agent_functions")
-        .select(`
+        .select(
+          `
           function_id,
           ai_functions:function_id (
             id,
@@ -87,20 +93,22 @@ const AgentDetail = () => {
             description,
             type
           )
-        `)
+        `
+        )
         .eq("agent_id", id)
         .eq("tenant_id", tenantId);
 
       if (error) throw error;
-      
+
       if (data) {
-        const functions = data.map(item => ({
+        console.log("data", data);
+        const functions = data.map((item) => ({
           id: item.ai_functions.id,
           name: item.ai_functions.name,
           description: item.ai_functions.description,
-          type: item.ai_functions.type
+          type: item.ai_functions.type,
         }));
-        
+
         setSelectedFunctions(functions);
       }
     } catch (error) {
@@ -162,7 +170,7 @@ const AgentDetail = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 ">
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"
@@ -181,7 +189,7 @@ const AgentDetail = () => {
           <CardTitle>Agent Details</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-4 ">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Internal Name</Label>
@@ -236,7 +244,7 @@ const AgentDetail = () => {
 
             <div className="space-y-2">
               <Label>AI Functions</Label>
-              <FunctionSelector 
+              <FunctionSelector
                 agentId={id || ""}
                 selectedFunctions={selectedFunctions}
                 onFunctionsChange={setSelectedFunctions}

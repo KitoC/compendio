@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, ChevronsUpDown, Plus, X } from "lucide-react";
@@ -8,6 +7,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command";
 import {
   Popover,
@@ -44,10 +44,11 @@ const FunctionSelector = ({
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [functions, setFunctions] = useState<AIFunction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     if (!tenantId) return;
-    
+
     const fetchFunctions = async () => {
       setIsLoading(true);
       try {
@@ -107,7 +108,9 @@ const FunctionSelector = ({
     if (!tenantId) return;
 
     // Remove from selected functions
-    const newSelectedFunctions = selectedFunctions.filter((fn) => fn.id !== fnId);
+    const newSelectedFunctions = selectedFunctions.filter(
+      (fn) => fn.id !== fnId
+    );
     onFunctionsChange(newSelectedFunctions);
 
     // Remove the association from the database
@@ -131,7 +134,7 @@ const FunctionSelector = ({
   const handleFunctionCreated = (newFunctionId: string) => {
     // Refresh the functions list
     if (!tenantId) return;
-    
+
     const fetchNewFunction = async () => {
       try {
         const { data, error } = await supabase
@@ -158,7 +161,11 @@ const FunctionSelector = ({
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2 mb-2">
         {selectedFunctions.map((fn) => (
-          <Badge key={fn.id} variant="secondary" className="flex items-center gap-1">
+          <Badge
+            key={fn.id}
+            variant="secondary"
+            className="flex items-center gap-1"
+          >
             {fn.name}
             <Button
               variant="ghost"
@@ -188,34 +195,49 @@ const FunctionSelector = ({
           </PopoverTrigger>
           <PopoverContent className="w-[300px] p-0">
             <Command>
-              <CommandInput placeholder="Search functions..." />
+              <CommandInput
+                placeholder="Search functions..."
+                value={search}
+                onValueChange={setSearch}
+              />
               <CommandEmpty>No functions found.</CommandEmpty>
-              <CommandGroup>
-                {functions
-                  .filter((fn) => !selectedFunctions.some((selected) => selected.id === fn.id))
-                  .map((fn) => (
-                    <CommandItem
-                      key={fn.id}
-                      value={fn.id}
-                      onSelect={handleSelectFunction}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          selectedFunctions.some((selected) => selected.id === fn.id)
-                            ? "opacity-100"
-                            : "opacity-0"
-                        )}
-                      />
-                      <div className="flex flex-col">
-                        <span>{fn.name}</span>
-                        <span className="text-xs text-muted-foreground truncate">
-                          {fn.description}
-                        </span>
-                      </div>
-                    </CommandItem>
-                  ))}
-              </CommandGroup>
+
+              <CommandList>
+                <CommandGroup>
+                  {functions
+                    .filter(
+                      (fn) =>
+                        !selectedFunctions.some(
+                          (selected) => selected.id === fn.id
+                        )
+                    )
+                    .map((fn) => (
+                      <CommandItem
+                        key={fn.id}
+                        value={fn.id}
+                        onSelect={handleSelectFunction}
+                      >
+                        item
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            selectedFunctions.some(
+                              (selected) => selected.id === fn.id
+                            )
+                              ? "opacity-100"
+                              : "opacity-0"
+                          )}
+                        />
+                        <div className="flex flex-col">
+                          <span>{fn.name}</span>
+                          <span className="text-xs text-muted-foreground truncate">
+                            {fn.description}
+                          </span>
+                        </div>
+                      </CommandItem>
+                    ))}
+                </CommandGroup>
+              </CommandList>
             </Command>
           </PopoverContent>
         </Popover>

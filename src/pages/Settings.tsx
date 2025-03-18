@@ -81,10 +81,10 @@ const Settings = () => {
 
   return (
     <AuthRequired>
-      <div className="container mx-auto py-8 max-w-5xl">
+      <div className="container mx-auto py-8 max-w-5xl flex flex-col h-full">
         <h1 className="text-3xl font-bold mb-6">Settings</h1>
 
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden flex  flex-col flex-1">
           <div className="p-4 border-b">
             <Tabs value={tab} className="w-full">
               <TabsList className="w-full flex justify-start overflow-x-auto">
@@ -105,7 +105,7 @@ const Settings = () => {
             </Tabs>
           </div>
 
-          <div className="p-6">
+          <div className="p-6 flex-1 overflow-y-auto flex-1">
             <Outlet />
           </div>
         </Card>
