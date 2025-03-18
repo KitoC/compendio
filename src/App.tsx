@@ -56,7 +56,6 @@ const CustomRoleForm = lazy(() => import("./pages/settings/CustomRoleForm"));
 const AppearanceSettings = lazy(() => import("./pages/settings/AppearanceSettings"));
 const AgentsSettings = lazy(() => import("./pages/settings/AgentsSettings"));
 const AgentDetail = lazy(() => import("./pages/settings/AgentDetail"));
-const IntegrationsSettings = lazy(() => import("./pages/settings/IntegrationsSettings"));
 
 const queryClient = new QueryClient();
 
@@ -124,16 +123,12 @@ const router = createBrowserRouter([
                 element: <CustomTablesPage />,
               },
               { path: ROUTES.SETTINGS_AGENTS_DETAIL, element: <AgentDetail /> },
-              {
-                path: ROUTES.SETTINGS_INTEGRATIONS,
-                element: <IntegrationsSettings />,
-              },
             ],
           },
           // Custom Tables CRUD routes
-          { path: ROUTES.SETTINGS_CUSTOM_TABLES_NEW, element: <CustomTableForm tableId={null} /> },
+          { path: ROUTES.SETTINGS_CUSTOM_TABLES_NEW, element: <CustomTableForm /> },
           { path: ROUTES.SETTINGS_CUSTOM_TABLES_DETAIL, element: <CustomTableDetail /> },
-          { path: `${ROUTES.SETTINGS_CUSTOM_TABLES_DETAIL}/edit`, element: <CustomTableForm tableId=":id" /> },
+          { path: `${ROUTES.SETTINGS_CUSTOM_TABLES_DETAIL}/edit`, element: <CustomTableForm /> },
           { path: ROUTES.SETTINGS_CUSTOM_ROLES_NEW, element: <CustomRoleForm /> },
           { path: ROUTES.SETTINGS_CUSTOM_ROLES_DETAIL, element: <CustomRoleForm /> },
         ],

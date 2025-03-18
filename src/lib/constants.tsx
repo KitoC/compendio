@@ -1,4 +1,3 @@
-
 export const ROUTES = {
   INDEX: "/",
   AUTH: "/auth",
@@ -20,6 +19,5 @@ export const ROUTES = {
   SETTINGS_CUSTOM_TABLES_NEW: "/settings/custom-tables/new-table",
   SETTINGS_CUSTOM_ROLES_DETAIL: "/settings/custom-tables/roles/:id",
   SETTINGS_CUSTOM_ROLES_NEW: "/settings/custom-tables/new-role",
-  SETTINGS_INTEGRATIONS: "/settings/integrations",
   NOT_FOUND: "*",
 };
