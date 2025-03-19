@@ -28,6 +28,7 @@ import { useSidebar } from "@/components/ui/sidebar/context";
 import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
+import { useCustomTables } from "@/contexts/CustomTables/useCustomTables";
 
 interface SidebarItemOrGroup {
   label: string;
@@ -58,6 +59,7 @@ const SidebarItem = (item: SidebarItemOrGroup) => {
 const AppSidebar = () => {
   const { user, profile, signOut } = useAuth();
   const { aiAgents } = useAiAgents();
+  const { tables } = useCustomTables();
   const { toggleSidebar } = useSidebar();
   const [showSettingsSidebar, setShowSettingsSidebar] = useState(false);
   const location = useLocation();
@@ -73,6 +75,14 @@ const AppSidebar = () => {
       children: aiAgents.map((agent) => ({
         label: agent.human_name || agent.name,
         url: ROUTES.CONVERSATIONS_DETAIL.replace(":id", agent.name),
+      })),
+    },
+    {
+      icon: <Table2 className="h-4 w-4" />,
+      label: "Custom Tables",
+      children: tables.map((table) => ({
+        label: table.name,
+        url: ROUTES.CUSTOM_TABLE_DATA.replace(":id", table.id),
       })),
     },
   ];

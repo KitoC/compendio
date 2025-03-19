@@ -1,4 +1,4 @@
-
+// NO_CHANGE
 import { lazy, Suspense } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -49,11 +49,16 @@ const RequestAccess = lazy(() => import("./pages/RequestAccess"));
 const AccessPending = lazy(() => import("./pages/AccessPending"));
 const ChatPage = lazy(() => import("./pages/ChatPage"));
 const Settings = lazy(() => import("./pages/Settings"));
-const CustomTablesPage = lazy(() => import("./pages/settings/CustomTablesPage"));
+const CustomTablesPage = lazy(
+  () => import("./pages/settings/CustomTablesPage")
+);
 const CustomTableForm = lazy(() => import("./pages/settings/CustomTableForm"));
-const CustomTableDetail = lazy(() => import("./pages/settings/CustomTableDetail"));
+
+const CustomTableDataPage = lazy(() => import("./pages/CustomTableDataPage"));
 const CustomRoleForm = lazy(() => import("./pages/settings/CustomRoleForm"));
-const AppearanceSettings = lazy(() => import("./pages/settings/AppearanceSettings"));
+const AppearanceSettings = lazy(
+  () => import("./pages/settings/AppearanceSettings")
+);
 const AgentsSettings = lazy(() => import("./pages/settings/AgentsSettings"));
 const AgentDetail = lazy(() => import("./pages/settings/AgentDetail"));
 
@@ -107,6 +112,10 @@ const router = createBrowserRouter([
           { path: ROUTES.CONVERSATIONS, element: <ChatPage /> },
           { path: ROUTES.CONVERSATIONS_DETAIL, element: <ChatPage /> },
           {
+            path: ROUTES.CUSTOM_TABLE_DATA,
+            element: <CustomTableDataPage />,
+          },
+          {
             path: ROUTES.SETTINGS,
             element: <Settings />,
             children: [
@@ -126,11 +135,26 @@ const router = createBrowserRouter([
             ],
           },
           // Custom Tables CRUD routes
-          { path: ROUTES.SETTINGS_CUSTOM_TABLES_NEW, element: <CustomTableForm /> },
-          { path: ROUTES.SETTINGS_CUSTOM_TABLES_DETAIL, element: <CustomTableDetail /> },
-          { path: `${ROUTES.SETTINGS_CUSTOM_TABLES_DETAIL}/edit`, element: <CustomTableForm /> },
-          { path: ROUTES.SETTINGS_CUSTOM_ROLES_NEW, element: <CustomRoleForm /> },
-          { path: ROUTES.SETTINGS_CUSTOM_ROLES_DETAIL, element: <CustomRoleForm /> },
+          {
+            path: ROUTES.SETTINGS_CUSTOM_TABLES_NEW,
+            element: <CustomTableForm />,
+          },
+          {
+            path: ROUTES.SETTINGS_CUSTOM_TABLES_DETAIL,
+            element: <CustomTableDetail />,
+          },
+          {
+            path: `${ROUTES.SETTINGS_CUSTOM_TABLES_DETAIL}/edit`,
+            element: <CustomTableForm />,
+          },
+          {
+            path: ROUTES.SETTINGS_CUSTOM_ROLES_NEW,
+            element: <CustomRoleForm />,
+          },
+          {
+            path: ROUTES.SETTINGS_CUSTOM_ROLES_DETAIL,
+            element: <CustomRoleForm />,
+          },
         ],
       },
 

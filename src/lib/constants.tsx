@@ -9,6 +9,7 @@ export const ROUTES = {
   CONVERSATIONS: "/conversations",
   CONVERSATION: "/conversation",
   CONVERSATIONS_DETAIL: "/conversations/:id",
+  CUSTOM_TABLE_DATA: "/ct/:id",
   CONVERSATION_ASSISTANT: "/conversations/general-assistant",
   SETTINGS: "/settings",
   SETTINGS_APPEARANCE: "/settings/appearance",

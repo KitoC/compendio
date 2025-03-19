@@ -165,10 +165,9 @@ const FormBuilder = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(values);
+
     if (validateForm()) {
       onSubmit(values);
-      toast.success("Form submitted successfully!");
     } else {
       toast.error("Please fix the errors in the form");
     }
@@ -191,7 +190,6 @@ const FormBuilder = ({
     }, 0);
   }, [values, buttonPortalId]);
 
-  console.log("footerEL", footerEl);
   const footer = (
     <CardFooter className="flex justify-between">
       {config.showReset && (

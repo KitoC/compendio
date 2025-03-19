@@ -88,53 +88,40 @@ const AgentsSettings = () => {
   const handleDeleteAgent = async () => {
     if (!agentToDelete) return;
 
-    try {
-      const { error } = await supabase
-        .from("ai_agents")
-        .delete()
-        .eq("id", agentToDelete);
+    const { error } = await supabase
+      .from("ai_agents")
+      .delete()
+      .eq("id", agentToDelete);
 
-      if (error) throw error;
+    if (error) throw error;
 
-      toast.success("Agent deleted successfully");
-      fetchAgents();
-    } catch (error) {
-      console.error("Error deleting agent:", error);
-      toast.error("Failed to delete agent");
-    } finally {
-      setDeleteDialogOpen(false);
-      setAgentToDelete(null);
-    }
+    toast.success("Agent deleted successfully");
+    fetchAgents();
   };
 
   const handleSaveAgent = async (agent: IAiAgent) => {
     if (!tenantId || !user) return;
 
-    try {
-      const isNewAgent = !agent.id;
-      const agentData = {
-        ...agent,
-        tenant_id: tenantId,
-      } as IAiAgent;
+    const isNewAgent = !agent.id;
+    const agentData = {
+      ...agent,
+      tenant_id: tenantId,
+    } as IAiAgent;
 
-      let result;
-      if (isNewAgent) {
-        result = await supabase.from("ai_agents").insert([agentData]).select();
-      } else {
-        result = await supabase
-          .from("ai_agents")
-          .update(agentData)
-          .eq("id", agent.id);
-      }
-
-      if (result.error) throw result.error;
-
-      toast.success(`Agent ${isNewAgent ? "created" : "updated"} successfully`);
-      navigate(`${ROUTES.SETTINGS}/agents`);
-    } catch (error) {
-      console.error("Error saving agent:", error);
-      toast.error(`Failed to ${!agent.id ? "create" : "update"} agent`);
+    let result;
+    if (isNewAgent) {
+      result = await supabase.from("ai_agents").insert([agentData]).select();
+    } else {
+      result = await supabase
+        .from("ai_agents")
+        .update(agentData)
+        .eq("id", agent.id);
     }
+
+    if (result.error) throw result.error;
+
+    toast.success(`Agent ${isNewAgent ? "created" : "updated"} successfully`);
+    navigate(`${ROUTES.SETTINGS}/agents`);
   };
 
   return (

@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import Page from "@/components/Page";
 
 const Settings = () => {
   const { user, isLoading, hasTenant, tenantId } = useAuth();
@@ -54,7 +55,7 @@ const Settings = () => {
 
   return (
     <AuthRequired>
-      <div className="container mx-auto py-8 max-w-8xl flex flex-col h-full">
+      <Page>
         <div className="flex items-center mb-6">
           <Button
             variant="ghost"
@@ -72,7 +73,7 @@ const Settings = () => {
         </div>
 
         <Outlet />
-      </div>
+      </Page>
     </AuthRequired>
   );
 };
