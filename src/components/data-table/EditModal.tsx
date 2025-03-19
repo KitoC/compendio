@@ -1,3 +1,4 @@
+
 // NO_CHANGE
 
 import { useState } from "react";
@@ -19,7 +20,6 @@ function EditModal<T extends Record<string, unknown>>({
 }: EditModalProps<T>) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  console.log("item", item);
   // Generate form config from columns
   const formConfig = getFormConfig(
     columnsToFormConfig(columns, (item || {}) as T, {
@@ -33,7 +33,6 @@ function EditModal<T extends Record<string, unknown>>({
     item
   );
 
-  console.log("formConfig", formConfig);
   // Get initial values from item
   const initialValues = item ? createInitialValues(item, columns) : {};
 

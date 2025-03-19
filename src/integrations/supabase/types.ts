@@ -125,6 +125,7 @@ export type Database = {
           description: string | null
           enabled_for: Json
           id: string
+          markup: Json | null
           name: string
           parameters: Json
           schema: Json
@@ -139,6 +140,7 @@ export type Database = {
           description?: string | null
           enabled_for: Json
           id?: string
+          markup?: Json | null
           name: string
           parameters: Json
           schema: Json
@@ -153,6 +155,7 @@ export type Database = {
           description?: string | null
           enabled_for?: Json
           id?: string
+          markup?: Json | null
           name?: string
           parameters?: Json
           schema?: Json
@@ -394,6 +397,57 @@ export type Database = {
           },
           {
             foreignKeyName: "fk_custom_roles_tenant"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_table_data: {
+        Row: {
+          created_at: string | null
+          data: Json
+          deleted_at: string | null
+          id: string
+          metadata: Json
+          table_id: string
+          table_name: string
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data: Json
+          deleted_at?: string | null
+          id?: string
+          metadata: Json
+          table_id: string
+          table_name: string
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json
+          deleted_at?: string | null
+          id?: string
+          metadata?: Json
+          table_id?: string
+          table_name?: string
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_table_data_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "custom_table_definitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_custom_table_data_tenant"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"

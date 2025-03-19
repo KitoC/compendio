@@ -1,4 +1,4 @@
-// NO_CHANGE
+
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,8 @@ import DataTable from "@/components/data-table";
 import type { Column } from "@/components/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import Page from "@/components/Page";
+import { customTableDataService } from "@/services/customTableDataService";
+import { FormConfig } from "@/components/form-builder/types";
 
 interface CustomTableField {
   id: string;
@@ -31,13 +33,22 @@ const CustomTableDataPage = () => {
   const { tenantId } = useAuth();
   const navigate = useNavigate();
 
-  const [tableDefinition, setTableDefinition] =
-    useState<CustomTableDefinition | null>(null);
+  const [tableDefinition, setTableDefinition] = useState<CustomTableDefinition | null>(null);
   const [tableFields, setTableFields] = useState<CustomTableField[]>([]);
   const [tableData, setTableData] = useState<unknown[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    pageSize: 10,
+    totalPages: 1,
+    totalItems: 0
+  });
+  const [sortField, setSortField] = useState<string>("created_at");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState<Record<string, string>>({});
 
-  // Fetch the table definition
+  // Fetch the table definition and fields
   useEffect(() => {
     const fetchTableDefinition = async () => {
       try {
@@ -70,23 +81,11 @@ const CustomTableDataPage = () => {
         if (fieldsError) throw fieldsError;
         setTableFields(fieldsData || []);
 
-        // Fetch the actual table data
-        if (definitionData.name) {
-          const { data: tableData, error: tableDataError } = await supabase.rpc(
-            "get_custom_table_data",
-            {
-              p_table_name: definitionData.name,
-              p_tenant_id: tenantId,
-            }
-          );
-
-          if (tableDataError) throw tableDataError;
-
-          setTableData((tableData || []) as unknown[]);
-        }
+        // Load initial data
+        await fetchTableData();
       } catch (error) {
-        console.error("Error fetching table data:", error);
-        toast.error("Failed to load table data");
+        console.error("Error fetching table definition:", error);
+        toast.error("Failed to load table definition");
       } finally {
         setIsLoading(false);
       }
@@ -94,6 +93,32 @@ const CustomTableDataPage = () => {
 
     fetchTableDefinition();
   }, [id, tenantId, navigate]);
+
+  // Fetch table data with pagination, sorting, filtering
+  const fetchTableData = async () => {
+    try {
+      if (!id) return;
+
+      setIsLoading(true);
+      
+      const response = await customTableDataService.getTableData(id, {
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+        sortField,
+        sortDirection,
+        search: searchTerm,
+        filters
+      });
+
+      setTableData(response.data);
+      setPagination(response.pagination);
+    } catch (error) {
+      console.error("Error fetching table data:", error);
+      toast.error("Failed to load table data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Generate columns for the DataTable based on table fields
   const generateColumns = (): Column<unknown>[] => {
@@ -121,92 +146,125 @@ const CustomTableDataPage = () => {
     }));
   };
 
-  // Handle creating a new record
-  const handleCreate = async (newRecord: unknown) => {
-    if (!tableDefinition?.name || !tenantId) return;
-
-    const { data, error } = await supabase.rpc("insert_custom_table_record", {
-      p_table_name: tableDefinition.name,
-      p_tenant_id: tenantId,
-      p_data: newRecord,
-    });
-
-    if (error) throw error;
-
-    toast.success("Record created successfully");
-
-    // Refresh the data
-    const { data: refreshedData, error: refreshError } = await supabase.rpc(
-      "get_custom_table_data",
-      {
-        p_table_name: tableDefinition.name,
-        p_tenant_id: tenantId,
+  // Generate custom form config based on field definitions
+  const getFormConfig = (defaultConfig: FormConfig): FormConfig => {
+    // Map field type from database to form field type
+    const mapFieldType = (dbType: string): string => {
+      switch (dbType) {
+        case "integer": return "number";
+        case "boolean": return "checkbox";
+        case "timestamp": return "date";
+        case "reference": return "select";
+        case "uuid": return "text";
+        default: return "text";
       }
-    );
+    };
 
-    if (refreshError) throw refreshError;
-    setTableData((tableData || []) as unknown[]);
+    // Create form fields based on table fields
+    const formFields = tableFields.map(field => ({
+      id: field.id,
+      name: field.name,
+      label: field.display_name,
+      type: mapFieldType(field.field_type) as any,
+      placeholder: `Enter ${field.display_name.toLowerCase()}`,
+      validation: {
+        required: field.is_required
+      },
+      // Add options for select fields if available
+      ...(field.field_type === "reference" && {
+        options: []  // You would populate this with actual options
+      })
+    }));
+
+    // Update the config sections with our fields
+    return {
+      ...defaultConfig,
+      sections: [
+        {
+          id: "main",
+          title: "Record Details",
+          fields: formFields
+        }
+      ]
+    };
+  };
+
+  // Handle creating a new record
+  const handleCreate = async (newRecord: Record<string, unknown>) => {
+    try {
+      if (!id) return;
+
+      await customTableDataService.createRecord(id, newRecord);
+      toast.success("Record created successfully");
+      
+      // Refresh the data
+      fetchTableData();
+    } catch (error) {
+      console.error("Error creating record:", error);
+      toast.error("Failed to create record");
+      throw error; // Re-throw to let the form handler deal with it
+    }
   };
 
   // Handle updating a record
-  const handleUpdate = async (updatedRecord: object) => {
-    if (!tableDefinition?.name || !tenantId) return;
+  const handleUpdate = async (updatedRecord: Record<string, unknown>) => {
+    try {
+      if (!id) return;
 
-    // Extract the ID and remove it from the data
-    const { id: recordId, ...recordData } = updatedRecord;
+      const recordId = updatedRecord.id as string;
+      // Remove id from the data object
+      const { id: _, ...recordData } = updatedRecord;
 
-    const { error } = await supabase.rpc("update_custom_table_record", {
-      p_table_name: tableDefinition.name,
-      p_record_id: recordId,
-      p_tenant_id: tenantId,
-      p_data: recordData,
-    });
-
-    if (error) throw error;
-
-    toast.success("Record updated successfully");
-
-    // Refresh the data
-    const { data: refreshedData, error: refreshError } = await supabase.rpc(
-      "get_custom_table_data",
-      {
-        p_table_name: tableDefinition.name,
-        p_tenant_id: tenantId,
-      }
-    );
-
-    if (refreshError) throw refreshError;
-    setTableData((tableData || []) as unknown[]);
+      await customTableDataService.updateRecord(recordId, id, recordData);
+      toast.success("Record updated successfully");
+      
+      // Refresh the data
+      fetchTableData();
+    } catch (error) {
+      console.error("Error updating record:", error);
+      toast.error("Failed to update record");
+      throw error; // Re-throw to let the form handler deal with it
+    }
   };
 
   // Handle deleting a record
   const handleDelete = async (recordId: string) => {
-    if (!tableDefinition?.name || !tenantId) return;
-
-    const { error } = await supabase.rpc("delete_custom_table_record", {
-      p_table_name: tableDefinition.name,
-      p_record_id: recordId,
-      p_tenant_id: tenantId,
-    });
-
-    if (error) throw error;
-
-    toast.success("Record deleted successfully");
-
-    // Refresh the data
-    const { data: refreshedData, error: refreshError } = await supabase.rpc(
-      "get_custom_table_data",
-      {
-        p_table_name: tableDefinition.name,
-        p_tenant_id: tenantId,
-      }
-    );
-
-    if (refreshError) throw refreshError;
-    setTableData((tableData || []) as unknown[]);
+    try {
+      await customTableDataService.deleteRecord(recordId);
+      toast.success("Record deleted successfully");
+      
+      // Refresh the data
+      fetchTableData();
+    } catch (error) {
+      console.error("Error deleting record:", error);
+      toast.error("Failed to delete record");
+      throw error;
+    }
   };
 
-  if (isLoading) {
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setPagination(prev => ({ ...prev, page }));
+  };
+
+  // Handle sort change
+  const handleSortChange = (field: string) => {
+    if (field === sortField) {
+      setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  // Effect to reload data when pagination, sort or filters change
+  useEffect(() => {
+    if (tableDefinition) {
+      fetchTableData();
+    }
+  }, [pagination.page, pagination.pageSize, sortField, sortDirection, searchTerm, filters]);
+
+  if (isLoading && !tableDefinition) {
     return (
       <Page>
         <div className="flex items-center justify-between">
@@ -239,6 +297,16 @@ const CustomTableDataPage = () => {
           onDelete={handleDelete}
           searchable
           pagination
+          pageSize={pagination.pageSize}
+          currentPage={pagination.page}
+          totalItems={pagination.totalItems}
+          onPageChange={handlePageChange}
+          onSearch={(term) => setSearchTerm(term)}
+          onSort={handleSortChange}
+          sortField={sortField}
+          sortDirection={sortDirection}
+          getFormConfig={getFormConfig}
+          isLoading={isLoading}
         />
       )}
     </Page>

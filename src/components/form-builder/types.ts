@@ -1,3 +1,4 @@
+
 // NO_CHANGE
 
 export type FormFieldType =
@@ -9,7 +10,12 @@ export type FormFieldType =
   | "select"
   | "checkbox"
   | "radio"
-  | "date";
+  | "date"
+  | "integer"   // Added for custom table fields
+  | "boolean"   // Added for custom table fields
+  | "reference" // Added for custom table fields
+  | "timestamp" // Added for custom table fields
+  | "uuid";     // Added for custom table fields
 
 export interface FormFieldOption {
   label: string;
