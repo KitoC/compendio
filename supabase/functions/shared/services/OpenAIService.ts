@@ -1,9 +1,12 @@
+// NO_CHANGE
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import type { OpenAiMessage, OpenAiRole } from "../../../../src/types/chat.ts";
 import type {
   IFunctionCall,
   IOpenAiFunction,
 } from "../../../../src/types/aiAgents.ts";
+import type Logger from "../utils/logger.ts";
 const OPEN_AI_URL = "https://api.openai.com";
 
 const ENDPOINTS = {
@@ -24,14 +27,21 @@ interface IStreamMessage {
   function_call?: IFunctionCall;
 }
 
+interface IConstructorParams {
+  apiKey: string;
+  logger: Logger;
+}
+
 type IFunctionCallHandler = (fn: IFunctionCall) => Promise<object | undefined>;
 
 class OpenAIService {
   private apiKey: string;
   private headers: Record<string, string>;
+  private logger: Logger;
 
-  constructor(apiKey: string) {
+  constructor({ apiKey, logger }: IConstructorParams) {
     this.apiKey = apiKey;
+    this.logger = logger;
     this.headers = {
       Authorization: `Bearer ${this.apiKey}`,
       "Content-Type": "application/json",
@@ -46,26 +56,38 @@ class OpenAIService {
     options = {},
   }: ICallOpenAIChatCompletionParams) {
     try {
+      this.logger.info("IS STREAMING?", stream ? "YES" : "NO");
+
+      const body = {
+        model,
+        messages,
+        stream,
+        functions: functions?.length ? functions : undefined,
+        ...options,
+      };
+
       const response = await fetch(ENDPOINTS.COMPLETIONS, {
         method: "POST",
         headers: this.headers,
-        body: JSON.stringify({
-          model,
-          messages,
-          stream,
-          functions,
-          ...options,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`OpenAI API error (${response.status}): ${errorText}`);
+
+        const error = new Error(errorText);
+
+        this.logger.error(errorText, error);
+
+        throw error;
       }
 
       return response;
     } catch (error) {
-      console.error("Error calling OpenAI:", error);
+      this.logger.error(
+        "Error in OpenAIService.callOpenAIChatCompletion:",
+        error
+      );
       throw error;
     }
   }

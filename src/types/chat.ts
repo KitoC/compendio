@@ -30,6 +30,7 @@ export interface ChatMessage {
   };
   metadata: Record<string, unknown>;
   created_at?: string;
+  updated_at?: string;
   loading?: boolean;
   reply_to?: string;
   tenant_id: string;

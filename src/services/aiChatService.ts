@@ -1,10 +1,70 @@
+// NO_CHANGE
+
 import { supabase } from "@/integrations/supabase/client";
 import { ChatMessage } from "@/types/chat";
-import { Json } from "@/integrations/supabase/types";
+import { Database, Json } from "@/integrations/supabase/types";
 import { v4 as uuidv4 } from "uuid";
 import { callSupabaseFunction } from "./supabaseFunctionServices";
-import { IFunction } from "@/types/aiAgents";
-import { MessageRole } from "@/types/chat";
+
+interface ListenForFunctionCallsProps {
+  conversationId: string;
+  agentId: string;
+  userId: string;
+  tenantId: string;
+  messageId: string;
+  functionCall: object;
+  onFunctionCall: (functionCall: object) => void;
+}
+
+const listenForFunctionCalls = async ({
+  conversationId,
+  agentId,
+  userId,
+  tenantId,
+  messageId,
+  functionCall,
+  onFunctionCall,
+}: ListenForFunctionCallsProps) => {
+  const response = await callSupabaseFunction("wss-functions", {
+    conversation_id: conversationId,
+    agent_id: agentId,
+    function_call: functionCall,
+  });
+
+  const data = await response.json();
+
+  const functionCallMessage = {
+    id: uuidv4(),
+    conversation_id: conversationId,
+    role: data.type,
+    content: data.markup,
+    metadata: {
+      config: data.config,
+      schema: data.schema,
+      function_call: functionCall,
+      function_id: data.id,
+      function_name: data.name,
+      function_description: data.description,
+      function_parameters: data.parameters,
+      function_type: data.type,
+      agent_id: agentId,
+    },
+    user_id: userId,
+    tenant_id: tenantId,
+    reply_to: messageId,
+  };
+
+  onFunctionCall({
+    response: data,
+    message: functionCallMessage,
+  });
+
+  await supabase
+    .from("messages")
+    .insert([
+      functionCallMessage as Database["public"]["Tables"]["messages"]["Insert"],
+    ]);
+};
 
 const streamAiResponse = async ({
   endpoint,
@@ -101,10 +161,7 @@ export const sendMessageToAI = async ({
   try {
     const formattedMessages = messagesToSend.map((msg) => ({
       role: msg.role,
-      content:
-        typeof msg.content === "string"
-          ? msg.content
-          : JSON.stringify(msg.content),
+      content: msg.content,
     }));
 
     const id = messageId;
@@ -117,34 +174,16 @@ export const sendMessageToAI = async ({
         agent_id: agentId,
       },
       onUpdate,
-      onFunctionCall: async (functionCall) => {
-        const response = await callSupabaseFunction("wss-functions", {
-          conversation_id: conversationId,
-          agent_id: agentId,
-          messages: formattedMessages,
-          function_call: functionCall,
-        });
-
-        const data = await response.json();
-
-        const functionCallMessage = {
-          id: uuidv4(),
-          conversation_id: conversationId,
-          role: MessageRole.FORM,
-          content: data.markup.config,
-          metadata: {},
-          user_id: userId,
-          tenant_id: tenantId,
-          reply_to: messageId,
-        };
-
-        onFunctionCall({
-          response: data,
-          message: functionCallMessage,
-        });
-
-        await supabase.from("messages").insert([functionCallMessage]);
-      },
+      onFunctionCall: (functionCall) =>
+        listenForFunctionCalls({
+          conversationId,
+          agentId,
+          userId,
+          tenantId,
+          messageId,
+          functionCall,
+          onFunctionCall,
+        }),
     });
 
     // Once streaming is complete, save the message to the database
@@ -159,7 +198,11 @@ export const sendMessageToAI = async ({
     };
 
     // Save the complete message to the database
-    await supabase.from("messages").insert([finalMessage]);
+    await supabase
+      .from("messages")
+      .insert([
+        finalMessage as Database["public"]["Tables"]["messages"]["Insert"],
+      ]);
 
     // Call the onComplete callback
     await onComplete(finalMessage);
@@ -169,4 +212,55 @@ export const sendMessageToAI = async ({
     console.error("Error in sendMessageToAI:", error);
     throw error;
   }
+};
+
+interface SaveVoiceMessageResponseProps {
+  messageId: string;
+  message: ChatMessage;
+  conversationId: string;
+  agentId: string;
+  userId: string | undefined;
+  tenantId: string | undefined;
+  onFunctionCall: (functionCall: {
+    response: object;
+    message: ChatMessage;
+  }) => void;
+  functionCall: object;
+}
+
+export const saveVoiceMessageResponse = async ({
+  messageId,
+  message,
+  conversationId,
+  agentId,
+  userId,
+  tenantId,
+  onFunctionCall,
+  functionCall,
+}: SaveVoiceMessageResponseProps): Promise<ChatMessage | null> => {
+  if (!conversationId || !userId || !tenantId) return null;
+
+  try {
+    listenForFunctionCalls({
+      conversationId,
+      agentId,
+      userId,
+      tenantId,
+      messageId,
+      functionCall,
+      onFunctionCall,
+    });
+
+    // Save the complete message to the database
+    await supabase.from("messages").insert([message]);
+  } catch (error: unknown) {
+    console.error("Error in sendMessageToAI:", error);
+    // TODO: Handle errored messages
+    throw error;
+  }
+};
+
+export const aiChatService = {
+  sendMessageToAI,
+  saveVoiceMessageResponse,
 };

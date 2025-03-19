@@ -1,3 +1,5 @@
+// NO_CHANGE
+
 import { useChat } from "@/contexts/chat";
 import ChatMessage from "./ChatMessage";
 
@@ -17,7 +19,6 @@ const ChatMessages = () => {
         const isLastMessage = index === filteredMessages.length - 1;
         const functionalMessages = messages.filter((fm) => {
           const hasResponse = messages.find((m) => m.reply_to === fm.id);
-          console.log("hasResponse", hasResponse);
 
           const isFunctionalMessage = fm.reply_to === message.id.toString();
 

@@ -1,14 +1,19 @@
+// NO_CHANGE
+
 // @ts-expect-error - Supabase client is not typed
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.8.0";
+import type Logger from "../shared/utils/logger.ts";
 
 class ConversationsController {
   private supabase: SupabaseClient | null;
   private userId: string | null;
   private user: object | null;
+  private logger: Logger;
 
-  constructor() {
+  constructor({ logger }: { logger: Logger }) {
     this.supabase = null;
     this.userId = null;
+    this.logger = logger;
   }
 
   async getConversations(userId: string) {
@@ -33,6 +38,16 @@ class ConversationsController {
       title: "New Conversation",
       domain: "default",
     });
+  }
+
+  async insertMessages(messages: object[]) {
+    this.logger.debug("MESSAGES TO INSERT", messages);
+    try {
+      return await this.supabase.from("messages").insert(messages);
+    } catch (error) {
+      this.logger.error("Error in insertMessages:", error);
+      throw error;
+    }
   }
 
   /**

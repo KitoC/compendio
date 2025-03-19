@@ -1,6 +1,7 @@
-
+// NO_CHANGE
 import type SupabaseService from "../shared/services/SupabaseService";
 import type { IFunction, IFunctionCall } from "../../../src/types/aiAgents";
+import type Logger from "../shared/utils/logger";
 
 const mockFunctions: IFunction[] = [
   {
@@ -162,11 +163,13 @@ class FunctionController {
   private supabaseService: SupabaseService | null;
   private markup: { [key: string]: unknown };
   private functionsMap: { [key: string]: IFunction };
+  private logger: Logger;
 
-  constructor() {
+  constructor({ logger }: { logger: Logger }) {
     this.supabaseService = null;
     this.markup = {};
     this.functionsMap = {};
+    this.logger = logger;
   }
 
   async setDependencies({
@@ -215,7 +218,7 @@ class FunctionController {
       // Try to get functions from the database first
       const { data, error } = await this.supabaseService.supabase
         .from("ai_functions")
-        .select("id, name, description, type, parameters, markup");
+        .select("*");
 
       if (error) {
         console.error("Error fetching functions:", error);
@@ -225,8 +228,17 @@ class FunctionController {
       if (data && data.length > 0) {
         // Process functions from the database
         return data.map((func) => {
-          const { id, name, description, type, parameters, markup } = func;
-          
+          const {
+            id,
+            name,
+            description,
+            type,
+            parameters,
+            markup,
+            config,
+            schema,
+          } = func;
+
           if (markup) {
             this.markup[name] = markup;
           }
@@ -236,13 +248,15 @@ class FunctionController {
             description,
             type,
             parameters: parameters || {},
-            markup: markup || {}
+            markup: markup || {},
+            config: config || {},
+            schema: schema || {},
           };
 
           return {
             name,
             description,
-            parameters: parameters || {}
+            parameters: parameters || {},
           };
         });
       } else {

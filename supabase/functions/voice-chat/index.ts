@@ -1,16 +1,32 @@
+// NO_CHANGE
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { getEnvKey } from "../shared/utils/env.ts";
 import OpenAIService from "../shared/services/OpenAIService.ts";
 import SupabaseService from "../shared/services/SupabaseService.ts";
+import Logger from "../shared/utils/logger.ts";
+import AgentController from "../controllers/AgentController.ts";
+import GoogleCloudController from "../controllers/GoogleCloudController.ts";
+import FunctionController from "../controllers/FunctionController.ts";
+import ConversationsController from "../controllers/ConversationsController.ts";
 
 // Environment variables
-const GOOGLE_CLOUD_API_KEY = Deno.env.get("GOOGLE_CLOUD_API_KEY");
 const supabaseUrl = getEnvKey("SUPABASE_URL");
 const supabaseAnonKey = getEnvKey("SUPABASE_ANON_KEY");
 
-const openAiService = new OpenAIService(getEnvKey("OPENAI_API_KEY"));
-const supabaseService = new SupabaseService();
+const logger = new Logger({ debug: getEnvKey("DEBUG") });
+const openAiService = new OpenAIService({
+  apiKey: getEnvKey("OPENAI_API_KEY"),
+  logger,
+});
+const supabaseService = new SupabaseService({ logger });
+const agentController = new AgentController({ logger });
+const googleCloudController = new GoogleCloudController({
+  apiKey: getEnvKey("GOOGLE_CLOUD_API_KEY"),
+});
+const functionController = new FunctionController({ logger });
+const conversationsController = new ConversationsController({ logger });
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,22 +43,27 @@ serve(async (req: Request) => {
   }
 
   try {
-    const { message, agent_id, tenant_id, user_id, voice_config } =
-      await req.json();
+    const {
+      message,
+      agent_id,
+      tenant_id,
+      user_id,
+      voice_config,
+      conversation_id,
+    } = await req.json();
+
+    // Basic validation
+    if (!conversation_id) {
+      return supabaseService.sendError("Conversation ID is required", 400);
+    }
 
     // Basic validation
     if (!message) {
-      return supabaseService.sendJsonResponse(
-        { error: "Message is required" },
-        400
-      );
+      return supabaseService.sendError("Message is required", 400);
     }
 
     if (!agent_id) {
-      return supabaseService.sendJsonResponse(
-        { error: "Agent ID is required" },
-        400
-      );
+      return supabaseService.sendError("Agent ID is required", 400);
     }
 
     supabaseService.checkAuthHeaderPresent(req);
@@ -52,106 +73,47 @@ serve(async (req: Request) => {
       key: supabaseAnonKey,
     });
 
-    // Fetch agent details
-    const { data: agent, error: agentError } = await supabaseService.supabase
-      .from("ai_agents")
-      .select("*")
-      .eq("id", agent_id)
-      .single();
-
-    if (agentError || !agent) {
-      return supabaseService.sendJsonResponse(
-        { error: "Agent not found" },
-        404
-      );
-    }
-
-    // Get agent system prompt
-    const systemPrompt = agent.prompt || "You are a helpful AI assistant.";
-
-    // Call OpenAI for text response
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${getEnvKey("OPENAI_API_KEY")}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: agent.model || "gpt-4o-mini",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: message },
-        ],
-        max_tokens: 500,
-      }),
+    await agentController.setDependenciesAndGetAgents({
+      supabaseService,
+      openAiService,
+      functionController,
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`OpenAI API error (${response.status}): ${errorText}`);
-    }
+    await functionController.setDependencies({
+      supabaseService,
+    });
 
-    const data = await response.json();
-    const textResponse = data.choices[0].message.content;
+    await conversationsController.setDependencies({
+      supabase: supabaseService.supabase,
+    });
 
-    // Store the conversation in the database
-    await supabaseService.supabase.from("messages").insert([
-      {
-        role: "user",
-        content: { text: message },
-        conversation_id: agent_id, // Using agent_id as conversation_id for simplicity
-        metadata: {},
-        user_id,
-        tenant_id,
-      },
-      {
-        role: "assistant",
-        content: { text: textResponse },
-        conversation_id: agent_id,
-        metadata: {},
-        user_id,
-        tenant_id,
-      },
-    ]);
+    await googleCloudController.setDependencies({
+      supabase: supabaseService.supabase,
+    });
+
+    // Call OpenAI for text response
+    const { textResponse, functionCall } = await agentController.messageAgent({
+      newMessage: message,
+      conversationId: conversation_id,
+      agentId: agent_id,
+    });
 
     // Generate speech from text if Google Cloud API key is available
     let audioContent = null;
 
-    if (GOOGLE_CLOUD_API_KEY) {
-      try {
-        const ttsResponse = await fetch(
-          `https://texttospeech.googleapis.com/v1/text:synthesize?key=${GOOGLE_CLOUD_API_KEY}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            // TODO: MAKE CONFIGURABLE
-            body: JSON.stringify({
-              audioConfig: {
-                audioEncoding: "LINEAR16",
-                effectsProfileId: ["small-bluetooth-speaker-class-device"],
-                pitch: 0,
-                speakingRate: 1,
-              },
-              input: {
-                text: textResponse,
-              },
-              voice: { languageCode: "en-AU", name: "en-AU-Chirp3-HD-Puck" },
-            }),
-          }
-        );
+    try {
+      const ttsResponse = await googleCloudController.generateSpeech(
+        textResponse
+      );
 
-        if (ttsResponse.ok) {
-          const ttsData = await ttsResponse.json();
-          audioContent = ttsData.audioContent; // Already in base64 format
-        } else {
-          console.error(
-            "Google Cloud TTS API error:",
-            await ttsResponse.text()
-          );
-        }
-      } catch (error) {
-        console.error("Error generating speech:", error);
+      if (ttsResponse.ok) {
+        const ttsData = await ttsResponse.json();
+        audioContent = ttsData.audioContent; // Already in base64 format
+      } else {
+        console.error("Google Cloud TTS API error:", await ttsResponse.text());
       }
+    } catch (error) {
+      console.error("Error generating speech:", error);
     }
 
     // Return both text and audio
@@ -159,14 +121,15 @@ serve(async (req: Request) => {
       {
         text: textResponse,
         audioContent,
+        functionCall,
       },
       200
     );
   } catch (error) {
-    console.error("Error in voice-chat function:", error);
-    return supabaseService.sendJsonResponse(
-      { error: error.message || "An unknown error occurred" },
-      error.status || 500
+    return supabaseService.sendError(
+      error.message || "An unknown error occurred",
+      error.status || 500,
+      error
     );
   }
 });

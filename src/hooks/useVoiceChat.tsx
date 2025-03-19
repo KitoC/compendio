@@ -1,9 +1,9 @@
+// NO_CHANGE
+
 import { useState, useRef, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { callSupabaseFunction } from "@/services/supabaseFunctionServices";
-
+import { ChatMessage } from "@/types/chat";
 // Google Cloud TTS voice configuration
 interface GoogleCloudVoiceConfig {
   languageCode?: string; // e.g., "en-US", "fr-FR"
@@ -14,8 +14,9 @@ interface GoogleCloudVoiceConfig {
 // Configuration options for the voice chat hook
 interface UseVoiceChatOptions {
   agentId?: string; // Optional agent ID to specify which AI agent to talk to
-  onMessageReceived?: (message: string) => void; // Callback for when a message is received
+  onMessageReceived?: (message: string, functionCall?: object) => void; // Callback for when a message is received
   voiceConfig?: GoogleCloudVoiceConfig; // Google Cloud TTS voice configuration
+  conversationId?: string;
 }
 
 // Return type of the hook
@@ -24,7 +25,7 @@ interface UseVoiceChatReturn {
   lastMessage: string | null; // Last message received from the agent
   errorMessage: string | null; // Any error message
   clearError: () => void; // Clear the error message
-  sendMessageToAgent: (message: string) => Promise<void>; // Send message to agent
+  sendMessageToAgent: (message: ChatMessage) => Promise<void>; // Send message to agent
 }
 
 /**
@@ -59,6 +60,7 @@ export const useVoiceChat = (
       name: "en-US-Standard-C",
       ssmlGender: "FEMALE",
     },
+    conversationId,
   } = options;
 
   // State
@@ -130,7 +132,7 @@ export const useVoiceChat = (
 
   // Function to send a message to the AI agent
   const sendMessageToAgent = useCallback(
-    async (message: string) => {
+    async (message: ChatMessage) => {
       if (!user || !tenantId || !agentId) {
         setErrorMessage("Missing user, tenant, or agent information");
         return;
@@ -144,6 +146,7 @@ export const useVoiceChat = (
           tenant_id: tenantId,
           user_id: user.id,
           voice_config: voiceConfig,
+          conversation_id: conversationId,
         });
 
         if (!response.ok) {
@@ -153,14 +156,16 @@ export const useVoiceChat = (
         }
         const responseJson = await response.json();
 
-        const { text, audioContent } = responseJson;
+        const { text, audioContent, functionCall } = responseJson;
+
+        console.log("useVoiceChat.tsx - responseJson", responseJson);
 
         if (!audioContent && !text)
           throw new Error("No data returned from voice chat");
 
         // Update last message and trigger callback
         setLastMessage(text);
-        if (onMessageReceived) onMessageReceived(text);
+        if (onMessageReceived) onMessageReceived(text, functionCall);
 
         // Play audio response if available
         if (audioContent) {
@@ -174,7 +179,7 @@ export const useVoiceChat = (
         setErrorMessage(`Error sending message to agent: ${error.message}`);
       }
     },
-    [user, tenantId, agentId, onMessageReceived, voiceConfig]
+    [user, tenantId, agentId, onMessageReceived, voiceConfig, conversationId]
   );
 
   // Play audio response from the server

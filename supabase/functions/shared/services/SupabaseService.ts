@@ -1,8 +1,11 @@
+// NO_CHANGE
+
 import {
   createClient,
   SupabaseClient,
   // @ts-expect-error - Supabase client is not typed
 } from "https://esm.sh/@supabase/supabase-js@2.8.0";
+import type Logger from "../utils/logger";
 
 // CORS headers for cross-origin requests
 const corsHeaders = {
@@ -22,11 +25,17 @@ export class RequestError extends Error {
   }
 }
 
+interface IConstructorParams {
+  logger: Logger;
+}
+
 class SupabaseService {
   private _supabase: SupabaseClient;
   private authHeader: string | null;
+  private logger: Logger;
 
-  constructor() {
+  constructor({ logger }: IConstructorParams) {
+    this.logger = logger;
     this.authHeader = null;
   }
 
@@ -66,6 +75,15 @@ class SupabaseService {
 
   sendJsonResponse(data: object, status: number) {
     return new Response(JSON.stringify(data), {
+      status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  sendError(message: string, status: number = 500, error?: Error) {
+    this.logger.error(message, error);
+
+    return new Response(JSON.stringify({ error: message }), {
       status,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

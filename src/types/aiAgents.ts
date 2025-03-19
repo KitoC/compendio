@@ -18,6 +18,8 @@ export interface IFunction {
   description: string;
   markup?: object;
   type: string;
+  config?: object;
+  schema?: object;
 }
 
 export interface IOpenAiFunction {

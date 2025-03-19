@@ -1,3 +1,5 @@
+// NO_CHANGE
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { getEnvKey } from "../shared/utils/env.ts";
@@ -6,15 +8,21 @@ import AgentController from "../controllers/AgentController.ts";
 import ConversationsController from "../controllers/ConversationsController.ts";
 import SupabaseService from "../shared/services/SupabaseService.ts";
 import FunctionController from "../controllers/FunctionController.ts";
+import Logger from "../shared/utils/logger.ts";
+
 // Environment variables
 const supabaseUrl = getEnvKey("SUPABASE_URL");
 const supabaseAnonKey = getEnvKey("SUPABASE_ANON_KEY");
 
-const openAiService = new OpenAIService(getEnvKey("OPENAI_API_KEY"));
-const agentController = new AgentController();
-const conversationsController = new ConversationsController();
-const supabaseService = new SupabaseService();
-const functionController = new FunctionController();
+const logger = new Logger({ debug: getEnvKey("DEBUG") });
+const openAiService = new OpenAIService({
+  apiKey: getEnvKey("OPENAI_API_KEY"),
+  logger,
+});
+const agentController = new AgentController({ logger });
+const conversationsController = new ConversationsController({ logger });
+const supabaseService = new SupabaseService({ logger });
+const functionController = new FunctionController({ logger });
 
 /**
  * Main handler for the AI chat edge function
@@ -26,8 +34,7 @@ serve(async (req: Request) => {
   }
 
   try {
-    const { conversation_id, agent_id, messages, function_call } =
-      await req.json();
+    const { conversation_id, agent_id, function_call } = await req.json();
 
     supabaseService.checkAuthHeaderPresent(req);
 

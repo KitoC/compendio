@@ -1,3 +1,5 @@
+// NO_CHANGE
+
 import { forwardRef, useState, KeyboardEvent, useEffect } from "react";
 import {
   AudioLines,
@@ -18,6 +20,7 @@ interface ChatInputProps {
   onSendMessage: (message: string) => void;
   disabled?: boolean;
   agentId?: string;
+  conversationId?: string;
 }
 
 const AudioVisualizer = ({
@@ -50,7 +53,7 @@ const buttonWrapperClass =
   "bg-white dark:bg-gray-700 rounded-full p-2 border border-gray-200 dark:border-slate-600 border-b-0 rounded-b-none border-r-0 border-l-0";
 
 const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
-  ({ onSendMessage, disabled, agentId }, ref) => {
+  ({ onSendMessage, disabled, agentId, conversationId }, ref) => {
     const [message, setMessage] = useState("");
     const [showCommands, setShowCommands] = useState(false);
     const [isVoiceMode, setIsVoiceMode] = useState(false);
@@ -61,12 +64,6 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
     );
     const { currentAgent } = useAiAgents();
 
-    const handleVoiceMessage = (voiceMessage: string) => {
-      if (voiceMessage.trim()) {
-        onSendMessage(voiceMessage.trim());
-      }
-    };
-
     const {
       listening,
       transcript,
@@ -75,10 +72,14 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
       toggleMute,
       isMuted,
       isAgentSpeaking,
-    } = useVoiceToggle(currentAgent?.id, handleVoiceMessage, {
-      languageCode: "en-US",
-      name: "en-US-Standard-C",
-      ssmlGender: "FEMALE",
+    } = useVoiceToggle({
+      agentId: currentAgent?.id,
+      voiceConfig: {
+        languageCode: "en-US",
+        name: "en-US-Standard-C",
+        ssmlGender: "FEMALE",
+      },
+      conversationId,
     });
 
     useEffect(() => {
@@ -241,7 +242,7 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
                   closeVoiceMode(e);
                 } else {
                   setIsVoiceMode(true);
-                  startListening(e);
+                  startListening();
                 }
               }}
               type={isVoiceMode ? "button" : "submit"}

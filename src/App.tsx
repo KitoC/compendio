@@ -134,19 +134,7 @@ const router = createBrowserRouter([
               { path: ROUTES.SETTINGS_AGENTS_DETAIL, element: <AgentDetail /> },
             ],
           },
-          // Custom Tables CRUD routes
-          {
-            path: ROUTES.SETTINGS_CUSTOM_TABLES_NEW,
-            element: <CustomTableForm />,
-          },
-          {
-            path: ROUTES.SETTINGS_CUSTOM_TABLES_DETAIL,
-            element: <CustomTableDetail />,
-          },
-          {
-            path: `${ROUTES.SETTINGS_CUSTOM_TABLES_DETAIL}/edit`,
-            element: <CustomTableForm />,
-          },
+
           {
             path: ROUTES.SETTINGS_CUSTOM_ROLES_NEW,
             element: <CustomRoleForm />,

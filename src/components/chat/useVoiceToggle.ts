@@ -1,11 +1,13 @@
+// NO_CHANGE
 import { useVoiceChat } from "@/hooks/useVoiceChat";
-import { Mic, MicOff, Volume2 } from "lucide-react";
-import { IconButton } from "../ui/IconButton";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
+import { v4 as uuidv4 } from "uuid";
+import { useAuth } from "@/hooks/useAuth";
+import { useChat } from "@/contexts/chat/useChat";
 
 interface VoiceChatToggleProps {
   agentId?: string;
@@ -15,23 +17,30 @@ interface VoiceChatToggleProps {
     name?: string;
     ssmlGender?: string;
   };
+  conversationId?: string;
 }
 
-const useVoiceToggle = (
+const useVoiceToggle = ({
   agentId,
-  onMessageReceived,
   voiceConfig = {
     languageCode: "en-US",
     name: "en-US-Standard-C",
     ssmlGender: "FEMALE",
-  }
-) => {
+  },
+  conversationId,
+}: VoiceChatToggleProps) => {
   const [isMuted, setIsMuted] = useState(false);
+  const { tenantId } = useAuth();
+  const { handleHumanVoiceMessage, handleAgentVoiceMessage } = useChat();
+
   const { isAgentSpeaking, errorMessage, clearError, sendMessageToAgent } =
     useVoiceChat({
       agentId,
-      onMessageReceived,
+      onMessageReceived: (message, functionCall) => {
+        handleAgentVoiceMessage(message.trim(), functionCall);
+      },
       voiceConfig,
+      conversationId,
     });
 
   const [lastFinalTranscript, setLastFinalTranscript] = useState("");
@@ -49,12 +58,22 @@ const useVoiceToggle = (
     commands: [
       {
         command: "*",
-        callback: (command) => {
+        callback: (text) => {
           // Only process if this is a new transcript
-          if (command && command !== lastFinalTranscript) {
-            setLastFinalTranscript(command);
+          if (text && text !== lastFinalTranscript) {
+            setLastFinalTranscript(text);
+            handleHumanVoiceMessage(text);
             // Send message to agent when speech is finished
-            sendMessageToAgent(command);
+            sendMessageToAgent({
+              id: uuidv4(),
+              conversation_id: conversationId,
+              role: "user",
+              content: { text },
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              metadata: {},
+              tenant_id: tenantId,
+            });
           }
         },
         matchInterim: false,

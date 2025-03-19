@@ -10,6 +10,10 @@ export interface MarkupbuilderProps {
 const MarkupBuilder = ({ message }: MarkupbuilderProps) => {
   const content = message.content as unknown;
 
+  if (!content) {
+    return null;
+  }
+
   if (message.role === "form") {
     return <FormBuilder config={content as FormBuilderConfig} />;
   }
