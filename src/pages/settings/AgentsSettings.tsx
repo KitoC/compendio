@@ -66,7 +66,6 @@ const AgentsSettings = () => {
     try {
       setIsLoading(true);
 
-      console.log("fetching agents", tenantId);
       const { data, error } = await supabase
         .from("ai_agents")
         .select("*")
@@ -144,14 +143,14 @@ const AgentsSettings = () => {
                     name: "avatar_url",
                     type: "text",
                     label: "Avatar URL",
-                    defaultValue: value.avatar_url,
+                    defaultValue: value?.avatar_url,
                   },
                   {
                     id: "prompt",
                     name: "prompt",
                     type: "textarea",
                     label: "Prompt",
-                    defaultValue: value.prompt,
+                    defaultValue: value?.prompt,
                   },
                 ],
               },

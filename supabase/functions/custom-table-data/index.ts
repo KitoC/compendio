@@ -1,12 +1,17 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.8.0";
 import { Database } from "../shared/types.ts";
+import Logger from "../shared/utils/logger.ts";
+import { getEnvKey } from "../shared/utils/env.ts";
+
+const logger = new Logger({ debug: getEnvKey("DEBUG") });
 
 // CORS headers for cross-origin requests
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
 };
 
 // Helper function to create a Supabase client
@@ -17,16 +22,20 @@ const createSupabaseClient = (req: Request) => {
   }
 
   // Get Supabase URL and service role key from environment variables
-  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  const supabaseUrl = getEnvKey("SUPABASE_URL");
+  const supabaseAnonKey = getEnvKey("SUPABASE_ANON_KEY");
 
-  return createClient<Database>(supabaseUrl, supabaseKey, {
+  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
     global: { headers: { Authorization: authHeader } },
   });
 };
 
 // Validate the data against field definitions
-async function validateData(supabase: ReturnType<typeof createSupabaseClient>, tableId: string, data: Record<string, unknown>) {
+async function validateData(
+  supabase: ReturnType<typeof createSupabaseClient>,
+  tableId: string,
+  data: Record<string, unknown>
+) {
   // Fetch table fields
   const { data: fields, error: fieldsError } = await supabase
     .from("custom_table_fields")
@@ -43,9 +52,12 @@ async function validateData(supabase: ReturnType<typeof createSupabaseClient>, t
   // Check required fields
   for (const field of fields) {
     const fieldName = field.name;
-    
+
     // Check if required field is missing
-    if (field.is_required && (data[fieldName] === undefined || data[fieldName] === null)) {
+    if (
+      field.is_required &&
+      (data[fieldName] === undefined || data[fieldName] === null)
+    ) {
       validationErrors.push(`Field '${field.display_name}' is required`);
       continue;
     }
@@ -58,28 +70,45 @@ async function validateData(supabase: ReturnType<typeof createSupabaseClient>, t
     // Type validation based on field_type
     switch (field.field_type) {
       case "integer":
-        if (typeof data[fieldName] !== "number" || !Number.isInteger(data[fieldName])) {
-          validationErrors.push(`Field '${field.display_name}' must be an integer`);
+        if (
+          typeof data[fieldName] !== "number" ||
+          !Number.isInteger(data[fieldName])
+        ) {
+          validationErrors.push(
+            `Field '${field.display_name}' must be an integer`
+          );
         }
         break;
       case "boolean":
         if (typeof data[fieldName] !== "boolean") {
-          validationErrors.push(`Field '${field.display_name}' must be a boolean`);
+          validationErrors.push(
+            `Field '${field.display_name}' must be a boolean`
+          );
         }
         break;
       case "timestamp":
         try {
           if (isNaN(Date.parse(String(data[fieldName])))) {
-            validationErrors.push(`Field '${field.display_name}' must be a valid date/time`);
+            validationErrors.push(
+              `Field '${field.display_name}' must be a valid date/time`
+            );
           }
         } catch (e) {
-          validationErrors.push(`Field '${field.display_name}' must be a valid date/time`);
+          validationErrors.push(
+            `Field '${field.display_name}' must be a valid date/time`
+          );
         }
         break;
       case "uuid":
-        const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-        if (typeof data[fieldName] !== "string" || !uuidPattern.test(String(data[fieldName]))) {
-          validationErrors.push(`Field '${field.display_name}' must be a valid UUID`);
+        const uuidPattern =
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        if (
+          typeof data[fieldName] !== "string" ||
+          !uuidPattern.test(String(data[fieldName]))
+        ) {
+          validationErrors.push(
+            `Field '${field.display_name}' must be a valid UUID`
+          );
         }
         break;
       case "reference":
@@ -110,7 +139,10 @@ async function validateData(supabase: ReturnType<typeof createSupabaseClient>, t
 }
 
 // Get table data with pagination, filtering, and searching
-async function getTableData(supabase: ReturnType<typeof createSupabaseClient>, request: Request) {
+async function getTableData(
+  supabase: ReturnType<typeof createSupabaseClient>,
+  request: Request
+) {
   try {
     const url = new URL(request.url);
     const tableId = url.searchParams.get("tableId");
@@ -119,7 +151,7 @@ async function getTableData(supabase: ReturnType<typeof createSupabaseClient>, r
     const sortField = url.searchParams.get("sortField") || "created_at";
     const sortDirection = url.searchParams.get("sortDirection") || "desc";
     const searchTerm = url.searchParams.get("search") || "";
-    
+
     // Get filters from query params - format is filter[fieldName]=value
     const filters: Record<string, string> = {};
     for (const [key, value] of url.searchParams.entries()) {
@@ -132,7 +164,10 @@ async function getTableData(supabase: ReturnType<typeof createSupabaseClient>, r
     if (!tableId) {
       return new Response(
         JSON.stringify({ error: "Missing tableId parameter" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
       );
     }
 
@@ -160,7 +195,9 @@ async function getTableData(supabase: ReturnType<typeof createSupabaseClient>, r
       query = query.order(sortField, { ascending: sortDirection === "asc" });
     } else {
       // Sort by a field in the data JSON
-      query = query.order(`data->>${sortField}`, { ascending: sortDirection === "asc" });
+      query = query.order(`data->>${sortField}`, {
+        ascending: sortDirection === "asc",
+      });
     }
 
     // Apply pagination
@@ -188,22 +225,30 @@ async function getTableData(supabase: ReturnType<typeof createSupabaseClient>, r
     );
   } catch (error) {
     console.error("Error fetching table data:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 }
 
 // Create a new table record
-async function createTableRecord(supabase: ReturnType<typeof createSupabaseClient>, request: Request) {
+async function createTableRecord(
+  supabase: ReturnType<typeof createSupabaseClient>,
+  request: Request
+) {
   try {
     const { tableId, data, tenantId } = await request.json();
 
     if (!tableId || !data || !tenantId) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: tableId, data, or tenantId" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          error: "Missing required fields: tableId, data, or tenantId",
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
       );
     }
 
@@ -211,8 +256,14 @@ async function createTableRecord(supabase: ReturnType<typeof createSupabaseClien
     const validationErrors = await validateData(supabase, tableId, data);
     if (validationErrors.length > 0) {
       return new Response(
-        JSON.stringify({ error: "Validation failed", details: validationErrors }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          error: "Validation failed",
+          details: validationErrors,
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
       );
     }
 
@@ -224,7 +275,9 @@ async function createTableRecord(supabase: ReturnType<typeof createSupabaseClien
       .single();
 
     if (tableError) {
-      throw new Error(`Failed to fetch table definition: ${tableError.message}`);
+      throw new Error(
+        `Failed to fetch table definition: ${tableError.message}`
+      );
     }
 
     // Insert the record
@@ -235,6 +288,10 @@ async function createTableRecord(supabase: ReturnType<typeof createSupabaseClien
         data,
         tenant_id: tenantId,
         table_name: tableData.name,
+        metadata: {
+          // created_by: user.id,
+          // created_at: new Date().toISOString(),
+        },
       })
       .select()
       .single();
@@ -243,28 +300,35 @@ async function createTableRecord(supabase: ReturnType<typeof createSupabaseClien
       throw new Error(`Failed to create record: ${insertError.message}`);
     }
 
-    return new Response(
-      JSON.stringify({ data: newRecord }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ data: newRecord }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error("Error creating table record:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 }
 
 // Update an existing table record
-async function updateTableRecord(supabase: ReturnType<typeof createSupabaseClient>, request: Request) {
+async function updateTableRecord(
+  supabase: ReturnType<typeof createSupabaseClient>,
+  request: Request
+) {
   try {
     const { id, tableId, data } = await request.json();
 
     if (!id || !tableId || !data) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: id, tableId, or data" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          error: "Missing required fields: id, tableId, or data",
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
       );
     }
 
@@ -278,21 +342,28 @@ async function updateTableRecord(supabase: ReturnType<typeof createSupabaseClien
       .single();
 
     if (recordError) {
-      return new Response(
-        JSON.stringify({ error: "Record not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Record not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Validate the data
     const validationErrors = await validateData(supabase, tableId, data);
     if (validationErrors.length > 0) {
       return new Response(
-        JSON.stringify({ error: "Validation failed", details: validationErrors }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          error: "Validation failed",
+          details: validationErrors,
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
       );
     }
 
+    logger.debug("Updating record", { id, tableId, data });
     // Update the record
     const { data: updatedRecord, error: updateError } = await supabase
       .from("custom_table_data")
@@ -308,30 +379,32 @@ async function updateTableRecord(supabase: ReturnType<typeof createSupabaseClien
       throw new Error(`Failed to update record: ${updateError.message}`);
     }
 
-    return new Response(
-      JSON.stringify({ data: updatedRecord }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ data: updatedRecord }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error("Error updating table record:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 }
 
 // Delete (soft delete) a table record
-async function deleteTableRecord(supabase: ReturnType<typeof createSupabaseClient>, request: Request) {
+async function deleteTableRecord(
+  supabase: ReturnType<typeof createSupabaseClient>,
+  request: Request
+) {
   try {
     const url = new URL(request.url);
     const id = url.searchParams.get("id");
-    
+
     if (!id) {
-      return new Response(
-        JSON.stringify({ error: "Missing id parameter" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Missing id parameter" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Soft delete the record
@@ -346,30 +419,32 @@ async function deleteTableRecord(supabase: ReturnType<typeof createSupabaseClien
       throw new Error(`Failed to delete record: ${deleteError.message}`);
     }
 
-    return new Response(
-      JSON.stringify({ success: true }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error("Error deleting table record:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 }
 
 // Get a single table record by ID
-async function getTableRecordById(supabase: ReturnType<typeof createSupabaseClient>, request: Request) {
+async function getTableRecordById(
+  supabase: ReturnType<typeof createSupabaseClient>,
+  request: Request
+) {
   try {
     const url = new URL(request.url);
     const id = url.searchParams.get("id");
-    
+
     if (!id) {
-      return new Response(
-        JSON.stringify({ error: "Missing id parameter" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Missing id parameter" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const { data, error } = await supabase
@@ -381,28 +456,28 @@ async function getTableRecordById(supabase: ReturnType<typeof createSupabaseClie
 
     if (error) {
       if (error.code === "PGRST116") {
-        return new Response(
-          JSON.stringify({ error: "Record not found" }),
-          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return new Response(JSON.stringify({ error: "Record not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
       throw new Error(`Failed to fetch record: ${error.message}`);
     }
 
-    return new Response(
-      JSON.stringify({ data }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ data }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error("Error fetching record:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 }
 
 serve(async (req: Request) => {
+  logger.info("Custom Table Data API", req.method);
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -429,15 +504,15 @@ serve(async (req: Request) => {
     }
 
     // If no route matches
-    return new Response(
-      JSON.stringify({ error: "Not found" }),
-      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: "Not found" }), {
+      status: 404,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error("Error processing request:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,9 +7,8 @@ import DataTable from "@/components/data-table";
 import type { Column } from "@/components/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import Page from "@/components/Page";
-import { customTableDataService } from "@/services/customTableDataService";
 import { FormConfig } from "@/components/form-builder/types";
-
+import { useCustomTableDataService } from "@/hooks/useCustomTableDataService";
 interface CustomTableField {
   id: string;
   name: string;
@@ -33,7 +31,8 @@ const CustomTableDataPage = () => {
   const { tenantId } = useAuth();
   const navigate = useNavigate();
 
-  const [tableDefinition, setTableDefinition] = useState<CustomTableDefinition | null>(null);
+  const [tableDefinition, setTableDefinition] =
+    useState<CustomTableDefinition | null>(null);
   const [tableFields, setTableFields] = useState<CustomTableField[]>([]);
   const [tableData, setTableData] = useState<unknown[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,12 +40,13 @@ const CustomTableDataPage = () => {
     page: 1,
     pageSize: 10,
     totalPages: 1,
-    totalItems: 0
+    totalItems: 0,
   });
   const [sortField, setSortField] = useState<string>("created_at");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<Record<string, string>>({});
+  const customTableDataService = useCustomTableDataService();
 
   // Fetch the table definition and fields
   useEffect(() => {
@@ -100,14 +100,14 @@ const CustomTableDataPage = () => {
       if (!id) return;
 
       setIsLoading(true);
-      
+
       const response = await customTableDataService.getTableData(id, {
         page: pagination.page,
         pageSize: pagination.pageSize,
         sortField,
         sortDirection,
         search: searchTerm,
-        filters
+        filters,
       });
 
       setTableData(response.data);
@@ -151,29 +151,35 @@ const CustomTableDataPage = () => {
     // Map field type from database to form field type
     const mapFieldType = (dbType: string): string => {
       switch (dbType) {
-        case "integer": return "number";
-        case "boolean": return "checkbox";
-        case "timestamp": return "date";
-        case "reference": return "select";
-        case "uuid": return "text";
-        default: return "text";
+        case "integer":
+          return "number";
+        case "boolean":
+          return "checkbox";
+        case "timestamp":
+          return "date";
+        case "reference":
+          return "select";
+        case "uuid":
+          return "text";
+        default:
+          return "text";
       }
     };
 
     // Create form fields based on table fields
-    const formFields = tableFields.map(field => ({
+    const formFields = tableFields.map((field) => ({
       id: field.id,
       name: field.name,
       label: field.display_name,
-      type: mapFieldType(field.field_type) as any,
+      type: mapFieldType(field.field_type) as unknown,
       placeholder: `Enter ${field.display_name.toLowerCase()}`,
       validation: {
-        required: field.is_required
+        required: field.is_required,
       },
       // Add options for select fields if available
       ...(field.field_type === "reference" && {
-        options: []  // You would populate this with actual options
-      })
+        options: [], // You would populate this with actual options
+      }),
     }));
 
     // Update the config sections with our fields
@@ -183,9 +189,9 @@ const CustomTableDataPage = () => {
         {
           id: "main",
           title: "Record Details",
-          fields: formFields
-        }
-      ]
+          fields: formFields,
+        },
+      ],
     };
   };
 
@@ -196,7 +202,7 @@ const CustomTableDataPage = () => {
 
       await customTableDataService.createRecord(id, newRecord);
       toast.success("Record created successfully");
-      
+
       // Refresh the data
       fetchTableData();
     } catch (error) {
@@ -213,11 +219,20 @@ const CustomTableDataPage = () => {
 
       const recordId = updatedRecord.id as string;
       // Remove id from the data object
-      const { id: _, ...recordData } = updatedRecord;
+      const { id: _ } = updatedRecord;
 
-      await customTableDataService.updateRecord(recordId, id, recordData);
+      const data = {};
+      Object.entries(updatedRecord.data).forEach(([Key, value]) => {
+        if (Object.prototype.hasOwnProperty.call(updatedRecord, Key)) {
+          data[Key] = updatedRecord[Key];
+        } else {
+          data[Key] = value;
+        }
+      });
+
+      await customTableDataService.updateRecord(recordId, id, data);
       toast.success("Record updated successfully");
-      
+
       // Refresh the data
       fetchTableData();
     } catch (error) {
@@ -232,7 +247,7 @@ const CustomTableDataPage = () => {
     try {
       await customTableDataService.deleteRecord(recordId);
       toast.success("Record deleted successfully");
-      
+
       // Refresh the data
       fetchTableData();
     } catch (error) {
@@ -244,13 +259,13 @@ const CustomTableDataPage = () => {
 
   // Handle page change
   const handlePageChange = (page: number) => {
-    setPagination(prev => ({ ...prev, page }));
+    setPagination((prev) => ({ ...prev, page }));
   };
 
   // Handle sort change
   const handleSortChange = (field: string) => {
     if (field === sortField) {
-      setSortDirection(prev => prev === "asc" ? "desc" : "asc");
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
     } else {
       setSortField(field);
       setSortDirection("asc");
@@ -262,7 +277,14 @@ const CustomTableDataPage = () => {
     if (tableDefinition) {
       fetchTableData();
     }
-  }, [pagination.page, pagination.pageSize, sortField, sortDirection, searchTerm, filters]);
+  }, [
+    pagination.page,
+    pagination.pageSize,
+    sortField,
+    sortDirection,
+    searchTerm,
+    filters,
+  ]);
 
   if (isLoading && !tableDefinition) {
     return (
@@ -276,11 +298,15 @@ const CustomTableDataPage = () => {
     );
   }
 
+  const restructedTableData = tableData.map((item) => {
+    return { ...item, ...item.data };
+  });
+
   return (
     <Page>
       {tableDefinition && (
         <DataTable
-          data={tableData}
+          data={restructedTableData}
           columns={generateColumns()}
           idField="id"
           title={tableDefinition.display_name}
