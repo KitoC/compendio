@@ -1,5 +1,7 @@
 // NO_CHANGE
 
+import { FormConfig } from "../form-builder/types";
+
 export type Permission = "create" | "read" | "update" | "delete" | "export";
 
 export interface UserPermissions {
@@ -38,6 +40,7 @@ export interface DataTableProps<T extends object> {
   isLoading?: boolean;
   emptyMessage?: string;
   className?: string;
+  getFormConfig?: (config: FormConfig, value: T) => FormConfig;
 }
 
 export interface TableHeaderProps<T extends object> {
@@ -89,4 +92,5 @@ export interface EditModalProps<T extends object> {
   columns: Column<T>[];
   idField: keyof T;
   isCreating?: boolean;
+  getFormConfig?: (config: FormConfig, value: T) => FormConfig;
 }

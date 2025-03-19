@@ -67,6 +67,7 @@ export interface FormBuilderProps {
   buttonPortalId?: string;
   onCancel?: () => void;
   hideSubmitButton?: boolean;
+  hideTitles?: boolean;
 }
 
 export interface FormFieldProps {

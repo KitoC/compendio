@@ -1,3 +1,4 @@
+// NO_CHANGE
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -129,8 +130,36 @@ const AgentsSettings = () => {
       <DataTable
         data={agents}
         columns={columns}
-        title="Ai Agents"
-        subtitle="Manage your AI agents and their configurations."
+        getFormConfig={(formConfig, value) => {
+          return {
+            ...formConfig,
+            sections: [
+              formConfig.sections[0],
+              {
+                id: "custom-section",
+
+                fields: [
+                  {
+                    id: "avatar_url",
+                    name: "avatar_url",
+                    type: "text",
+                    label: "Avatar URL",
+                    defaultValue: value.avatar_url,
+                  },
+                  {
+                    id: "prompt",
+                    name: "prompt",
+                    type: "textarea",
+                    label: "Prompt",
+                    defaultValue: value.prompt,
+                  },
+                ],
+              },
+            ],
+            title: value?.id ? `Customize ${value.name}` : "Create Agent",
+            description: "Manage your AI agents and their configurations.",
+          };
+        }}
         permissions={{
           create: true,
           read: true,

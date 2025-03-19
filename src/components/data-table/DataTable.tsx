@@ -69,6 +69,7 @@ function DataTable<T extends object>({
   isLoading = false,
   emptyMessage = "No data available",
   className,
+  getFormConfig,
 }: DataTableProps<T>) {
   const isMobile = useIsMobile();
 
@@ -469,6 +470,7 @@ function DataTable<T extends object>({
           columns={columns}
           idField={idField}
           isCreating={isCreating}
+          getFormConfig={getFormConfig}
         />
 
         {/* Delete Confirmation Dialog */}

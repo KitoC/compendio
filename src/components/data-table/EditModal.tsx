@@ -15,24 +15,29 @@ function EditModal<T extends Record<string, unknown>>({
   columns,
   idField,
   isCreating = false,
+  getFormConfig = (config) => config,
 }: EditModalProps<T>) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  console.log("item", item);
   // Generate form config from columns
-  const formConfig = columnsToFormConfig(columns, (item || {}) as T, {
-    title: isCreating ? "Create New Item" : "Edit Item",
-    formId: "data-table-edit-form",
-    includeHiddenColumns: false,
-    submitButtonText: "Save",
-    cancelButtonText: "Cancel",
-    showReset: false,
-  });
+  const formConfig = getFormConfig(
+    columnsToFormConfig(columns, (item || {}) as T, {
+      title: isCreating ? "Create New Item" : "Edit Item",
+      formId: "data-table-edit-form",
+      includeHiddenColumns: false,
+      submitButtonText: "Save",
+      cancelButtonText: "Cancel",
+      showReset: false,
+    }),
+    item
+  );
 
+  console.log("formConfig", formConfig);
   // Get initial values from item
   const initialValues = item ? createInitialValues(item, columns) : {};
 
   const handleSubmit = async (values: Record<string, unknown>) => {
-    console.log(values);
     setIsSubmitting(true);
     try {
       // If item exists, merge with existing values to preserve fields not in the form
@@ -57,10 +62,12 @@ function EditModal<T extends Record<string, unknown>>({
     <SlidePanel
       open={isOpen}
       onOpenChange={(open) => !open && onClose()}
-      title={isCreating ? "Create New Item" : "Edit Item"}
+      title={formConfig.title}
+      description={formConfig.description}
       footer={<div></div>}
     >
       <FormBuilder
+        hideTitles={true}
         config={formConfig}
         onSubmit={handleSubmit}
         onCancel={onClose}

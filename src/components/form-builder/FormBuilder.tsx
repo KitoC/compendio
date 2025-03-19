@@ -25,6 +25,7 @@ const FormBuilder = ({
   buttonPortalId,
   onCancel,
   hideSubmitButton,
+  hideTitles = false,
 }: FormBuilderProps) => {
   const [values, setValues] = useState<Record<string, unknown>>(initialValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -232,7 +233,7 @@ const FormBuilder = ({
   return (
     <Card className={cn("w-full", className)}>
       <form onSubmit={handleSubmit}>
-        {(config.title || config.description) && (
+        {(config.title || config.description) && !hideTitles && (
           <CardHeader>
             {config.title && <CardTitle>{config.title}</CardTitle>}
             {config.description && (
