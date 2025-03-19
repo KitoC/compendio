@@ -19,7 +19,7 @@ function EditModal<T extends Record<string, unknown>>({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Generate form config from columns
-  const formConfig = columnsToFormConfig(columns, item || {}, {
+  const formConfig = columnsToFormConfig(columns, (item || {}) as T, {
     title: isCreating ? "Create New Item" : "Edit Item",
     formId: "data-table-edit-form",
     includeHiddenColumns: false,

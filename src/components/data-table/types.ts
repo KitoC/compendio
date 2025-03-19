@@ -21,7 +21,7 @@ export interface Column<T = unknown> {
   align?: "left" | "center" | "right";
 }
 
-export interface DataTableProps<T extends Record<string, unknown>> {
+export interface DataTableProps<T extends object> {
   data: T[];
   idField?: keyof T;
   columns?: Column<T>[];
@@ -40,7 +40,7 @@ export interface DataTableProps<T extends Record<string, unknown>> {
   className?: string;
 }
 
-export interface TableHeaderProps<T extends Record<string, unknown>> {
+export interface TableHeaderProps<T extends object> {
   columns: Column<T>[];
   permissions: UserPermissions;
   sortField?: keyof T | null;
@@ -49,7 +49,7 @@ export interface TableHeaderProps<T extends Record<string, unknown>> {
   showActionsColumn: boolean;
 }
 
-export interface TableBodyProps<T extends Record<string, unknown>> {
+export interface TableBodyProps<T extends object> {
   data: T[];
   columns: Column<T>[];
   idField: keyof T;
@@ -60,7 +60,7 @@ export interface TableBodyProps<T extends Record<string, unknown>> {
   isEditing?: string | number | null;
 }
 
-export interface TableActionsProps<T extends Record<string, unknown>> {
+export interface TableActionsProps<T extends object> {
   item: T;
   idField: keyof T;
   permissions: UserPermissions;
@@ -75,13 +75,13 @@ export interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
-export interface TableFilterProps<T extends Record<string, unknown>> {
+export interface TableFilterProps<T extends object> {
   columns: Column<T>[];
   filters: Record<string, string>;
   onFilterChange: (field: string, value: string) => void;
 }
 
-export interface EditModalProps<T extends Record<string, unknown>> {
+export interface EditModalProps<T extends object> {
   isOpen: boolean;
   onClose: () => void;
   item?: T | null;

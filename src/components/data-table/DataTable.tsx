@@ -52,7 +52,7 @@ const defaultPermissions: UserPermissions = {
   export: true,
 };
 
-function DataTable<T extends Record<string, unknown>>({
+function DataTable<T extends object>({
   data,
   idField = "id" as keyof T,
   columns: providedColumns,

@@ -1,7 +1,6 @@
-
+// NO_CHANGE
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import { Card } from "@/components/ui/card";
 import AuthRequired from "@/components/AuthRequired";
 import PageLoading from "@/components/PageLoading";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +12,6 @@ const Settings = () => {
   const { user, isLoading, hasTenant, tenantId } = useAuth();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isRoleLoading, setIsRoleLoading] = useState(true);
-  const location = useLocation();
 
   // Dispatch custom event to show settings sidebar
   useEffect(() => {
@@ -28,7 +26,7 @@ const Settings = () => {
   // Fetch user role from Supabase
   useEffect(() => {
     const fetchUserRole = async () => {
-      if (!user || !hasTenant) return;
+      if (!user || !hasTenant || !tenantId) return;
 
       try {
         const { data, error } = await supabase
@@ -56,25 +54,24 @@ const Settings = () => {
 
   return (
     <AuthRequired>
-      <div className="container mx-auto py-8 max-w-5xl flex flex-col h-full">
+      <div className="container mx-auto py-8 max-w-8xl flex flex-col h-full">
         <div className="flex items-center mb-6">
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             className="mr-2 md:hidden"
-            onClick={() => document.dispatchEvent(new CustomEvent("toggle-sidebar"))}
+            onClick={() =>
+              document.dispatchEvent(new CustomEvent("toggle-sidebar"))
+            }
           >
             <ArrowLeft className="h-5 w-5" />
             <span className="sr-only">Back to main navigation</span>
           </Button>
-          <h1 className="text-3xl font-bold">Settings</h1>
+          {/* TODO: Add title to the page derived from route */}
+          {/* <h1 className="text-3xl font-bold">Settings</h1> */}
         </div>
 
-        <Card className="overflow-hidden flex flex-col flex-1">
-          <div className="p-6 flex-1 overflow-y-auto">
-            <Outlet />
-          </div>
-        </Card>
+        <Outlet />
       </div>
     </AuthRequired>
   );

@@ -6,7 +6,7 @@ import type { FormConfig, FormField, FormFieldType } from "../form-builder";
  */
 const mapColumnTypeToFieldType = (
   field: string,
-  sample?: any
+  sample?: unknown
 ): FormFieldType => {
   if (!sample) return "text";
 
@@ -50,7 +50,7 @@ const shouldIncludeField = (field: string): boolean => {
 /**
  * Converts DataTable columns to a FormBuilder configuration
  */
-export const columnsToFormConfig = <T extends Record<string, any>>(
+export const columnsToFormConfig = <T extends Record<string, unknown>>(
   columns: Column<T>[],
   data?: T,
   options?: {
@@ -61,6 +61,7 @@ export const columnsToFormConfig = <T extends Record<string, any>>(
     fieldTypeMap?: Record<string, FormFieldType>;
     submitButtonText?: string;
     showReset?: boolean;
+    cancelButtonText?: string;
   }
 ): FormConfig => {
   const {
@@ -137,11 +138,11 @@ export const columnsToFormConfig = <T extends Record<string, any>>(
 /**
  * Creates an initial values object from data for the FormBuilder
  */
-export const createInitialValues = <T extends Record<string, any>>(
+export const createInitialValues = <T extends Record<string, unknown>>(
   data: T,
   columns: Column<T>[]
-): Record<string, any> => {
-  const initialValues: Record<string, any> = {};
+): Record<string, unknown> => {
+  const initialValues: Record<string, unknown> = {};
 
   columns.forEach((column) => {
     const field = String(column.field);
