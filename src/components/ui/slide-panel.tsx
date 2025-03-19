@@ -58,7 +58,11 @@ export function SlidePanel({
           </SheetHeader>
         )}
         <div className="flex-1 overflow-auto p-6">{children}</div>
-        {footer && <div className="border-t p-4 mt-auto">{footer}</div>}
+        {footer && (
+          <div className="border-t p-4 mt-auto" id="slide-panel-footer-portal">
+            {footer}
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );
