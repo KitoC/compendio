@@ -132,9 +132,9 @@ const Auth = () => {
                     type="button"
                     variant="outline"
                     disabled={loading}
-                    onClick={() => handleOAuthSignIn("github" as Provider)}
+                    onClick={() => handleOAuthSignIn("azure" as Provider)}
                   >
-                    GitHub
+                    Azure (outlook)
                   </Button>
                 </div>
               </CardFooter>

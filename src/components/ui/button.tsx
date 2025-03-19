@@ -51,7 +51,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         {...props}
         onClick={(e) => {
-          if (type !== "submit") {
+          if (type !== "submit" && e.target.tagName !== "A") {
             e.preventDefault();
           }
           onClick?.(e);
