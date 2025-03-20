@@ -1,0 +1,11 @@
+{
+  "imports": {
+    "deno-land": "https://deno.land/std@0.168.0/http/server.ts",
+    "locals/controllers/RequestController": "./_shared/controllers/RequestController.ts",
+    "locals/controllers/SupabaseController": "./_shared/controllers/SupabaseController.ts",
+    "locals/utils/Logger": "./_shared/utils/Logger.ts",
+    "locals/utils/env": "./_shared/utils/env.ts",
+    "lodash": "https://esm.sh/lodash@4",
+    "supabase-js": "https://esm.sh/@supabase/supabase-js@2"
+  }
+}

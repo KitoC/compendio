@@ -15,3 +15,9 @@ verify_jwt = false
 
 [functions.custom-table-data]
 verify_jwt = false
+
+[functions.table-builder]
+verify_jwt = false
+
+[functions.test]
+verify_jwt = false
