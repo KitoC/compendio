@@ -7,7 +7,7 @@ import {
 } from "https://esm.sh/@supabase/supabase-js@2.8.0";
 import { getEnvKey } from "locals/utils/env";
 import Logger from "locals/utils/Logger";
-import RequestController from "locals/controllers/RequestController";
+import { RequestController } from "locals/controllers/RequestController";
 
 const ROLES = {
   SUPER_ADMIN: "super-admin",
@@ -17,7 +17,11 @@ const ROLES = {
   ADMIN: "admin",
 };
 
-class SupabaseController {
+interface IConstructorParams {
+  logger?: Logger;
+}
+
+class SupabaseController extends RequestController {
   public supabase_AS_SUPER_ADMIN: SupabaseClient;
   public logger: Logger;
   private _supabase: SupabaseClient;
@@ -27,13 +31,17 @@ class SupabaseController {
   private tenantId: string | null;
   private user: object | null;
 
-  constructor() {
+  constructor({
+    logger = new Logger({ name: "SupabaseController" }),
+  }: IConstructorParams) {
+    super();
+
+    this.logger = logger;
     this.supabase_AS_SUPER_ADMIN = createClient(
       getEnvKey("SUPABASE_URL"),
       getEnvKey("SUPABASE_ANON_KEY")
     );
     this.token = null;
-    this.logger = new Logger({ name: "SupabaseController" });
     this.roles = null;
     this.tenantId = null;
     this.user = null;
@@ -42,7 +50,7 @@ class SupabaseController {
 
   private checkSupabaseInitialized() {
     if (!this._supabase) {
-      RequestController.throwError("Supabase client not initialized", 500);
+      this.throwError("Supabase client not initialized", 500);
     }
   }
 
@@ -70,7 +78,7 @@ class SupabaseController {
     this.token = token || null;
 
     if (!authHeader) {
-      RequestController.throwError("Authorization header is required", 401);
+      this.throwError("Authorization header is required", 401);
     }
   }
 
@@ -80,8 +88,10 @@ class SupabaseController {
 
     const { data, error } = await this._supabase.auth.getUser(this.token);
 
+    this.logger.debug("data", data);
+    this.logger.debug("error", error);
     if (error) {
-      RequestController.throwError("Error getting user", error, 500);
+      this.throwError("Error getting user", error, 500);
     }
 
     return data;
@@ -106,7 +116,7 @@ class SupabaseController {
         .eq("tenant_id", tenantId);
 
     if (rolesError) {
-      RequestController.throwError("Error getting roles", rolesError, 500);
+      this.throwError("Error getting roles", rolesError, 500);
     }
 
     this.roles = roles.map((role: { role_type: string }) => role.role_type);
@@ -126,17 +136,21 @@ class SupabaseController {
 
   private rolesNotSet() {
     if (!this.roles) {
-      RequestController.throwError("Roles are not set", 500);
+      this.throwError("Roles are not set", 500);
     }
   }
 
   private noPrivileges() {
-    RequestController.throwError("User does not have required role", 403);
+    this.throwError("User does not have required role", 403);
+  }
+
+  get tenant_id() {
+    return this.tenantId;
   }
 
   requireTenantId() {
     if (!this.tenantId) {
-      RequestController.throwError("Tenant ID is required", 400);
+      this.throwError("Tenant ID is required", 400);
     }
   }
 
@@ -159,6 +173,7 @@ class SupabaseController {
 
     this.rolesNotSet();
 
+    console.log(roles, this.roles);
     if (!roles.some((role) => this.roles?.includes(role))) {
       this.noPrivileges();
     }
@@ -171,4 +186,6 @@ class SupabaseController {
 
 export { ROLES, SupabaseController };
 
-export default new SupabaseController();
+export default new SupabaseController({
+  logger: new Logger({ name: "SupabaseController" }),
+});

@@ -13,6 +13,7 @@ export interface IAiAgent {
 }
 
 export interface IFunction {
+  id: string;
   name: string;
   parameters?: object;
   description: string;
@@ -20,6 +21,14 @@ export interface IFunction {
   type: string;
   config?: object;
   schema?: object;
+}
+
+export interface IAiAgentFunction {
+  id: string;
+  agent_id: string;
+  function_id: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface IOpenAiFunction {

@@ -23,13 +23,10 @@ export class RequestError extends Error {
 // edge-function.ts
 
 class RequestController {
-  private authHeader: string | null;
-  private logger: Logger;
+  public logger: Logger;
 
   constructor() {
     this.logger = new Logger({ name: "RequestController" });
-
-    this.authHeader = null;
   }
 
   throwError(

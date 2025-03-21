@@ -11,8 +11,6 @@ serve(async (req: Request) => {
   try {
     RequestController.sendPreflightResponse();
 
-    RequestController.checkAuthHeaderPresent(req);
-
     await SupabaseController.initialize(req, true);
 
     SupabaseController.requireRole(ROLES.ADMIN);

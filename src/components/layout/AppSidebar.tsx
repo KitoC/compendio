@@ -29,6 +29,7 @@ import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
 import { useCustomTables } from "@/contexts/CustomTables/useCustomTables";
+import { settingsItems } from "@/lib/constants";
 
 interface SidebarItemOrGroup {
   label: string;
@@ -93,30 +94,6 @@ const AppSidebar = () => {
       label: "Settings",
       url: ROUTES.SETTINGS_APPEARANCE,
       icon: <Settings className="h-4 w-4" />,
-    },
-  ];
-
-  // Define settings sidebar items
-  const settingsItems = [
-    {
-      label: "Settings",
-      children: [
-        {
-          label: "Appearance",
-          url: ROUTES.SETTINGS_APPEARANCE,
-          icon: <Palette className="h-4 w-4" />,
-        },
-        {
-          label: "Agents",
-          url: ROUTES.SETTINGS_AGENTS,
-          icon: <Users2 className="h-4 w-4" />,
-        },
-        {
-          label: "Custom Tables",
-          url: ROUTES.SETTINGS_CUSTOM_TABLES,
-          icon: <Table2 className="h-4 w-4" />,
-        },
-      ],
     },
   ];
 

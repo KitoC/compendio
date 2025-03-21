@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -16,9 +15,9 @@ const Index: React.FC = () => {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen bg-background relative h-full overflow-y-auto">
       <Navbar />
-      <main>
+      <main className="overflow-y-auto">
         <Hero />
 
         {/* Call to Action Section for Conversations */}

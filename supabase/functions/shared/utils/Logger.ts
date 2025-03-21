@@ -16,16 +16,19 @@ enum LogLevel {
 
 class Logger {
   private currentLogLevel: LogLevel;
-
+  private name: string;
   constructor({
     debug,
     level = LogLevel.INFO,
+    name = "default",
   }: {
     debug: boolean;
     level?: LogLevel;
+    name?: string;
   }) {
     console.log("debug", debug);
     this.currentLogLevel = debug ? LogLevel.DEBUG : level;
+    this.name = name;
   }
 
   // Helper to format date consistently
@@ -40,7 +43,9 @@ class Logger {
     data?: unknown
   ): string {
     const timestamp = this.getTimestamp();
-    const formattedMessage = `[${timestamp}] [${level}] ${message}`;
+    const formattedMessage = `[${timestamp}] [${level}] [${
+      this.name || "default"
+    }] ${message}`;
 
     if (data) {
       return `${formattedMessage} ${

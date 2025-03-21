@@ -1,8 +1,13 @@
 {
   "imports": {
     "deno-land": "https://deno.land/std@0.168.0/http/server.ts",
+    "locals/controllers/AgentController": "./_shared/controllers/AgentController.ts",
+    "locals/controllers/FunctionController": "./_shared/controllers/FunctionController.ts",
+    "locals/controllers/OpenAIController": "./_shared/controllers/OpenAIController.ts",
     "locals/controllers/RequestController": "./_shared/controllers/RequestController.ts",
     "locals/controllers/SupabaseController": "./_shared/controllers/SupabaseController.ts",
+    "locals/controllers/TableBuilderController": "./_shared/controllers/TableBuilderController.ts",
+    "locals/dsl/Migration": "./_shared/dsl/Migration.ts",
     "locals/utils/Logger": "./_shared/utils/Logger.ts",
     "locals/utils/env": "./_shared/utils/env.ts",
     "lodash": "https://esm.sh/lodash@4",

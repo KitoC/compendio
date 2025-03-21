@@ -49,6 +49,9 @@ const RequestAccess = lazy(() => import("./pages/RequestAccess"));
 const AccessPending = lazy(() => import("./pages/AccessPending"));
 const ChatPage = lazy(() => import("./pages/ChatPage"));
 const Settings = lazy(() => import("./pages/Settings"));
+const TableBuilderPage = lazy(
+  () => import("./pages/settings/TableBuilderPage")
+);
 const CustomTablesPage = lazy(
   () => import("./pages/settings/CustomTablesPage")
 );
@@ -130,6 +133,10 @@ const router = createBrowserRouter([
               {
                 path: ROUTES.SETTINGS_CUSTOM_TABLES,
                 element: <CustomTablesPage />,
+              },
+              {
+                path: ROUTES.SETTINGS_TABLE_BUILDER,
+                element: <TableBuilderPage />,
               },
               { path: ROUTES.SETTINGS_AGENTS_DETAIL, element: <AgentDetail /> },
             ],
