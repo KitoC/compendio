@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,12 +13,18 @@ const AuthCallback = () => {
     // Handle the OAuth callback
     const handleAuthCallback = async () => {
       const code = getUrlParameter("code");
-
+      const state = getUrlParameter("state");
+      
       try {
         // Get the URL hash or query params for the token
         const hash = window.location.hash;
         const query = window.location.search;
-
+        
+        // Check if this is a return from an integration OAuth flow
+        const integrationReturnUrl = sessionStorage.getItem("integration_return_url");
+        const oauthStateId = sessionStorage.getItem("oauth_state_id");
+        
+        // Handle OAuth provider-specific token exchange
         if (sessionStorage.getItem("provider") === "azure") {
           const tokens = await exchangeAzureCodeForTokens(code);
 
@@ -29,6 +34,17 @@ const AuthCallback = () => {
               provider: "azure",
               token: id_token,
             });
+            
+            // If this was part of an integration flow, update the oauth_states table
+            if (oauthStateId) {
+              await supabase
+                .from("oauth_states")
+                .update({ 
+                  status: "completed",
+                  token_data: tokens 
+                })
+                .eq("id", oauthStateId);
+            }
           }
         }
 
@@ -46,7 +62,23 @@ const AuthCallback = () => {
           } else if (data.session) {
             toast.success("Successfully signed in!");
 
-            // Successfully authenticated, redirect to home
+            // If we're returning from an integration flow, go back to the integration page
+            if (integrationReturnUrl) {
+              // Clean up session storage
+              const wizardState = sessionStorage.getItem("integration_wizard_state");
+              sessionStorage.removeItem("integration_return_url");
+              sessionStorage.removeItem("oauth_state_id");
+              sessionStorage.removeItem("code_verifier");
+              sessionStorage.removeItem("oauth_state");
+              sessionStorage.removeItem("provider");
+              
+              // Navigate back to the integration page
+              toast.success("Successfully connected service!");
+              navigate(ROUTES.SETTINGS_INTEGRATIONS);
+              return;
+            }
+
+            // Otherwise, go to the default destination
             navigate(ROUTES.CONVERSATION_ASSISTANT, { replace: true });
           } else {
             toast.error("Authentication failed: No session found");

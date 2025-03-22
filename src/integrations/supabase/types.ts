@@ -1034,11 +1034,15 @@ export type Database = {
         Row: {
           agent_id: string | null
           code_verifier: string | null
+          config: Json | null
           created_at: string | null
           deleted_at: string | null
           id: string
+          provider: string | null
           redirect_uri: string | null
-          state: string
+          service_type: string | null
+          state: string | null
+          status: string | null
           tenant_id: string
           updated_at: string | null
           user_id: string | null
@@ -1047,11 +1051,15 @@ export type Database = {
         Insert: {
           agent_id?: string | null
           code_verifier?: string | null
+          config?: Json | null
           created_at?: string | null
           deleted_at?: string | null
           id?: string
+          provider?: string | null
           redirect_uri?: string | null
-          state: string
+          service_type?: string | null
+          state?: string | null
+          status?: string | null
           tenant_id: string
           updated_at?: string | null
           user_id?: string | null
@@ -1060,11 +1068,15 @@ export type Database = {
         Update: {
           agent_id?: string | null
           code_verifier?: string | null
+          config?: Json | null
           created_at?: string | null
           deleted_at?: string | null
           id?: string
+          provider?: string | null
           redirect_uri?: string | null
-          state?: string
+          service_type?: string | null
+          state?: string | null
+          status?: string | null
           tenant_id?: string
           updated_at?: string | null
           user_id?: string | null

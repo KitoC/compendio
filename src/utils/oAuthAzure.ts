@@ -1,5 +1,4 @@
 
-import { get } from "http";
 import { getRedirectUri } from "./supabaseUtils";
 
 export const getAzureClientId = () => {

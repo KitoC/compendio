@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -65,6 +64,15 @@ interface AddIntegrationWizardProps {
   onClose: () => void;
 }
 
+// Interface for storing wizard state
+interface WizardState {
+  step: number;
+  selectedAgentId: string;
+  selectedIntegrationType: string;
+  selectedCredentialId: string;
+  configValues: Record<string, unknown>;
+}
+
 const getIntegrationIcon = (type: string) => {
   switch (type) {
     case "mail":
@@ -95,20 +103,66 @@ const AddIntegrationWizard = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCreatingAgent, setIsCreatingAgent] = useState(false);
   const [newAgentData, setNewAgentData] = useState<Record<string, unknown>>({});
+  const [restoringState, setRestoringState] = useState(false);
+
+  // Restore wizard state from session storage if available
+  useEffect(() => {
+    if (isOpen) {
+      try {
+        const savedStateString = sessionStorage.getItem("integration_wizard_state");
+        
+        if (savedStateString) {
+          setRestoringState(true);
+          const savedState: WizardState = JSON.parse(savedStateString);
+          
+          setStep(savedState.step);
+          setSelectedAgentId(savedState.selectedAgentId);
+          setSelectedIntegrationType(savedState.selectedIntegrationType);
+          setSelectedCredentialId(savedState.selectedCredentialId);
+          setConfigValues(savedState.configValues);
+          
+          // Clean up saved state after restoring
+          sessionStorage.removeItem("integration_wizard_state");
+          
+          // Slight delay to avoid fetch conflicts
+          setTimeout(() => {
+            setRestoringState(false);
+          }, 100);
+        }
+      } catch (error) {
+        console.error("Error restoring wizard state:", error);
+      }
+    }
+  }, [isOpen]);
 
   // Only fetch agents when the dialog is opened and not in agent creation mode
   useEffect(() => {
-    if (isOpen && !isCreatingAgent) {
+    if (isOpen && !isCreatingAgent && !restoringState) {
       fetchAgents();
     }
-  }, [isOpen, tenantId, isCreatingAgent]);
+  }, [isOpen, tenantId, isCreatingAgent, restoringState]);
 
   // Only fetch credentials when an integration type is selected
   useEffect(() => {
-    if (selectedIntegrationType) {
+    if (selectedIntegrationType && !restoringState) {
       fetchExistingCredentials(selectedIntegrationType);
     }
-  }, [selectedIntegrationType, tenantId]);
+  }, [selectedIntegrationType, tenantId, restoringState]);
+
+  // Save wizard state whenever key fields change
+  useEffect(() => {
+    if (isOpen && !restoringState) {
+      const currentState: WizardState = {
+        step,
+        selectedAgentId,
+        selectedIntegrationType,
+        selectedCredentialId,
+        configValues
+      };
+      
+      sessionStorage.setItem("integration_wizard_state", JSON.stringify(currentState));
+    }
+  }, [isOpen, step, selectedAgentId, selectedIntegrationType, selectedCredentialId, configValues, restoringState]);
 
   const fetchAgents = async () => {
     if (!tenantId) return;
@@ -253,6 +307,9 @@ const AddIntegrationWizard = ({
       setSelectedAgentId("");
       setSelectedIntegrationType("");
       setConfigValues({});
+      setSelectedCredentialId("");
+      // Clear session storage
+      sessionStorage.removeItem("integration_wizard_state");
       navigate(ROUTES.SETTINGS_INTEGRATIONS);
     } catch (error) {
       console.error("Error creating integration:", error);
@@ -271,14 +328,14 @@ const AddIntegrationWizard = ({
       // First create a record in oauth_states to track this OAuth flow
       const { data: oauthStateData, error: oauthStateError } = await supabase
         .from("oauth_states")
-        .insert([{
+        .insert({
           provider,
           agent_id: selectedAgentId,
           service_type: selectedIntegrationType,
           tenant_id: tenantId,
           config: configValues,
           status: "pending"
-        }])
+        })
         .select();
         
       if (oauthStateError) throw oauthStateError;
@@ -332,6 +389,8 @@ const AddIntegrationWizard = ({
     setConfigValues({});
     setSelectedCredentialId("");
     setIsCreatingAgent(false);
+    // Clear session storage
+    sessionStorage.removeItem("integration_wizard_state");
     onClose();
   };
 
