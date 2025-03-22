@@ -21,6 +21,7 @@ import {
   Table2,
   Palette,
   Bot,
+  LayoutDashboard,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ROUTES } from "@/lib/constants";
@@ -71,6 +72,11 @@ const AppSidebar = () => {
   // Define sidebar items for main navigation
   const sidebarItems = [
     {
+      icon: <LayoutDashboard className="h-4 w-4" />,
+      label: "Dashboard",
+      url: ROUTES.DASHBOARD,
+    },
+    {
       icon: <Bot className="h-4 w-4" />,
       label: "Agents",
       children: aiAgents.map((agent) => ({
@@ -101,7 +107,7 @@ const AppSidebar = () => {
   const settingsFooterItems = [
     {
       label: "Back to Main Menu",
-      url: ROUTES.CONVERSATIONS,
+      url: ROUTES.DASHBOARD,
       icon: <ArrowLeft className="h-4 w-4" />,
       onClick: (e) => {
         e.preventDefault();

@@ -1,8 +1,13 @@
-
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/lib/constants";
@@ -34,11 +39,13 @@ interface WorkflowInstance {
 }
 
 const Dashboard = () => {
-  const { tenantId } = useAuth();
+  const { tenantId, user } = useAuth();
   const navigate = useNavigate();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
-  const [workflowInstances, setWorkflowInstances] = useState<WorkflowInstance[]>([]);
+  const [workflowInstances, setWorkflowInstances] = useState<
+    WorkflowInstance[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -55,7 +62,13 @@ const Dashboard = () => {
       // Fetch recent conversations
       const { data: convData } = await supabase
         .from("conversations")
-        .select("*")
+        .select(
+          `
+          *,
+          tasks!inner(status)
+        `
+        )
+        .eq("tasks.user_id", user.id)
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false })
         .limit(5);
@@ -78,10 +91,12 @@ const Dashboard = () => {
       // Fetch recent workflow instances with workflow names
       const { data: workflowData } = await supabase
         .from("workflow_instances")
-        .select(`
+        .select(
+          `
           id, status, current_step, workflow_id, created_at, completed_at,
           workflows (name)
-        `)
+        `
+        )
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false })
         .limit(5);
@@ -90,11 +105,10 @@ const Dashboard = () => {
         // Transform to include workflow name
         const formattedWorkflows = workflowData.map((wi) => ({
           ...wi,
-          workflow_name: wi.workflows?.name || "Unknown workflow"
+          workflow_name: wi.workflows?.name || "Unknown workflow",
         }));
         setWorkflowInstances(formattedWorkflows);
       }
-
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     } finally {
@@ -125,7 +139,11 @@ const Dashboard = () => {
             <CardHeader className="pb-3">
               <div className="flex justify-between items-center">
                 <CardTitle>Recent Conversations</CardTitle>
-                <Button size="sm" variant="ghost" onClick={() => navigate(ROUTES.CHAT)}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => navigate(ROUTES.CHAT)}
+                >
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
@@ -141,13 +159,15 @@ const Dashboard = () => {
               ) : conversations.length > 0 ? (
                 <div className="space-y-3">
                   {conversations.map((conv) => (
-                    <div 
-                      key={conv.id} 
+                    <div
+                      key={conv.id}
                       className="p-3 rounded-md border hover:bg-accent cursor-pointer"
                       onClick={() => navigate(`${ROUTES.CHAT}/${conv.id}`)}
                     >
                       <div className="flex justify-between">
-                        <h3 className="font-medium">{conv.title || "Untitled Conversation"}</h3>
+                        <h3 className="font-medium">
+                          {conv.title || "Untitled Conversation"}
+                        </h3>
                         <span className="text-xs text-muted-foreground">
                           {new Date(conv.created_at).toLocaleDateString()}
                         </span>
@@ -158,8 +178,8 @@ const Dashboard = () => {
               ) : (
                 <div className="text-center py-6 text-muted-foreground">
                   <p>No conversations yet</p>
-                  <Button 
-                    variant="link" 
+                  <Button
+                    variant="link"
                     onClick={() => navigate(ROUTES.CHAT)}
                     className="mt-2"
                   >
@@ -175,9 +195,9 @@ const Dashboard = () => {
             <CardHeader className="pb-3">
               <div className="flex justify-between items-center">
                 <CardTitle>AI Agents</CardTitle>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
+                <Button
+                  size="sm"
+                  variant="ghost"
                   onClick={() => navigate(ROUTES.SETTINGS_AGENTS)}
                 >
                   <Plus className="h-4 w-4" />
@@ -195,26 +215,32 @@ const Dashboard = () => {
               ) : agents.length > 0 ? (
                 <div className="space-y-3">
                   {agents.map((agent) => (
-                    <div 
-                      key={agent.id} 
+                    <div
+                      key={agent.id}
                       className="p-3 rounded-md border hover:bg-accent cursor-pointer"
-                      onClick={() => navigate(`${ROUTES.SETTINGS_AGENTS}/${agent.id}`)}
+                      onClick={() =>
+                        navigate(`${ROUTES.SETTINGS_AGENTS}/${agent.id}`)
+                      }
                     >
                       <div className="flex items-center">
                         <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center mr-3">
                           {agent.avatar_url ? (
-                            <img 
-                              src={agent.avatar_url} 
-                              alt={agent.name} 
+                            <img
+                              src={agent.avatar_url}
+                              alt={agent.name}
                               className="w-full h-full rounded-full object-cover"
                             />
                           ) : (
                             <div className="text-sm font-medium text-primary">
-                              {(agent.human_name || agent.name).charAt(0).toUpperCase()}
+                              {(agent.human_name || agent.name)
+                                .charAt(0)
+                                .toUpperCase()}
                             </div>
                           )}
                         </div>
-                        <h3 className="font-medium">{agent.human_name || agent.name}</h3>
+                        <h3 className="font-medium">
+                          {agent.human_name || agent.name}
+                        </h3>
                       </div>
                     </div>
                   ))}
@@ -222,8 +248,8 @@ const Dashboard = () => {
               ) : (
                 <div className="text-center py-6 text-muted-foreground">
                   <p>No agents configured</p>
-                  <Button 
-                    variant="link" 
+                  <Button
+                    variant="link"
                     onClick={() => navigate(ROUTES.SETTINGS_AGENTS)}
                     className="mt-2"
                   >
@@ -239,9 +265,9 @@ const Dashboard = () => {
             <CardHeader className="pb-3">
               <div className="flex justify-between items-center">
                 <CardTitle>Recent Workflows</CardTitle>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
+                <Button
+                  size="sm"
+                  variant="ghost"
                   onClick={() => navigate(ROUTES.SETTINGS_WORKFLOWS)}
                 >
                   <Plus className="h-4 w-4" />
@@ -259,13 +285,19 @@ const Dashboard = () => {
               ) : workflowInstances.length > 0 ? (
                 <div className="space-y-3">
                   {workflowInstances.map((instance) => (
-                    <div 
-                      key={instance.id} 
+                    <div
+                      key={instance.id}
                       className="p-3 rounded-md border hover:bg-accent cursor-pointer"
-                      onClick={() => navigate(`${ROUTES.SETTINGS_WORKFLOW_INSTANCES}/${instance.id}`)}
+                      onClick={() =>
+                        navigate(
+                          `${ROUTES.SETTINGS_WORKFLOW_INSTANCES}/${instance.id}`
+                        )
+                      }
                     >
                       <div className="flex justify-between mb-1">
-                        <h3 className="font-medium">{instance.workflow_name}</h3>
+                        <h3 className="font-medium">
+                          {instance.workflow_name}
+                        </h3>
                         <span className="text-xs">
                           {new Date(instance.created_at).toLocaleDateString()}
                         </span>
@@ -277,11 +309,13 @@ const Dashboard = () => {
                             Step {instance.current_step}
                           </span>
                         </div>
-                        <span 
+                        <span
                           className={`text-xs px-2 py-0.5 rounded-full ${
-                            instance.status === "completed" ? "bg-green-100 text-green-800" : 
-                            instance.status === "failed" ? "bg-red-100 text-red-800" : 
-                            "bg-amber-100 text-amber-800"
+                            instance.status === "completed"
+                              ? "bg-green-100 text-green-800"
+                              : instance.status === "failed"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-amber-100 text-amber-800"
                           }`}
                         >
                           {instance.status}
@@ -293,8 +327,8 @@ const Dashboard = () => {
               ) : (
                 <div className="text-center py-6 text-muted-foreground">
                   <p>No workflow executions yet</p>
-                  <Button 
-                    variant="link" 
+                  <Button
+                    variant="link"
                     onClick={() => navigate(ROUTES.SETTINGS_WORKFLOWS)}
                     className="mt-2"
                   >
