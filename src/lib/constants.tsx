@@ -1,4 +1,5 @@
-import { Palette, Users2, Table2 } from "lucide-react";
+
+import { Palette, Users2, Table2, Workflow, Bot, Link, GitBranch } from "lucide-react";
 
 export const ROUTES = {
   INDEX: "/",
@@ -17,6 +18,11 @@ export const ROUTES = {
   SETTINGS_APPEARANCE: "/settings/appearance",
   SETTINGS_AGENTS: "/settings/agents",
   SETTINGS_AGENTS_DETAIL: "/settings/agents/:id",
+  SETTINGS_AGENT_WORKFLOWS: "/settings/agents/:id/workflows",
+  SETTINGS_WORKFLOWS: "/settings/workflows",
+  SETTINGS_WORKFLOW_DETAIL: "/settings/workflows/:id",
+  SETTINGS_INTEGRATIONS: "/settings/integrations",
+  SETTINGS_WORKFLOW_INSTANCES: "/settings/workflow-instances",
   SETTINGS_TABLE_BUILDER: "/settings/table-builder",
   SETTINGS_CUSTOM_TABLES: "/settings/custom-tables",
   SETTINGS_CUSTOM_TABLES_DETAIL: "/settings/custom-tables/:id",
@@ -39,7 +45,22 @@ export const settingsItems = [
       {
         label: "Agents",
         url: ROUTES.SETTINGS_AGENTS,
-        icon: <Users2 className="h-4 w-4" />,
+        icon: <Bot className="h-4 w-4" />,
+      },
+      {
+        label: "Workflows",
+        url: ROUTES.SETTINGS_WORKFLOWS,
+        icon: <Workflow className="h-4 w-4" />,
+      },
+      {
+        label: "Workflow Executions",
+        url: ROUTES.SETTINGS_WORKFLOW_INSTANCES,
+        icon: <GitBranch className="h-4 w-4" />,
+      },
+      {
+        label: "Integrations",
+        url: ROUTES.SETTINGS_INTEGRATIONS,
+        icon: <Link className="h-4 w-4" />,
       },
       {
         label: "Custom Tables",

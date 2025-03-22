@@ -359,6 +359,56 @@ export type Database = {
           },
         ]
       }
+      custom_migrations: {
+        Row: {
+          applied_at: string | null
+          created_at: string | null
+          deleted_at: string | null
+          error: string | null
+          id: string
+          migration: Json
+          name: string
+          rollback: Json | null
+          success: boolean | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          applied_at?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          error?: string | null
+          id?: string
+          migration: Json
+          name: string
+          rollback?: Json | null
+          success?: boolean | null
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          applied_at?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          error?: string | null
+          id?: string
+          migration?: Json
+          name?: string
+          rollback?: Json | null
+          success?: boolean | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_custom_migrations_tenant"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       custom_roles: {
         Row: {
           created_at: string | null
@@ -440,13 +490,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "custom_table_data_table_id_fkey"
-            columns: ["table_id"]
-            isOneToOne: false
-            referencedRelation: "custom_table_definitions"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "fk_custom_table_data_tenant"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -455,12 +498,42 @@ export type Database = {
           },
         ]
       }
+      custom_table_data_progress: {
+        Row: {
+          current_step: number | null
+          last_table: string | null
+          last_table_id: string | null
+          status: string | null
+          tenant_id: string
+          total_steps: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          current_step?: number | null
+          last_table?: string | null
+          last_table_id?: string | null
+          status?: string | null
+          tenant_id: string
+          total_steps?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          current_step?: number | null
+          last_table?: string | null
+          last_table_id?: string | null
+          status?: string | null
+          tenant_id?: string
+          total_steps?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       custom_table_definitions: {
         Row: {
           created_at: string | null
           deleted_at: string | null
           description: string | null
-          display_name: string
+          display_name: string | null
           icon: string | null
           id: string
           name: string
@@ -472,11 +545,11 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           description?: string | null
-          display_name: string
+          display_name?: string | null
           icon?: string | null
           id?: string
           name: string
-          permissions?: Json
+          permissions: Json
           tenant_id: string
           updated_at?: string | null
         }
@@ -484,7 +557,7 @@ export type Database = {
           created_at?: string | null
           deleted_at?: string | null
           description?: string | null
-          display_name?: string
+          display_name?: string | null
           icon?: string | null
           id?: string
           name?: string
@@ -493,13 +566,6 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "custom_table_definitions_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "fk_custom_table_definitions_tenant"
             columns: ["tenant_id"]
@@ -512,54 +578,60 @@ export type Database = {
       custom_table_fields: {
         Row: {
           created_at: string | null
-          default_value: Json | null
+          default_value: string | null
           deleted_at: string | null
           description: string | null
-          display_name: string
-          field_type: Database["public"]["Enums"]["field_type_enum"] | null
+          display_name: string | null
+          field_type: Database["public"]["Enums"]["field_type_enum"]
           id: string
-          is_required: boolean
-          is_unique: boolean
+          is_required: boolean | null
+          is_unique: boolean | null
           name: string
           options: Json | null
           permissions: Json
-          table_id: string
+          relation: Json | null
+          table_id: string | null
           tenant_id: string
           updated_at: string | null
+          validation: Json | null
         }
         Insert: {
           created_at?: string | null
-          default_value?: Json | null
+          default_value?: string | null
           deleted_at?: string | null
           description?: string | null
-          display_name: string
-          field_type?: Database["public"]["Enums"]["field_type_enum"] | null
+          display_name?: string | null
+          field_type: Database["public"]["Enums"]["field_type_enum"]
           id?: string
-          is_required?: boolean
-          is_unique?: boolean
+          is_required?: boolean | null
+          is_unique?: boolean | null
           name: string
           options?: Json | null
-          permissions?: Json
-          table_id: string
+          permissions: Json
+          relation?: Json | null
+          table_id?: string | null
           tenant_id: string
           updated_at?: string | null
+          validation?: Json | null
         }
         Update: {
           created_at?: string | null
-          default_value?: Json | null
+          default_value?: string | null
           deleted_at?: string | null
           description?: string | null
-          display_name?: string
-          field_type?: Database["public"]["Enums"]["field_type_enum"] | null
+          display_name?: string | null
+          field_type?: Database["public"]["Enums"]["field_type_enum"]
           id?: string
-          is_required?: boolean
-          is_unique?: boolean
+          is_required?: boolean | null
+          is_unique?: boolean | null
           name?: string
           options?: Json | null
           permissions?: Json
-          table_id?: string
+          relation?: Json | null
+          table_id?: string | null
           tenant_id?: string
           updated_at?: string | null
+          validation?: Json | null
         }
         Relationships: [
           {
@@ -570,14 +642,94 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "custom_table_fields_tenant_id_fkey"
+            foreignKeyName: "fk_custom_table_fields_tenant"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      custom_table_progress: {
+        Row: {
+          current_step: number | null
+          last_table: string | null
+          last_table_id: string | null
+          status: string | null
+          tenant_id: string
+          total_steps: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          current_step?: number | null
+          last_table?: string | null
+          last_table_id?: string | null
+          status?: string | null
+          tenant_id: string
+          total_steps?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          current_step?: number | null
+          last_table?: string | null
+          last_table_id?: string | null
+          status?: string | null
+          tenant_id?: string
+          total_steps?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      custom_table_relationships: {
+        Row: {
+          created_at: string | null
+          deleted_at: string | null
+          from_field: string
+          from_table: string
+          id: string
+          relationship_type: string
+          table_id: string | null
+          tenant_id: string
+          to_field: string
+          to_table: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          deleted_at?: string | null
+          from_field: string
+          from_table: string
+          id?: string
+          relationship_type: string
+          table_id?: string | null
+          tenant_id: string
+          to_field: string
+          to_table: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          deleted_at?: string | null
+          from_field?: string
+          from_table?: string
+          id?: string
+          relationship_type?: string
+          table_id?: string | null
+          tenant_id?: string
+          to_field?: string
+          to_table?: string
+          updated_at?: string | null
+        }
+        Relationships: [
           {
-            foreignKeyName: "fk_custom_table_fields_tenant"
+            foreignKeyName: "custom_table_relationships_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "custom_table_definitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_custom_table_relationships_tenant"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -975,17 +1127,20 @@ export type Database = {
         Row: {
           id: string
           name: string | null
-          workspace: string | null
+          tenant_owner_id: string
+          workspace: string
         }
         Insert: {
           id?: string
           name?: string | null
-          workspace?: string | null
+          tenant_owner_id: string
+          workspace: string
         }
         Update: {
           id?: string
           name?: string | null
-          workspace?: string | null
+          tenant_owner_id?: string
+          workspace?: string
         }
         Relationships: []
       }
@@ -1089,6 +1244,12 @@ export type Database = {
         }
         Returns: undefined
       }
+      apply_custom_migration: {
+        Args: {
+          migration_name: string
+        }
+        Returns: undefined
+      }
       binary_quantize:
         | {
             Args: {
@@ -1102,6 +1263,17 @@ export type Database = {
             }
             Returns: unknown
           }
+      build_default_permissions: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      can_access_tenant_data: {
+        Args: {
+          target_tenant_id: string
+          allowed_roles: Database["public"]["Enums"]["user_role_type"][]
+        }
+        Returns: boolean
+      }
       create_tenant_request: {
         Args: {
           workspace_name: string
@@ -1127,6 +1299,18 @@ export type Database = {
       get_field_types: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["field_type_enum"][]
+      }
+      get_table_schema: {
+        Args: {
+          t_name: string
+        }
+        Returns: {
+          column_name: string
+          data_type: string
+          character_maximum_length: number
+          is_nullable: string
+          column_default: string
+        }[]
       }
       halfvec_avg: {
         Args: {
@@ -1160,6 +1344,22 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_row_permission:
+        | {
+            Args: {
+              perms: Json
+              action: string
+            }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              target_tenant_id: string
+              perms: Json
+              action: string
+            }
+            Returns: boolean
+          }
       hnsw_bit_support: {
         Args: {
           "": unknown
@@ -1184,11 +1384,25 @@ export type Database = {
         }
         Returns: unknown
       }
+      import_custom_table_data: {
+        Args: {
+          import_data: Json
+          input_tenant_id: string
+        }
+        Returns: undefined
+      }
       insert_custom_table_record: {
         Args: {
           p_table_name: string
           p_tenant_id: string
           p_data: Json
+        }
+        Returns: Json
+      }
+      insert_custom_tables: {
+        Args: {
+          schema_data: Json
+          input_tenant_id: string
         }
         Returns: Json
       }
@@ -1382,6 +1596,13 @@ export type Database = {
         | "reference"
         | "timestamp"
         | "uuid"
+        | "number"
+        | "date"
+        | "select"
+        | "email"
+        | "url"
+        | "relation"
+        | "textarea"
       user_role_type:
         | "admin"
         | "member"

@@ -1,3 +1,4 @@
+
 // NO_CHANGE
 import { lazy, Suspense } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -64,6 +65,11 @@ const AppearanceSettings = lazy(
 );
 const AgentsSettings = lazy(() => import("./pages/settings/AgentsSettings"));
 const AgentDetail = lazy(() => import("./pages/settings/AgentDetail"));
+const AgentWorkflowsSettings = lazy(() => import("./pages/settings/AgentWorkflowsSettings"));
+const WorkflowsSettings = lazy(() => import("./pages/settings/WorkflowsSettings"));
+const WorkflowDetail = lazy(() => import("./pages/settings/WorkflowDetail"));
+const IntegrationsSettings = lazy(() => import("./pages/settings/IntegrationsSettings"));
+const WorkflowInstancesSettings = lazy(() => import("./pages/settings/WorkflowInstancesSettings"));
 
 const queryClient = new QueryClient();
 
@@ -139,6 +145,11 @@ const router = createBrowserRouter([
                 element: <TableBuilderPage />,
               },
               { path: ROUTES.SETTINGS_AGENTS_DETAIL, element: <AgentDetail /> },
+              { path: "/settings/agents/:id/workflows", element: <AgentWorkflowsSettings /> },
+              { path: "/settings/workflows", element: <WorkflowsSettings /> },
+              { path: "/settings/workflows/:id", element: <WorkflowDetail /> },
+              { path: "/settings/integrations", element: <IntegrationsSettings /> },
+              { path: "/settings/workflow-instances", element: <WorkflowInstancesSettings /> },
             ],
           },
 

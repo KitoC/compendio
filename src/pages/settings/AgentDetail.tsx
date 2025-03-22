@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,7 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Workflow } from "lucide-react";
 import FunctionSelector from "@/components/selectors/FunctionSelector";
 
 interface AIFunction {
@@ -161,6 +162,12 @@ const AgentDetail = () => {
     setAgent((prev) => ({ ...prev!, enabled: checked }));
   };
 
+  const handleManageWorkflows = () => {
+    if (id) {
+      navigate(`/settings/agents/${id}/workflows`);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center p-8">
@@ -171,17 +178,29 @@ const AgentDetail = () => {
 
   return (
     <div className="space-y-6 flex flex-col h-full">
-      <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate(`${ROUTES.SETTINGS}/agents`)}
-        >
-          <ArrowLeft size={16} />
-        </Button>
-        <h2 className="text-2xl font-medium">
-          {id === "new" ? "Create New Agent" : "Edit Agent"}
-        </h2>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(`${ROUTES.SETTINGS}/agents`)}
+          >
+            <ArrowLeft size={16} />
+          </Button>
+          <h2 className="text-2xl font-medium">
+            {id === "new" ? "Create New Agent" : "Edit Agent"}
+          </h2>
+        </div>
+        
+        {id !== "new" && (
+          <Button 
+            variant="outline" 
+            onClick={handleManageWorkflows}
+          >
+            <Workflow className="h-4 w-4 mr-2" />
+            Manage Workflows
+          </Button>
+        )}
       </div>
 
       <Card className="flex-1 overflow-y-auto">
