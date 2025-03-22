@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -6,6 +7,8 @@ import { toast } from "sonner";
 import { INTEGRATION_TYPES, ROUTES } from "@/lib/constants";
 import FormBuilder from "@/components/form-builder";
 import { FormConfig } from "@/components/form-builder/types";
+import { newAgentFormConfig } from "@/forms/agents";
+import { integrationSettingsConfig, INTEGRATION_FORM_CONFIGS } from "@/forms/integrations";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +42,7 @@ import {
   ArrowRight,
   LogIn,
   Loader2,
+  Plus,
 } from "lucide-react";
 
 interface AiAgent {
@@ -83,16 +87,15 @@ const AddIntegrationWizard = ({
   const [step, setStep] = useState(1);
   const [agents, setAgents] = useState<AiAgent[]>([]);
   const [selectedAgentId, setSelectedAgentId] = useState<string>("");
-  const [selectedIntegrationType, setSelectedIntegrationType] =
-    useState<string>("");
+  const [selectedIntegrationType, setSelectedIntegrationType] = useState<string>("");
   const [isLoadingAgents, setIsLoadingAgents] = useState(true);
-  const [existingCredentials, setExistingCredentials] = useState<Credential[]>(
-    []
-  );
+  const [existingCredentials, setExistingCredentials] = useState<Credential[]>([]);
   const [selectedCredentialId, setSelectedCredentialId] = useState<string>("");
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
   const [configValues, setConfigValues] = useState<Record<string, unknown>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCreatingAgent, setIsCreatingAgent] = useState(false);
+  const [newAgentData, setNewAgentData] = useState<Record<string, unknown>>({});
 
   useEffect(() => {
     if (isOpen) {
@@ -144,6 +147,45 @@ const AddIntegrationWizard = ({
       console.error("Error fetching credentials:", error);
     } finally {
       setIsLoadingCredentials(false);
+    }
+  };
+
+  const handleCreateAgent = async (values: Record<string, unknown>) => {
+    if (!tenantId) return;
+
+    try {
+      setIsSubmitting(true);
+      
+      // Convert enabled boolean if it exists
+      const agentData = {
+        ...values,
+        enabled: values.enabled === undefined ? true : Boolean(values.enabled),
+        tenant_id: tenantId
+      };
+      
+      const { data, error } = await supabase
+        .from("ai_agents")
+        .insert([agentData])
+        .select();
+
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        setNewAgentData(data[0]);
+        setSelectedAgentId(data[0].id);
+        toast.success("Agent created successfully");
+        
+        // Refresh agents list
+        fetchAgents();
+        
+        // Exit creation mode and continue wizard
+        setIsCreatingAgent(false);
+      }
+    } catch (error) {
+      console.error("Error creating agent:", error);
+      toast.error("Failed to create agent");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -251,6 +293,7 @@ const AddIntegrationWizard = ({
     setSelectedIntegrationType("");
     setConfigValues({});
     setSelectedCredentialId("");
+    setIsCreatingAgent(false);
     onClose();
   };
 
@@ -266,50 +309,83 @@ const AddIntegrationWizard = ({
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
-              {isLoadingAgents ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : agents.length === 0 ? (
-                <div className="text-center py-6">
-                  <p className="text-muted-foreground mb-4">
-                    No agents found. Create an agent first.
-                  </p>
-                  <Button onClick={() => navigate(ROUTES.SETTINGS_AGENTS)}>
-                    Create Agent
+              {isCreatingAgent ? (
+                <div className="space-y-4">
+                  <FormBuilder
+                    config={newAgentFormConfig}
+                    onSubmit={handleCreateAgent}
+                    isSubmitting={isSubmitting}
+                  />
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsCreatingAgent(false)}
+                    className="w-full mt-2"
+                  >
+                    Cancel
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <Select
-                    value={selectedAgentId}
-                    onValueChange={setSelectedAgentId}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select an agent" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {agents.map((agent) => (
-                        <SelectItem key={agent.id} value={agent.id}>
-                          {agent.human_name || agent.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <>
+                  {isLoadingAgents ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  ) : agents.length === 0 ? (
+                    <div className="text-center py-6">
+                      <p className="text-muted-foreground mb-4">
+                        No agents found. Create an agent first.
+                      </p>
+                      <Button onClick={() => setIsCreatingAgent(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Agent
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <Select
+                        value={selectedAgentId}
+                        onValueChange={setSelectedAgentId}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select an agent" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {agents.map((agent) => (
+                            <SelectItem key={agent.id} value={agent.id}>
+                              {agent.human_name || agent.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      
+                      <div className="mt-4 flex justify-center">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setIsCreatingAgent(true)}
+                          className="w-full"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Create New Agent
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={resetAndClose}>
-                Cancel
-              </Button>
-              <Button
-                onClick={nextStep}
-                disabled={!selectedAgentId || isLoadingAgents}
-              >
-                Next <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </DialogFooter>
+            {!isCreatingAgent && (
+              <DialogFooter>
+                <Button variant="outline" onClick={resetAndClose}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={nextStep}
+                  disabled={!selectedAgentId || isLoadingAgents}
+                >
+                  Next <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </DialogFooter>
+            )}
           </>
         );
 
@@ -370,6 +446,7 @@ const AddIntegrationWizard = ({
           (t) => t.id === selectedIntegrationType
         );
         const authType = selectedType?.authType || "custom";
+        const formConfig = selectedType && INTEGRATION_FORM_CONFIGS[selectedIntegrationType];
 
         if (isLoadingCredentials) {
           return (
@@ -450,15 +527,17 @@ const AddIntegrationWizard = ({
                     size="lg"
                   >
                     <LogIn className="h-5 w-5" />
-                    {selectedType?.formConfig.submitButtonText ||
+                    {formConfig?.submitButtonText ||
                       "Connect Account"}
                   </Button>
                 </div>
               ) : (
-                <FormBuilder
-                  config={selectedType?.formConfig as FormConfig}
-                  onSubmit={handleFormSubmit}
-                />
+                formConfig && (
+                  <FormBuilder
+                    config={formConfig}
+                    onSubmit={handleFormSubmit}
+                  />
+                )
               )}
             </div>
             {authType !== "oauth" ? null : (
@@ -486,36 +565,12 @@ const AddIntegrationWizard = ({
             </DialogHeader>
             <div className="py-4">
               <FormBuilder
-                config={{
-                  id: "integration-settings",
-                  title: "Integration Settings",
-                  sections: [
-                    {
-                      id: "settings",
-                      fields: [
-                        {
-                          id: "name",
-                          name: "name",
-                          label: "Integration Name",
-                          type: "text",
-                          placeholder: "My Integration",
-                          defaultValue:
-                            configValues.name || selectedIntegrationType,
-                        },
-                        {
-                          id: "description",
-                          name: "description",
-                          label: "Description",
-                          type: "textarea",
-                          placeholder:
-                            "What will this integration be used for?",
-                        },
-                      ],
-                    },
-                  ],
-                  submitButtonText: "Continue",
-                }}
+                config={integrationSettingsConfig}
                 onSubmit={handleFormSubmit}
+                initialValues={{
+                  name: configValues.name || selectedIntegrationType,
+                  description: configValues.description || ""
+                }}
               />
             </div>
           </>

@@ -3,58 +3,45 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { ROUTES, INTEGRATION_TYPES } from "@/lib/constants";
-import WebhookEventsTable from "@/components/integrations/WebhookEventsTable";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+import WebhookEventsTable from "./WebhookEventsTable";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  ArrowLeft,
-  Trash2,
-  RefreshCcw,
-  Box,
-  Calendar,
-  LogIn,
-  ShieldAlert,
-  Loader2,
-} from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-
-interface ConnectedService {
-  id: string;
-  service_type: string;
-  name: string;
-  status: string;
-  agent_id: string;
-  created_at: string;
-  updated_at: string;
-  config: any;
-  auth_type: string;
-}
+import { ArrowLeft, RefreshCcw, Trash2, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Credential {
   id: string;
   username: string;
   domain: string;
-  scopes: string[];
-  expires_at: string;
   connected_service_id: string;
+  expires_at?: string;
   created_at: string;
   updated_at: string;
+  scopes?: string[];
+}
+
+interface ConnectedService {
+  id: string;
+  service_type: string;
+  name: string;
+  agent_id: string;
+  status: string;
+  created_at: string;
+  updated_at?: string;
+  deleted_at?: string;
+  tenant_id: string;
+  workflow_instance_id?: string;
+  auth_type: string;
+  config: Record<string, unknown>;
 }
 
 interface Agent {
@@ -65,150 +52,174 @@ interface Agent {
 }
 
 const IntegrationDetail = () => {
-  const { id } = useParams<{ id: string }>();
   const { tenantId } = useAuth();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
+
   const [service, setService] = useState<ConnectedService | null>(null);
   const [credential, setCredential] = useState<Credential | null>(null);
   const [agent, setAgent] = useState<Agent | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [isDeletingService, setIsDeletingService] = useState(false);
-  
+  const [activeTab, setActiveTab] = useState("overview");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
+
   useEffect(() => {
-    if (tenantId && id) {
-      fetchServiceDetails();
-    }
+    if (!tenantId || !id) return;
+    fetchServiceDetails();
   }, [tenantId, id]);
-  
+
   const fetchServiceDetails = async () => {
     if (!tenantId || !id) return;
-    
+
     try {
-      setIsLoading(true);
-      
-      // Fetch the service
+      // Fetch connected service
       const { data: serviceData, error: serviceError } = await supabase
         .from("connected_services")
         .select("*")
         .eq("id", id)
         .eq("tenant_id", tenantId)
         .single();
-      
+
       if (serviceError) throw serviceError;
-      setService(serviceData);
       
-      // Fetch related credential
-      if (serviceData) {
-        const { data: credData, error: credError } = await supabase
-          .from("credentials")
-          .select("id, username, domain, scopes, expires_at, connected_service_id, created_at, updated_at")
-          .eq("connected_service_id", serviceData.id)
-          .eq("tenant_id", tenantId)
-          .maybeSingle();
-        
-        if (credError) throw credError;
-        setCredential(credData);
-        
-        // Fetch agent
-        if (serviceData.agent_id) {
-          const { data: agentData, error: agentError } = await supabase
-            .from("ai_agents")
-            .select("id, name, human_name, avatar_url")
-            .eq("id", serviceData.agent_id)
-            .eq("tenant_id", tenantId)
-            .single();
-          
-          if (agentError) throw agentError;
+      // Type assertion
+      const typedService = serviceData as unknown as ConnectedService;
+      setService(typedService);
+
+      if (typedService.agent_id) {
+        // Fetch agent details
+        const { data: agentData, error: agentError } = await supabase
+          .from("ai_agents")
+          .select("id, name, human_name, avatar_url")
+          .eq("id", typedService.agent_id)
+          .single();
+
+        if (!agentError && agentData) {
           setAgent(agentData);
         }
+      }
+
+      // Fetch credentials
+      const { data: credData, error: credError } = await supabase
+        .from("credentials")
+        .select("*")
+        .eq("connected_service_id", id)
+        .eq("tenant_id", tenantId)
+        .single();
+
+      if (!credError && credData) {
+        // Type assertion for credential
+        const typedCredential = credData as unknown as Credential;
+        setCredential(typedCredential);
       }
     } catch (error) {
       console.error("Error fetching service details:", error);
       toast.error("Failed to load integration details");
+      // Navigate back on error
       navigate(ROUTES.SETTINGS_INTEGRATIONS);
-    } finally {
-      setIsLoading(false);
     }
   };
-  
+
   const handleDelete = async () => {
     if (!tenantId || !id) return;
-    
+
     try {
-      setIsDeletingService(true);
+      setIsDeleting(true);
       
-      // Delete associated credentials first
-      if (credential) {
-        await supabase
-          .from("credentials")
-          .delete()
-          .eq("id", credential.id)
-          .eq("tenant_id", tenantId);
-      }
-      
-      // Delete the service
+      // First delete any associated credentials
+      await supabase
+        .from("credentials")
+        .delete()
+        .eq("connected_service_id", id)
+        .eq("tenant_id", tenantId);
+        
+      // Then delete the service
       const { error } = await supabase
         .from("connected_services")
         .delete()
         .eq("id", id)
         .eq("tenant_id", tenantId);
-      
+
       if (error) throw error;
       
       toast.success("Integration deleted successfully");
       navigate(ROUTES.SETTINGS_INTEGRATIONS);
     } catch (error) {
-      console.error("Error deleting service:", error);
+      console.error("Error deleting integration:", error);
       toast.error("Failed to delete integration");
     } finally {
-      setIsDeletingService(false);
-      setShowDeleteDialog(false);
+      setIsDeleting(false);
     }
   };
-  
+
   const handleReconnect = async () => {
-    // This would trigger a reconnection flow
-    // For OAuth, it would start a new OAuth flow
-    // For API keys, it would open a form to update credentials
-    toast.info("Reconnection flow would start here");
+    if (!service) return;
+    
+    setIsReconnecting(true);
+    
+    try {
+      // Implement reconnection logic
+      // This would typically involve:
+      // 1. For OAuth: Redirect to auth page
+      // 2. For API key: Show form to update credentials
+      
+      // For now, just update status to show it was attempted
+      const { error } = await supabase
+        .from("connected_services")
+        .update({ status: "reconnecting" })
+        .eq("id", service.id)
+        .eq("tenant_id", tenantId);
+        
+      if (error) throw error;
+      
+      toast.success("Reconnection initiated");
+      
+      // Refresh service details
+      fetchServiceDetails();
+    } catch (error) {
+      console.error("Error reconnecting:", error);
+      toast.error("Failed to reconnect");
+    } finally {
+      setIsReconnecting(false);
+    }
   };
-  
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-  
+
+  const getServiceTypeName = (serviceType: string) => {
+    const integrationType = INTEGRATION_TYPES.find(t => t.id === serviceType);
+    return integrationType?.name || serviceType;
+  };
+
   if (!service) {
     return (
-      <div className="text-center py-10">
-        <h2 className="text-xl font-bold mb-4">Integration Not Found</h2>
-        <Button onClick={() => navigate(ROUTES.SETTINGS_INTEGRATIONS)}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Integrations
-        </Button>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <h2 className="text-xl font-bold mb-2">Integration Not Found</h2>
+          <p className="text-muted-foreground mb-4">
+            The integration you're looking for doesn't exist or you don't have permission to view it.
+          </p>
+          <Button onClick={() => navigate(ROUTES.SETTINGS_INTEGRATIONS)}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Integrations
+          </Button>
+        </div>
       </div>
     );
   }
-  
-  const integrationTypeInfo = INTEGRATION_TYPES.find(t => t.id === service.service_type);
-  
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-4">
-          <Button
-            variant="outline"
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <Button 
+            variant="outline" 
             size="icon"
             onClick={() => navigate(ROUTES.SETTINGS_INTEGRATIONS)}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-2xl font-bold">{service.name || integrationTypeInfo?.name || service.service_type}</h1>
+          <h1 className="text-2xl font-bold">
+            {service.name || getServiceTypeName(service.service_type)}
+          </h1>
           <Badge
             variant={
               service.status === "active" ? "success" :
@@ -221,179 +232,202 @@ const IntegrationDetail = () => {
         </div>
         
         <div className="flex space-x-2">
-          <Button
-            variant="outline"
+          <Button 
+            variant="outline" 
             onClick={handleReconnect}
+            disabled={isReconnecting}
           >
-            <RefreshCcw className="mr-2 h-4 w-4" />
-            Reconnect
+            {isReconnecting ? (
+              <>
+                <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
+                Reconnecting...
+              </>
+            ) : (
+              <>
+                <RefreshCcw className="mr-2 h-4 w-4" />
+                Reconnect
+              </>
+            )}
           </Button>
-          <Button
-            variant="destructive"
-            onClick={() => setShowDeleteDialog(true)}
+          
+          <Button 
+            variant="destructive" 
+            onClick={handleDelete}
+            disabled={isDeleting}
           >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete
+            {isDeleting ? (
+              <>
+                <Trash2 className="mr-2 h-4 w-4 animate-pulse" />
+                Deleting...
+              </>
+            ) : (
+              <>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </>
+            )}
           </Button>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Integration Details</CardTitle>
-            <CardDescription>Service configuration information</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h3 className="text-sm font-medium mb-1">Service Type</h3>
-              <p>{integrationTypeInfo?.name || service.service_type}</p>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium mb-1">Auth Type</h3>
-              <p>{service.auth_type}</p>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium mb-1">Connected Agent</h3>
-              <p>
-                {agent ? (agent.human_name || agent.name) : "None"}
-                {agent && agent.avatar_url && (
-                  <img 
-                    src={agent.avatar_url} 
-                    alt={agent.name} 
-                    className="w-6 h-6 rounded-full inline-block ml-2"
-                  />
-                )}
-              </p>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium mb-1">Created</h3>
-              <p>{new Date(service.created_at).toLocaleString()}</p>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium mb-1">Last Updated</h3>
-              <p>{new Date(service.updated_at).toLocaleString()}</p>
-            </div>
-          </CardContent>
-        </Card>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="events">Webhook Events</TabsTrigger>
+          <TabsTrigger value="credentials">Credentials</TabsTrigger>
+        </TabsList>
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Credential Information</CardTitle>
-            <CardDescription>Authentication details</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {credential ? (
-              <div className="space-y-4">
+        <TabsContent value="overview" className="space-y-6 pt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Integration Details</CardTitle>
+              <CardDescription>
+                Basic information about this integration
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <h3 className="text-sm font-medium mb-1">Username</h3>
-                  <p>{credential.username}</p>
+                  <h3 className="text-sm font-medium">Service Type</h3>
+                  <p>{getServiceTypeName(service.service_type)}</p>
                 </div>
-                {credential.scopes && credential.scopes.length > 0 && (
+                
+                <div>
+                  <h3 className="text-sm font-medium">Authentication Type</h3>
+                  <p className="capitalize">{service.auth_type}</p>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium">Connected Agent</h3>
+                  <p>{agent ? (agent.human_name || agent.name) : "Unknown Agent"}</p>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium">Created</h3>
+                  <p>{new Date(service.created_at).toLocaleDateString()}</p>
+                </div>
+                
+                {service.config && service.config.description && (
+                  <div className="md:col-span-2">
+                    <h3 className="text-sm font-medium">Description</h3>
+                    <p>{service.config.description as string}</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+          
+          {service.config && Object.keys(service.config).length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Configuration</CardTitle>
+                <CardDescription>
+                  Service configuration details
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {Object.entries(service.config)
+                    .filter(([key]) => !['password', 'api_token', 'secret', 'token', 'apiKey'].includes(key)) // Filter out sensitive fields
+                    .map(([key, value]) => (
+                      <div key={key}>
+                        <h3 className="text-sm font-medium capitalize">{key.replace('_', ' ')}</h3>
+                        <p>{typeof value === 'string' ? value : JSON.stringify(value)}</p>
+                      </div>
+                    ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="events" className="pt-4">
+          <WebhookEventsTable tenantId={tenantId} serviceId={service.id} />
+        </TabsContent>
+        
+        <TabsContent value="credentials" className="pt-4">
+          {credential ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Credential Information</CardTitle>
+                <CardDescription>
+                  Authentication details for this integration
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <h3 className="text-sm font-medium mb-1">Permissions</h3>
-                    <div className="flex flex-wrap gap-1">
-                      {credential.scopes.map((scope, index) => (
-                        <Badge key={index} variant="secondary">
-                          {scope}
-                        </Badge>
-                      ))}
+                    <h3 className="text-sm font-medium">Username</h3>
+                    <p>{credential.username}</p>
+                  </div>
+                  
+                  {credential.expires_at && (
+                    <div>
+                      <h3 className="text-sm font-medium">Expires</h3>
+                      <p>
+                        {new Date(credential.expires_at).toLocaleDateString()}
+                        {new Date(credential.expires_at) < new Date() && (
+                          <Badge variant="destructive" className="ml-2">
+                            <AlertTriangle className="h-3 w-3 mr-1" />
+                            Expired
+                          </Badge>
+                        )}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {credential.scopes && credential.scopes.length > 0 && (
+                    <div className="md:col-span-2">
+                      <h3 className="text-sm font-medium">Scopes</h3>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {credential.scopes.map(scope => (
+                          <Badge key={scope} variant="outline">{scope}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <h3 className="text-sm font-medium">Created</h3>
+                    <p>{new Date(credential.created_at).toLocaleDateString()}</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-sm font-medium">Updated</h3>
+                    <p>{new Date(credential.updated_at).toLocaleDateString()}</p>
+                  </div>
+                </div>
+                
+                <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-md">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-amber-800 dark:text-amber-300">Credential Security</h4>
+                      <p className="text-sm text-amber-700 dark:text-amber-400">
+                        For security reasons, access tokens and secrets are encrypted and cannot be displayed. 
+                        If you need to update credentials, use the Reconnect button.
+                      </p>
                     </div>
                   </div>
-                )}
-                {credential.expires_at && (
-                  <div>
-                    <h3 className="text-sm font-medium mb-1">Expires</h3>
-                    <p>{new Date(credential.expires_at).toLocaleString()}</p>
-                  </div>
-                )}
-                <div className="pt-2">
-                  <p className="text-sm text-muted-foreground flex items-center">
-                    <ShieldAlert className="h-4 w-4 mr-2" />
-                    Credentials are securely stored and encrypted
-                  </p>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-6">
-                <p className="text-muted-foreground mb-4">No credentials found for this integration</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <h2 className="text-xl font-medium mb-2">No Credentials Found</h2>
+                <p className="text-muted-foreground mb-4">
+                  This integration doesn't have any stored credentials.
+                </p>
                 <Button onClick={handleReconnect}>
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Add Credentials
+                  <RefreshCcw className="mr-2 h-4 w-4" />
+                  Set Up Credentials
                 </Button>
               </div>
-            )}
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Integration Usage</CardTitle>
-            <CardDescription>Connected workflows and usage metrics</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center p-2 rounded-md bg-primary/5">
-                <Box className="h-8 w-8 text-primary mr-4" />
-                <div>
-                  <h3 className="font-medium">0 Workflows</h3>
-                  <p className="text-sm text-muted-foreground">Using this integration</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center p-2 rounded-md bg-primary/5">
-                <Calendar className="h-8 w-8 text-primary mr-4" />
-                <div>
-                  <h3 className="font-medium">0 Events</h3>
-                  <p className="text-sm text-muted-foreground">Past 30 days</p>
-                </div>
-              </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <div className="mt-8">
-        <WebhookEventsTable tenantId={tenantId} />
-      </div>
-      
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this integration? This action cannot be undone, 
-              and all related credentials will be permanently removed.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline" 
-              onClick={() => setShowDeleteDialog(false)}
-              disabled={isDeletingService}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={isDeletingService}
-            >
-              {isDeletingService ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete Integration
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
