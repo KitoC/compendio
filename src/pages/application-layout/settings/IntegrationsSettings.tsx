@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -53,30 +52,39 @@ const IntegrationsSettings = () => {
     }
   }, [tenantId]);
 
+  useEffect(() => {
+    if (sessionStorage.getItem("integration_wizard_state")) {
+      setIsWizardOpen(true);
+    }
+  }, []);
+
   const fetchServices = async () => {
     if (!tenantId) return;
 
     try {
       setIsLoading(true);
-      
+
       // Fetch services with agent names
       const { data, error } = await supabase
         .from("connected_services")
-        .select(`
+        .select(
+          `
           *,
           ai_agents (
             name
           )
-        `)
+        `
+        )
         .eq("tenant_id", tenantId);
 
       if (error) throw error;
-      
+
       // Transform data to include agent name
-      const servicesWithAgentNames = data?.map(service => ({
-        ...service,
-        agent_name: service.ai_agents?.name || "Unknown agent"
-      })) || [];
+      const servicesWithAgentNames =
+        data?.map((service) => ({
+          ...service,
+          agent_name: service.ai_agents?.name || "Unknown agent",
+        })) || [];
 
       setServices(servicesWithAgentNames);
     } catch (error) {
@@ -113,7 +121,7 @@ const IntegrationsSettings = () => {
         .delete()
         .eq("connected_service_id", id)
         .eq("tenant_id", tenantId);
-        
+
       // Then delete the service
       const { error } = await supabase
         .from("connected_services")
@@ -141,7 +149,7 @@ const IntegrationsSettings = () => {
   };
 
   const getServiceTypeName = (serviceType: string) => {
-    const integrationType = INTEGRATION_TYPES.find(t => t.id === serviceType);
+    const integrationType = INTEGRATION_TYPES.find((t) => t.id === serviceType);
     return integrationType?.name || serviceType;
   };
 
@@ -150,19 +158,20 @@ const IntegrationsSettings = () => {
       field: "name",
       header: "Name",
       sortable: true,
-      render: (service) => service.name || getServiceTypeName(service.service_type)
+      render: (service) =>
+        service.name || getServiceTypeName(service.service_type),
     },
     {
       field: "service_type",
       header: "Service Type",
       sortable: true,
-      render: (service) => getServiceTypeName(service.service_type)
+      render: (service) => getServiceTypeName(service.service_type),
     },
     {
       field: "agent_id",
       header: "Agent",
       sortable: true,
-      render: (service) => service.agent_name || "Unknown agent"
+      render: (service) => service.agent_name || "Unknown agent",
     },
     {
       field: "status",
@@ -173,9 +182,13 @@ const IntegrationsSettings = () => {
         return (
           <Badge
             variant={
-              status === "active" ? "success" :
-              status === "pending" ? "warning" :
-              status === "error" ? "destructive" : "default"
+              status === "active"
+                ? "success"
+                : status === "pending"
+                ? "warning"
+                : status === "error"
+                ? "destructive"
+                : "default"
             }
           >
             {status}
@@ -198,9 +211,9 @@ const IntegrationsSettings = () => {
       field: "actions",
       header: "Actions",
       render: (service) => (
-        <Button 
-          variant="outline" 
-          size="sm" 
+        <Button
+          variant="outline"
+          size="sm"
           onClick={(e) => {
             e.stopPropagation();
             handleReconnect(service);
@@ -210,7 +223,7 @@ const IntegrationsSettings = () => {
           Reconnect
         </Button>
       ),
-    }
+    },
   ];
 
   const credentialColumns: Column<Credential>[] = [
@@ -223,29 +236,36 @@ const IntegrationsSettings = () => {
       field: "domain",
       header: "Domain",
       sortable: true,
-      render: (credential) => getServiceTypeName(credential.domain)
+      render: (credential) => getServiceTypeName(credential.domain),
     },
     {
       field: "connected_service_id",
       header: "Service",
       sortable: true,
       render: (credential) => {
-        const service = services.find(s => s.id === credential.connected_service_id);
-        return service ? (service.name || getServiceTypeName(service.service_type)) : "Unknown";
+        const service = services.find(
+          (s) => s.id === credential.connected_service_id
+        );
+        return service
+          ? service.name || getServiceTypeName(service.service_type)
+          : "Unknown";
       },
     },
     {
       field: "expires_at",
       header: "Expires",
       sortable: true,
-      render: (credential) => credential.expires_at ? 
-        new Date(credential.expires_at).toLocaleDateString() : "Never",
+      render: (credential) =>
+        credential.expires_at
+          ? new Date(credential.expires_at).toLocaleDateString()
+          : "Never",
     },
     {
       field: "created_at",
       header: "Created",
       sortable: true,
-      render: (credential) => new Date(credential.created_at).toLocaleDateString(),
+      render: (credential) =>
+        new Date(credential.created_at).toLocaleDateString(),
     },
   ];
 
@@ -299,7 +319,7 @@ const IntegrationsSettings = () => {
               export: false,
             }}
             onDelete={(id) => {
-              if (typeof id === 'string') {
+              if (typeof id === "string") {
                 supabase
                   .from("credentials")
                   .delete()
