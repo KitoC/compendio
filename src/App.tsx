@@ -1,181 +1,82 @@
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import RequestAccess from "./pages/RequestAccess";
+import AccessPending from "./pages/AccessPending";
+import Conversations from "./pages/Conversations";
+import ConversationDetail from "./pages/ConversationDetail";
+import CustomTableData from "./pages/CustomTableData";
+import ConversationAssistant from "./pages/ConversationAssistant";
+import { ROUTES } from "./lib/constants";
+import AgentDetail from "./pages/settings/AgentDetail";
+import AgentWorkflowsSettings from "./pages/settings/AgentWorkflowsSettings";
+import AgentsSettings from "./pages/settings/AgentsSettings";
+import AppearanceSettings from "./pages/settings/AppearanceSettings";
+import CustomTableForm from "./pages/settings/CustomTableForm";
+import CustomRoleForm from "./pages/settings/CustomRoleForm";
+import CustomTablesPage from "./pages/settings/CustomTablesPage";
+import IntegrationsSettings from "./pages/settings/IntegrationsSettings";
+import IntegrationDetailPage from "./pages/settings/IntegrationDetail";
+import Settings from "./pages/Settings";
+import TableBuilderPage from "./pages/settings/TableBuilderPage";
+import WorkflowDetail from "./pages/settings/WorkflowDetail";
+import WorkflowsSettings from "./pages/settings/WorkflowsSettings";
+import WorkflowInstancesSettings from "./pages/settings/WorkflowInstancesSettings";
 
-// NO_CHANGE
-import { lazy, Suspense } from "react";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
-import { ThemeProvider } from "@/components/ThemeProvider";
-import AuthenticatedLayout from "@/components/layout/AuthenticatedLayout";
-import { ROUTES } from "@/lib/constants";
-import ErrorBoundary from "@/components/ErrorBoundary";
-import { UserSettingsProvider } from "@/contexts/UserSettingsProvider";
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path={ROUTES.AUTH} element={<Auth />} />
+        <Route path={ROUTES.AUTH_CALLBACK} element={<AuthCallback />} />
+        <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword />} />
+        <Route path={ROUTES.RESET_PASSWORD} element={<ResetPassword />} />
+        <Route path={ROUTES.REQUEST_ACCESS} element={<RequestAccess />} />
+        <Route path={ROUTES.ACCESS_PENDING} element={<AccessPending />} />
+        <Route path={ROUTES.CONVERSATIONS} element={<Conversations />} />
+        <Route
+          path={ROUTES.CONVERSATIONS_DETAIL}
+          element={<ConversationDetail />}
+        />
+        <Route path={ROUTES.CUSTOM_TABLE_DATA} element={<CustomTableData />} />
+        <Route
+          path={ROUTES.CONVERSATION_ASSISTANT}
+          element={<ConversationAssistant />}
+        />
 
-/**
- * DEV_NOTE: We are using React Router v7 with the framework mode.
- * Any changes should preserve this architecture here within the App.tsx file:
- * - Follow strict React Router v7 documentation for the most part.
- * - Use the React Router v7 "createBrowserRouter" and "RouterProvider" functions.
- * - Use the React Router v7 "Outlet" component to render nested routes.
- * - Use the React Router v7 "useNavigate" hook to navigate between routes.
- * - Use the React Router v7 "useParams" hook to access route parameters.
- * - Use the React Router v7 "useLocation" hook to access the current location.
- * - Use the React Router v7 "useSearchParams" hook to access the current search parameters.
- * - Use the React Router v7 "useLoaderData" hook to access the data returned by loaders.
- * - Use the React Router v7 "useActionData" hook to access the data returned by actions.
- * - Use the React Router v7 "useNavigation" hook to access the navigation object.
- * - Use the React Router v7 "useSubmit" hook to submit forms.
- * - Ensure all pages and components are lazy loaded.
- * - Keep the configuration based pattern for the routes.
- * - Always use the ROUTES constant for the routes.
- *
- * */
+        {/* Settings Routes */}
+        <Route path={ROUTES.SETTINGS} element={<Settings />}>
+          <Route path={ROUTES.SETTINGS_APPEARANCE} element={<AppearanceSettings />} />
+          <Route path={ROUTES.SETTINGS_AGENTS} element={<AgentsSettings />} />
+          <Route path={ROUTES.SETTINGS_AGENTS_DETAIL} element={<AgentDetail />} />
+          <Route path={ROUTES.SETTINGS_AGENT_WORKFLOWS} element={<AgentWorkflowsSettings />} />
+          <Route path={ROUTES.SETTINGS_WORKFLOWS} element={<WorkflowsSettings />} />
+          <Route path={ROUTES.SETTINGS_WORKFLOW_DETAIL} element={<WorkflowDetail />} />
+          <Route path={ROUTES.SETTINGS_INTEGRATIONS} element={<IntegrationsSettings />} />
+          <Route path={ROUTES.SETTINGS_INTEGRATION_DETAIL} element={<IntegrationDetailPage />} />
+          <Route path={ROUTES.SETTINGS_WORKFLOW_INSTANCES} element={<WorkflowInstancesSettings />} />
+          <Route path={ROUTES.SETTINGS_CUSTOM_TABLES} element={<CustomTablesPage />} />
+          <Route path={ROUTES.SETTINGS_CUSTOM_TABLES_DETAIL} element={<CustomTableForm />} />
+          <Route path={ROUTES.SETTINGS_CUSTOM_TABLES_NEW} element={<CustomTableForm />} />
+          <Route path={ROUTES.SETTINGS_CUSTOM_ROLES_DETAIL} element={<CustomRoleForm />} />
+          <Route path={ROUTES.SETTINGS_CUSTOM_ROLES_NEW} element={<CustomRoleForm />} />
+          <Route path={ROUTES.SETTINGS_TABLE_BUILDER} element={<TableBuilderPage />} />
+          {/* Default Settings Route */}
+          <Route index element={<Navigate to={ROUTES.SETTINGS_APPEARANCE} replace />} />
+        </Route>
 
-// Loading component
-const LoadingFallback = () => (
-  <div className="flex items-center justify-center h-screen">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-  </div>
-);
-
-// Lazy loaded pages
-const Index = lazy(() => import("./pages/Index"));
-const Auth = lazy(() => import("./pages/Auth"));
-const AuthCallback = lazy(() => import("./pages/AuthCallback"));
-const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
-const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const RequestAccess = lazy(() => import("./pages/RequestAccess"));
-const AccessPending = lazy(() => import("./pages/AccessPending"));
-const ChatPage = lazy(() => import("./pages/ChatPage"));
-const Settings = lazy(() => import("./pages/Settings"));
-const TableBuilderPage = lazy(
-  () => import("./pages/settings/TableBuilderPage")
-);
-const CustomTablesPage = lazy(
-  () => import("./pages/settings/CustomTablesPage")
-);
-const CustomTableForm = lazy(() => import("./pages/settings/CustomTableForm"));
-
-const CustomTableDataPage = lazy(() => import("./pages/CustomTableDataPage"));
-const CustomRoleForm = lazy(() => import("./pages/settings/CustomRoleForm"));
-const AppearanceSettings = lazy(
-  () => import("./pages/settings/AppearanceSettings")
-);
-const AgentsSettings = lazy(() => import("./pages/settings/AgentsSettings"));
-const AgentDetail = lazy(() => import("./pages/settings/AgentDetail"));
-const AgentWorkflowsSettings = lazy(() => import("./pages/settings/AgentWorkflowsSettings"));
-const WorkflowsSettings = lazy(() => import("./pages/settings/WorkflowsSettings"));
-const WorkflowDetail = lazy(() => import("./pages/settings/WorkflowDetail"));
-const IntegrationsSettings = lazy(() => import("./pages/settings/IntegrationsSettings"));
-const WorkflowInstancesSettings = lazy(() => import("./pages/settings/WorkflowInstancesSettings"));
-
-const queryClient = new QueryClient();
-
-// Root layout for authenticated routes
-const AuthenticatedRoot = () => (
-  <AuthenticatedLayout>
-    <Outlet />
-  </AuthenticatedLayout>
-);
-
-// Root layout with providers
-const Root = () => (
-  <ErrorBoundary>
-    <AuthProvider>
-      <UserSettingsProvider>
-        <ThemeProvider>
-          <TooltipProvider>
-            <Sonner />
-            <Suspense fallback={<LoadingFallback />}>
-              <Outlet />
-            </Suspense>
-          </TooltipProvider>
-        </ThemeProvider>
-      </UserSettingsProvider>
-    </AuthProvider>
-  </ErrorBoundary>
-);
-
-// Create router with routes
-const router = createBrowserRouter([
-  {
-    element: <Root />,
-    children: [
-      // Public routes
-      { path: ROUTES.INDEX, element: <Index /> },
-      { path: ROUTES.AUTH, element: <Auth /> },
-      { path: ROUTES.AUTH_CALLBACK, element: <AuthCallback /> },
-      { path: ROUTES.FORGOT_PASSWORD, element: <ForgotPassword /> },
-      { path: ROUTES.RESET_PASSWORD, element: <ResetPassword /> },
-
-      // Access request routes
-      { path: ROUTES.REQUEST_ACCESS, element: <RequestAccess /> },
-      { path: ROUTES.ACCESS_PENDING, element: <AccessPending /> },
-
-      // Protected routes with authenticated layout
-      {
-        element: <AuthenticatedRoot />,
-        children: [
-          { path: ROUTES.CONVERSATIONS, element: <ChatPage /> },
-          { path: ROUTES.CONVERSATIONS_DETAIL, element: <ChatPage /> },
-          {
-            path: ROUTES.CUSTOM_TABLE_DATA,
-            element: <CustomTableDataPage />,
-          },
-          {
-            path: ROUTES.SETTINGS,
-            element: <Settings />,
-            children: [
-              {
-                path: ROUTES.SETTINGS_APPEARANCE,
-                element: <AppearanceSettings />,
-              },
-              {
-                path: ROUTES.SETTINGS_AGENTS,
-                element: <AgentsSettings />,
-              },
-              {
-                path: ROUTES.SETTINGS_CUSTOM_TABLES,
-                element: <CustomTablesPage />,
-              },
-              {
-                path: ROUTES.SETTINGS_TABLE_BUILDER,
-                element: <TableBuilderPage />,
-              },
-              { path: ROUTES.SETTINGS_AGENTS_DETAIL, element: <AgentDetail /> },
-              { path: "/settings/agents/:id/workflows", element: <AgentWorkflowsSettings /> },
-              { path: "/settings/workflows", element: <WorkflowsSettings /> },
-              { path: "/settings/workflows/:id", element: <WorkflowDetail /> },
-              { path: "/settings/integrations", element: <IntegrationsSettings /> },
-              { path: "/settings/workflow-instances", element: <WorkflowInstancesSettings /> },
-            ],
-          },
-
-          {
-            path: ROUTES.SETTINGS_CUSTOM_ROLES_NEW,
-            element: <CustomRoleForm />,
-          },
-          {
-            path: ROUTES.SETTINGS_CUSTOM_ROLES_DETAIL,
-            element: <CustomRoleForm />,
-          },
-        ],
-      },
-
-      // Catch-all
-      { path: "*", element: <NotFound /> },
-    ],
-  },
-]);
-
-const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
-  </ErrorBoundary>
-);
+        <Route path={ROUTES.INDEX} element={<Conversations />} />
+        <Route path={ROUTES.NOT_FOUND} element={<Conversations />} />
+      </Routes>
+    </Router>
+  );
+}
 
 export default App;

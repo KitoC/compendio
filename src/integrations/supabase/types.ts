@@ -61,6 +61,58 @@ export type Database = {
           },
         ]
       }
+      ai_agent_workflows: {
+        Row: {
+          agent_id: string | null
+          created_at: string | null
+          deleted_at: string | null
+          id: string
+          tenant_id: string
+          updated_at: string | null
+          workflow_id: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string
+          tenant_id: string
+          updated_at?: string | null
+          workflow_id?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string
+          tenant_id?: string
+          updated_at?: string | null
+          workflow_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_agent_workflows_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_agent_workflows_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflows"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_ai_agent_workflows_tenant"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_agents: {
         Row: {
           avatar_url: string | null
@@ -217,6 +269,64 @@ export type Database = {
           },
         ]
       }
+      connected_services: {
+        Row: {
+          agent_id: string | null
+          created_at: string | null
+          deleted_at: string | null
+          id: string
+          service_type: string
+          status: string | null
+          tenant_id: string
+          updated_at: string | null
+          workflow_instance_id: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string
+          service_type: string
+          status?: string | null
+          tenant_id: string
+          updated_at?: string | null
+          workflow_instance_id?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string
+          service_type?: string
+          status?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+          workflow_instance_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connected_services_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connected_services_workflow_instance_id_fkey"
+            columns: ["workflow_instance_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_instances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_connected_services_tenant"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_participants: {
         Row: {
           conversation_id: string | null
@@ -317,39 +427,64 @@ export type Database = {
       }
       credentials: {
         Row: {
+          access_token: string | null
+          connected_service_id: string | null
           created_at: string
           deleted_at: string | null
           domain: string
+          expires_at: string | null
           id: number
           password: string
+          refresh_token: string | null
+          scopes: string[] | null
           tenant_id: string
+          type: string | null
           updated_at: string | null
           userId: string
           username: string
         }
         Insert: {
+          access_token?: string | null
+          connected_service_id?: string | null
           created_at?: string
           deleted_at?: string | null
           domain: string
+          expires_at?: string | null
           id?: number
           password: string
+          refresh_token?: string | null
+          scopes?: string[] | null
           tenant_id: string
+          type?: string | null
           updated_at?: string | null
           userId?: string
           username: string
         }
         Update: {
+          access_token?: string | null
+          connected_service_id?: string | null
           created_at?: string
           deleted_at?: string | null
           domain?: string
+          expires_at?: string | null
           id?: number
           password?: string
+          refresh_token?: string | null
+          scopes?: string[] | null
           tenant_id?: string
+          type?: string | null
           updated_at?: string | null
           userId?: string
           username?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "credentials_connected_service_id_fkey"
+            columns: ["connected_service_id"]
+            isOneToOne: false
+            referencedRelation: "connected_services"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fk_credentials_tenant"
             columns: ["tenant_id"]
@@ -895,6 +1030,63 @@ export type Database = {
         }
         Relationships: []
       }
+      oauth_states: {
+        Row: {
+          agent_id: string | null
+          code_verifier: string | null
+          created_at: string | null
+          deleted_at: string | null
+          id: string
+          redirect_uri: string | null
+          state: string
+          tenant_id: string
+          updated_at: string | null
+          user_id: string | null
+          workflow_instance_id: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          code_verifier?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string
+          redirect_uri?: string | null
+          state: string
+          tenant_id: string
+          updated_at?: string | null
+          user_id?: string | null
+          workflow_instance_id?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          code_verifier?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          id?: string
+          redirect_uri?: string | null
+          state?: string
+          tenant_id?: string
+          updated_at?: string | null
+          user_id?: string | null
+          workflow_instance_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_oauth_states_tenant"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "oauth_states_workflow_instance_id_fkey"
+            columns: ["workflow_instance_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       price_items: {
         Row: {
           cost_price: number | null
@@ -1224,6 +1416,337 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "user_roles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_events: {
+        Row: {
+          created_at: string | null
+          deleted_at: string | null
+          error_message: string | null
+          headers: Json | null
+          id: string
+          payload: Json | null
+          received_at: string | null
+          status: string | null
+          tenant_id: string
+          updated_at: string | null
+          webhook_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          deleted_at?: string | null
+          error_message?: string | null
+          headers?: Json | null
+          id?: string
+          payload?: Json | null
+          received_at?: string | null
+          status?: string | null
+          tenant_id: string
+          updated_at?: string | null
+          webhook_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          deleted_at?: string | null
+          error_message?: string | null
+          headers?: Json | null
+          id?: string
+          payload?: Json | null
+          received_at?: string | null
+          status?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+          webhook_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_webhook_events_tenant"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webhook_events_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "webhook_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_subscriptions: {
+        Row: {
+          agent_id: string | null
+          created_at: string | null
+          deleted_at: string | null
+          endpoint_url: string | null
+          id: string
+          secret: string | null
+          service_type: string | null
+          status: string | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          endpoint_url?: string | null
+          id?: string
+          secret?: string | null
+          service_type?: string | null
+          status?: string | null
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          endpoint_url?: string | null
+          id?: string
+          secret?: string | null
+          service_type?: string | null
+          status?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_webhook_subscriptions_tenant"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "webhook_subscriptions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_instances: {
+        Row: {
+          agent_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          current_step: number | null
+          deleted_at: string | null
+          id: string
+          status: string | null
+          tenant_id: string
+          updated_at: string | null
+          workflow_id: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          current_step?: number | null
+          deleted_at?: string | null
+          id?: string
+          status?: string | null
+          tenant_id: string
+          updated_at?: string | null
+          workflow_id?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          current_step?: number | null
+          deleted_at?: string | null
+          id?: string
+          status?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+          workflow_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_workflow_instances_tenant"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_instances_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_instances_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_responses: {
+        Row: {
+          created_at: string | null
+          deleted_at: string | null
+          error_message: string | null
+          id: string
+          response: Json | null
+          status: string | null
+          step_index: number | null
+          tenant_id: string
+          updated_at: string | null
+          workflow_instance_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          deleted_at?: string | null
+          error_message?: string | null
+          id?: string
+          response?: Json | null
+          status?: string | null
+          step_index?: number | null
+          tenant_id: string
+          updated_at?: string | null
+          workflow_instance_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          deleted_at?: string | null
+          error_message?: string | null
+          id?: string
+          response?: Json | null
+          status?: string | null
+          step_index?: number | null
+          tenant_id?: string
+          updated_at?: string | null
+          workflow_instance_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_workflow_responses_tenant"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_responses_workflow_instance_id_fkey"
+            columns: ["workflow_instance_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_steps: {
+        Row: {
+          config: Json | null
+          connected_service_id: string | null
+          created_at: string | null
+          deleted_at: string | null
+          description: string | null
+          id: string
+          step_index: number
+          tenant_id: string
+          type: string
+          updated_at: string | null
+          workflow_id: string | null
+        }
+        Insert: {
+          config?: Json | null
+          connected_service_id?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          id?: string
+          step_index: number
+          tenant_id: string
+          type: string
+          updated_at?: string | null
+          workflow_id?: string | null
+        }
+        Update: {
+          config?: Json | null
+          connected_service_id?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          id?: string
+          step_index?: number
+          tenant_id?: string
+          type?: string
+          updated_at?: string | null
+          workflow_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_workflow_steps_tenant"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_steps_connected_service_id_fkey"
+            columns: ["connected_service_id"]
+            isOneToOne: false
+            referencedRelation: "connected_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_steps_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflows: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          deleted_at: string | null
+          description: string | null
+          id: string
+          name: string
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_workflows_tenant"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"

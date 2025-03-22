@@ -1,15 +1,17 @@
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ROUTES, INTEGRATION_TYPES } from "@/lib/constants";
 import DataTable, { Column } from "@/components/data-table";
+import AddIntegrationWizard from "@/components/integrations/AddIntegrationWizard";
+import WebhookEventsTable from "@/components/integrations/WebhookEventsTable";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, RefreshCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ServiceConnectionModal from "@/components/integrations/ServiceConnectionModal";
-import WebhookEventsTable from "@/components/integrations/WebhookEventsTable";
 
 interface ConnectedService {
   id: string;
@@ -21,6 +23,8 @@ interface ConnectedService {
   tenant_id: string;
   auth_type: string;
   config: any;
+  agent_id: string;
+  agent_name?: string;
 }
 
 interface Credential {
@@ -35,16 +39,18 @@ interface Credential {
 
 const IntegrationsSettings = () => {
   const { tenantId } = useAuth();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [services, setServices] = useState<ConnectedService[]>([]);
   const [credentials, setCredentials] = useState<Credential[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedService, setSelectedService] = useState<ConnectedService | null>(null);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("services");
 
   useEffect(() => {
-    fetchServices();
-    fetchCredentials();
+    if (tenantId) {
+      fetchServices();
+      fetchCredentials();
+    }
   }, [tenantId]);
 
   const fetchServices = async () => {
@@ -52,13 +58,27 @@ const IntegrationsSettings = () => {
 
     try {
       setIsLoading(true);
+      
+      // Fetch services with agent names
       const { data, error } = await supabase
         .from("connected_services")
-        .select("*")
+        .select(`
+          *,
+          ai_agents (
+            name
+          )
+        `)
         .eq("tenant_id", tenantId);
 
       if (error) throw error;
-      setServices(data || []);
+      
+      // Transform data to include agent name
+      const servicesWithAgentNames = data?.map(service => ({
+        ...service,
+        agent_name: service.ai_agents?.name || "Unknown agent"
+      })) || [];
+
+      setServices(servicesWithAgentNames);
     } catch (error) {
       console.error("Error fetching services:", error);
       toast.error("Failed to load connected services");
@@ -80,49 +100,6 @@ const IntegrationsSettings = () => {
       setCredentials(data || []);
     } catch (error) {
       console.error("Error fetching credentials:", error);
-    }
-  };
-
-  const handleAddService = () => {
-    setSelectedService(null);
-    setIsModalOpen(true);
-  };
-
-  const handleEditService = (service: ConnectedService) => {
-    setSelectedService(service);
-    setIsModalOpen(true);
-  };
-
-  const handleSaveService = async (service: ConnectedService) => {
-    if (!tenantId) return;
-
-    try {
-      const isNew = !service.id;
-      
-      if (isNew) {
-        const { data, error } = await supabase
-          .from("connected_services")
-          .insert([{ ...service, tenant_id: tenantId }])
-          .select();
-
-        if (error) throw error;
-        toast.success("Service added successfully");
-      } else {
-        const { error } = await supabase
-          .from("connected_services")
-          .update(service)
-          .eq("id", service.id)
-          .eq("tenant_id", tenantId);
-
-        if (error) throw error;
-        toast.success("Service updated successfully");
-      }
-      
-      setIsModalOpen(false);
-      fetchServices();
-    } catch (error) {
-      console.error("Error saving service:", error);
-      toast.error("Failed to save service connection");
     }
   };
 
@@ -154,16 +131,38 @@ const IntegrationsSettings = () => {
     }
   };
 
+  const handleRowClick = (service: ConnectedService) => {
+    navigate(`${ROUTES.SETTINGS}/integrations/${service.id}`);
+  };
+
+  const handleReconnect = (service: ConnectedService) => {
+    // Implement reconnect logic here
+    toast.info(`Reconnecting ${service.name || service.service_type}...`);
+  };
+
+  const getServiceTypeName = (serviceType: string) => {
+    const integrationType = INTEGRATION_TYPES.find(t => t.id === serviceType);
+    return integrationType?.name || serviceType;
+  };
+
   const serviceColumns: Column<ConnectedService>[] = [
     {
       field: "name",
       header: "Name",
       sortable: true,
+      render: (service) => service.name || getServiceTypeName(service.service_type)
     },
     {
       field: "service_type",
       header: "Service Type",
       sortable: true,
+      render: (service) => getServiceTypeName(service.service_type)
+    },
+    {
+      field: "agent_id",
+      header: "Agent",
+      sortable: true,
+      render: (service) => service.agent_name || "Unknown agent"
     },
     {
       field: "status",
@@ -195,6 +194,23 @@ const IntegrationsSettings = () => {
       sortable: true,
       render: (service) => new Date(service.created_at).toLocaleDateString(),
     },
+    {
+      field: "actions",
+      header: "Actions",
+      render: (service) => (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={(e) => {
+            e.stopPropagation();
+            handleReconnect(service);
+          }}
+        >
+          <RefreshCcw className="h-4 w-4 mr-1" />
+          Reconnect
+        </Button>
+      ),
+    }
   ];
 
   const credentialColumns: Column<Credential>[] = [
@@ -207,6 +223,7 @@ const IntegrationsSettings = () => {
       field: "domain",
       header: "Domain",
       sortable: true,
+      render: (credential) => getServiceTypeName(credential.domain)
     },
     {
       field: "connected_service_id",
@@ -214,7 +231,7 @@ const IntegrationsSettings = () => {
       sortable: true,
       render: (credential) => {
         const service = services.find(s => s.id === credential.connected_service_id);
-        return service ? service.name : "Unknown";
+        return service ? (service.name || getServiceTypeName(service.service_type)) : "Unknown";
       },
     },
     {
@@ -236,9 +253,9 @@ const IntegrationsSettings = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Integrations</h1>
-        <Button onClick={handleAddService}>
+        <Button onClick={() => setIsWizardOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
-          Add Service
+          Add Integration
         </Button>
       </div>
 
@@ -256,11 +273,11 @@ const IntegrationsSettings = () => {
             permissions={{
               create: false,
               read: true,
-              update: true,
+              update: false,
               delete: true,
               export: false,
             }}
-            onRowClick={handleEditService}
+            onRowClick={handleRowClick}
             onDelete={handleDeleteService}
             isLoading={isLoading}
             searchable={true}
@@ -311,13 +328,14 @@ const IntegrationsSettings = () => {
         </TabsContent>
       </Tabs>
 
-      {isModalOpen && (
-        <ServiceConnectionModal
-          service={selectedService}
-          onSave={handleSaveService}
-          onCancel={() => setIsModalOpen(false)}
-        />
-      )}
+      <AddIntegrationWizard
+        isOpen={isWizardOpen}
+        onClose={() => {
+          setIsWizardOpen(false);
+          fetchServices();
+          fetchCredentials();
+        }}
+      />
     </div>
   );
 };

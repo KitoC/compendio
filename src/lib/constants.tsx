@@ -1,5 +1,5 @@
 
-import { Palette, Users2, Table2, Workflow, Bot, Link, GitBranch } from "lucide-react";
+import { Palette, Users2, Table2, Workflow, Bot, Link, GitBranch, Plus } from "lucide-react";
 
 export const ROUTES = {
   INDEX: "/",
@@ -22,6 +22,7 @@ export const ROUTES = {
   SETTINGS_WORKFLOWS: "/settings/workflows",
   SETTINGS_WORKFLOW_DETAIL: "/settings/workflows/:id",
   SETTINGS_INTEGRATIONS: "/settings/integrations",
+  SETTINGS_INTEGRATION_DETAIL: "/settings/integrations/:id",
   SETTINGS_WORKFLOW_INSTANCES: "/settings/workflow-instances",
   SETTINGS_TABLE_BUILDER: "/settings/table-builder",
   SETTINGS_CUSTOM_TABLES: "/settings/custom-tables",
@@ -74,4 +75,138 @@ export const settingsItems = [
       },
     ],
   },
+];
+
+// Define the supported integration types with their configurations
+export const INTEGRATION_TYPES = [
+  {
+    id: "gmail",
+    name: "Gmail",
+    description: "Connect to Gmail to access emails and contacts",
+    icon: "mail",
+    authType: "oauth",
+    oauthProvider: "google",
+    formConfig: {
+      id: "gmail-config",
+      title: "Gmail OAuth Setup",
+      description: "Click below to authenticate with your Google account.",
+      sections: [],
+      submitButtonText: "Connect with Google"
+    }
+  },
+  {
+    id: "outlook",
+    name: "Outlook",
+    description: "Connect to Microsoft Outlook for emails and calendar",
+    icon: "mail",
+    authType: "oauth",
+    oauthProvider: "microsoft",
+    formConfig: {
+      id: "outlook-config",
+      title: "Outlook OAuth Setup",
+      description: "Authenticate with your Microsoft account to enable Outlook integration.",
+      sections: [],
+      submitButtonText: "Connect with Microsoft"
+    }
+  },
+  {
+    id: "n8n",
+    name: "N8N",
+    description: "Connect to N8N workflow automation platform",
+    icon: "workflow",
+    authType: "api_key",
+    formConfig: {
+      id: "n8n-config",
+      title: "N8N Configuration",
+      description: "Enter your N8N instance details",
+      sections: [
+        {
+          id: "connection",
+          title: "API Connection",
+          fields: [
+            {
+              id: "base_url",
+              name: "base_url",
+              label: "Base URL",
+              type: "text",
+              placeholder: "https://n8n.example.com",
+              validation: { required: true }
+            },
+            {
+              id: "api_token",
+              name: "api_token",
+              label: "API Token",
+              type: "password",
+              validation: { required: true }
+            }
+          ]
+        }
+      ],
+      submitButtonText: "Save N8N Connection"
+    }
+  },
+  {
+    id: "make",
+    name: "Make (Integromat)",
+    description: "Connect to Make automation platform",
+    icon: "workflow",
+    authType: "api_key",
+    formConfig: {
+      id: "make-config",
+      title: "Make Configuration",
+      description: "Enter your Make platform details",
+      sections: [
+        {
+          id: "connection",
+          title: "API Connection",
+          fields: [
+            {
+              id: "api_token",
+              name: "api_token",
+              label: "API Token",
+              type: "password",
+              validation: { required: true }
+            }
+          ]
+        }
+      ],
+      submitButtonText: "Save Make Connection"
+    }
+  },
+  {
+    id: "webhook",
+    name: "Custom Webhook",
+    description: "Set up an incoming webhook endpoint",
+    icon: "webhook",
+    authType: "custom",
+    formConfig: {
+      id: "webhook-config",
+      title: "Webhook Configuration",
+      description: "Set up an incoming webhook",
+      sections: [
+        {
+          id: "webhook",
+          title: "Webhook Info",
+          fields: [
+            {
+              id: "endpoint_url",
+              name: "endpoint_url",
+              label: "Webhook URL",
+              type: "text",
+              placeholder: "https://your-service.com/webhook",
+              validation: { required: true }
+            },
+            {
+              id: "secret",
+              name: "secret",
+              label: "Webhook Secret",
+              type: "password",
+              validation: { required: false }
+            }
+          ]
+        }
+      ],
+      submitButtonText: "Save Webhook"
+    }
+  }
 ];
