@@ -111,17 +111,34 @@ const AuthCallback = () => {
                     scopes: tokens.scope ? tokens.scope.split(' ') : []
                   };
                   
+                  let credentialId = null;
+                  
                   if (existingCreds) {
                     // Update existing credential
                     await supabase
                       .from("credentials")
                       .update(credentialData)
                       .eq("id", existingCreds.id);
+                      
+                    credentialId = existingCreds.id;
                   } else {
                     // Create new credential
-                    await supabase
+                    const { data: newCred } = await supabase
                       .from("credentials")
-                      .insert([credentialData]);
+                      .insert([credentialData])
+                      .select();
+                      
+                    if (newCred && newCred.length > 0) {
+                      credentialId = newCred[0].id;
+                    }
+                  }
+                  
+                  // Set a flag in session storage to indicate successful OAuth
+                  sessionStorage.setItem("oauth_success", "true");
+                  
+                  // If we have a credential ID, store it to select it automatically in the wizard
+                  if (credentialId) {
+                    sessionStorage.setItem("last_credential_id", String(credentialId));
                   }
                 }
               }

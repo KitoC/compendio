@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -31,6 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Globe,
   Mail,
@@ -41,6 +43,8 @@ import {
   LogIn,
   Loader2,
   Plus,
+  CheckCircle2,
+  User,
 } from "lucide-react";
 
 interface AiAgent {
@@ -104,11 +108,28 @@ const AddIntegrationWizard = ({
   const [isCreatingAgent, setIsCreatingAgent] = useState(false);
   const [newAgentData, setNewAgentData] = useState<Record<string, unknown>>({});
   const [restoringState, setRestoringState] = useState(false);
+  const [isOAuthSuccess, setIsOAuthSuccess] = useState(false);
+  const [availableCredentialsByType, setAvailableCredentialsByType] = useState<Credential[]>([]);
 
   // Restore wizard state from session storage if available
   useEffect(() => {
     if (isOpen) {
       try {
+        // Check if we have an OAuth success flag
+        const oauthSuccess = sessionStorage.getItem("oauth_success");
+        if (oauthSuccess === "true") {
+          setIsOAuthSuccess(true);
+          // Clear the flag so it doesn't show up again
+          sessionStorage.removeItem("oauth_success");
+          
+          // Get the last credential ID if available
+          const lastCredentialId = sessionStorage.getItem("last_credential_id");
+          if (lastCredentialId) {
+            setSelectedCredentialId(lastCredentialId);
+            sessionStorage.removeItem("last_credential_id");
+          }
+        }
+        
         const savedStateString = sessionStorage.getItem("integration_wizard_state");
         
         if (savedStateString) {
@@ -118,11 +139,8 @@ const AddIntegrationWizard = ({
           setStep(savedState.step);
           setSelectedAgentId(savedState.selectedAgentId);
           setSelectedIntegrationType(savedState.selectedIntegrationType);
-          setSelectedCredentialId(savedState.selectedCredentialId);
+          setSelectedCredentialId(savedState.selectedCredentialId || "");
           setConfigValues(savedState.configValues);
-          
-          // Clean up saved state after restoring
-          sessionStorage.removeItem("integration_wizard_state");
           
           // Slight delay to avoid fetch conflicts
           setTimeout(() => {
@@ -146,6 +164,11 @@ const AddIntegrationWizard = ({
   useEffect(() => {
     if (selectedIntegrationType && !restoringState) {
       fetchExistingCredentials(selectedIntegrationType);
+      
+      // Fetch reusable credentials by type regardless of connected service
+      if (tenantId) {
+        fetchCredentialsByType(selectedIntegrationType);
+      }
     }
   }, [selectedIntegrationType, tenantId, restoringState]);
 
@@ -207,6 +230,31 @@ const AddIntegrationWizard = ({
       console.error("Error fetching credentials:", error);
     } finally {
       setIsLoadingCredentials(false);
+    }
+  };
+
+  const fetchCredentialsByType = async (serviceType: string) => {
+    if (!tenantId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("credentials")
+        .select("id, username, domain, expires_at, scopes, type")
+        .eq("tenant_id", tenantId)
+        .eq("domain", serviceType)
+        .is("connected_service_id", null);
+
+      if (error) throw error;
+      
+      // Convert numeric IDs to strings to avoid TypeScript issues
+      const credentialsData = (data || []).map(cred => ({
+        ...cred,
+        id: String(cred.id)
+      }));
+      
+      setAvailableCredentialsByType(credentialsData);
+    } catch (error) {
+      console.error("Error fetching reusable credentials:", error);
     }
   };
 
@@ -308,6 +356,7 @@ const AddIntegrationWizard = ({
       setSelectedIntegrationType("");
       setConfigValues({});
       setSelectedCredentialId("");
+      setIsOAuthSuccess(false);
       // Clear session storage
       sessionStorage.removeItem("integration_wizard_state");
       navigate(ROUTES.SETTINGS_INTEGRATIONS);
@@ -379,6 +428,12 @@ const AddIntegrationWizard = ({
     nextStep();
   };
 
+  const handleReusableCredentialSelect = (credentialId: string) => {
+    setSelectedCredentialId(credentialId);
+    // Skip to the last step since we already have credentials
+    setStep(5);
+  };
+
   const nextStep = () => setStep(step + 1);
   const prevStep = () => setStep(step - 1);
 
@@ -389,6 +444,7 @@ const AddIntegrationWizard = ({
     setConfigValues({});
     setSelectedCredentialId("");
     setIsCreatingAgent(false);
+    setIsOAuthSuccess(false);
     // Clear session storage
     sessionStorage.removeItem("integration_wizard_state");
     onClose();
@@ -564,6 +620,50 @@ const AddIntegrationWizard = ({
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
+              {isOAuthSuccess && (
+                <Alert className="mb-4 bg-green-50 border-green-200">
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <AlertTitle className="text-green-800">Authentication Successful</AlertTitle>
+                  <AlertDescription className="text-green-700">
+                    Your account was successfully connected. You can continue to the next step.
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {/* Show reusable credentials dropdown if available */}
+              {availableCredentialsByType.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium mb-2">
+                    Available Credentials
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    You have existing credentials you can reuse for this integration:
+                  </p>
+                  <Select
+                    value={selectedCredentialId}
+                    onValueChange={handleReusableCredentialSelect}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select existing credentials" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableCredentialsByType.map((cred) => (
+                        <SelectItem key={cred.id} value={cred.id}>
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4" />
+                            {cred.username} {cred.expires_at ? `(Expires: ${new Date(cred.expires_at).toLocaleDateString()})` : ''}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="border-t my-4"></div>
+                  <h3 className="text-sm font-medium mb-2">
+                    Or Create New Credentials
+                  </h3>
+                </div>
+              )}
+
               {existingCredentials.length > 0 && (
                 <div className="mb-6">
                   <h3 className="text-sm font-medium mb-2">
@@ -614,28 +714,35 @@ const AddIntegrationWizard = ({
 
               {authType === "oauth" ? (
                 <div className="flex justify-center py-6">
-                  <Button
-                    onClick={() => {
-                      // Determine which OAuth provider to use based on the selected integration type
-                      let provider = "google";
-                      if (selectedIntegrationType === "outlook") {
-                        provider = "microsoft";
-                      }
-                      
-                      handleOAuthRedirect(provider);
-                    }}
-                    className="gap-2"
-                    size="lg"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                    ) : (
-                      <LogIn className="h-5 w-5" />
-                    )}
-                    {formConfig?.submitButtonText ||
-                      `Connect with ${selectedType?.name}`}
-                  </Button>
+                  {isOAuthSuccess ? (
+                    <Button onClick={nextStep} className="gap-2" size="lg">
+                      <ArrowRight className="h-4 w-4" />
+                      Continue to Next Step
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => {
+                        // Determine which OAuth provider to use based on the selected integration type
+                        let provider = "google";
+                        if (selectedIntegrationType === "outlook") {
+                          provider = "microsoft";
+                        }
+                        
+                        handleOAuthRedirect(provider);
+                      }}
+                      className="gap-2"
+                      size="lg"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                      ) : (
+                        <LogIn className="h-5 w-5" />
+                      )}
+                      {formConfig?.submitButtonText ||
+                        `Connect with ${selectedType?.name}`}
+                    </Button>
+                  )}
                 </div>
               ) : (
                 formConfig && (
@@ -728,6 +835,16 @@ const AddIntegrationWizard = ({
                     <h3 className="text-sm font-medium">Description</h3>
                     <p>{configValues.description as string}</p>
                   </div>
+                )}
+                
+                {isOAuthSuccess && (
+                  <Alert className="bg-green-50 border-green-200">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <AlertTitle className="text-green-800">Authentication Successful</AlertTitle>
+                    <AlertDescription className="text-green-700">
+                      Your account was successfully connected and credentials have been saved.
+                    </AlertDescription>
+                  </Alert>
                 )}
               </div>
             </div>
