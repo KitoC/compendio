@@ -1,4 +1,3 @@
-
 import { FormConfig } from "@/components/form-builder/types";
 
 export const newAgentFormConfig: FormConfig = {
@@ -11,6 +10,16 @@ export const newAgentFormConfig: FormConfig = {
       title: "Basic Information",
       fields: [
         {
+          id: "human_name",
+          name: "human_name",
+          label: "Display Name",
+          type: "text",
+          placeholder: "Tech Support Assistant",
+          validation: {
+            required: true,
+          },
+        },
+        {
           id: "name",
           name: "name",
           label: "Internal Name",
@@ -18,18 +27,8 @@ export const newAgentFormConfig: FormConfig = {
           placeholder: "tech-support-agent",
           validation: {
             required: true,
-            pattern: "^[a-z0-9-]+$"
-          }
-        },
-        {
-          id: "human_name",
-          name: "human_name",
-          label: "Display Name",
-          type: "text",
-          placeholder: "Tech Support Assistant",
-          validation: {
-            required: true
-          }
+            pattern: "^[a-z0-9-]+$",
+          },
         },
         {
           id: "responsibility",
@@ -38,8 +37,19 @@ export const newAgentFormConfig: FormConfig = {
           type: "textarea",
           placeholder: "This agent helps with technical support issues...",
           validation: {
-            required: true
-          }
+            required: true,
+          },
+        },
+
+        {
+          id: "prompt",
+          name: "prompt",
+          label: "Prompt",
+          type: "textarea",
+          placeholder: "This agent helps with technical support issues...",
+          defaultValue:
+            "You are a helpful assistant that can answer questions and help with tasks.",
+          validation: {},
         },
         {
           id: "model",
@@ -47,13 +57,14 @@ export const newAgentFormConfig: FormConfig = {
           label: "AI Model",
           type: "select",
           options: [
-            { label: "GPT-4", value: "gpt-4" },
-            { label: "GPT-3.5 Turbo", value: "gpt-3.5-turbo" }
+            { label: "GPT-4o-mini", value: "gpt-4o-mini" },
+            { label: "GPT-4o", value: "gpt-4o" },
+            { label: "GPT-3.5 Turbo", value: "gpt-3.5-turbo" },
           ],
-          defaultValue: "gpt-4",
+          defaultValue: "gpt-4o-mini",
           validation: {
-            required: true
-          }
+            required: true,
+          },
         },
         {
           id: "avatar_url",
@@ -68,9 +79,9 @@ export const newAgentFormConfig: FormConfig = {
           label: "Enable Agent",
           type: "checkbox",
           defaultValue: true,
-        }
-      ]
-    }
+        },
+      ],
+    },
   ],
-  submitButtonText: "Create Agent"
+  submitButtonText: "Create Agent",
 };

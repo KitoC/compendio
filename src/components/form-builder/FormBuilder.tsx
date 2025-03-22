@@ -32,11 +32,6 @@ const FormBuilder = ({
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [footerEl, setFooterEl] = useState<HTMLDivElement | null>(null);
 
-  // Update values when initialValues change
-  useEffect(() => {
-    setValues(initialValues);
-  }, [initialValues]);
-
   const handleChange = (name: string, value: unknown) => {
     setValues((prev) => ({ ...prev, [name]: value }));
 
