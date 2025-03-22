@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,30 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, RefreshCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-interface ConnectedService {
-  id: string;
-  service_type: string;
-  name: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  tenant_id: string;
-  auth_type: string;
-  config: any;
-  agent_id: string;
-  agent_name?: string;
-}
-
-interface Credential {
-  id: string;
-  username: string;
-  domain: string;
-  connected_service_id: string;
-  expires_at: string;
-  created_at: string;
-  updated_at: string;
-}
+import { ConnectedService, Credential } from "@/forms/types";
 
 const IntegrationsSettings = () => {
   const { tenantId } = useAuth();
@@ -80,11 +58,12 @@ const IntegrationsSettings = () => {
       if (error) throw error;
 
       // Transform data to include agent name
-      const servicesWithAgentNames =
-        data?.map((service) => ({
-          ...service,
-          agent_name: service.ai_agents?.name || "Unknown agent",
-        })) || [];
+      const servicesWithAgentNames = data?.map((service) => ({
+        ...service,
+        agent_name: service.ai_agents?.name || "Unknown agent",
+        name: service.name || getServiceTypeName(service.service_type), // Ensure name is always set
+        auth_type: service.auth_type || "custom" // Ensure auth_type is always set
+      })) as ConnectedService[];
 
       setServices(servicesWithAgentNames);
     } catch (error) {
@@ -105,7 +84,14 @@ const IntegrationsSettings = () => {
         .eq("tenant_id", tenantId);
 
       if (error) throw error;
-      setCredentials(data || []);
+      
+      // Convert numeric IDs to strings to avoid TypeScript issues
+      const processedCredentials = (data || []).map(cred => ({
+        ...cred,
+        id: String(cred.id)
+      })) as Credential[];
+      
+      setCredentials(processedCredentials);
     } catch (error) {
       console.error("Error fetching credentials:", error);
     }
@@ -205,7 +191,7 @@ const IntegrationsSettings = () => {
       field: "created_at",
       header: "Created",
       sortable: true,
-      render: (service) => new Date(service.created_at).toLocaleDateString(),
+      render: (service) => new Date(service.created_at || '').toLocaleDateString(),
     },
     {
       field: "actions",
@@ -252,6 +238,11 @@ const IntegrationsSettings = () => {
       },
     },
     {
+      field: "type",
+      header: "Auth Type",
+      sortable: true,
+    },
+    {
       field: "expires_at",
       header: "Expires",
       sortable: true,
@@ -268,6 +259,26 @@ const IntegrationsSettings = () => {
         new Date(credential.created_at).toLocaleDateString(),
     },
   ];
+
+  const handleDeleteCredential = async (id: string) => {
+    if (!tenantId) return;
+    
+    try {
+      const { error } = await supabase
+        .from("credentials")
+        .delete()
+        .eq("id", id)
+        .eq("tenant_id", tenantId);
+        
+      if (error) throw error;
+      
+      toast.success("Credential deleted");
+      fetchCredentials();
+    } catch (error) {
+      console.error("Error deleting credential:", error);
+      toast.error("Failed to delete credential");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -318,23 +329,7 @@ const IntegrationsSettings = () => {
               delete: true,
               export: false,
             }}
-            onDelete={(id) => {
-              if (typeof id === "string") {
-                supabase
-                  .from("credentials")
-                  .delete()
-                  .eq("id", id)
-                  .eq("tenant_id", tenantId)
-                  .then(() => {
-                    toast.success("Credential deleted");
-                    fetchCredentials();
-                  })
-                  .catch((error) => {
-                    toast.error("Failed to delete credential");
-                    console.error(error);
-                  });
-              }
-            }}
+            onDelete={handleDeleteCredential}
             isLoading={isLoading}
             searchable={true}
             pagination={true}
@@ -344,7 +339,7 @@ const IntegrationsSettings = () => {
         </TabsContent>
 
         <TabsContent value="webhooks" className="space-y-4 pt-4">
-          <WebhookEventsTable tenantId={tenantId} />
+          <WebhookEventsTable tenantId={tenantId || ""} />
         </TabsContent>
       </Tabs>
 
