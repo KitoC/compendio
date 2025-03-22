@@ -266,17 +266,49 @@ const AddIntegrationWizard = ({
     if (!tenantId || !selectedAgentId) return;
 
     try {
-      // This would need to be implemented to handle OAuth redirects
-      // You'd likely store the current state in the database and then redirect
-      toast.info(`OAuth flow for ${provider} would start here`);
-
-      // Example implementation:
-      // 1. Create a state record in oauth_states table
-      // 2. Redirect to provider's OAuth endpoint
-      // 3. Handle callback in a separate route
+      setIsSubmitting(true);
+      
+      // First create a record in oauth_states to track this OAuth flow
+      const { data: oauthStateData, error: oauthStateError } = await supabase
+        .from("oauth_states")
+        .insert([{
+          provider,
+          agent_id: selectedAgentId,
+          service_type: selectedIntegrationType,
+          tenant_id: tenantId,
+          config: configValues,
+          status: "pending"
+        }])
+        .select();
+        
+      if (oauthStateError) throw oauthStateError;
+      
+      // Store oauth state ID in session storage for the callback to use
+      if (oauthStateData && oauthStateData.length > 0) {
+        sessionStorage.setItem("oauth_state_id", oauthStateData[0].id);
+        sessionStorage.setItem("integration_return_url", window.location.href);
+        
+        // Now redirect to the appropriate OAuth URL
+        if (provider === "google") {
+          // Google OAuth for Gmail
+          const redirectUri = `${window.location.origin}/auth/callback`;
+          const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${import.meta.env.VITE_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=https://www.googleapis.com/auth/gmail.readonly&access_type=offline&prompt=consent`;
+          window.location.href = googleAuthUrl;
+        } else if (provider === "microsoft") {
+          // Microsoft OAuth for Outlook
+          // Import the utility for building the Azure OAuth URL
+          const { buildAzureOAuthUrl } = await import("@/utils/oAuthAzure");
+          // This will handle creating the proper PKCE code challenge and storing the code verifier
+          const azureAuthUrl = await buildAzureOAuthUrl();
+          window.location.href = azureAuthUrl;
+        } else {
+          toast.error(`Unsupported OAuth provider: ${provider}`);
+        }
+      }
     } catch (error) {
       console.error("Error starting OAuth flow:", error);
       toast.error("Failed to start authentication flow");
+      setIsSubmitting(false);
     }
   };
 
@@ -524,17 +556,26 @@ const AddIntegrationWizard = ({
               {authType === "oauth" ? (
                 <div className="flex justify-center py-6">
                   <Button
-                    onClick={() =>
-                      handleOAuthRedirect(
-                        selectedType?.oauthProvider || "unknown"
-                      )
-                    }
+                    onClick={() => {
+                      // Determine which OAuth provider to use based on the selected integration type
+                      let provider = "google";
+                      if (selectedIntegrationType === "outlook") {
+                        provider = "microsoft";
+                      }
+                      
+                      handleOAuthRedirect(provider);
+                    }}
                     className="gap-2"
                     size="lg"
+                    disabled={isSubmitting}
                   >
-                    <LogIn className="h-5 w-5" />
+                    {isSubmitting ? (
+                      <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                    ) : (
+                      <LogIn className="h-5 w-5" />
+                    )}
                     {formConfig?.submitButtonText ||
-                      "Connect Account"}
+                      `Connect with ${selectedType?.name}`}
                   </Button>
                 </div>
               ) : (
@@ -551,8 +592,8 @@ const AddIntegrationWizard = ({
                 <Button variant="outline" onClick={prevStep}>
                   <ArrowLeft className="mr-2 h-4 w-4" /> Back
                 </Button>
-                <Button onClick={nextStep}>
-                  Next <ArrowRight className="ml-2 h-4 w-4" />
+                <Button onClick={nextStep} disabled={isSubmitting}>
+                  Skip <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </DialogFooter>
             )}

@@ -1,3 +1,4 @@
+
 // Define window.__ENV__ type
 interface WindowWithEnv extends Window {
   __ENV__?: {
