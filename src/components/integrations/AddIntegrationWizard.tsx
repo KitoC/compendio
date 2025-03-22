@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { INTEGRATION_TYPES, ROUTES } from "@/lib/constants";
 import FormBuilder from "@/components/form-builder";
-import { FormConfig } from "@/components/form-builder/types";
 import { newAgentFormConfig } from "@/forms/agents";
 import { integrationSettingsConfig, INTEGRATION_FORM_CONFIGS } from "@/forms/integrations";
 import {
@@ -97,12 +96,14 @@ const AddIntegrationWizard = ({
   const [isCreatingAgent, setIsCreatingAgent] = useState(false);
   const [newAgentData, setNewAgentData] = useState<Record<string, unknown>>({});
 
+  // Only fetch agents when the dialog is opened and not in agent creation mode
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !isCreatingAgent) {
       fetchAgents();
     }
-  }, [isOpen, tenantId]);
+  }, [isOpen, tenantId, isCreatingAgent]);
 
+  // Only fetch credentials when an integration type is selected
   useEffect(() => {
     if (selectedIntegrationType) {
       fetchExistingCredentials(selectedIntegrationType);
@@ -142,7 +143,12 @@ const AddIntegrationWizard = ({
         .eq("domain", serviceType);
 
       if (error) throw error;
-      setExistingCredentials(data || []);
+      // Convert numeric IDs to strings to avoid TypeScript issues
+      const credentialsData = (data || []).map(cred => ({
+        ...cred,
+        id: String(cred.id)
+      }));
+      setExistingCredentials(credentialsData);
     } catch (error) {
       console.error("Error fetching credentials:", error);
     } finally {
@@ -176,7 +182,7 @@ const AddIntegrationWizard = ({
         toast.success("Agent created successfully");
         
         // Refresh agents list
-        fetchAgents();
+        await fetchAgents();
         
         // Exit creation mode and continue wizard
         setIsCreatingAgent(false);
@@ -494,7 +500,7 @@ const AddIntegrationWizard = ({
                                     ).toLocaleDateString()}`
                                   : "Never expires"}
                               </p>
-                              {cred.scopes && (
+                              {cred.scopes && cred.scopes.length > 0 && (
                                 <p className="text-xs text-muted-foreground mt-1">
                                   Scopes: {cred.scopes.join(", ")}
                                 </p>
