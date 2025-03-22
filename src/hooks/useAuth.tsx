@@ -12,9 +12,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/lib/constants";
-import { cleanupSupabaseAuth } from "@/utils/supabaseUtils";
+import { cleanupSupabaseAuth, getRedirectUri } from "@/utils/supabaseUtils";
 import { toast } from "sonner";
 import { Provider } from "@supabase/supabase-js";
+import { buildAzureOAuthUrl } from "../utils/oAuthAzure";
 
 interface Profile {
   id: string;
@@ -47,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasTenant, setHasTenant] = useState(true);
+  const [hasTenant, setHasTenant] = useState(false);
   const [tenantId, setTenantId] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -167,7 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: getRedirectUri(),
         },
       });
 
@@ -188,11 +189,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
 
+      // Store the state
+      // e.g., 'http://localhost:3000/auth/callback'
+      if (provider === "azure") {
+        // Generate the authorization URL
+        const url = await buildAzureOAuthUrl();
+        window.location.href = url;
+        return;
+        // Redirect the user to the authorization URL
+        // window.location.href = url;
+      }
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
+        options: { redirectTo: getRedirectUri() },
       });
 
       if (error) throw error;
@@ -218,7 +228,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!supabaseSession?.user) {
         setProfile(null);
-        setHasTenant(true);
         setTenantId(null);
         setIsLoading(false);
       }
@@ -243,7 +252,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(null);
       setUser(null);
       setProfile(null);
-      setHasTenant(true);
+      setHasTenant(false);
       setTenantId(null);
 
       navigate(ROUTES.AUTH, { replace: true });
@@ -264,6 +273,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     handleEmailSignIn,
     handleOAuthSignIn,
     handleEmailSignUp,
+    checkTenantAccess,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

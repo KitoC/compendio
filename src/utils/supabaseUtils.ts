@@ -69,3 +69,7 @@ export const cleanupSupabaseAuth = () => {
 
   console.log("Cleaned up Supabase auth data from localStorage");
 };
+
+export const getRedirectUri = () => {
+  return `${window.location.origin}/auth/callback`;
+};

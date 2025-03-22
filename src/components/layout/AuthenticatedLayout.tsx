@@ -23,14 +23,10 @@ const AuthenticatedLayout = ({ children }: AuthenticatedLayoutProps) => {
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
-        // Not authenticated, redirect to login
         navigate(ROUTES.AUTH);
-      } else if (
-        !hasTenant &&
-        !location.pathname.includes(ROUTES.REQUEST_ACCESS) &&
-        !location.pathname.includes(ROUTES.ACCESS_PENDING)
-      ) {
-        // User has no tenant and isn't already on request access pages
+      }
+
+      if (!hasTenant) {
         navigate(ROUTES.REQUEST_ACCESS);
       }
     }
