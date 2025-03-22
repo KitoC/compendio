@@ -36,10 +36,10 @@ const Navbar: React.FC = () => {
             </Link>
             {user && (
               <Link
-                to={ROUTES.CONVERSATIONS}
+                to={ROUTES.APPLICATION}
                 className="px-3 py-2 text-sm font-medium"
               >
-                Conversations
+                Dashboard
               </Link>
             )}
           </nav>
@@ -55,9 +55,9 @@ const Navbar: React.FC = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild>
-                    <Link to={ROUTES.CONVERSATIONS} className="cursor-pointer">
+                    <Link to={ROUTES.APPLICATION} className="cursor-pointer">
                       <MessageSquare className="mr-2 h-4 w-4" />
-                      <span>My Conversations</span>
+                      <span>Dashboard</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem
@@ -102,11 +102,11 @@ const Navbar: React.FC = () => {
             </Link>
             {user && (
               <Link
-                to={ROUTES.CONVERSATIONS}
+                to={ROUTES.DASHBOARD}
                 className="block px-3 py-2 rounded-md text-base font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Conversations
+                Dashboard
               </Link>
             )}
             {user ? (

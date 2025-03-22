@@ -54,27 +54,25 @@ const Settings = () => {
   }
 
   return (
-    <AuthRequired>
-      <Page>
-        <div className="flex items-center mb-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="mr-2 md:hidden"
-            onClick={() =>
-              document.dispatchEvent(new CustomEvent("toggle-sidebar"))
-            }
-          >
-            <ArrowLeft className="h-5 w-5" />
-            <span className="sr-only">Back to main navigation</span>
-          </Button>
-          {/* TODO: Add title to the page derived from route */}
-          {/* <h1 className="text-3xl font-bold">Settings</h1> */}
-        </div>
+    <Page>
+      <div className="flex items-center mb-6">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="mr-2 md:hidden"
+          onClick={() =>
+            document.dispatchEvent(new CustomEvent("toggle-sidebar"))
+          }
+        >
+          <ArrowLeft className="h-5 w-5" />
+          <span className="sr-only">Back to main navigation</span>
+        </Button>
+        {/* TODO: Add title to the page derived from route */}
+        {/* <h1 className="text-3xl font-bold">Settings</h1> */}
+      </div>
 
-        <Outlet />
-      </Page>
-    </AuthRequired>
+      <Outlet />
+    </Page>
   );
 };
 

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,12 +6,13 @@ import { toast } from "sonner";
 import { INTEGRATION_TYPES, ROUTES } from "@/lib/constants";
 import FormBuilder from "@/components/form-builder";
 import { FormConfig } from "@/components/form-builder/types";
-import { 
+import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Card,
@@ -73,16 +73,22 @@ const getIntegrationIcon = (type: string) => {
   }
 };
 
-const AddIntegrationWizard = ({ isOpen, onClose }: AddIntegrationWizardProps) => {
+const AddIntegrationWizard = ({
+  isOpen,
+  onClose,
+}: AddIntegrationWizardProps) => {
   const { user, tenantId } = useAuth();
   const navigate = useNavigate();
-  
+
   const [step, setStep] = useState(1);
   const [agents, setAgents] = useState<AiAgent[]>([]);
   const [selectedAgentId, setSelectedAgentId] = useState<string>("");
-  const [selectedIntegrationType, setSelectedIntegrationType] = useState<string>("");
+  const [selectedIntegrationType, setSelectedIntegrationType] =
+    useState<string>("");
   const [isLoadingAgents, setIsLoadingAgents] = useState(true);
-  const [existingCredentials, setExistingCredentials] = useState<Credential[]>([]);
+  const [existingCredentials, setExistingCredentials] = useState<Credential[]>(
+    []
+  );
   const [selectedCredentialId, setSelectedCredentialId] = useState<string>("");
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
   const [configValues, setConfigValues] = useState<Record<string, unknown>>({});
@@ -149,12 +155,14 @@ const AddIntegrationWizard = ({ isOpen, onClose }: AddIntegrationWizardProps) =>
 
       const integrationConfig = {
         service_type: selectedIntegrationType,
-        name: configValues.name as string || selectedIntegrationType,
+        name: (configValues.name as string) || selectedIntegrationType,
         status: "active",
         agent_id: selectedAgentId,
         tenant_id: tenantId,
         config: configValues,
-        auth_type: INTEGRATION_TYPES.find(t => t.id === selectedIntegrationType)?.authType || "custom"
+        auth_type:
+          INTEGRATION_TYPES.find((t) => t.id === selectedIntegrationType)
+            ?.authType || "custom",
       };
 
       const { data, error } = await supabase
@@ -167,12 +175,12 @@ const AddIntegrationWizard = ({ isOpen, onClose }: AddIntegrationWizardProps) =>
       // If we have credential data, save it
       if (Object.keys(configValues).length > 0 && !selectedCredentialId) {
         const credentialData = {
-          username: configValues.username as string || "default_user",
-          password: configValues.api_token as string || "",
+          username: (configValues.username as string) || "default_user",
+          password: (configValues.api_token as string) || "",
           domain: selectedIntegrationType,
           type: integrationConfig.auth_type,
           connected_service_id: data[0].id,
-          tenant_id: tenantId
+          tenant_id: tenantId,
         };
 
         const { error: credError } = await supabase
@@ -213,7 +221,7 @@ const AddIntegrationWizard = ({ isOpen, onClose }: AddIntegrationWizardProps) =>
       // This would need to be implemented to handle OAuth redirects
       // You'd likely store the current state in the database and then redirect
       toast.info(`OAuth flow for ${provider} would start here`);
-      
+
       // Example implementation:
       // 1. Create a state record in oauth_states table
       // 2. Redirect to provider's OAuth endpoint
@@ -264,7 +272,9 @@ const AddIntegrationWizard = ({ isOpen, onClose }: AddIntegrationWizardProps) =>
                 </div>
               ) : agents.length === 0 ? (
                 <div className="text-center py-6">
-                  <p className="text-muted-foreground mb-4">No agents found. Create an agent first.</p>
+                  <p className="text-muted-foreground mb-4">
+                    No agents found. Create an agent first.
+                  </p>
                   <Button onClick={() => navigate(ROUTES.SETTINGS_AGENTS)}>
                     Create Agent
                   </Button>
@@ -293,8 +303,8 @@ const AddIntegrationWizard = ({ isOpen, onClose }: AddIntegrationWizardProps) =>
               <Button variant="outline" onClick={resetAndClose}>
                 Cancel
               </Button>
-              <Button 
-                onClick={nextStep} 
+              <Button
+                onClick={nextStep}
                 disabled={!selectedAgentId || isLoadingAgents}
               >
                 Next <ArrowRight className="ml-2 h-4 w-4" />
@@ -314,10 +324,12 @@ const AddIntegrationWizard = ({ isOpen, onClose }: AddIntegrationWizardProps) =>
             </DialogHeader>
             <div className="py-4 grid grid-cols-1 md:grid-cols-2 gap-4">
               {INTEGRATION_TYPES.map((integrationType) => (
-                <Card 
-                  key={integrationType.id} 
+                <Card
+                  key={integrationType.id}
                   className={`cursor-pointer hover:border-primary transition-colors ${
-                    selectedIntegrationType === integrationType.id ? 'border-primary bg-primary/5' : ''
+                    selectedIntegrationType === integrationType.id
+                      ? "border-primary bg-primary/5"
+                      : ""
                   }`}
                   onClick={() => setSelectedIntegrationType(integrationType.id)}
                 >
@@ -332,8 +344,12 @@ const AddIntegrationWizard = ({ isOpen, onClose }: AddIntegrationWizardProps) =>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <CardTitle className="text-lg">{integrationType.name}</CardTitle>
-                    <CardDescription>{integrationType.description}</CardDescription>
+                    <CardTitle className="text-lg">
+                      {integrationType.name}
+                    </CardTitle>
+                    <CardDescription>
+                      {integrationType.description}
+                    </CardDescription>
                   </CardContent>
                 </Card>
               ))}
@@ -342,10 +358,7 @@ const AddIntegrationWizard = ({ isOpen, onClose }: AddIntegrationWizardProps) =>
               <Button variant="outline" onClick={prevStep}>
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back
               </Button>
-              <Button 
-                onClick={nextStep} 
-                disabled={!selectedIntegrationType}
-              >
+              <Button onClick={nextStep} disabled={!selectedIntegrationType}>
                 Next <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </DialogFooter>
@@ -353,9 +366,11 @@ const AddIntegrationWizard = ({ isOpen, onClose }: AddIntegrationWizardProps) =>
         );
 
       case 3: {
-        const selectedType = INTEGRATION_TYPES.find(t => t.id === selectedIntegrationType);
+        const selectedType = INTEGRATION_TYPES.find(
+          (t) => t.id === selectedIntegrationType
+        );
         const authType = selectedType?.authType || "custom";
-        
+
         if (isLoadingCredentials) {
           return (
             <div className="flex justify-center py-8">
@@ -369,21 +384,25 @@ const AddIntegrationWizard = ({ isOpen, onClose }: AddIntegrationWizardProps) =>
             <DialogHeader>
               <DialogTitle>Step 3: Configure Authentication</DialogTitle>
               <DialogDescription>
-                {authType === "oauth" 
-                  ? "Authenticate with your account" 
+                {authType === "oauth"
+                  ? "Authenticate with your account"
                   : "Enter your connection credentials"}
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
               {existingCredentials.length > 0 && (
                 <div className="mb-6">
-                  <h3 className="text-sm font-medium mb-2">Use Existing Credentials</h3>
+                  <h3 className="text-sm font-medium mb-2">
+                    Use Existing Credentials
+                  </h3>
                   <div className="space-y-3">
-                    {existingCredentials.map(cred => (
-                      <Card 
-                        key={cred.id} 
+                    {existingCredentials.map((cred) => (
+                      <Card
+                        key={cred.id}
                         className={`cursor-pointer hover:border-primary transition-colors ${
-                          selectedCredentialId === cred.id ? 'border-primary bg-primary/5' : ''
+                          selectedCredentialId === cred.id
+                            ? "border-primary bg-primary/5"
+                            : ""
                         }`}
                         onClick={() => handleCredentialSelect(cred.id)}
                       >
@@ -392,8 +411,10 @@ const AddIntegrationWizard = ({ isOpen, onClose }: AddIntegrationWizardProps) =>
                             <div>
                               <p className="font-medium">{cred.username}</p>
                               <p className="text-sm text-muted-foreground">
-                                {cred.expires_at 
-                                  ? `Expires: ${new Date(cred.expires_at).toLocaleDateString()}` 
+                                {cred.expires_at
+                                  ? `Expires: ${new Date(
+                                      cred.expires_at
+                                    ).toLocaleDateString()}`
                                   : "Never expires"}
                               </p>
                               {cred.scopes && (
@@ -411,19 +432,26 @@ const AddIntegrationWizard = ({ isOpen, onClose }: AddIntegrationWizardProps) =>
                     ))}
                   </div>
                   <div className="border-t my-4"></div>
-                  <h3 className="text-sm font-medium mb-2">Or Create New Credentials</h3>
+                  <h3 className="text-sm font-medium mb-2">
+                    Or Create New Credentials
+                  </h3>
                 </div>
               )}
 
               {authType === "oauth" ? (
                 <div className="flex justify-center py-6">
-                  <Button 
-                    onClick={() => handleOAuthRedirect(selectedType?.oauthProvider || "unknown")}
+                  <Button
+                    onClick={() =>
+                      handleOAuthRedirect(
+                        selectedType?.oauthProvider || "unknown"
+                      )
+                    }
                     className="gap-2"
                     size="lg"
                   >
                     <LogIn className="h-5 w-5" />
-                    {selectedType?.formConfig.submitButtonText || "Connect Account"}
+                    {selectedType?.formConfig.submitButtonText ||
+                      "Connect Account"}
                   </Button>
                 </div>
               ) : (
@@ -471,19 +499,21 @@ const AddIntegrationWizard = ({ isOpen, onClose }: AddIntegrationWizardProps) =>
                           label: "Integration Name",
                           type: "text",
                           placeholder: "My Integration",
-                          defaultValue: configValues.name || selectedIntegrationType
+                          defaultValue:
+                            configValues.name || selectedIntegrationType,
                         },
                         {
                           id: "description",
                           name: "description",
                           label: "Description",
                           type: "textarea",
-                          placeholder: "What will this integration be used for?"
-                        }
-                      ]
-                    }
+                          placeholder:
+                            "What will this integration be used for?",
+                        },
+                      ],
+                    },
                   ],
-                  submitButtonText: "Continue"
+                  submitButtonText: "Continue",
                 }}
                 onSubmit={handleFormSubmit}
               />
@@ -492,9 +522,11 @@ const AddIntegrationWizard = ({ isOpen, onClose }: AddIntegrationWizardProps) =>
         );
 
       case 5:
-        const selectedType = INTEGRATION_TYPES.find(t => t.id === selectedIntegrationType);
-        const selectedAgent = agents.find(a => a.id === selectedAgentId);
-        
+        const selectedType = INTEGRATION_TYPES.find(
+          (t) => t.id === selectedIntegrationType
+        );
+        const selectedAgent = agents.find((a) => a.id === selectedAgentId);
+
         return (
           <>
             <DialogHeader>
@@ -521,11 +553,11 @@ const AddIntegrationWizard = ({ isOpen, onClose }: AddIntegrationWizardProps) =>
                   <div>
                     <h3 className="text-sm font-medium">Authentication</h3>
                     <p>
-                      {selectedCredentialId 
-                        ? "Using existing credentials" 
-                        : selectedType?.authType === "oauth" 
-                          ? "OAuth" 
-                          : "API Key / Custom"}
+                      {selectedCredentialId
+                        ? "Using existing credentials"
+                        : selectedType?.authType === "oauth"
+                        ? "OAuth"
+                        : "API Key / Custom"}
                     </p>
                   </div>
                 </div>
@@ -578,7 +610,7 @@ const AddIntegrationWizard = ({ isOpen, onClose }: AddIntegrationWizardProps) =>
             ></div>
           </div>
         </div>
-        
+
         {renderStepContent()}
       </DialogContent>
     </Dialog>

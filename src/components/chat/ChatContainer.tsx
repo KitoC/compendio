@@ -199,7 +199,7 @@ export const ChatContainer = ({
     return (
       <Card className="flex flex-col items-center justify-center p-8 h-full">
         <p className="mb-4">No conversation selected or you need to sign in.</p>
-        <Button onClick={() => navigate(ROUTES.CONVERSATIONS)}>
+        <Button onClick={() => navigate(ROUTES.DASHBOARD)}>
           Back to Conversations
         </Button>
       </Card>

@@ -1,35 +1,44 @@
-
-import { Palette, Users2, Table2, Workflow, Bot, Link, GitBranch, Plus } from "lucide-react";
+import {
+  Palette,
+  Users2,
+  Table2,
+  Workflow,
+  Bot,
+  Link,
+  GitBranch,
+  Plus,
+} from "lucide-react";
 
 export const ROUTES = {
   INDEX: "/",
   AUTH: "/auth",
   AUTH_CALLBACK: "/auth/callback",
+  APPLICATION: "/app",
   FORGOT_PASSWORD: "/forgot-password",
   RESET_PASSWORD: "/reset-password",
   REQUEST_ACCESS: "/request-access",
   ACCESS_PENDING: "/access-pending",
-  CONVERSATIONS: "/conversations",
-  CONVERSATION: "/conversation",
-  CONVERSATIONS_DETAIL: "/conversations/:id",
-  CUSTOM_TABLE_DATA: "/ct/:id",
-  CONVERSATION_ASSISTANT: "/conversations/general-assistant",
-  SETTINGS: "/settings",
-  SETTINGS_APPEARANCE: "/settings/appearance",
-  SETTINGS_AGENTS: "/settings/agents",
-  SETTINGS_AGENTS_DETAIL: "/settings/agents/:id",
-  SETTINGS_AGENT_WORKFLOWS: "/settings/agents/:id/workflows",
-  SETTINGS_WORKFLOWS: "/settings/workflows",
-  SETTINGS_WORKFLOW_DETAIL: "/settings/workflows/:id",
-  SETTINGS_INTEGRATIONS: "/settings/integrations",
-  SETTINGS_INTEGRATION_DETAIL: "/settings/integrations/:id",
-  SETTINGS_WORKFLOW_INSTANCES: "/settings/workflow-instances",
-  SETTINGS_TABLE_BUILDER: "/settings/table-builder",
-  SETTINGS_CUSTOM_TABLES: "/settings/custom-tables",
-  SETTINGS_CUSTOM_TABLES_DETAIL: "/settings/custom-tables/:id",
-  SETTINGS_CUSTOM_TABLES_NEW: "/settings/custom-tables/new-table",
-  SETTINGS_CUSTOM_ROLES_DETAIL: "/settings/custom-tables/roles/:id",
-  SETTINGS_CUSTOM_ROLES_NEW: "/settings/custom-tables/new-role",
+  DASHBOARD: "/app",
+  CONVERSATION: "/app/conversation",
+  CONVERSATIONS_DETAIL: "/app/conversations/:id",
+  CUSTOM_TABLE_DATA: "/app/ct/:id",
+  CONVERSATION_ASSISTANT: "/app/conversations/general-assistant",
+  SETTINGS: "/app/settings",
+  SETTINGS_APPEARANCE: "/app/settings/appearance",
+  SETTINGS_AGENTS: "/app/settings/agents",
+  SETTINGS_AGENTS_DETAIL: "/app/settings/agents/:id",
+  SETTINGS_AGENT_WORKFLOWS: "/app/settings/agents/:id/workflows",
+  SETTINGS_WORKFLOWS: "/app/settings/workflows",
+  SETTINGS_WORKFLOW_DETAIL: "/app/settings/workflows/:id",
+  SETTINGS_INTEGRATIONS: "/app/settings/integrations",
+  SETTINGS_INTEGRATION_DETAIL: "/app/settings/integrations/:id",
+  SETTINGS_WORKFLOW_INSTANCES: "/app/settings/workflow-instances",
+  SETTINGS_TABLE_BUILDER: "/app/settings/table-builder",
+  SETTINGS_CUSTOM_TABLES: "/app/settings/custom-tables",
+  SETTINGS_CUSTOM_TABLES_DETAIL: "/app/settings/custom-tables/:id",
+  SETTINGS_CUSTOM_TABLES_NEW: "/app/settings/custom-tables/new-table",
+  SETTINGS_CUSTOM_ROLES_DETAIL: "/app/settings/custom-tables/roles/:id",
+  SETTINGS_CUSTOM_ROLES_NEW: "/app/settings/custom-tables/new-role",
   NOT_FOUND: "*",
 };
 
@@ -91,8 +100,8 @@ export const INTEGRATION_TYPES = [
       title: "Gmail OAuth Setup",
       description: "Click below to authenticate with your Google account.",
       sections: [],
-      submitButtonText: "Connect with Google"
-    }
+      submitButtonText: "Connect with Google",
+    },
   },
   {
     id: "outlook",
@@ -104,10 +113,11 @@ export const INTEGRATION_TYPES = [
     formConfig: {
       id: "outlook-config",
       title: "Outlook OAuth Setup",
-      description: "Authenticate with your Microsoft account to enable Outlook integration.",
+      description:
+        "Authenticate with your Microsoft account to enable Outlook integration.",
       sections: [],
-      submitButtonText: "Connect with Microsoft"
-    }
+      submitButtonText: "Connect with Microsoft",
+    },
   },
   {
     id: "n8n",
@@ -130,20 +140,20 @@ export const INTEGRATION_TYPES = [
               label: "Base URL",
               type: "text",
               placeholder: "https://n8n.example.com",
-              validation: { required: true }
+              validation: { required: true },
             },
             {
               id: "api_token",
               name: "api_token",
               label: "API Token",
               type: "password",
-              validation: { required: true }
-            }
-          ]
-        }
+              validation: { required: true },
+            },
+          ],
+        },
       ],
-      submitButtonText: "Save N8N Connection"
-    }
+      submitButtonText: "Save N8N Connection",
+    },
   },
   {
     id: "make",
@@ -165,13 +175,13 @@ export const INTEGRATION_TYPES = [
               name: "api_token",
               label: "API Token",
               type: "password",
-              validation: { required: true }
-            }
-          ]
-        }
+              validation: { required: true },
+            },
+          ],
+        },
       ],
-      submitButtonText: "Save Make Connection"
-    }
+      submitButtonText: "Save Make Connection",
+    },
   },
   {
     id: "webhook",
@@ -194,19 +204,19 @@ export const INTEGRATION_TYPES = [
               label: "Webhook URL",
               type: "text",
               placeholder: "https://your-service.com/webhook",
-              validation: { required: true }
+              validation: { required: true },
             },
             {
               id: "secret",
               name: "secret",
               label: "Webhook Secret",
               type: "password",
-              validation: { required: false }
-            }
-          ]
-        }
+              validation: { required: false },
+            },
+          ],
+        },
       ],
-      submitButtonText: "Save Webhook"
-    }
-  }
+      submitButtonText: "Save Webhook",
+    },
+  },
 ];

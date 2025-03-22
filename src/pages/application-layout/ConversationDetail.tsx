@@ -55,12 +55,12 @@ const ConversationDetail = () => {
 
       if (!participantData || participantData.length === 0) {
         toast.error("You are not a participant in this conversation.");
-        navigate(ROUTES.CONVERSATIONS);
+        navigate(ROUTES.DASHBOARD);
         return;
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to load conversation");
-      navigate(ROUTES.CONVERSATIONS);
+      navigate(ROUTES.DASHBOARD);
     }
   };
 
@@ -157,63 +157,61 @@ const ConversationDetail = () => {
   };
 
   return (
-    <AuthRequired>
-      <div className="min-h-screen bg-background flex flex-col">
-        <Navbar />
-        <div className="flex-grow container max-w-4xl py-8">
-          <Card className="h-full flex flex-col">
-            <CardHeader>
-              <CardTitle>
-                {loading ? "Loading..." : conversation?.title || "Conversation"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex-grow flex flex-col">
-              <div className="flex-grow mb-4 overflow-y-auto space-y-4 max-h-[60vh]">
-                {messages.length === 0 && !loading ? (
-                  <p className="text-center text-muted-foreground">
-                    No messages yet.
-                  </p>
-                ) : (
-                  messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`p-3 rounded-lg max-w-[80%] ${
-                        msg.user_id === user?.id
-                          ? "ml-auto bg-primary text-primary-foreground"
-                          : "bg-muted"
-                      }`}
-                    >
-                      {typeof msg.content === "object" && msg.content?.text
-                        ? msg.content.text
-                        : typeof msg.content === "string"
-                        ? msg.content
-                        : JSON.stringify(msg.content)}
-                    </div>
-                  ))
-                )}
-              </div>
-              <div className="flex gap-2">
-                <Textarea
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Type your message..."
-                  className="flex-grow resize-none"
-                  rows={2}
-                />
-                <Button
-                  onClick={sendMessage}
-                  disabled={!message.trim()}
-                  className="self-end"
-                >
-                  Send
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+    <div className="min-h-screen bg-background flex flex-col">
+      <Navbar />
+      <div className="flex-grow container max-w-4xl py-8">
+        <Card className="h-full flex flex-col">
+          <CardHeader>
+            <CardTitle>
+              {loading ? "Loading..." : conversation?.title || "Conversation"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex-grow flex flex-col">
+            <div className="flex-grow mb-4 overflow-y-auto space-y-4 max-h-[60vh]">
+              {messages.length === 0 && !loading ? (
+                <p className="text-center text-muted-foreground">
+                  No messages yet.
+                </p>
+              ) : (
+                messages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`p-3 rounded-lg max-w-[80%] ${
+                      msg.user_id === user?.id
+                        ? "ml-auto bg-primary text-primary-foreground"
+                        : "bg-muted"
+                    }`}
+                  >
+                    {typeof msg.content === "object" && msg.content?.text
+                      ? msg.content.text
+                      : typeof msg.content === "string"
+                      ? msg.content
+                      : JSON.stringify(msg.content)}
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Type your message..."
+                className="flex-grow resize-none"
+                rows={2}
+              />
+              <Button
+                onClick={sendMessage}
+                disabled={!message.trim()}
+                className="self-end"
+              >
+                Send
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </AuthRequired>
+    </div>
   );
 };
 

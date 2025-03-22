@@ -34,7 +34,7 @@ const Index: React.FC = () => {
                   real-time.
                 </p>
                 <Button asChild size="lg">
-                  <Link to={ROUTES.CONVERSATIONS}>Go to My Conversations</Link>
+                  <Link to={ROUTES.DASHBOARD}>Go to My Dashboard</Link>
                 </Button>
               </div>
             </div>
@@ -138,7 +138,7 @@ const Index: React.FC = () => {
                 size="lg"
                 className="px-8 py-4 rounded-full shadow-lg font-medium text-lg"
               >
-                <Link to={ROUTES.CONVERSATIONS}>Access Conversations</Link>
+                <Link to={ROUTES.DASHBOARD}>Access Dashboard</Link>
               </Button>
             ) : (
               <Button
