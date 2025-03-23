@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,16 +9,26 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
+import { useTenant } from "@/contexts/TenantContext";
 import { LogOut, User, MessageSquare, Menu, X } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
 
 const Navbar: React.FC = () => {
   const { user, signOut } = useAuth();
+  const { tenantId, urlTenantAlias, hasTenantAccess, isTenantOwner } = useTenant();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
+
+  // Helper function to get the dashboard link
+  const getDashboardLink = () => {
+    if (!urlTenantAlias || !hasTenantAccess) return ROUTES.INDEX;
+    return ROUTES.APPLICATION.replace(':tenantId', urlTenantAlias);
+  };
+
+  const dashboardLink = getDashboardLink();
 
   return (
     <header className="bg-white border-b sticky top-0 z-50">
@@ -36,11 +47,16 @@ const Navbar: React.FC = () => {
             </Link>
             {user && (
               <Link
-                to={ROUTES.APPLICATION}
+                to={dashboardLink}
                 className="px-3 py-2 text-sm font-medium"
               >
                 Dashboard
               </Link>
+            )}
+            {isTenantOwner && (
+              <span className="px-3 py-2 text-sm font-medium text-green-600">
+                Admin
+              </span>
             )}
           </nav>
 
@@ -55,7 +71,7 @@ const Navbar: React.FC = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild>
-                    <Link to={ROUTES.APPLICATION} className="cursor-pointer">
+                    <Link to={dashboardLink} className="cursor-pointer">
                       <MessageSquare className="mr-2 h-4 w-4" />
                       <span>Dashboard</span>
                     </Link>
@@ -102,12 +118,17 @@ const Navbar: React.FC = () => {
             </Link>
             {user && (
               <Link
-                to={ROUTES.DASHBOARD}
+                to={dashboardLink}
                 className="block px-3 py-2 rounded-md text-base font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Dashboard
               </Link>
+            )}
+            {isTenantOwner && (
+              <span className="block px-3 py-2 rounded-md text-base font-medium text-green-600">
+                Admin
+              </span>
             )}
             {user ? (
               <Button

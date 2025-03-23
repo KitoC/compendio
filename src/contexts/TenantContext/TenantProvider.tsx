@@ -1,11 +1,12 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useAuth } from "./useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { TenantContext } from "./TenantContext";
 
-export function useTenantFromUrl() {
+export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
   const { tenantId: urlTenantAlias } = useParams<{ tenantId: string }>();
   const { user } = useAuth();
   const [tenantId, setTenantId] = useState<string | null>(null);
@@ -14,6 +15,7 @@ export function useTenantFromUrl() {
   const [hasTenantAccess, setHasTenantAccess] = useState<boolean>(false);
   const [hasPendingRequest, setHasPendingRequest] = useState<boolean>(false);
   const [tenantOwnerId, setTenantOwnerId] = useState<string | null>(null);
+  const [isTenantOwner, setIsTenantOwner] = useState<boolean>(false);
 
   // Fetch tenant data from the workspace alias
   useEffect(() => {
@@ -58,6 +60,7 @@ export function useTenantFromUrl() {
       if (!user || !tenantId) {
         setHasTenantAccess(false);
         setHasPendingRequest(false);
+        setIsTenantOwner(false);
         return;
       }
 
@@ -66,6 +69,7 @@ export function useTenantFromUrl() {
         if (user.id === tenantOwnerId) {
           setHasTenantAccess(true);
           setHasPendingRequest(false);
+          setIsTenantOwner(true);
           return;
         }
 
@@ -81,6 +85,7 @@ export function useTenantFromUrl() {
         if (pendingRequest) {
           setHasTenantAccess(false);
           setHasPendingRequest(true);
+          setIsTenantOwner(false);
           return;
         }
 
@@ -95,30 +100,38 @@ export function useTenantFromUrl() {
         if (tenantUser) {
           setHasTenantAccess(true);
           setHasPendingRequest(false);
+          setIsTenantOwner(false);
         } else {
           setHasTenantAccess(false);
           setHasPendingRequest(false);
+          setIsTenantOwner(false);
         }
       } catch (error) {
         console.error("Error checking tenant access:", error);
         setHasTenantAccess(false);
         setHasPendingRequest(false);
+        setIsTenantOwner(false);
       }
     };
 
     checkTenantAccess();
   }, [user, tenantId, tenantOwnerId]);
   
-  // Return data about tenant from URL and user's access status
-  return {
-    tenantId, // This is the actual UUID from the database
-    urlTenantAlias, // This is the workspace name from the URL
-    tenantData, // Full tenant object if needed
-    isLoading,
-    hasTenantAccess, // Whether the current user has access to this tenant
-    hasPendingRequest, // Whether the current user has a pending request
-    tenantOwnerId, // The ID of the tenant owner
-    // Whether we have a tenant in the URL
-    hasTenantInUrl: !!urlTenantAlias,
-  };
-}
+  return (
+    <TenantContext.Provider
+      value={{
+        tenantId,
+        urlTenantAlias,
+        tenantData,
+        isLoading,
+        hasTenantAccess,
+        hasPendingRequest,
+        tenantOwnerId,
+        hasTenantInUrl: !!urlTenantAlias,
+        isTenantOwner
+      }}
+    >
+      {children}
+    </TenantContext.Provider>
+  );
+};

@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useTenantFromUrl } from '@/hooks/useTenantFromUrl';
+import { useTenant } from '@/contexts/TenantContext';
 
 interface AuthRequiredProps {
   children: React.ReactNode;
@@ -15,7 +15,7 @@ const AuthRequired: React.FC<AuthRequiredProps> = ({ children }) => {
     hasTenantAccess, 
     hasPendingRequest, 
     isLoading: tenantLoading 
-  } = useTenantFromUrl();
+  } = useTenant();
   const navigate = useNavigate();
   const location = useLocation();
 

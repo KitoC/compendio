@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useTenantFromUrl } from '@/hooks/useTenantFromUrl';
+import { useTenant } from '@/contexts/TenantContext';
 import { ROUTES } from '@/lib/constants';
 
 const RequestAccess = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
-  const { urlTenantAlias, tenantData, tenantId } = useTenantFromUrl();
+  const { urlTenantAlias, tenantData, tenantId } = useTenant();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,7 +32,7 @@ const RequestAccess = () => {
         .insert({
           user_id: user.id,
           user_email: user.email,
-          tenant_id: tenantId,
+          workspace: urlTenantAlias,
           status: 'pending'
         });
 

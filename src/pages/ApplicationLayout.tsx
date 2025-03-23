@@ -2,7 +2,7 @@
 import { ReactNode, useEffect, Suspense } from "react";
 import { useLocation, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useTenantFromUrl } from "@/hooks/useTenantFromUrl";
+import { useTenant } from "@/contexts/TenantContext";
 import AppSidebar from "@/components/layout/AppSidebar";
 import { ROUTES } from "@/lib/constants";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { AiAgentsProvider } from "@/contexts/AiAgents/AiAgentsProvider";
 import { CustomTablesProvider } from "@/contexts/CustomTables/CustomTablesProvider";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
-import { toast } from "sonner";
 
 interface ApplicationLayoutProps {
   children?: ReactNode;
@@ -26,7 +25,7 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
     isLoading: tenantLoading,
     hasTenantAccess,
     hasPendingRequest
-  } = useTenantFromUrl();
+  } = useTenant();
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();

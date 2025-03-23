@@ -2,13 +2,13 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { useTenantFromUrl } from "@/hooks/useTenantFromUrl";
+import { useTenant } from "@/contexts/TenantContext";
 import { ROUTES } from "@/lib/constants";
 import { useNavigate } from "react-router-dom";
 
 const AccessPending = () => {
   const { signOut } = useAuth();
-  const { urlTenantAlias, tenantData } = useTenantFromUrl();
+  const { urlTenantAlias, tenantData } = useTenant();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
