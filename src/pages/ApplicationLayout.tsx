@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect, Suspense } from "react";
 import { useLocation, useNavigate, Outlet, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,13 +13,23 @@ import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { toast } from "sonner";
 import { useTenantFromUrl } from "@/hooks/useTenantFromUrl";
 
-interface AuthenticatedLayoutProps {
+interface ApplicationLayoutProps {
   children?: ReactNode;
 }
 
-const ApplicationLayout = ({ children }: AuthenticatedLayoutProps) => {
-  const { user, isLoading: authLoading, hasTenant, tenantId: authTenantId } = useAuth();
-  const { tenantId, urlTenantAlias, isCurrentTenant, isLoading: tenantLoading } = useTenantFromUrl();
+const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
+  const {
+    user,
+    isLoading: authLoading,
+    hasTenant,
+    tenantId: authTenantId,
+  } = useAuth();
+  const {
+    tenantId,
+    urlTenantAlias,
+    isCurrentTenant,
+    isLoading: tenantLoading,
+  } = useTenantFromUrl();
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
@@ -45,7 +54,18 @@ const ApplicationLayout = ({ children }: AuthenticatedLayoutProps) => {
         return;
       }
     }
-  }, [user, authLoading, tenantLoading, hasTenant, urlTenantAlias, tenantId, authTenantId, isCurrentTenant, navigate, location.pathname]);
+  }, [
+    user,
+    authLoading,
+    tenantLoading,
+    hasTenant,
+    urlTenantAlias,
+    tenantId,
+    authTenantId,
+    isCurrentTenant,
+    navigate,
+    location.pathname,
+  ]);
 
   if (authLoading || tenantLoading) {
     return (
@@ -81,9 +101,7 @@ const ApplicationLayout = ({ children }: AuthenticatedLayoutProps) => {
                     size="icon"
                     className="mr-2"
                     onClick={() =>
-                      document.dispatchEvent(
-                        new CustomEvent("toggle-sidebar")
-                      )
+                      document.dispatchEvent(new CustomEvent("toggle-sidebar"))
                     }
                   >
                     <Menu className="h-5 w-5" />
