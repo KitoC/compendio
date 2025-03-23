@@ -6,12 +6,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TenantContext } from "./TenantContext";
 
+type TenantData = {
+  id: string;
+  workspace: string;
+  name: string;
+  tenant_owner_id: string;
+  [key: string]: any;
+};
+
 export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
   const { tenantId: urlTenantAlias } = useParams<{ tenantId: string }>();
   const { user } = useAuth();
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(!!urlTenantAlias);
-  const [tenantData, setTenantData] = useState<any>(null);
+  const [tenantData, setTenantData] = useState<TenantData | null>(null);
   const [hasTenantAccess, setHasTenantAccess] = useState<boolean>(false);
   const [hasPendingRequest, setHasPendingRequest] = useState<boolean>(false);
   const [tenantOwnerId, setTenantOwnerId] = useState<string | null>(null);

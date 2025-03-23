@@ -38,10 +38,10 @@ import { UserSettingsProvider } from "./contexts/UserSettingsProvider";
 function App() {
   return (
     <QueryProvider>
-      <ThemeProvider defaultTheme="system" storageKey="ui-theme">
-        <AuthProvider>
-          <TenantProvider>
-            <UserSettingsProvider>
+      <AuthProvider>
+        <TenantProvider>
+          <UserSettingsProvider>
+            <ThemeProvider defaultTheme="system" storageKey="ui-theme">
               <Routes>
                 <Route path={ROUTES.AUTH} element={<Auth />} />
                 <Route path={ROUTES.INDEX} element={<LandingPage />} />
@@ -135,10 +135,10 @@ function App() {
                 </Route>
               </Routes>
               <Toaster />
-            </UserSettingsProvider>
-          </TenantProvider>
-        </AuthProvider>
-      </ThemeProvider>
+            </ThemeProvider>
+          </UserSettingsProvider>
+        </TenantProvider>
+      </AuthProvider>
     </QueryProvider>
   );
 }

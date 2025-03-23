@@ -4,7 +4,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 const UserSettingsProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
@@ -14,7 +13,10 @@ const UserSettingsProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const fetchUserConfig = async () => {
-      if (!user || !tenantId) return;
+      if (!user || !tenantId) {
+        setIsLoading(false);
+        return;
+      }
 
       try {
         const { data, error } = await supabase
