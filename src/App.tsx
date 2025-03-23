@@ -1,4 +1,5 @@
-import { Routes, Route } from "react-router-dom";
+
+import { Routes, Route, BrowserRouter, Navigate } from "react-router-dom";
 import { QueryProvider } from "./contexts/QueryProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
@@ -136,12 +137,11 @@ function App() {
 
 const ProvidedApp = () => (
   <ErrorBoundary>
-    <Router>
+    <BrowserRouter>
       <AuthProvider>
-        <Toaster />
         <App />
       </AuthProvider>
-    </Router>
+    </BrowserRouter>
   </ErrorBoundary>
 );
 

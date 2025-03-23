@@ -18,6 +18,8 @@ export const useAiAgentsQuery = () => {
   const { data: aiAgents = [], isLoading, error } = useQuery({
     queryKey: [QUERY_KEYS.aiAgents, tenantId],
     queryFn: async () => {
+      if (!tenantId) return [];
+      
       const { data, error } = await supabase
         .from("ai_agents")
         .select("*")
@@ -32,9 +34,23 @@ export const useAiAgentsQuery = () => {
   // Create a new AI agent
   const createAgent = useMutation({
     mutationFn: async (newAgent: Partial<IAiAgent>) => {
+      if (!tenantId) throw new Error("Tenant ID is required");
+      
+      // Ensure required fields are present
+      const agentData = {
+        name: newAgent.name || '',
+        human_name: newAgent.human_name || '',
+        prompt: newAgent.prompt || '',
+        responsibility: newAgent.responsibility || '',
+        model: newAgent.model || 'gpt-4',
+        enabled: newAgent.enabled !== undefined ? newAgent.enabled : true,
+        tenant_id: tenantId,
+        ...newAgent
+      };
+      
       const { data, error } = await supabase
         .from("ai_agents")
-        .insert([{ ...newAgent, tenant_id: tenantId }])
+        .insert([agentData])
         .select();
       
       if (error) throw error;
@@ -45,7 +61,7 @@ export const useAiAgentsQuery = () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.aiAgents, tenantId] });
       toast.success("AI agent created successfully");
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error(`Failed to create AI agent: ${error.message}`);
     },
   });
@@ -53,6 +69,8 @@ export const useAiAgentsQuery = () => {
   // Update an existing AI agent
   const updateAgent = useMutation({
     mutationFn: async (agent: IAiAgent) => {
+      if (!tenantId) throw new Error("Tenant ID is required");
+      
       const { data, error } = await supabase
         .from("ai_agents")
         .update(agent)
@@ -67,7 +85,7 @@ export const useAiAgentsQuery = () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.aiAgents, tenantId] });
       toast.success("AI agent updated successfully");
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error(`Failed to update AI agent: ${error.message}`);
     },
   });
@@ -75,6 +93,8 @@ export const useAiAgentsQuery = () => {
   // Delete an AI agent
   const deleteAgent = useMutation({
     mutationFn: async (agentId: string) => {
+      if (!tenantId) throw new Error("Tenant ID is required");
+      
       const { error } = await supabase
         .from("ai_agents")
         .delete()
@@ -87,7 +107,7 @@ export const useAiAgentsQuery = () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.aiAgents, tenantId] });
       toast.success("AI agent deleted successfully");
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error(`Failed to delete AI agent: ${error.message}`);
     },
   });

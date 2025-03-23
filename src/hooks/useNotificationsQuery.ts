@@ -3,18 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { Notification } from "@/types/notifications";
 
-// Define a notification type
-interface Notification {
-  id: string;
-  user_id: string;
-  message: string;
-  is_read: boolean;
-  created_at: string;
-  tenant_id: string;
-}
-
-// Query keys
+// Query keys for better cache management
 export const QUERY_KEYS = {
   notifications: 'notifications',
 };
@@ -27,10 +18,12 @@ export const useNotificationsQuery = () => {
   const { data: notifications = [], isLoading, error } = useQuery({
     queryKey: [QUERY_KEYS.notifications, user?.id],
     queryFn: async () => {
+      if (!user?.id || !tenantId) return [];
+      
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
-        .eq("user_id", user?.id)
+        .eq("user_id", user.id)
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false });
       
@@ -43,11 +36,13 @@ export const useNotificationsQuery = () => {
   // Mark notification as read
   const markAsRead = useMutation({
     mutationFn: async (notificationId: string) => {
+      if (!user?.id || !tenantId) throw new Error("User not authenticated");
+      
       const { data, error } = await supabase
         .from("notifications")
         .update({ is_read: true })
         .eq("id", notificationId)
-        .eq("user_id", user?.id)
+        .eq("user_id", user.id)
         .eq("tenant_id", tenantId)
         .select();
       
@@ -57,7 +52,7 @@ export const useNotificationsQuery = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.notifications, user?.id] });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error(`Failed to update notification: ${error.message}`);
     },
   });
@@ -65,10 +60,12 @@ export const useNotificationsQuery = () => {
   // Mark all notifications as read
   const markAllAsRead = useMutation({
     mutationFn: async () => {
+      if (!user?.id || !tenantId) throw new Error("User not authenticated");
+      
       const { error } = await supabase
         .from("notifications")
         .update({ is_read: true })
-        .eq("user_id", user?.id)
+        .eq("user_id", user.id)
         .eq("tenant_id", tenantId)
         .eq("is_read", false);
       
@@ -78,7 +75,7 @@ export const useNotificationsQuery = () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.notifications, user?.id] });
       toast.success("All notifications marked as read");
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error(`Failed to update notifications: ${error.message}`);
     },
   });
@@ -103,7 +100,7 @@ export const useNotificationsQuery = () => {
           toast.info(newNotification.message, {
             action: {
               label: "Mark as Read",
-              onClick: () => markAsRead.mutate(newNotification.id),
+              onClick: () => markAsRead.mutate(notificationId),
             },
           });
           
