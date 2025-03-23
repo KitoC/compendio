@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,7 +8,7 @@ import DataTable, { Column } from "@/components/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-
+import { useTenant } from "@/contexts/TenantContext";
 interface Workflow {
   id: string;
   name: string;
@@ -22,7 +21,8 @@ interface Workflow {
 }
 
 const WorkflowsSettings = () => {
-  const { user, tenantId } = useAuth();
+  const { user } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,19 +65,22 @@ const WorkflowsSettings = () => {
       // Fetch workflows with count of steps
       const { data, error } = await supabase
         .from("workflows")
-        .select(`
+        .select(
+          `
           *,
           workflow_steps (count)
-        `)
+        `
+        )
         .eq("tenant_id", tenantId);
 
       if (error) throw error;
 
       // Transform data to include step count
-      const workflowsWithStepCount = data?.map(workflow => ({
-        ...workflow,
-        total_steps: workflow.workflow_steps[0]?.count || 0
-      })) || [];
+      const workflowsWithStepCount =
+        data?.map((workflow) => ({
+          ...workflow,
+          total_steps: workflow.workflow_steps[0]?.count || 0,
+        })) || [];
 
       setWorkflows(workflowsWithStepCount);
     } catch (error) {
@@ -110,7 +113,7 @@ const WorkflowsSettings = () => {
 
     toast.success("Workflow created successfully");
     fetchWorkflows();
-    
+
     // Navigate to workflow detail page
     if (data && data[0]) {
       navigate(`${ROUTES.SETTINGS}/workflows/${data[0].id}`);
@@ -173,7 +176,7 @@ const WorkflowsSettings = () => {
           Create Workflow
         </Button>
       </div>
-      
+
       <DataTable
         data={workflows}
         columns={columns}

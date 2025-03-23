@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,13 @@ import { ROUTES } from "@/lib/constants";
 
 const Navbar: React.FC = () => {
   const { user, signOut } = useAuth();
-  const { tenantId, urlTenantAlias, hasTenantAccess, isTenantOwner } = useTenant();
+  const {
+    tenantId,
+    urlTenantAlias,
+    hasTenantAccess,
+    isTenantOwner,
+    tenantData,
+  } = useTenant();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const toggleMobileMenu = () => {
@@ -24,8 +29,13 @@ const Navbar: React.FC = () => {
 
   // Helper function to get the dashboard link
   const getDashboardLink = () => {
+    if (tenantData) {
+      return ROUTES.APPLICATION.replace(":tenantId", tenantData.workspace);
+    }
+
     if (!urlTenantAlias || !hasTenantAccess) return ROUTES.INDEX;
-    return ROUTES.APPLICATION.replace(':tenantId', urlTenantAlias);
+
+    return ROUTES.APPLICATION.replace(":tenantId", urlTenantAlias);
   };
 
   const dashboardLink = getDashboardLink();

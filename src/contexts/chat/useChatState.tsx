@@ -9,7 +9,7 @@ import { Database } from "@/integrations/supabase/types";
 import useChatHelpers from "./useChatHelpers";
 import { User } from "@/types/user";
 import { aiChatService } from "@/services/aiChatService";
-
+import { useTenant } from "@/contexts/TenantContext";
 interface UseChatOptions {
   conversationId: string;
 }
@@ -18,7 +18,8 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const { currentAgent } = useAiAgents();
-  const { user, tenantId } = useAuth();
+  const { user } = useAuth();
+  const { tenantId } = useTenant();
 
   const { createAiMessage, createHumanMessage } = useChatHelpers({
     conversationId,

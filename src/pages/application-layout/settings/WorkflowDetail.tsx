@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,7 +19,7 @@ import { ArrowLeft, Plus } from "lucide-react";
 import DataTable, { Column } from "@/components/data-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import WorkflowStepEditor from "@/components/workflow/WorkflowStepEditor";
-
+import { useTenant } from "@/contexts/TenantContext";
 interface Workflow {
   id: string;
   name: string;
@@ -60,7 +59,8 @@ interface Function {
 
 const WorkflowDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const { user, tenantId } = useAuth();
+  const { user } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,7 +74,9 @@ const WorkflowDetail = () => {
     created_by: user?.id || "",
   });
   const [workflowSteps, setWorkflowSteps] = useState<WorkflowStep[]>([]);
-  const [connectedServices, setConnectedServices] = useState<ConnectedService[]>([]);
+  const [connectedServices, setConnectedServices] = useState<
+    ConnectedService[]
+  >([]);
   const [functions, setFunctions] = useState<Function[]>([]);
   const [currentTab, setCurrentTab] = useState("details");
   const [showStepEditor, setShowStepEditor] = useState(false);
@@ -182,7 +184,10 @@ const WorkflowDetail = () => {
 
       let result;
       if (isNewWorkflow) {
-        result = await supabase.from("workflows").insert([workflowData]).select();
+        result = await supabase
+          .from("workflows")
+          .insert([workflowData])
+          .select();
       } else {
         result = await supabase
           .from("workflows")
@@ -192,8 +197,10 @@ const WorkflowDetail = () => {
 
       if (result.error) throw result.error;
 
-      toast.success(`Workflow ${isNewWorkflow ? "created" : "updated"} successfully`);
-      
+      toast.success(
+        `Workflow ${isNewWorkflow ? "created" : "updated"} successfully`
+      );
+
       if (isNewWorkflow && result.data && result.data[0]) {
         navigate(`${ROUTES.SETTINGS}/workflows/${result.data[0].id}`);
       }
@@ -235,17 +242,19 @@ const WorkflowDetail = () => {
   const handleSaveStep = async (step: WorkflowStep) => {
     try {
       const isNewStep = !step.id;
-      
+
       if (isNewStep) {
         const { data, error } = await supabase
           .from("workflow_steps")
-          .insert([{
-            ...step,
-            workflow_id: workflow.id,
-            tenant_id: tenantId
-          }])
+          .insert([
+            {
+              ...step,
+              workflow_id: workflow.id,
+              tenant_id: tenantId,
+            },
+          ])
           .select();
-          
+
         if (error) throw error;
         toast.success("Step added successfully");
       } else {
@@ -254,11 +263,11 @@ const WorkflowDetail = () => {
           .update(step)
           .eq("id", step.id)
           .eq("tenant_id", tenantId);
-          
+
         if (error) throw error;
         toast.success("Step updated successfully");
       }
-      
+
       fetchWorkflowSteps();
       setShowStepEditor(false);
       setCurrentStep(null);
@@ -281,9 +290,9 @@ const WorkflowDetail = () => {
 
       // Reindex remaining steps
       const remainingSteps = workflowSteps
-        .filter(step => step.id !== id)
+        .filter((step) => step.id !== id)
         .sort((a, b) => a.step_index - b.step_index);
-        
+
       for (let i = 0; i < remainingSteps.length; i++) {
         await supabase
           .from("workflow_steps")
@@ -300,33 +309,36 @@ const WorkflowDetail = () => {
     }
   };
 
-  const handleMoveStep = async (step: WorkflowStep, direction: "up" | "down") => {
+  const handleMoveStep = async (
+    step: WorkflowStep,
+    direction: "up" | "down"
+  ) => {
     try {
       const currentIndex = step.step_index;
       const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-      
+
       // Ensure the new index is within bounds
       if (newIndex < 0 || newIndex >= workflowSteps.length) {
         return;
       }
-      
-      const otherStep = workflowSteps.find(s => s.step_index === newIndex);
+
+      const otherStep = workflowSteps.find((s) => s.step_index === newIndex);
       if (!otherStep) return;
-      
+
       // Update the current step's index
       await supabase
         .from("workflow_steps")
         .update({ step_index: newIndex })
         .eq("id", step.id)
         .eq("tenant_id", tenantId);
-        
+
       // Update the other step's index
       await supabase
         .from("workflow_steps")
         .update({ step_index: currentIndex })
         .eq("id", otherStep.id)
         .eq("tenant_id", tenantId);
-      
+
       toast.success("Step order updated");
       fetchWorkflowSteps();
     } catch (error) {
@@ -468,7 +480,7 @@ const WorkflowDetail = () => {
                 Add Step
               </Button>
             </div>
-            
+
             <DataTable
               data={workflowSteps}
               columns={stepsColumns}

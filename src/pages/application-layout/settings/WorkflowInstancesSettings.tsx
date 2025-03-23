@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
+import { useTenant } from "@/contexts/TenantContext";
 interface WorkflowInstance {
   id: string;
   workflow_id: string;
@@ -57,13 +56,16 @@ interface Agent {
 }
 
 const WorkflowInstancesSettings = () => {
-  const { tenantId } = useAuth();
+  const { tenantId } = useTenant();
   const [isLoading, setIsLoading] = useState(true);
   const [instances, setInstances] = useState<WorkflowInstance[]>([]);
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
-  const [selectedInstance, setSelectedInstance] = useState<WorkflowInstance | null>(null);
-  const [instanceResponses, setInstanceResponses] = useState<WorkflowResponse[]>([]);
+  const [selectedInstance, setSelectedInstance] =
+    useState<WorkflowInstance | null>(null);
+  const [instanceResponses, setInstanceResponses] = useState<
+    WorkflowResponse[]
+  >([]);
   const [showResponsesDialog, setShowResponsesDialog] = useState(false);
   const [filterWorkflow, setFilterWorkflow] = useState<string>("all");
   const [filterAgent, setFilterAgent] = useState<string>("all");
@@ -88,43 +90,48 @@ const WorkflowInstancesSettings = () => {
 
     try {
       setIsLoading(true);
-      
+
       let query = supabase
         .from("workflow_instances")
-        .select(`
+        .select(
+          `
           *,
           workflows:workflow_id (name),
           ai_agents:agent_id (name, human_name)
-        `)
+        `
+        )
         .eq("tenant_id", tenantId);
-        
+
       // Apply filters
       if (filterWorkflow !== "all") {
         query = query.eq("workflow_id", filterWorkflow);
       }
-      
+
       if (filterAgent !== "all") {
         query = query.eq("agent_id", filterAgent);
       }
-      
+
       if (filterStatus !== "all") {
         query = query.eq("status", filterStatus);
       }
-      
+
       // Order by created_at
       query = query.order("created_at", { ascending: false });
-      
+
       const { data, error } = await query;
 
       if (error) throw error;
-      
+
       // Transform data to include workflow and agent names
       const transformedData = (data || []).map((instance) => ({
         ...instance,
         workflow_name: instance.workflows?.name || "Unknown",
-        agent_name: instance.ai_agents?.human_name || instance.ai_agents?.name || "Unknown",
+        agent_name:
+          instance.ai_agents?.human_name ||
+          instance.ai_agents?.name ||
+          "Unknown",
       }));
-      
+
       setInstances(transformedData);
     } catch (error) {
       console.error("Error fetching workflow instances:", error);
@@ -201,7 +208,7 @@ const WorkflowInstancesSettings = () => {
         .delete()
         .eq("workflow_instance_id", id)
         .eq("tenant_id", tenantId);
-        
+
       // Then delete the instance
       const { error } = await supabase
         .from("workflow_instances")
@@ -238,9 +245,13 @@ const WorkflowInstancesSettings = () => {
         return (
           <Badge
             variant={
-              status === "completed" ? "success" :
-              status === "in_progress" ? "warning" :
-              status === "error" ? "destructive" : "default"
+              status === "completed"
+                ? "success"
+                : status === "in_progress"
+                ? "warning"
+                : status === "error"
+                ? "destructive"
+                : "default"
             }
           >
             {status.replace("_", " ")}
@@ -263,8 +274,10 @@ const WorkflowInstancesSettings = () => {
       field: "completed_at",
       header: "Completed",
       sortable: true,
-      render: (instance) => instance.completed_at ? 
-        new Date(instance.completed_at).toLocaleString() : "—",
+      render: (instance) =>
+        instance.completed_at
+          ? new Date(instance.completed_at).toLocaleString()
+          : "—",
     },
   ];
 
@@ -273,7 +286,7 @@ const WorkflowInstancesSettings = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Workflow Executions</h1>
       </div>
-      
+
       <div className="grid grid-cols-3 gap-4">
         <div>
           <label className="text-sm font-medium mb-2 block">Workflow</label>
@@ -291,7 +304,7 @@ const WorkflowInstancesSettings = () => {
             </SelectContent>
           </Select>
         </div>
-        
+
         <div>
           <label className="text-sm font-medium mb-2 block">Agent</label>
           <Select value={filterAgent} onValueChange={setFilterAgent}>
@@ -308,7 +321,7 @@ const WorkflowInstancesSettings = () => {
             </SelectContent>
           </Select>
         </div>
-        
+
         <div>
           <label className="text-sm font-medium mb-2 block">Status</label>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -325,7 +338,7 @@ const WorkflowInstancesSettings = () => {
           </Select>
         </div>
       </div>
-      
+
       <DataTable
         data={instances}
         columns={columns}
@@ -346,7 +359,10 @@ const WorkflowInstancesSettings = () => {
       />
 
       {showResponsesDialog && selectedInstance && (
-        <Dialog open={showResponsesDialog} onOpenChange={setShowResponsesDialog}>
+        <Dialog
+          open={showResponsesDialog}
+          onOpenChange={setShowResponsesDialog}
+        >
           <DialogContent className="sm:max-w-[800px] sm:max-h-[80vh] overflow-auto">
             <DialogHeader>
               <DialogTitle>Workflow Execution Details</DialogTitle>
@@ -365,9 +381,13 @@ const WorkflowInstancesSettings = () => {
                   <h4 className="font-semibold text-sm">Status:</h4>
                   <Badge
                     variant={
-                      selectedInstance.status === "completed" ? "success" :
-                      selectedInstance.status === "in_progress" ? "warning" :
-                      selectedInstance.status === "error" ? "destructive" : "default"
+                      selectedInstance.status === "completed"
+                        ? "success"
+                        : selectedInstance.status === "in_progress"
+                        ? "warning"
+                        : selectedInstance.status === "error"
+                        ? "destructive"
+                        : "default"
                     }
                   >
                     {selectedInstance.status.replace("_", " ")}
@@ -379,15 +399,20 @@ const WorkflowInstancesSettings = () => {
                 </div>
                 <div>
                   <h4 className="font-semibold text-sm">Started:</h4>
-                  <p>{new Date(selectedInstance.created_at).toLocaleString()}</p>
+                  <p>
+                    {new Date(selectedInstance.created_at).toLocaleString()}
+                  </p>
                 </div>
                 <div>
                   <h4 className="font-semibold text-sm">Completed:</h4>
-                  <p>{selectedInstance.completed_at ? 
-                    new Date(selectedInstance.completed_at).toLocaleString() : "—"}</p>
+                  <p>
+                    {selectedInstance.completed_at
+                      ? new Date(selectedInstance.completed_at).toLocaleString()
+                      : "—"}
+                  </p>
                 </div>
               </div>
-              
+
               <Tabs defaultValue="steps" className="w-full mt-6">
                 <TabsList>
                   <TabsTrigger value="steps">Steps & Responses</TabsTrigger>
@@ -395,37 +420,52 @@ const WorkflowInstancesSettings = () => {
                 </TabsList>
                 <TabsContent value="steps" className="space-y-4 pt-4">
                   {instanceResponses.length === 0 ? (
-                    <p className="text-muted-foreground">No responses recorded for this workflow execution.</p>
+                    <p className="text-muted-foreground">
+                      No responses recorded for this workflow execution.
+                    </p>
                   ) : (
                     <div className="space-y-4">
                       {instanceResponses.map((response) => (
-                        <div key={response.id} className="border rounded-md p-4">
+                        <div
+                          key={response.id}
+                          className="border rounded-md p-4"
+                        >
                           <div className="flex justify-between items-start mb-2">
                             <div>
-                              <h4 className="font-medium">Step {response.step_index + 1}</h4>
+                              <h4 className="font-medium">
+                                Step {response.step_index + 1}
+                              </h4>
                               <p className="text-xs text-muted-foreground">
                                 {new Date(response.created_at).toLocaleString()}
                               </p>
                             </div>
                             <Badge
                               variant={
-                                response.status === "success" ? "success" :
-                                response.status === "pending" ? "warning" :
-                                response.status === "error" ? "destructive" : "default"
+                                response.status === "success"
+                                  ? "success"
+                                  : response.status === "pending"
+                                  ? "warning"
+                                  : response.status === "error"
+                                  ? "destructive"
+                                  : "default"
                               }
                             >
                               {response.status}
                             </Badge>
                           </div>
-                          
+
                           {response.error_message && (
                             <div className="bg-red-50 border border-red-200 rounded p-2 mb-2">
-                              <p className="text-red-700 text-sm">{response.error_message}</p>
+                              <p className="text-red-700 text-sm">
+                                {response.error_message}
+                              </p>
                             </div>
                           )}
-                          
+
                           <div className="mt-2">
-                            <h5 className="text-sm font-medium mb-1">Response:</h5>
+                            <h5 className="text-sm font-medium mb-1">
+                              Response:
+                            </h5>
                             <pre className="bg-muted p-3 rounded-md text-xs overflow-auto max-h-48">
                               {JSON.stringify(response.response, null, 2)}
                             </pre>
@@ -437,10 +477,14 @@ const WorkflowInstancesSettings = () => {
                 </TabsContent>
                 <TabsContent value="raw" className="space-y-4 pt-4">
                   <pre className="bg-muted p-4 rounded-md overflow-auto max-h-96 text-xs">
-                    {JSON.stringify({
-                      instance: selectedInstance,
-                      responses: instanceResponses,
-                    }, null, 2)}
+                    {JSON.stringify(
+                      {
+                        instance: selectedInstance,
+                        responses: instanceResponses,
+                      },
+                      null,
+                      2
+                    )}
                   </pre>
                 </TabsContent>
               </Tabs>

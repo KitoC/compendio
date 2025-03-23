@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,7 +6,10 @@ import { toast } from "sonner";
 import { INTEGRATION_TYPES, ROUTES } from "@/lib/constants";
 import FormBuilder from "@/components/form-builder";
 import { newAgentFormConfig } from "@/forms/agents";
-import { integrationSettingsConfig, INTEGRATION_FORM_CONFIGS } from "@/forms/integrations";
+import {
+  integrationSettingsConfig,
+  INTEGRATION_FORM_CONFIGS,
+} from "@/forms/integrations";
 import {
   Dialog,
   DialogContent,
@@ -46,7 +48,7 @@ import {
   CheckCircle2,
   User,
 } from "lucide-react";
-
+import { useTenant } from "@/contexts/TenantContext";
 interface AiAgent {
   id: string;
   name: string;
@@ -92,15 +94,19 @@ const AddIntegrationWizard = ({
   isOpen,
   onClose,
 }: AddIntegrationWizardProps) => {
-  const { user, tenantId } = useAuth();
+  const { user } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
 
   const [step, setStep] = useState(1);
   const [agents, setAgents] = useState<AiAgent[]>([]);
   const [selectedAgentId, setSelectedAgentId] = useState<string>("");
-  const [selectedIntegrationType, setSelectedIntegrationType] = useState<string>("");
+  const [selectedIntegrationType, setSelectedIntegrationType] =
+    useState<string>("");
   const [isLoadingAgents, setIsLoadingAgents] = useState(true);
-  const [existingCredentials, setExistingCredentials] = useState<Credential[]>([]);
+  const [existingCredentials, setExistingCredentials] = useState<Credential[]>(
+    []
+  );
   const [selectedCredentialId, setSelectedCredentialId] = useState<string>("");
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(false);
   const [configValues, setConfigValues] = useState<Record<string, unknown>>({});
@@ -109,7 +115,9 @@ const AddIntegrationWizard = ({
   const [newAgentData, setNewAgentData] = useState<Record<string, unknown>>({});
   const [restoringState, setRestoringState] = useState(false);
   const [isOAuthSuccess, setIsOAuthSuccess] = useState(false);
-  const [availableCredentialsByType, setAvailableCredentialsByType] = useState<Credential[]>([]);
+  const [availableCredentialsByType, setAvailableCredentialsByType] = useState<
+    Credential[]
+  >([]);
 
   // Restore wizard state from session storage if available
   useEffect(() => {
@@ -121,7 +129,7 @@ const AddIntegrationWizard = ({
           setIsOAuthSuccess(true);
           // Clear the flag so it doesn't show up again
           sessionStorage.removeItem("oauth_success");
-          
+
           // Get the last credential ID if available
           const lastCredentialId = sessionStorage.getItem("last_credential_id");
           if (lastCredentialId) {
@@ -129,19 +137,21 @@ const AddIntegrationWizard = ({
             sessionStorage.removeItem("last_credential_id");
           }
         }
-        
-        const savedStateString = sessionStorage.getItem("integration_wizard_state");
-        
+
+        const savedStateString = sessionStorage.getItem(
+          "integration_wizard_state"
+        );
+
         if (savedStateString) {
           setRestoringState(true);
           const savedState: WizardState = JSON.parse(savedStateString);
-          
+
           setStep(savedState.step);
           setSelectedAgentId(savedState.selectedAgentId);
           setSelectedIntegrationType(savedState.selectedIntegrationType);
           setSelectedCredentialId(savedState.selectedCredentialId || "");
           setConfigValues(savedState.configValues);
-          
+
           // Slight delay to avoid fetch conflicts
           setTimeout(() => {
             setRestoringState(false);
@@ -164,7 +174,7 @@ const AddIntegrationWizard = ({
   useEffect(() => {
     if (selectedIntegrationType && !restoringState) {
       fetchExistingCredentials(selectedIntegrationType);
-      
+
       // Fetch reusable credentials by type regardless of connected service
       if (tenantId) {
         fetchCredentialsByType(selectedIntegrationType);
@@ -180,12 +190,23 @@ const AddIntegrationWizard = ({
         selectedAgentId,
         selectedIntegrationType,
         selectedCredentialId,
-        configValues
+        configValues,
       };
-      
-      sessionStorage.setItem("integration_wizard_state", JSON.stringify(currentState));
+
+      sessionStorage.setItem(
+        "integration_wizard_state",
+        JSON.stringify(currentState)
+      );
     }
-  }, [isOpen, step, selectedAgentId, selectedIntegrationType, selectedCredentialId, configValues, restoringState]);
+  }, [
+    isOpen,
+    step,
+    selectedAgentId,
+    selectedIntegrationType,
+    selectedCredentialId,
+    configValues,
+    restoringState,
+  ]);
 
   const fetchAgents = async () => {
     if (!tenantId) return;
@@ -221,9 +242,9 @@ const AddIntegrationWizard = ({
 
       if (error) throw error;
       // Convert numeric IDs to strings to avoid TypeScript issues
-      const credentialsData = (data || []).map(cred => ({
+      const credentialsData = (data || []).map((cred) => ({
         ...cred,
-        id: String(cred.id)
+        id: String(cred.id),
       }));
       setExistingCredentials(credentialsData);
     } catch (error) {
@@ -245,13 +266,13 @@ const AddIntegrationWizard = ({
         .is("connected_service_id", null);
 
       if (error) throw error;
-      
+
       // Convert numeric IDs to strings to avoid TypeScript issues
-      const credentialsData = (data || []).map(cred => ({
+      const credentialsData = (data || []).map((cred) => ({
         ...cred,
-        id: String(cred.id)
+        id: String(cred.id),
       }));
-      
+
       setAvailableCredentialsByType(credentialsData);
     } catch (error) {
       console.error("Error fetching reusable credentials:", error);
@@ -263,29 +284,29 @@ const AddIntegrationWizard = ({
 
     try {
       setIsSubmitting(true);
-      
+
       // Convert enabled boolean if it exists
       const agentData = {
         ...values,
         enabled: values.enabled === undefined ? true : Boolean(values.enabled),
-        tenant_id: tenantId
+        tenant_id: tenantId,
       };
-      
+
       const { data, error } = await supabase
         .from("ai_agents")
         .insert([agentData])
         .select();
 
       if (error) throw error;
-      
+
       if (data && data.length > 0) {
         setNewAgentData(data[0]);
         setSelectedAgentId(data[0].id);
         toast.success("Agent created successfully");
-        
+
         // Refresh agents list
         await fetchAgents();
-        
+
         // Exit creation mode and continue wizard
         setIsCreatingAgent(false);
       }
@@ -373,7 +394,7 @@ const AddIntegrationWizard = ({
 
     try {
       setIsSubmitting(true);
-      
+
       // First create a record in oauth_states to track this OAuth flow
       const { data: oauthStateData, error: oauthStateError } = await supabase
         .from("oauth_states")
@@ -383,22 +404,26 @@ const AddIntegrationWizard = ({
           service_type: selectedIntegrationType,
           tenant_id: tenantId,
           config: configValues,
-          status: "pending"
+          status: "pending",
         })
         .select();
-        
+
       if (oauthStateError) throw oauthStateError;
-      
+
       // Store oauth state ID in session storage for the callback to use
       if (oauthStateData && oauthStateData.length > 0) {
         sessionStorage.setItem("oauth_state_id", oauthStateData[0].id);
         sessionStorage.setItem("integration_return_url", window.location.href);
-        
+
         // Now redirect to the appropriate OAuth URL
         if (provider === "google") {
           // Google OAuth for Gmail
           const redirectUri = `${window.location.origin}/auth/callback`;
-          const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${import.meta.env.VITE_GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=https://www.googleapis.com/auth/gmail.readonly&access_type=offline&prompt=consent`;
+          const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${
+            import.meta.env.VITE_GOOGLE_CLIENT_ID
+          }&redirect_uri=${encodeURIComponent(
+            redirectUri
+          )}&response_type=code&scope=https://www.googleapis.com/auth/gmail.readonly&access_type=offline&prompt=consent`;
           window.location.href = googleAuthUrl;
         } else if (provider === "microsoft") {
           // Microsoft OAuth for Outlook
@@ -469,8 +494,8 @@ const AddIntegrationWizard = ({
                     onSubmit={handleCreateAgent}
                     isSubmitting={isSubmitting}
                   />
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => setIsCreatingAgent(false)}
                     className="w-full mt-2"
                   >
@@ -510,10 +535,10 @@ const AddIntegrationWizard = ({
                           ))}
                         </SelectContent>
                       </Select>
-                      
+
                       <div className="mt-4 flex justify-center">
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           onClick={() => setIsCreatingAgent(true)}
                           className="w-full"
                         >
@@ -599,7 +624,8 @@ const AddIntegrationWizard = ({
           (t) => t.id === selectedIntegrationType
         );
         const authType = selectedType?.authType || "custom";
-        const formConfig = selectedType && INTEGRATION_FORM_CONFIGS[selectedIntegrationType];
+        const formConfig =
+          selectedType && INTEGRATION_FORM_CONFIGS[selectedIntegrationType];
 
         if (isLoadingCredentials) {
           return (
@@ -623,13 +649,16 @@ const AddIntegrationWizard = ({
               {isOAuthSuccess && (
                 <Alert className="mb-4 bg-green-50 border-green-200">
                   <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  <AlertTitle className="text-green-800">Authentication Successful</AlertTitle>
+                  <AlertTitle className="text-green-800">
+                    Authentication Successful
+                  </AlertTitle>
                   <AlertDescription className="text-green-700">
-                    Your account was successfully connected. You can continue to the next step.
+                    Your account was successfully connected. You can continue to
+                    the next step.
                   </AlertDescription>
                 </Alert>
               )}
-              
+
               {/* Show reusable credentials dropdown if available */}
               {availableCredentialsByType.length > 0 && (
                 <div className="mb-6">
@@ -637,7 +666,8 @@ const AddIntegrationWizard = ({
                     Available Credentials
                   </h3>
                   <p className="text-sm text-muted-foreground mb-3">
-                    You have existing credentials you can reuse for this integration:
+                    You have existing credentials you can reuse for this
+                    integration:
                   </p>
                   <Select
                     value={selectedCredentialId}
@@ -651,7 +681,12 @@ const AddIntegrationWizard = ({
                         <SelectItem key={cred.id} value={cred.id}>
                           <div className="flex items-center gap-2">
                             <User className="h-4 w-4" />
-                            {cred.username} {cred.expires_at ? `(Expires: ${new Date(cred.expires_at).toLocaleDateString()})` : ''}
+                            {cred.username}{" "}
+                            {cred.expires_at
+                              ? `(Expires: ${new Date(
+                                  cred.expires_at
+                                ).toLocaleDateString()})`
+                              : ""}
                           </div>
                         </SelectItem>
                       ))}
@@ -727,7 +762,7 @@ const AddIntegrationWizard = ({
                         if (selectedIntegrationType === "outlook") {
                           provider = "microsoft";
                         }
-                        
+
                         handleOAuthRedirect(provider);
                       }}
                       className="gap-2"
@@ -782,7 +817,7 @@ const AddIntegrationWizard = ({
                 onSubmit={handleFormSubmit}
                 initialValues={{
                   name: configValues.name || selectedIntegrationType,
-                  description: configValues.description || ""
+                  description: configValues.description || "",
                 }}
               />
             </div>
@@ -836,13 +871,16 @@ const AddIntegrationWizard = ({
                     <p>{configValues.description as string}</p>
                   </div>
                 )}
-                
+
                 {isOAuthSuccess && (
                   <Alert className="bg-green-50 border-green-200">
                     <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    <AlertTitle className="text-green-800">Authentication Successful</AlertTitle>
+                    <AlertTitle className="text-green-800">
+                      Authentication Successful
+                    </AlertTitle>
                     <AlertDescription className="text-green-700">
-                      Your account was successfully connected and credentials have been saved.
+                      Your account was successfully connected and credentials
+                      have been saved.
                     </AlertDescription>
                   </Alert>
                 )}

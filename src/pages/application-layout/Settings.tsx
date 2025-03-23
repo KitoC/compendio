@@ -8,9 +8,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Page from "@/components/Page";
+import { useTenant } from "@/contexts/TenantContext";
 
 const Settings = () => {
-  const { user, isLoading, hasTenant, tenantId } = useAuth();
+  const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isRoleLoading, setIsRoleLoading] = useState(true);
 
@@ -27,7 +29,7 @@ const Settings = () => {
   // Fetch user role from Supabase
   useEffect(() => {
     const fetchUserRole = async () => {
-      if (!user || !hasTenant || !tenantId) return;
+      if (!user || !tenantId) return;
 
       try {
         const { data, error } = await supabase
@@ -47,9 +49,9 @@ const Settings = () => {
     };
 
     fetchUserRole();
-  }, [user, hasTenant, tenantId]);
+  }, [user, tenantId]);
 
-  if (isLoading || isRoleLoading) {
+  if (isRoleLoading) {
     return <PageLoading />;
   }
 

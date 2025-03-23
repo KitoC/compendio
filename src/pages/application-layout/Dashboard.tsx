@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/lib/constants";
 import { MessageSquare, Activity, Settings, Plus } from "lucide-react";
-
+import { useTenant } from "@/contexts/TenantContext";
 interface Conversation {
   id: string;
   title: string;
@@ -39,7 +39,8 @@ interface WorkflowInstance {
 }
 
 const Dashboard = () => {
-  const { tenantId, user } = useAuth();
+  const { user } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -62,13 +63,13 @@ const Dashboard = () => {
       // Fetch recent conversations
       const { data: convData } = await supabase
         .from("conversations")
-        .select(
-          `
-          *,
-          tasks!inner(status)
-        `
-        )
-        .eq("tasks.user_id", user.id)
+        // .select(
+        //   `
+        //   *,
+        //   tasks!inner(status)
+        // `
+        // )
+        // .eq("tasks.user_id", user.id)
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false })
         .limit(5);

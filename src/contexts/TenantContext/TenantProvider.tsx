@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -65,6 +64,9 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
   // Check user's access to this tenant
   useEffect(() => {
     const checkTenantAccess = async () => {
+      if (tenantData) {
+        return;
+      }
       if (!user || !tenantId) {
         setHasTenantAccess(false);
         setHasPendingRequest(false);
@@ -131,20 +133,109 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     checkTenantAccess();
-  }, [user, tenantId, tenantOwnerId]);
-  
+  }, [user, tenantId, tenantOwnerId, tenantData]);
+
+  useEffect(() => {
+    const getUserPrimaryTenant = async () => {
+      try {
+        if (isLoading) return;
+        if (!user) return;
+
+        if (urlTenantAlias) return;
+        if (tenantData) return;
+
+        setIsLoading(true);
+
+        const { data: ownTenant, error: ownTenantError } = await supabase
+          .from("tenants")
+          .select("*")
+          .eq("tenant_owner_id", user.id)
+          .single();
+
+        if (ownTenantError) {
+          console.error("Error fetching owner tenant:", ownTenantError);
+          return;
+        }
+
+        if (ownTenant) {
+          setTenantId(ownTenant.id);
+          setTenantData(ownTenant);
+          setIsLoading(false);
+          setHasTenantAccess(true);
+          setHasPendingRequest(false);
+          setIsTenantOwner(true);
+
+          return;
+        }
+
+        const { data: primaryTenantUser, error: primaryTenantUserError } =
+          await supabase
+            .from("tenant_users")
+            .select("*")
+            .eq("user_id", user.id)
+            .eq("is_primary", true)
+            .single();
+
+        if (primaryTenantUserError) {
+          console.error(
+            "Error fetching primary tenant:",
+            primaryTenantUserError
+          );
+          return;
+        }
+
+        if (primaryTenantUser) {
+          const { data: primaryTenant, error: primaryTenantError } =
+            await supabase
+              .from("tenants")
+              .select("*")
+              .eq("id", primaryTenantUser.tenant_id)
+              .single();
+
+          if (primaryTenantError) {
+            console.error("Error fetching primary tenant:", primaryTenantError);
+            return;
+          }
+
+          if (primaryTenant) {
+            setTenantId(primaryTenant.id);
+            setTenantData(primaryTenant);
+            setIsLoading(false);
+            setHasTenantAccess(true);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching primary tenant:", error);
+        setIsLoading(false);
+      }
+    };
+
+    getUserPrimaryTenant();
+  }, [
+    user,
+    urlTenantAlias,
+    tenantId,
+    tenantOwnerId,
+    tenantData,
+    hasTenantAccess,
+    hasPendingRequest,
+    isLoading,
+  ]);
+
   const contextValue = {
     tenantId,
-    urlTenantAlias,
+    urlTenantAlias: urlTenantAlias || tenantData?.workspace,
     tenantData,
     isLoading,
     hasTenantAccess,
     hasPendingRequest,
     tenantOwnerId,
     hasTenantInUrl: !!urlTenantAlias,
-    isTenantOwner
+    isTenantOwner,
   };
-  
+
+  console.log("contextValue", contextValue);
+
   return (
     <TenantContext.Provider value={contextValue}>
       {children}

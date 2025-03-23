@@ -1,6 +1,11 @@
-
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface CreateFunctionModalProps {
   isOpen: boolean;
@@ -15,8 +21,13 @@ interface CreateFunctionModalProps {
   onFunctionCreated: (functionId: string) => void;
 }
 
-const CreateFunctionModal = ({ isOpen, onClose, onFunctionCreated }: CreateFunctionModalProps) => {
-  const { tenantId } = useAuth();
+const CreateFunctionModal = ({
+  isOpen,
+  onClose,
+  onFunctionCreated,
+}: CreateFunctionModalProps) => {
+  const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [functionData, setFunctionData] = useState({
     name: "",
@@ -37,7 +48,7 @@ const CreateFunctionModal = ({ isOpen, onClose, onFunctionCreated }: CreateFunct
 
   const handleSubmit = async () => {
     if (!tenantId) return;
-    
+
     setIsSubmitting(true);
     try {
       // Create JSON structure for non-string fields
@@ -57,7 +68,7 @@ const CreateFunctionModal = ({ isOpen, onClose, onFunctionCreated }: CreateFunct
         .single();
 
       if (error) throw error;
-      
+
       toast.success("Function created successfully");
       onFunctionCreated(data.id);
       onClose();
@@ -120,10 +131,12 @@ const CreateFunctionModal = ({ isOpen, onClose, onFunctionCreated }: CreateFunct
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button 
-            type="button" 
-            onClick={handleSubmit} 
-            disabled={isSubmitting || !functionData.name || !functionData.description}
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            disabled={
+              isSubmitting || !functionData.name || !functionData.description
+            }
           >
             {isSubmitting ? "Creating..." : "Create"}
           </Button>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,9 +12,10 @@ import { Plus, RefreshCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ConnectedService, Credential } from "@/forms/types";
+import { useTenant } from "@/contexts/TenantContext";
 
 const IntegrationsSettings = () => {
-  const { tenantId } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [services, setServices] = useState<ConnectedService[]>([]);
@@ -62,7 +62,7 @@ const IntegrationsSettings = () => {
         ...service,
         agent_name: service.ai_agents?.name || "Unknown agent",
         name: service.name || getServiceTypeName(service.service_type), // Ensure name is always set
-        auth_type: service.auth_type || "custom" // Ensure auth_type is always set
+        auth_type: service.auth_type || "custom", // Ensure auth_type is always set
       })) as ConnectedService[];
 
       setServices(servicesWithAgentNames);
@@ -84,13 +84,13 @@ const IntegrationsSettings = () => {
         .eq("tenant_id", tenantId);
 
       if (error) throw error;
-      
+
       // Convert numeric IDs to strings to avoid TypeScript issues
-      const processedCredentials = (data || []).map(cred => ({
+      const processedCredentials = (data || []).map((cred) => ({
         ...cred,
-        id: String(cred.id)
+        id: String(cred.id),
       })) as Credential[];
-      
+
       setCredentials(processedCredentials);
     } catch (error) {
       console.error("Error fetching credentials:", error);
@@ -191,7 +191,8 @@ const IntegrationsSettings = () => {
       field: "created_at",
       header: "Created",
       sortable: true,
-      render: (service) => new Date(service.created_at || '').toLocaleDateString(),
+      render: (service) =>
+        new Date(service.created_at || "").toLocaleDateString(),
     },
     {
       field: "actions",
@@ -262,16 +263,16 @@ const IntegrationsSettings = () => {
 
   const handleDeleteCredential = async (id: string) => {
     if (!tenantId) return;
-    
+
     try {
       const { error } = await supabase
         .from("credentials")
         .delete()
         .eq("id", id)
         .eq("tenant_id", tenantId);
-        
+
       if (error) throw error;
-      
+
       toast.success("Credential deleted");
       fetchCredentials();
     } catch (error) {

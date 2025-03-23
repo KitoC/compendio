@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -7,13 +6,28 @@ import { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { ROUTES } from "@/lib/constants";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import PageLoading from "@/components/PageLoading";
+import { useTenant } from "@/contexts/TenantContext";
 
 const roleFormSchema = z.object({
   name: z
@@ -28,7 +42,8 @@ type FormValues = z.infer<typeof roleFormSchema>;
 const CustomRoleForm = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, tenantId } = useAuth();
+  const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const isEditing = id && id !== "new-role";
@@ -57,7 +72,7 @@ const CustomRoleForm = () => {
           .single();
 
         if (error) throw error;
-        
+
         if (data) {
           form.reset({
             name: data.name,
@@ -96,13 +111,11 @@ const CustomRoleForm = () => {
         toast.success("Role updated successfully");
       } else {
         // Create new role
-        const { error } = await supabase
-          .from("custom_roles")
-          .insert({
-            tenant_id: tenantId,
-            name: values.name,
-            description: values.description,
-          });
+        const { error } = await supabase.from("custom_roles").insert({
+          tenant_id: tenantId,
+          name: values.name,
+          description: values.description,
+        });
 
         if (error) throw error;
         toast.success("Role created successfully");
@@ -128,8 +141,8 @@ const CustomRoleForm = () => {
         <CardHeader>
           <CardTitle>{isEditing ? "Edit Role" : "Create New Role"}</CardTitle>
           <CardDescription>
-            {isEditing 
-              ? "Update the details of your custom role" 
+            {isEditing
+              ? "Update the details of your custom role"
               : "Create a new custom role for your application"}
           </CardDescription>
         </CardHeader>
@@ -157,10 +170,10 @@ const CustomRoleForm = () => {
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea 
-                        placeholder="Manages projects and their resources" 
-                        className="min-h-[100px]" 
-                        {...field} 
+                      <Textarea
+                        placeholder="Manages projects and their resources"
+                        className="min-h-[100px]"
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -178,7 +191,11 @@ const CustomRoleForm = () => {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={isSaving}>
-                  {isSaving ? "Saving..." : isEditing ? "Update Role" : "Create Role"}
+                  {isSaving
+                    ? "Saving..."
+                    : isEditing
+                    ? "Update Role"
+                    : "Create Role"}
                 </Button>
               </div>
             </form>

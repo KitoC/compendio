@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,7 +19,7 @@ import {
 } from "@/components/ui/card";
 import { ArrowLeft, Workflow } from "lucide-react";
 import FunctionSelector from "@/components/selectors/FunctionSelector";
-
+import { useTenant } from "@/contexts/TenantContext";
 interface AIFunction {
   id: string;
   name: string;
@@ -30,7 +29,8 @@ interface AIFunction {
 
 const AgentDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const { user, tenantId } = useAuth();
+  const { user } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -191,12 +191,9 @@ const AgentDetail = () => {
             {id === "new" ? "Create New Agent" : "Edit Agent"}
           </h2>
         </div>
-        
+
         {id !== "new" && (
-          <Button 
-            variant="outline" 
-            onClick={handleManageWorkflows}
-          >
+          <Button variant="outline" onClick={handleManageWorkflows}>
             <Workflow className="h-4 w-4 mr-2" />
             Manage Workflows
           </Button>

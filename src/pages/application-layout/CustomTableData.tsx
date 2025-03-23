@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Page from "@/components/Page";
 import { FormConfig } from "@/components/form-builder/types";
 import { useCustomTableDataService } from "@/hooks/useCustomTableDataService";
+import { useTenant } from "@/contexts/TenantContext";
 interface CustomTableField {
   id: string;
   name: string;
@@ -28,7 +29,7 @@ interface CustomTableDefinition {
 
 const CustomTableDataPage = () => {
   const { id } = useParams<{ id: string }>();
-  const { tenantId } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
 
   const [tableDefinition, setTableDefinition] =

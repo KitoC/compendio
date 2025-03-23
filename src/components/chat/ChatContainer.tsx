@@ -12,6 +12,7 @@ import { Conversation } from "@/types/chat";
 import { Card } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface ChatContainerProps {
   conversationId?: string;
@@ -25,7 +26,8 @@ export const ChatContainer = ({
   const { id: paramId } = useParams<{ id: string }>();
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [loading, setLoading] = useState(true);
-  const { user, tenantId } = useAuth();
+  const { user } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
 
   // Use the ID from props or URL params

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -20,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/useAuth";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface ConnectedService {
   id: string;
@@ -60,7 +60,8 @@ const ServiceConnectionModal = ({
   onSave,
   onCancel,
 }: ServiceConnectionModalProps) => {
-  const { tenantId } = useAuth();
+  const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [formData, setFormData] = useState<ConnectedService>({
     id: "",
     service_type: "custom",
@@ -119,7 +120,9 @@ const ServiceConnectionModal = ({
     <Dialog open={true} onOpenChange={() => onCancel()}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>{isNew ? "Add Service Connection" : "Edit Service Connection"}</DialogTitle>
+          <DialogTitle>
+            {isNew ? "Add Service Connection" : "Edit Service Connection"}
+          </DialogTitle>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
@@ -139,7 +142,9 @@ const ServiceConnectionModal = ({
               <Label htmlFor="service_type">Service Type</Label>
               <Select
                 value={formData.service_type}
-                onValueChange={(value) => handleSelectChange("service_type", value)}
+                onValueChange={(value) =>
+                  handleSelectChange("service_type", value)
+                }
               >
                 <SelectTrigger id="service_type">
                   <SelectValue placeholder="Select type" />
@@ -147,7 +152,8 @@ const ServiceConnectionModal = ({
                 <SelectContent>
                   {SERVICE_TYPES.map((type) => (
                     <SelectItem key={type} value={type}>
-                      {type.charAt(0).toUpperCase() + type.slice(1).replace("_", " ")}
+                      {type.charAt(0).toUpperCase() +
+                        type.slice(1).replace("_", " ")}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -160,7 +166,9 @@ const ServiceConnectionModal = ({
               <Label htmlFor="auth_type">Authentication Type</Label>
               <Select
                 value={formData.auth_type}
-                onValueChange={(value) => handleSelectChange("auth_type", value)}
+                onValueChange={(value) =>
+                  handleSelectChange("auth_type", value)
+                }
               >
                 <SelectTrigger id="auth_type">
                   <SelectValue placeholder="Select auth type" />
@@ -168,7 +176,8 @@ const ServiceConnectionModal = ({
                 <SelectContent>
                   {AUTH_TYPES.map((type) => (
                     <SelectItem key={type} value={type}>
-                      {type.charAt(0).toUpperCase() + type.slice(1).replace("_", " ")}
+                      {type.charAt(0).toUpperCase() +
+                        type.slice(1).replace("_", " ")}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -176,7 +185,9 @@ const ServiceConnectionModal = ({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="status" className="block mb-6">Status</Label>
+              <Label htmlFor="status" className="block mb-6">
+                Status
+              </Label>
               <div className="flex items-center space-x-2">
                 <Switch
                   id="status"

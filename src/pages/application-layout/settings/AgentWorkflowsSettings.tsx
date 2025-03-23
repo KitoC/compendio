@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -6,12 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Plus } from "lucide-react";
 import DataTable, { Column } from "@/components/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { IAiAgent } from "@/types/aiAgents";
-
+import { useTenant } from "@/contexts/TenantContext";
 interface Workflow {
   id: string;
   name: string;
@@ -49,7 +43,7 @@ interface AgentWorkflow {
 
 const AgentWorkflowsSettings = () => {
   const { id } = useParams<{ id: string }>();
-  const { tenantId } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [agent, setAgent] = useState<IAiAgent | null>(null);
@@ -93,7 +87,8 @@ const AgentWorkflowsSettings = () => {
       setIsLoading(true);
       const { data, error } = await supabase
         .from("ai_agent_workflows")
-        .select(`
+        .select(
+          `
           *,
           workflow:workflow_id (
             id,
@@ -102,21 +97,22 @@ const AgentWorkflowsSettings = () => {
             created_at,
             workflow_steps (count)
           )
-        `)
+        `
+        )
         .eq("agent_id", id)
         .eq("tenant_id", tenantId);
 
       if (error) throw error;
-      
+
       // Transform data to include workflow details
-      const transformedData = (data || []).map(item => ({
+      const transformedData = (data || []).map((item) => ({
         ...item,
         workflow: {
           ...item.workflow,
-          total_steps: item.workflow.workflow_steps[0]?.count || 0
-        }
+          total_steps: item.workflow.workflow_steps[0]?.count || 0,
+        },
       }));
-      
+
       setAgentWorkflows(transformedData);
     } catch (error) {
       console.error("Error fetching agent workflows:", error);
@@ -263,7 +259,9 @@ const AgentWorkflowsSettings = () => {
               delete: true,
               export: false,
             }}
-            onRowClick={(item) => navigate(`${ROUTES.SETTINGS}/workflows/${item.workflow_id}`)}
+            onRowClick={(item) =>
+              navigate(`${ROUTES.SETTINGS}/workflows/${item.workflow_id}`)
+            }
             onDelete={(id) => handleRemoveWorkflow(id as string)}
             isLoading={isLoading}
             searchable={true}
@@ -294,9 +292,7 @@ const AgentWorkflowsSettings = () => {
                   {availableWorkflows
                     .filter(
                       (w) =>
-                        !agentWorkflows.some(
-                          (aw) => aw.workflow_id === w.id
-                        )
+                        !agentWorkflows.some((aw) => aw.workflow_id === w.id)
                     )
                     .map((workflow) => (
                       <SelectItem key={workflow.id} value={workflow.id}>
@@ -306,12 +302,13 @@ const AgentWorkflowsSettings = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             {selectedWorkflowId && (
               <div className="p-4 bg-muted/50 rounded-md">
                 <h4 className="text-sm font-medium mb-1">Workflow Details</h4>
                 <p className="text-sm">
-                  {availableWorkflows.find(w => w.id === selectedWorkflowId)?.description || "No description"}
+                  {availableWorkflows.find((w) => w.id === selectedWorkflowId)
+                    ?.description || "No description"}
                 </p>
               </div>
             )}
@@ -320,10 +317,7 @@ const AgentWorkflowsSettings = () => {
             <Button variant="outline" onClick={() => setShowAddDialog(false)}>
               Cancel
             </Button>
-            <Button
-              onClick={handleAddWorkflow}
-              disabled={!selectedWorkflowId}
-            >
+            <Button onClick={handleAddWorkflow} disabled={!selectedWorkflowId}>
               Link Workflow
             </Button>
           </DialogFooter>

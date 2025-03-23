@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,7 +24,7 @@ import {
 import { SlidePanel } from "@/components/ui/slide-panel";
 import CustomTableForm from "./CustomTableForm";
 import { format } from "date-fns";
-
+import { useTenant } from "@/contexts/TenantContext";
 interface CustomTable {
   id: string;
   name: string;
@@ -37,7 +36,7 @@ interface CustomTable {
 }
 
 const CustomTablesPage = () => {
-  const { tenantId } = useAuth();
+  const { tenantId } = useTenant();
   const [tables, setTables] = useState<CustomTable[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
@@ -149,7 +148,9 @@ const CustomTablesPage = () => {
                     {table.description || "No description"}
                   </TableCell>
                   <TableCell className="text-sm">
-                    {table.created_at ? format(new Date(table.created_at), "MMM d, yyyy") : ""}
+                    {table.created_at
+                      ? format(new Date(table.created_at), "MMM d, yyyy")
+                      : ""}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -160,7 +161,9 @@ const CustomTablesPage = () => {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleEditTable(table.id)}>
+                        <DropdownMenuItem
+                          onClick={() => handleEditTable(table.id)}
+                        >
                           <Pencil className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
@@ -201,10 +204,7 @@ const CustomTablesPage = () => {
             <Button variant="outline" onClick={() => setFormOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              form="table-form"
-            >
+            <Button type="submit" form="table-form">
               {selectedTableId ? "Save Changes" : "Create Table"}
             </Button>
           </div>

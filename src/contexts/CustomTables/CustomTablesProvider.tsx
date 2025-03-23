@@ -2,14 +2,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { CustomTablesContext, ICustomTable } from "./CustomTablesContext";
-import { useAuth } from "@/hooks/useAuth";
+import { useTenant } from "@/contexts/TenantContext";
 
 export const CustomTablesProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
   const [customTables, setCustomTables] = useState<ICustomTable[]>([]);
   const params = useParams();
-  const { tenantId } = useAuth();
+  const { tenantId } = useTenant();
 
   const fetchCustomTables = useCallback(async () => {
     if (!tenantId) {

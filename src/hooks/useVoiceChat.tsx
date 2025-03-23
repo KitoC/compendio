@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { callSupabaseFunction } from "@/services/supabaseFunctionServices";
 import { ChatMessage } from "@/types/chat";
+import { useTenant } from "@/contexts/TenantContext";
 // Google Cloud TTS voice configuration
 interface GoogleCloudVoiceConfig {
   languageCode?: string; // e.g., "en-US", "fr-FR"
@@ -72,7 +73,8 @@ export const useVoiceChat = (
   const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioQueueRef = useRef<Array<string>>([]);
-  const { user, tenantId } = useAuth();
+  const { user } = useAuth();
+  const { tenantId } = useTenant();
 
   const playAudioResponse = useCallback(async (base64Audio: string) => {
     try {

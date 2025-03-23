@@ -18,6 +18,7 @@ import {
 import { ROUTES } from "@/lib/constants";
 import DataTable, { Column } from "@/components/data-table";
 import { Badge } from "@/components/ui/badge";
+import { useTenant } from "@/contexts/TenantContext";
 
 const columns: Column<IAiAgent>[] = [
   {
@@ -53,7 +54,8 @@ const columns: Column<IAiAgent>[] = [
 ];
 
 const AgentsSettings = () => {
-  const { user, tenantId } = useAuth();
+  const { user } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
   const [agents, setAgents] = useState<IAiAgent[]>([]);
   const [isLoading, setIsLoading] = useState(true);

@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import PageLoading from "@/components/PageLoading";
 import { ColumnEditor, Column } from "@/components/tables/ColumnEditor";
 import { Database } from "@/integrations/supabase/types";
+import { useTenant } from "@/contexts/TenantContext";
 const tableFormSchema = z.object({
   name: z
     .string()
@@ -48,7 +49,8 @@ const CustomTableForm = ({
   onCancel,
 }: CustomTableFormProps) => {
   const isEditing = Boolean(tableId);
-  const { user, tenantId } = useAuth();
+  const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [isLoading, setIsLoading] = useState(isEditing);
   const [isSaving, setIsSaving] = useState(false);
   const [columns, setColumns] = useState<Column[]>([]);

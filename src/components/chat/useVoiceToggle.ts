@@ -8,7 +8,7 @@ import SpeechRecognition, {
 import { v4 as uuidv4 } from "uuid";
 import { useAuth } from "@/hooks/useAuth";
 import { useChat } from "@/contexts/chat/useChat";
-
+import { useTenant } from "@/contexts/TenantContext";
 interface VoiceChatToggleProps {
   agentId?: string;
   onMessageReceived?: (message: string) => void;
@@ -30,7 +30,8 @@ const useVoiceToggle = ({
   conversationId,
 }: VoiceChatToggleProps) => {
   const [isMuted, setIsMuted] = useState(false);
-  const { tenantId } = useAuth();
+  const { user } = useAuth();
+  const { tenantId } = useTenant();
   const { handleHumanVoiceMessage, handleAgentVoiceMessage } = useChat();
 
   const { isAgentSpeaking, errorMessage, clearError, sendMessageToAgent } =

@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getSupabaseFunctionsUrl } from "@/utils/supabaseUtils";
-import { useAuth } from "@/hooks/useAuth";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface PaginationParams {
   page?: number;
@@ -22,7 +22,8 @@ interface PaginatedResponse<T> {
 }
 
 export const useCustomTableDataService = () => {
-  const { tenantId, user, session } = useAuth();
+  const { tenantId } = useTenant();
+
   // Service for interacting with custom table data
   return {
     // Get data with pagination, filtering, and searching

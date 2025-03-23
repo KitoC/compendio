@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { getSupabaseFunctionsUrl } from "@/utils/supabaseUtils";
 import { toast } from "sonner";
+import { useTenant } from "@/contexts/TenantContext";
 
 export interface TableSchema {
   tables: Array<{
@@ -42,7 +43,8 @@ export interface ImportResult {
 }
 
 export const useTableBuilderService = () => {
-  const { user, tenantId } = useAuth();
+  const { user } = useAuth();
+  const { tenantId } = useTenant();
 
   const callEdgeFunction = async (
     action: string,

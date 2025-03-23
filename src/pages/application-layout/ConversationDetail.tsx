@@ -11,14 +11,15 @@ import Navbar from "@/components/Navbar";
 import { Message } from "@/types/message";
 import { ROUTES } from "@/lib/constants";
 import { isUuid } from "@/utils/generateAlias";
-
+import { useTenant } from "@/contexts/TenantContext";
 const ConversationDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [conversation, setConversation] = useState<any>(null);
-  const { user, tenantId } = useAuth();
+  const { user } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
 
   const fetchConversation = async () => {

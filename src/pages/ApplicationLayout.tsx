@@ -1,4 +1,3 @@
-
 import { ReactNode, useEffect, Suspense } from "react";
 import { useLocation, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,7 +23,8 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
     urlTenantAlias,
     isLoading: tenantLoading,
     hasTenantAccess,
-    hasPendingRequest
+    hasPendingRequest,
+    tenantData,
   } = useTenant();
   const navigate = useNavigate();
   const location = useLocation();
@@ -37,34 +37,41 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
         return;
       }
 
-      if (!urlTenantAlias) {
+      if (!urlTenantAlias && !tenantData) {
+        console.log("no tenant in URL, redirecting to index");
         // If no tenant in URL, redirect to the index to select or request a tenant
         navigate(ROUTES.INDEX);
         return;
       }
 
       // Determine whether the current route is one of the access-related routes
-      const isAccessRoute = 
-        location.pathname.includes('/request-access') || 
-        location.pathname.includes('/access-pending');
+      const isAccessRoute =
+        location.pathname.includes("/request-access") ||
+        location.pathname.includes("/access-pending");
 
-      if (hasPendingRequest && !location.pathname.includes('/access-pending')) {
+      if (hasPendingRequest && !location.pathname.includes("/access-pending")) {
         // User has a pending access request for this tenant
-        const pendingUrl = ROUTES.ACCESS_PENDING.replace(':tenantId', urlTenantAlias);
+        const pendingUrl = ROUTES.ACCESS_PENDING.replace(
+          ":tenantId",
+          urlTenantAlias
+        );
         navigate(pendingUrl);
         return;
       }
 
       if (!hasTenantAccess && !isAccessRoute) {
         // User doesn't have access and isn't on an access-related page
-        const requestUrl = ROUTES.REQUEST_ACCESS.replace(':tenantId', urlTenantAlias);
+        const requestUrl = ROUTES.REQUEST_ACCESS.replace(
+          ":tenantId",
+          urlTenantAlias
+        );
         navigate(requestUrl);
         return;
       }
 
       // If on an access route but has access, redirect to app
       if (hasTenantAccess && isAccessRoute) {
-        const appUrl = ROUTES.APPLICATION.replace(':tenantId', urlTenantAlias);
+        const appUrl = ROUTES.APPLICATION.replace(":tenantId", urlTenantAlias);
         navigate(appUrl);
         return;
       }
@@ -78,7 +85,7 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
     urlTenantAlias,
     tenantId,
     navigate,
-    location.pathname
+    location.pathname,
   ]);
 
   if (authLoading || tenantLoading) {
@@ -93,9 +100,9 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
   }
 
   // Check if the current route is an access route
-  const isAccessRoute = 
-    location.pathname.includes('/request-access') || 
-    location.pathname.includes('/access-pending');
+  const isAccessRoute =
+    location.pathname.includes("/request-access") ||
+    location.pathname.includes("/access-pending");
 
   // For access routes, we don't need the app sidebar
   if (isAccessRoute) {

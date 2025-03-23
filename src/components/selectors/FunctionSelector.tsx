@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import CreateFunctionModal from "../modals/CreateFunctionModal";
 import { toast } from "sonner";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface AIFunction {
   id: string;
@@ -39,7 +40,8 @@ const FunctionSelector = ({
   selectedFunctions,
   onFunctionsChange,
 }: FunctionSelectorProps) => {
-  const { tenantId } = useAuth();
+  const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [open, setOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [functions, setFunctions] = useState<AIFunction[]>([]);
