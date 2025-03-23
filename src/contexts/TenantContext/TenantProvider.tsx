@@ -74,13 +74,17 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         // Check if user has a pending request
-        const { data: pendingRequest } = await supabase
+        const { data: pendingRequest, error: pendingError } = await supabase
           .from("tenant_requests")
           .select("*")
           .eq("user_id", user.id)
           .eq("tenant_id", tenantId)
           .eq("status", "pending")
           .single();
+
+        if (pendingError && pendingError.code !== "PGRST116") {
+          throw pendingError;
+        }
 
         if (pendingRequest) {
           setHasTenantAccess(false);
@@ -90,12 +94,16 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         // Check if user is a tenant member
-        const { data: tenantUser } = await supabase
+        const { data: tenantUser, error: tenantUserError } = await supabase
           .from("tenant_users")
           .select("*")
           .eq("user_id", user.id)
           .eq("tenant_id", tenantId)
           .single();
+
+        if (tenantUserError && tenantUserError.code !== "PGRST116") {
+          throw tenantUserError;
+        }
 
         if (tenantUser) {
           setHasTenantAccess(true);
@@ -117,20 +125,20 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
     checkTenantAccess();
   }, [user, tenantId, tenantOwnerId]);
   
+  const contextValue = {
+    tenantId,
+    urlTenantAlias,
+    tenantData,
+    isLoading,
+    hasTenantAccess,
+    hasPendingRequest,
+    tenantOwnerId,
+    hasTenantInUrl: !!urlTenantAlias,
+    isTenantOwner
+  };
+  
   return (
-    <TenantContext.Provider
-      value={{
-        tenantId,
-        urlTenantAlias,
-        tenantData,
-        isLoading,
-        hasTenantAccess,
-        hasPendingRequest,
-        tenantOwnerId,
-        hasTenantInUrl: !!urlTenantAlias,
-        isTenantOwner
-      }}
-    >
+    <TenantContext.Provider value={contextValue}>
       {children}
     </TenantContext.Provider>
   );

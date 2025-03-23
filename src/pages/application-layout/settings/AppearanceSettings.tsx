@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+
+import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTenant } from "@/contexts/TenantContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,13 +9,15 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { useUserSettings } from "@/contexts/UserSettingsProvider";
+
 const AppearanceSettings = () => {
-  const { user, tenantId } = useAuth();
+  const { user } = useAuth();
+  const { tenantId } = useTenant();
   const [isSaving, setIsSaving] = useState(false);
   const { theme, setTheme, isLoading } = useUserSettings();
 
   const handleSaveAppearance = async () => {
-    if (!user) return;
+    if (!user || !tenantId) return;
 
     setIsSaving(true);
     try {
