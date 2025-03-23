@@ -1,11 +1,23 @@
+
 import { createContext } from "react";
 import { IAiAgent } from "@/types/aiAgents";
 
-export interface AiAgentsContextType {
+interface AiAgentsContextType {
   aiAgents: IAiAgent[];
-  currentAgent: IAiAgent | null;
+  currentAgent: IAiAgent | undefined;
+  isLoading: boolean;
+  error: Error | null;
+  createAgent: (agent: Partial<IAiAgent>) => Promise<IAiAgent>;
+  updateAgent: (agent: IAiAgent) => Promise<IAiAgent>;
+  deleteAgent: (agentId: string) => Promise<void>;
 }
 
-export const AiAgentsContext = createContext<AiAgentsContextType | undefined>(
-  undefined
-);
+export const AiAgentsContext = createContext<AiAgentsContextType>({
+  aiAgents: [],
+  currentAgent: undefined,
+  isLoading: false,
+  error: null,
+  createAgent: async () => Promise.resolve({} as IAiAgent),
+  updateAgent: async () => Promise.resolve({} as IAiAgent),
+  deleteAgent: async () => Promise.resolve(),
+});
