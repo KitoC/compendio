@@ -3,34 +3,38 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useTenantFromUrl } from '@/hooks/useTenantFromUrl';
+import { ROUTES } from '@/lib/constants';
 
 const RequestAccess = () => {
-  const [workspace, setWorkspace] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
+  const { urlTenantAlias, tenantData, tenantId } = useTenantFromUrl();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!workspace.trim()) {
-      toast.error("Please enter a workspace name");
+    if (!tenantId || !user) {
+      toast.error("Missing tenant or user information");
       return;
     }
 
     try {
       setIsSubmitting(true);
       
-      // Using the RPC endpoint for the function to avoid policy recursion
-      const { data, error } = await supabase.rpc('create_tenant_request', {
-        workspace_name: workspace,
-        user_email: user?.email
-      });
+      // Create a tenant request for the specific tenant ID
+      const { data, error } = await supabase
+        .from('tenant_requests')
+        .insert({
+          user_id: user.id,
+          user_email: user.email,
+          tenant_id: tenantId,
+          status: 'pending'
+        });
 
       if (error) {
         console.error('Tenant request error:', error);
@@ -38,7 +42,11 @@ const RequestAccess = () => {
       }
       
       toast.success("Access request submitted successfully");
-      navigate('/access-pending');
+      
+      // Navigate to the pending page for this tenant
+      const pendingUrl = ROUTES.ACCESS_PENDING.replace(':tenantId', urlTenantAlias);
+      navigate(pendingUrl);
+      
     } catch (error: any) {
       console.error('Error requesting access:', error);
       toast.error(error.message || "Failed to submit access request");
@@ -53,22 +61,16 @@ const RequestAccess = () => {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Request Access</CardTitle>
           <CardDescription className="text-center">
-            Enter your workspace name to request tenant access
+            Request access to {tenantData?.name || urlTenantAlias} workspace
           </CardDescription>
         </CardHeader>
         
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="workspace">Workspace Name</Label>
-              <Input 
-                id="workspace" 
-                placeholder="Enter workspace name" 
-                value={workspace}
-                onChange={(e) => setWorkspace(e.target.value)}
-                required
-              />
-            </div>
+            <p className="text-center">
+              You don't currently have access to this workspace.
+              Click below to request access from the workspace administrator.
+            </p>
           </CardContent>
           <CardFooter>
             <Button type="submit" className="w-full" disabled={isSubmitting}>

@@ -2,11 +2,13 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { useTenantFromUrl } from "@/hooks/useTenantFromUrl";
+import { ROUTES } from "@/lib/constants";
 import { useNavigate } from "react-router-dom";
 
 const AccessPending = () => {
   const { signOut } = useAuth();
+  const { urlTenantAlias, tenantData } = useTenantFromUrl();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -14,8 +16,8 @@ const AccessPending = () => {
     navigate('/auth');
   };
 
-  const handleRefresh = async () => {
-    window.location.href = '/';
+  const handleRefresh = () => {
+    window.location.reload();
   };
 
   return (
@@ -24,13 +26,13 @@ const AccessPending = () => {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Access Pending</CardTitle>
           <CardDescription className="text-center">
-            Your access request is pending approval
+            Your access request for {tenantData?.name || urlTenantAlias} is pending approval
           </CardDescription>
         </CardHeader>
         
         <CardContent className="space-y-4 text-center">
           <p>
-            An administrator needs to approve your request before you can access the system.
+            An administrator needs to approve your request before you can access this workspace.
             You will be notified by email when your request is approved.
           </p>
         </CardContent>

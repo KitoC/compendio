@@ -1,6 +1,8 @@
+
 import { ReactNode, useEffect, Suspense } from "react";
-import { useLocation, useNavigate, Outlet, useParams } from "react-router-dom";
+import { useLocation, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useTenantFromUrl } from "@/hooks/useTenantFromUrl";
 import AppSidebar from "@/components/layout/AppSidebar";
 import { ROUTES } from "@/lib/constants";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -11,24 +13,19 @@ import { AiAgentsProvider } from "@/contexts/AiAgents/AiAgentsProvider";
 import { CustomTablesProvider } from "@/contexts/CustomTables/CustomTablesProvider";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { toast } from "sonner";
-import { useTenantFromUrl } from "@/hooks/useTenantFromUrl";
 
 interface ApplicationLayoutProps {
   children?: ReactNode;
 }
 
 const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
-  const {
-    user,
-    isLoading: authLoading,
-    hasTenant,
-    tenantId: authTenantId,
-  } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const {
     tenantId,
     urlTenantAlias,
-    isCurrentTenant,
     isLoading: tenantLoading,
+    hasTenantAccess,
+    hasPendingRequest
   } = useTenantFromUrl();
   const navigate = useNavigate();
   const location = useLocation();
@@ -41,16 +38,35 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
         return;
       }
 
-      if (!hasTenant) {
-        navigate(ROUTES.REQUEST_ACCESS);
+      if (!urlTenantAlias) {
+        // If no tenant in URL, redirect to the index to select or request a tenant
+        navigate(ROUTES.INDEX);
         return;
       }
 
-      // If URL has tenant but it doesn't match auth tenant, redirect to correct tenant
-      if (tenantId && !isCurrentTenant) {
-        toast.error("You don't have access to this tenant workspace");
-        // Need to find the workspace name for the auth tenant ID
-        navigate(`/${ROUTES.REQUEST_ACCESS}`);
+      // Determine whether the current route is one of the access-related routes
+      const isAccessRoute = 
+        location.pathname.includes('/request-access') || 
+        location.pathname.includes('/access-pending');
+
+      if (hasPendingRequest && !location.pathname.includes('/access-pending')) {
+        // User has a pending access request for this tenant
+        const pendingUrl = ROUTES.ACCESS_PENDING.replace(':tenantId', urlTenantAlias);
+        navigate(pendingUrl);
+        return;
+      }
+
+      if (!hasTenantAccess && !isAccessRoute) {
+        // User doesn't have access and isn't on an access-related page
+        const requestUrl = ROUTES.REQUEST_ACCESS.replace(':tenantId', urlTenantAlias);
+        navigate(requestUrl);
+        return;
+      }
+
+      // If on an access route but has access, redirect to app
+      if (hasTenantAccess && isAccessRoute) {
+        const appUrl = ROUTES.APPLICATION.replace(':tenantId', urlTenantAlias);
+        navigate(appUrl);
         return;
       }
     }
@@ -58,13 +74,12 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
     user,
     authLoading,
     tenantLoading,
-    hasTenant,
+    hasTenantAccess,
+    hasPendingRequest,
     urlTenantAlias,
     tenantId,
-    authTenantId,
-    isCurrentTenant,
     navigate,
-    location.pathname,
+    location.pathname
   ]);
 
   if (authLoading || tenantLoading) {
@@ -78,13 +93,28 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
     );
   }
 
-  // Only render if authenticated and has tenant access or on request access pages
-  if (
-    !user ||
-    (!hasTenant &&
-      !location.pathname.includes(ROUTES.REQUEST_ACCESS) &&
-      !location.pathname.includes(ROUTES.ACCESS_PENDING))
-  ) {
+  // Check if the current route is an access route
+  const isAccessRoute = 
+    location.pathname.includes('/request-access') || 
+    location.pathname.includes('/access-pending');
+
+  // For access routes, we don't need the app sidebar
+  if (isAccessRoute) {
+    return (
+      <Suspense
+        fallback={
+          <div className="flex justify-center items-center h-full p-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        }
+      >
+        {children || <Outlet />}
+      </Suspense>
+    );
+  }
+
+  // Only render if authenticated and has tenant access
+  if (!user || !hasTenantAccess) {
     return null;
   }
 
