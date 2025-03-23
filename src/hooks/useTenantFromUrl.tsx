@@ -1,6 +1,5 @@
 
 import { useParams } from "react-router-dom";
-import { useEffect } from "react";
 import { useAuth } from "./useAuth";
 
 export function useTenantFromUrl() {
@@ -9,6 +8,7 @@ export function useTenantFromUrl() {
   
   // Return data about tenant from URL
   return {
+    tenantId: urlTenantId,
     urlTenantId,
     // Whether the URL tenant matches the authenticated tenant
     isCurrentTenant: urlTenantId === authTenantId,

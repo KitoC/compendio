@@ -7,12 +7,10 @@ import {
   useContext,
   ReactNode,
   useCallback,
-  useLocation,
-  useParams,
 } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
-import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/lib/constants";
 import { cleanupSupabaseAuth, getRedirectUri } from "@/utils/supabaseUtils";
 import { toast } from "sonner";
