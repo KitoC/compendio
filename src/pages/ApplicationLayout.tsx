@@ -19,14 +19,14 @@ interface AuthenticatedLayoutProps {
 }
 
 const ApplicationLayout = ({ children }: AuthenticatedLayoutProps) => {
-  const { user, isLoading, hasTenant, tenantId: authTenantId } = useAuth();
-  const { tenantId: urlTenantId, isCurrentTenant } = useTenantFromUrl();
+  const { user, isLoading: authLoading, hasTenant, tenantId: authTenantId } = useAuth();
+  const { tenantId, urlTenantAlias, isCurrentTenant, isLoading: tenantLoading } = useTenantFromUrl();
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    if (!isLoading) {
+    if (!authLoading && !tenantLoading) {
       if (!user) {
         navigate(ROUTES.AUTH);
         return;
@@ -38,16 +38,16 @@ const ApplicationLayout = ({ children }: AuthenticatedLayoutProps) => {
       }
 
       // If URL has tenant but it doesn't match auth tenant, redirect to correct tenant
-      if (urlTenantId && !isCurrentTenant) {
-        toast.error("You don't have access to this tenant");
-        const correctPath = location.pathname.replace(`/${urlTenantId}/`, `/${authTenantId}/`);
-        navigate(correctPath);
+      if (tenantId && !isCurrentTenant) {
+        toast.error("You don't have access to this tenant workspace");
+        // Need to find the workspace name for the auth tenant ID
+        navigate(`/${ROUTES.REQUEST_ACCESS}`);
         return;
       }
     }
-  }, [user, isLoading, hasTenant, urlTenantId, authTenantId, isCurrentTenant, navigate, location.pathname]);
+  }, [user, authLoading, tenantLoading, hasTenant, urlTenantAlias, tenantId, authTenantId, isCurrentTenant, navigate, location.pathname]);
 
-  if (isLoading) {
+  if (authLoading || tenantLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

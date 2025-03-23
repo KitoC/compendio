@@ -35,6 +35,7 @@ interface AuthContextType {
   isLoading: boolean;
   hasTenant: boolean;
   tenantId: string | null;
+  workspace: string | null;
   signOut: () => Promise<void>;
   handleEmailSignIn: (params: SignInParams) => Promise<void>;
   handleEmailSignUp: (params: SignInParams) => Promise<void>;
@@ -50,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasTenant, setHasTenant] = useState(false);
   const [tenantId, setTenantId] = useState<string | null>(null);
+  const [workspace, setWorkspace] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams<{ tenantId?: string }>();
@@ -65,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (pendingRequest) {
         setHasTenant(false);
+        setWorkspace(null);
         return;
       }
 
@@ -78,17 +81,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setHasTenant(true);
         setTenantId(tenantUser.tenant_id);
         
-        if (location.pathname === "/" && !location.pathname.includes(tenantUser.tenant_id)) {
-          navigate(`/${tenantUser.tenant_id}/app`, { replace: true });
+        const { data: tenant } = await supabase
+          .from("tenants")
+          .select("workspace")
+          .eq("id", tenantUser.tenant_id)
+          .single();
+          
+        if (tenant) {
+          setWorkspace(tenant.workspace);
+          
+          if (location.pathname === "/" && tenant.workspace) {
+            navigate(`/${tenant.workspace}/app`, { replace: true });
+          }
         }
       } else {
         setHasTenant(false);
         setTenantId(null);
+        setWorkspace(null);
       }
     } catch (error) {
       console.error("Error checking tenant access:", error);
       setHasTenant(false);
       setTenantId(null);
+      setWorkspace(null);
     }
   };
 
@@ -232,6 +247,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!supabaseSession?.user) {
         setProfile(null);
         setTenantId(null);
+        setWorkspace(null);
         setIsLoading(false);
       }
     });
@@ -257,6 +273,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(null);
       setHasTenant(false);
       setTenantId(null);
+      setWorkspace(null);
 
       navigate(ROUTES.AUTH, { replace: true });
     } catch (error) {
@@ -272,11 +289,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     hasTenant,
     tenantId,
+    workspace,
     signOut,
     handleEmailSignIn,
     handleOAuthSignIn,
     handleEmailSignUp,
-    checkTenantAccess,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

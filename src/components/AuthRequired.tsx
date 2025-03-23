@@ -2,18 +2,20 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useTenantFromUrl } from '@/hooks/useTenantFromUrl';
 
 interface AuthRequiredProps {
   children: React.ReactNode;
 }
 
 const AuthRequired: React.FC<AuthRequiredProps> = ({ children }) => {
-  const { user, isLoading, hasTenant } = useAuth();
+  const { user, isLoading: authLoading, hasTenant, workspace } = useAuth();
+  const { tenantId, isLoading: tenantLoading } = useTenantFromUrl();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    if (!isLoading) {
+    if (!authLoading && !tenantLoading) {
       if (!user) {
         // Not authenticated, redirect to login
         navigate('/auth');
@@ -24,9 +26,9 @@ const AuthRequired: React.FC<AuthRequiredProps> = ({ children }) => {
         navigate('/request-access');
       }
     }
-  }, [user, isLoading, hasTenant, navigate, location.pathname]);
+  }, [user, authLoading, tenantLoading, hasTenant, navigate, location.pathname]);
 
-  if (isLoading) {
+  if (authLoading || tenantLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
