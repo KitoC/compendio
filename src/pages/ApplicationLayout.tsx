@@ -1,6 +1,6 @@
 
 import { ReactNode, useEffect, Suspense } from "react";
-import { useLocation, useNavigate, Outlet } from "react-router-dom";
+import { useLocation, useNavigate, Outlet, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import AppSidebar from "@/components/layout/AppSidebar";
 import { ROUTES } from "@/lib/constants";
@@ -11,13 +11,16 @@ import { Button } from "@/components/ui/button";
 import { AiAgentsProvider } from "@/contexts/AiAgents/AiAgentsProvider";
 import { CustomTablesProvider } from "@/contexts/CustomTables/CustomTablesProvider";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
+import { toast } from "sonner";
+import { useTenantFromUrl } from "@/hooks/useTenantFromUrl";
 
 interface AuthenticatedLayoutProps {
   children?: ReactNode;
 }
 
 const ApplicationLayout = ({ children }: AuthenticatedLayoutProps) => {
-  const { user, isLoading, hasTenant } = useAuth();
+  const { user, isLoading, hasTenant, tenantId: authTenantId } = useAuth();
+  const { tenantId: urlTenantId, isCurrentTenant } = useTenantFromUrl();
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
@@ -26,13 +29,23 @@ const ApplicationLayout = ({ children }: AuthenticatedLayoutProps) => {
     if (!isLoading) {
       if (!user) {
         navigate(ROUTES.AUTH);
+        return;
       }
 
       if (!hasTenant) {
         navigate(ROUTES.REQUEST_ACCESS);
+        return;
+      }
+
+      // If URL has tenant but it doesn't match auth tenant, redirect to correct tenant
+      if (urlTenantId && !isCurrentTenant) {
+        toast.error("You don't have access to this tenant");
+        const correctPath = location.pathname.replace(`/${urlTenantId}/`, `/${authTenantId}/`);
+        navigate(correctPath);
+        return;
       }
     }
-  }, [user, isLoading, hasTenant, navigate, location.pathname]);
+  }, [user, isLoading, hasTenant, urlTenantId, authTenantId, isCurrentTenant, navigate, location.pathname]);
 
   if (isLoading) {
     return (

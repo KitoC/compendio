@@ -102,11 +102,11 @@ function App() {
                 />
                 <Route
                   path={ROUTES.SETTINGS_CUSTOM_TABLES_DETAIL}
-                  element={<CustomTableForm />}
+                  element={<CustomTableForm tableId="" />}
                 />
                 <Route
                   path={ROUTES.SETTINGS_CUSTOM_TABLES_NEW}
-                  element={<CustomTableForm />}
+                  element={<CustomTableForm tableId="" />}
                 />
                 <Route
                   path={ROUTES.SETTINGS_CUSTOM_ROLES_DETAIL}
@@ -127,8 +127,8 @@ function App() {
                 />
               </Route>
 
-              <Route path={ROUTES.APPLICATION} element={<Dashboard />} />
-              <Route path={ROUTES.NOT_FOUND} element={<Dashboard />} />
+              <Route index element={<Dashboard />} />
+              <Route path="*" element={<Dashboard />} />
             </Route>
           </Routes>
           <Toaster />

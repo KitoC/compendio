@@ -7,6 +7,8 @@ import {
   useContext,
   ReactNode,
   useCallback,
+  useLocation,
+  useParams,
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -51,6 +53,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [hasTenant, setHasTenant] = useState(false);
   const [tenantId, setTenantId] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  const params = useParams<{ tenantId?: string }>();
 
   const checkTenantAccess = async (userId: string) => {
     try {
@@ -75,6 +79,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (tenantUser) {
         setHasTenant(true);
         setTenantId(tenantUser.tenant_id);
+        
+        if (location.pathname === "/" && !location.pathname.includes(tenantUser.tenant_id)) {
+          navigate(`/${tenantUser.tenant_id}/app`, { replace: true });
+        }
       } else {
         setHasTenant(false);
         setTenantId(null);
@@ -142,9 +150,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await fetchProfile(data.session.user.id);
 
         toast.success("Signed in successfully");
-
-        // Navigate after successful sign in
-        navigate(ROUTES.CONVERSATION_ASSISTANT, { replace: true });
+        
+        if (tenantId) {
+          navigate(`/${tenantId}/app/conversations/general-assistant`, { replace: true });
+        } else {
+          navigate(ROUTES.CONVERSATION_ASSISTANT, { replace: true });
+        }
       } catch (error) {
         console.error("Error signing in:", error);
         toast.error(error.message || "Invalid login credentials");
@@ -152,7 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [navigate]
+    [navigate, tenantId]
   );
 
   const handleEmailSignUp = useCallback(async ({ email, password }) => {
@@ -189,15 +200,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
 
-      // Store the state
-      // e.g., 'http://localhost:3000/auth/callback'
       if (provider === "azure") {
-        // Generate the authorization URL
         const url = await buildAzureOAuthUrl();
         window.location.href = url;
         return;
-        // Redirect the user to the authorization URL
-        // window.location.href = url;
       }
 
       const { error } = await supabase.auth.signInWithOAuth({
@@ -207,7 +213,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
 
-      // Will redirect from OAuth provider
     } catch (error) {
       console.error(`Error signing in with ${provider}:`, error);
       toast.error(error.message || `Failed to sign in with ${provider}`);
