@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +8,7 @@ import DataTable, { Column } from "@/components/data-table";
 import AddIntegrationWizard from "@/components/integrations/AddIntegrationWizard";
 import WebhookEventsTable from "@/components/integrations/WebhookEventsTable";
 import { Button } from "@/components/ui/button";
-import { Plus, RefreshCcw } from "lucide-react";
+import { Plus, RefreshCcw, Bot } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ConnectedService, Credential } from "@/forms/types";
@@ -19,6 +19,7 @@ const IntegrationsSettings = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [services, setServices] = useState<ConnectedService[]>([]);
+  const [agents, setAgents] = useState<Agent[]>([]);
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("services");
@@ -49,7 +50,9 @@ const IntegrationsSettings = () => {
           `
           *,
           ai_agents (
-            name
+            name,
+            human_name,
+            enabled
           )
         `
         )
@@ -73,6 +76,19 @@ const IntegrationsSettings = () => {
       setIsLoading(false);
     }
   };
+
+  const fetchAgents = useCallback(async () => {
+    if (!tenantId) return;
+
+    const { data, error } = await supabase
+      .from("ai_agents")
+      .select("*")
+      .eq("tenant_id", tenantId);
+
+    if (error) throw error;
+
+    setAgents(data || []);
+  }, [tenantId]);
 
   const fetchCredentials = async () => {
     if (!tenantId) return;
@@ -102,11 +118,6 @@ const IntegrationsSettings = () => {
 
     try {
       // First delete any associated credentials
-      await supabase
-        .from("credentials")
-        .delete()
-        .eq("connected_service_id", id)
-        .eq("tenant_id", tenantId);
 
       // Then delete the service
       const { error } = await supabase
@@ -118,15 +129,10 @@ const IntegrationsSettings = () => {
       if (error) throw error;
       toast.success("Service deleted successfully");
       fetchServices();
-      fetchCredentials();
     } catch (error) {
       console.error("Error deleting service:", error);
       toast.error("Failed to delete service");
     }
-  };
-
-  const handleRowClick = (service: ConnectedService) => {
-    navigate(`${ROUTES.SETTINGS}/integrations/${service.id}`);
   };
 
   const handleReconnect = (service: ConnectedService) => {
@@ -157,7 +163,17 @@ const IntegrationsSettings = () => {
       field: "agent_id",
       header: "Agent",
       sortable: true,
-      render: (service) => service.agent_name || "Unknown agent",
+      render: (service) => {
+        const agent = agents.find((a) => a.id === service.agent_id);
+        if (!agent) return "Unknown agent";
+
+        return (
+          <Badge variant={agent.enabled ? "outline-success" : "outline-error"}>
+            <Bot className="h-4 w-4 mr-1" />
+            {agent.human_name || agent.name}
+          </Badge>
+        );
+      },
     },
     {
       field: "status",
@@ -186,6 +202,13 @@ const IntegrationsSettings = () => {
       field: "auth_type",
       header: "Auth Type",
       sortable: true,
+      render: (service) => {
+        const credential = credentials.find(
+          (c) => c.id === service.credential_id
+        );
+
+        return credential?.type || "Unknown";
+      },
     },
     {
       field: "created_at",
@@ -194,26 +217,31 @@ const IntegrationsSettings = () => {
       render: (service) =>
         new Date(service.created_at || "").toLocaleDateString(),
     },
-    {
-      field: "actions",
-      header: "Actions",
-      render: (service) => (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleReconnect(service);
-          }}
-        >
-          <RefreshCcw className="h-4 w-4 mr-1" />
-          Reconnect
-        </Button>
-      ),
-    },
+    // {
+    //   field: "actions",
+    //   header: "Actions",
+    //   render: (service) => (
+    //     <Button
+    //       variant="outline"
+    //       size="sm"
+    //       onClick={(e) => {
+    //         e.stopPropagation();
+    //         handleReconnect(service);
+    //       }}
+    //     >
+    //       <RefreshCcw className="h-4 w-4 mr-1" />
+    //       Reconnect
+    //     </Button>
+    //   ),
+    // },
   ];
 
   const credentialColumns: Column<Credential>[] = [
+    {
+      field: "name",
+      header: "Name",
+      sortable: true,
+    },
     {
       field: "username",
       header: "Username",
@@ -224,19 +252,6 @@ const IntegrationsSettings = () => {
       header: "Domain",
       sortable: true,
       render: (credential) => getServiceTypeName(credential.domain),
-    },
-    {
-      field: "connected_service_id",
-      header: "Service",
-      sortable: true,
-      render: (credential) => {
-        const service = services.find(
-          (s) => s.id === credential.connected_service_id
-        );
-        return service
-          ? service.name || getServiceTypeName(service.service_type)
-          : "Unknown";
-      },
     },
     {
       field: "type",
@@ -281,6 +296,12 @@ const IntegrationsSettings = () => {
     }
   };
 
+  useEffect(() => {
+    if (tenantId) {
+      fetchAgents();
+    }
+  }, [tenantId, fetchAgents]);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -305,11 +326,10 @@ const IntegrationsSettings = () => {
             permissions={{
               create: false,
               read: true,
-              update: false,
+              update: true,
               delete: true,
               export: false,
             }}
-            onRowClick={handleRowClick}
             onDelete={handleDeleteService}
             isLoading={isLoading}
             searchable={true}

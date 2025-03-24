@@ -84,7 +84,7 @@ const AppSidebar = () => {
       label: "Agents",
       children: aiAgents.map((agent) => ({
         label: agent.human_name || agent.name,
-        url: ROUTES.CONVERSATIONS_DETAIL.replace(":id", agent.name),
+        url: ROUTES.AGENT_CHAT.replace(":id", agent.name),
       })),
     },
     {

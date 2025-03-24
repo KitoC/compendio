@@ -1,4 +1,3 @@
-
 import { Routes, Route, BrowserRouter, Navigate } from "react-router-dom";
 import { QueryProvider } from "./contexts/QueryProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -10,9 +9,8 @@ import ResetPassword from "./pages/ResetPassword";
 import RequestAccess from "./pages/RequestAccess";
 import AccessPending from "./pages/AccessPending";
 import Dashboard from "./pages/application-layout/Dashboard";
-import ConversationDetail from "./pages/application-layout/ConversationDetail";
 import CustomTableData from "./pages/application-layout/CustomTableData";
-import ConversationAssistant from "./pages/application-layout/ConversationAssistant";
+import AgentChat from "./pages/application-layout/AgentChat";
 import { ROUTES } from "./lib/constants";
 import AgentDetail from "./pages/application-layout/settings/AgentDetail";
 import AgentWorkflowsSettings from "./pages/application-layout/settings/AgentWorkflowsSettings";
@@ -46,23 +44,34 @@ function App() {
                 <Route path={ROUTES.AUTH} element={<Auth />} />
                 <Route path={ROUTES.INDEX} element={<LandingPage />} />
                 <Route path={ROUTES.AUTH_CALLBACK} element={<AuthCallback />} />
-                <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword />} />
-                <Route path={ROUTES.RESET_PASSWORD} element={<ResetPassword />} />
-                <Route path={ROUTES.REQUEST_ACCESS} element={<RequestAccess />} />
-                <Route path={ROUTES.ACCESS_PENDING} element={<AccessPending />} />
+                <Route
+                  path={ROUTES.FORGOT_PASSWORD}
+                  element={<ForgotPassword />}
+                />
+                <Route
+                  path={ROUTES.RESET_PASSWORD}
+                  element={<ResetPassword />}
+                />
+                <Route
+                  path={ROUTES.REQUEST_ACCESS}
+                  element={<RequestAccess />}
+                />
+                <Route
+                  path={ROUTES.ACCESS_PENDING}
+                  element={<AccessPending />}
+                />
 
-                <Route path={ROUTES.APPLICATION} element={<ApplicationLayout />}>
+                <Route
+                  path={ROUTES.APPLICATION}
+                  element={<ApplicationLayout />}
+                >
                   <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
 
                   <Route
-                    path={ROUTES.CONVERSATIONS_DETAIL}
-                    element={<ConversationDetail />}
+                    path={ROUTES.CUSTOM_TABLE_DATA}
+                    element={<CustomTableData />}
                   />
-                  <Route path={ROUTES.CUSTOM_TABLE_DATA} element={<CustomTableData />} />
-                  <Route
-                    path={ROUTES.CONVERSATION_ASSISTANT}
-                    element={<ConversationAssistant />}
-                  />
+                  <Route path={ROUTES.AGENT_CHAT} element={<AgentChat />} />
 
                   {/* Settings Routes */}
                   <Route path={ROUTES.SETTINGS} element={<Settings />}>
@@ -70,7 +79,10 @@ function App() {
                       path={ROUTES.SETTINGS_APPEARANCE}
                       element={<AppearanceSettings />}
                     />
-                    <Route path={ROUTES.SETTINGS_AGENTS} element={<AgentsSettings />} />
+                    <Route
+                      path={ROUTES.SETTINGS_AGENTS}
+                      element={<AgentsSettings />}
+                    />
                     <Route
                       path={ROUTES.SETTINGS_AGENTS_DETAIL}
                       element={<AgentDetail />}
@@ -126,7 +138,9 @@ function App() {
                     {/* Default Settings Route */}
                     <Route
                       index
-                      element={<Navigate to={ROUTES.SETTINGS_APPEARANCE} replace />}
+                      element={
+                        <Navigate to={ROUTES.SETTINGS_APPEARANCE} replace />
+                      }
                     />
                   </Route>
 
