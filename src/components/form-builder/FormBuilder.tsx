@@ -26,6 +26,7 @@ const FormBuilder = ({
   onCancel,
   hideSubmitButton,
   hideTitles = false,
+  footerClassname,
 }: FormBuilderProps) => {
   const [values, setValues] = useState<Record<string, unknown>>(initialValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -187,7 +188,7 @@ const FormBuilder = ({
   }, [values, buttonPortalId]);
 
   const footer = (
-    <CardFooter className="flex justify-between">
+    <CardFooter className={`"flex justify-between" ${footerClassname}`}>
       {config.showReset && (
         <Button
           type="button"
@@ -195,7 +196,9 @@ const FormBuilder = ({
           onClick={handleReset}
           disabled={isSubmitting}
         >
+          {config.resetIconButtonBefore}
           {config.resetButtonText || "Reset"}
+          {config.resetIconButtonAfter}
         </Button>
       )}
       <div className="flex gap-2 ml-auto">
@@ -206,7 +209,9 @@ const FormBuilder = ({
             onClick={onCancel}
             disabled={isSubmitting}
           >
+            {config.cancelIconButtonBefore}
             {config.cancelButtonText}
+            {config.cancelIconButtonAfter}
           </Button>
         )}
 
@@ -216,9 +221,11 @@ const FormBuilder = ({
             className={!config.showReset ? "ml-auto" : ""}
             onClick={handleSubmit}
           >
+            {config.submitIconButtonBefore}
             {isSubmitting
               ? "Submitting..."
               : config.submitButtonText || "Submit"}
+            {config.submitIconButtonAfter}
           </Button>
         )}
       </div>

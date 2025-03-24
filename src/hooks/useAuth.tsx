@@ -1,4 +1,3 @@
-
 import {
   useState,
   useEffect,
@@ -14,7 +13,7 @@ import { ROUTES } from "@/lib/constants";
 import { cleanupSupabaseAuth, getRedirectUri } from "@/utils/supabaseUtils";
 import { toast } from "sonner";
 import { Provider } from "@supabase/supabase-js";
-import { buildAzureOAuthUrl } from "../utils/oAuthAzure";
+import { buildAzureOAuthUrl } from "../utils/oAuth/oAuthAzure";
 
 interface Profile {
   id: string;
@@ -160,7 +159,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) throw error;
-
     } catch (error) {
       console.error(`Error signing in with ${provider}:`, error);
       toast.error(error.message || `Failed to sign in with ${provider}`);

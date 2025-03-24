@@ -1,5 +1,5 @@
-
 import { FormConfig } from "@/components/form-builder/types";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 // OAuth-based integrations
 export const gmailFormConfig: FormConfig = {
@@ -7,15 +7,16 @@ export const gmailFormConfig: FormConfig = {
   title: "Gmail OAuth Setup",
   description: "Click below to authenticate with your Google account.",
   sections: [],
-  submitButtonText: "Connect with Google"
+  submitButtonText: "Connect with Google",
 };
 
 export const outlookFormConfig: FormConfig = {
   id: "outlook-config",
   title: "Outlook OAuth Setup",
-  description: "Authenticate with your Microsoft account to enable Outlook integration.",
+  description:
+    "Authenticate with your Microsoft account to enable Outlook integration.",
   sections: [],
-  submitButtonText: "Connect with Microsoft"
+  submitButtonText: "Connect with Microsoft",
 };
 
 // API Key / Custom integrations
@@ -34,19 +35,19 @@ export const n8nFormConfig: FormConfig = {
           label: "Base URL",
           type: "text",
           placeholder: "https://n8n.example.com",
-          validation: { required: true }
+          validation: { required: true },
         },
         {
           id: "api_token",
           name: "api_token",
           label: "API Token",
           type: "password",
-          validation: { required: true }
-        }
-      ]
-    }
+          validation: { required: true },
+        },
+      ],
+    },
   ],
-  submitButtonText: "Save N8N Connection"
+  submitButtonText: "Save N8N Connection",
 };
 
 export const webhookFormConfig: FormConfig = {
@@ -64,19 +65,19 @@ export const webhookFormConfig: FormConfig = {
           label: "Webhook URL",
           type: "text",
           placeholder: "https://your-service.com/webhook",
-          validation: { required: true }
+          validation: { required: true },
         },
         {
           id: "secret",
           name: "secret",
           label: "Webhook Secret",
           type: "password",
-          validation: { required: false }
-        }
-      ]
-    }
+          validation: { required: false },
+        },
+      ],
+    },
   ],
-  submitButtonText: "Save Webhook"
+  submitButtonText: "Save Webhook",
 };
 
 // Integration settings form
@@ -104,7 +105,11 @@ export const integrationSettingsConfig: FormConfig = {
       ],
     },
   ],
-  submitButtonText: "Continue",
+  submitButtonText: "Next",
+  cancelButtonText: "Back",
+  removeBorder: true,
+  cancelIconButtonBefore: <ArrowLeft className="ml-2 h-4 w-4" />,
+  submitIconButtonAfter: <ArrowRight className="ml-2 h-4 w-4" />,
 };
 
 // Map of integrations to their form configs

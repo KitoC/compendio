@@ -1,4 +1,3 @@
-
 import {
   Palette,
   Users2,
@@ -38,7 +37,8 @@ export const ROUTES = {
   SETTINGS_CUSTOM_TABLES: "/:tenantId/app/settings/custom-tables",
   SETTINGS_CUSTOM_TABLES_DETAIL: "/:tenantId/app/settings/custom-tables/:id",
   SETTINGS_CUSTOM_TABLES_NEW: "/:tenantId/app/settings/custom-tables/new-table",
-  SETTINGS_CUSTOM_ROLES_DETAIL: "/:tenantId/app/settings/custom-tables/roles/:id",
+  SETTINGS_CUSTOM_ROLES_DETAIL:
+    "/:tenantId/app/settings/custom-tables/roles/:id",
   SETTINGS_CUSTOM_ROLES_NEW: "/:tenantId/app/settings/custom-tables/new-role",
   NOT_FOUND: "*",
 };
@@ -120,104 +120,104 @@ export const INTEGRATION_TYPES = [
       submitButtonText: "Connect with Microsoft",
     },
   },
-  {
-    id: "n8n",
-    name: "N8N",
-    description: "Connect to N8N workflow automation platform",
-    icon: "workflow",
-    authType: "api_key",
-    formConfig: {
-      id: "n8n-config",
-      title: "N8N Configuration",
-      description: "Enter your N8N instance details",
-      sections: [
-        {
-          id: "connection",
-          title: "API Connection",
-          fields: [
-            {
-              id: "base_url",
-              name: "base_url",
-              label: "Base URL",
-              type: "text",
-              placeholder: "https://n8n.example.com",
-              validation: { required: true },
-            },
-            {
-              id: "api_token",
-              name: "api_token",
-              label: "API Token",
-              type: "password",
-              validation: { required: true },
-            },
-          ],
-        },
-      ],
-      submitButtonText: "Save N8N Connection",
-    },
-  },
-  {
-    id: "make",
-    name: "Make (Integromat)",
-    description: "Connect to Make automation platform",
-    icon: "workflow",
-    authType: "api_key",
-    formConfig: {
-      id: "make-config",
-      title: "Make Configuration",
-      description: "Enter your Make platform details",
-      sections: [
-        {
-          id: "connection",
-          title: "API Connection",
-          fields: [
-            {
-              id: "api_token",
-              name: "api_token",
-              label: "API Token",
-              type: "password",
-              validation: { required: true },
-            },
-          ],
-        },
-      ],
-      submitButtonText: "Save Make Connection",
-    },
-  },
-  {
-    id: "webhook",
-    name: "Custom Webhook",
-    description: "Set up an incoming webhook endpoint",
-    icon: "webhook",
-    authType: "custom",
-    formConfig: {
-      id: "webhook-config",
-      title: "Webhook Configuration",
-      description: "Set up an incoming webhook",
-      sections: [
-        {
-          id: "webhook",
-          title: "Webhook Info",
-          fields: [
-            {
-              id: "endpoint_url",
-              name: "endpoint_url",
-              label: "Webhook URL",
-              type: "text",
-              placeholder: "https://your-service.com/webhook",
-              validation: { required: true },
-            },
-            {
-              id: "secret",
-              name: "secret",
-              label: "Webhook Secret",
-              type: "password",
-              validation: { required: false },
-            },
-          ],
-        },
-      ],
-      submitButtonText: "Save Webhook",
-    },
-  },
+  // {
+  //   id: "n8n",
+  //   name: "N8N",
+  //   description: "Connect to N8N workflow automation platform",
+  //   icon: "workflow",
+  //   authType: "api_key",
+  //   formConfig: {
+  //     id: "n8n-config",
+  //     title: "N8N Configuration",
+  //     description: "Enter your N8N instance details",
+  //     sections: [
+  //       {
+  //         id: "connection",
+  //         title: "API Connection",
+  //         fields: [
+  //           {
+  //             id: "base_url",
+  //             name: "base_url",
+  //             label: "Base URL",
+  //             type: "text",
+  //             placeholder: "https://n8n.example.com",
+  //             validation: { required: true },
+  //           },
+  //           {
+  //             id: "api_token",
+  //             name: "api_token",
+  //             label: "API Token",
+  //             type: "password",
+  //             validation: { required: true },
+  //           },
+  //         ],
+  //       },
+  //     ],
+  //     submitButtonText: "Save N8N Connection",
+  //   },
+  // },
+  // {
+  //   id: "make",
+  //   name: "Make (Integromat)",
+  //   description: "Connect to Make automation platform",
+  //   icon: "workflow",
+  //   authType: "api_key",
+  //   formConfig: {
+  //     id: "make-config",
+  //     title: "Make Configuration",
+  //     description: "Enter your Make platform details",
+  //     sections: [
+  //       {
+  //         id: "connection",
+  //         title: "API Connection",
+  //         fields: [
+  //           {
+  //             id: "api_token",
+  //             name: "api_token",
+  //             label: "API Token",
+  //             type: "password",
+  //             validation: { required: true },
+  //           },
+  //         ],
+  //       },
+  //     ],
+  //     submitButtonText: "Save Make Connection",
+  //   },
+  // },
+  // {
+  //   id: "webhook",
+  //   name: "Custom Webhook",
+  //   description: "Set up an incoming webhook endpoint",
+  //   icon: "webhook",
+  //   authType: "custom",
+  //   formConfig: {
+  //     id: "webhook-config",
+  //     title: "Webhook Configuration",
+  //     description: "Set up an incoming webhook",
+  //     sections: [
+  //       {
+  //         id: "webhook",
+  //         title: "Webhook Info",
+  //         fields: [
+  //           {
+  //             id: "endpoint_url",
+  //             name: "endpoint_url",
+  //             label: "Webhook URL",
+  //             type: "text",
+  //             placeholder: "https://your-service.com/webhook",
+  //             validation: { required: true },
+  //           },
+  //           {
+  //             id: "secret",
+  //             name: "secret",
+  //             label: "Webhook Secret",
+  //             type: "password",
+  //             validation: { required: false },
+  //           },
+  //         ],
+  //       },
+  //     ],
+  //     submitButtonText: "Save Webhook",
+  //   },
+  // },
 ];

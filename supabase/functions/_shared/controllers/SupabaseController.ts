@@ -39,7 +39,16 @@ class SupabaseController extends RequestController {
     this.logger = logger;
     this.supabase_AS_SUPER_ADMIN = createClient(
       getEnvKey("SUPABASE_URL"),
-      getEnvKey("SUPABASE_ANON_KEY")
+      getEnvKey("SUPABASE_ANON_KEY"),
+      {
+        global: {
+          headers: {
+            "x-postgres-settings": JSON.stringify({
+              "app.encryption_key": getEnvKey("ENCRYPTION_KEY")!,
+            }),
+          },
+        },
+      }
     );
     this.token = null;
     this.roles = null;

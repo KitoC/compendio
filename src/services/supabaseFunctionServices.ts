@@ -9,7 +9,9 @@ export const callSupabaseFunction = async (
 
   console.log("Calling AI chat function at:", functionUrl);
 
-  const token = (await supabase.auth.getSession()).data.session?.access_token;
+  const token =
+    (await supabase.auth.getSession()).data.session?.access_token ||
+    import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   const response = await fetch(`${functionUrl}/${functionName}`, {
     method: "POST",

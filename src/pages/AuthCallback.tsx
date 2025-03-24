@@ -1,199 +1,128 @@
-
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ROUTES } from "@/lib/constants";
 import { toast } from "sonner";
-import { exchangeAzureCodeForTokens } from "@/utils/oAuthAzure";
-import { getUrlParameter } from "@/utils/oAuthAzure";
+import { getUrlParameter } from "@/utils/oAuth/shared";
+import { useTenant } from "@/contexts/TenantContext";
+import { useAuth } from "@/hooks/useAuth";
+import { callSupabaseFunction } from "@/services/supabaseFunctionServices";
 
 const AuthCallback = () => {
+  const { user } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Handle the OAuth callback
-    const handleAuthCallback = async () => {
-      const code = getUrlParameter("code");
-      const state = getUrlParameter("state");
-      
-      try {
-        // Get the URL hash or query params for the token
-        const hash = window.location.hash;
-        const query = window.location.search;
-        
-        // Check if this is a return from an integration OAuth flow
-        const integrationReturnUrl = sessionStorage.getItem("integration_return_url");
-        const oauthStateId = sessionStorage.getItem("oauth_state_id");
-        
-        // Handle OAuth provider-specific token exchange
-        if (sessionStorage.getItem("provider") === "azure") {
-          const tokens = await exchangeAzureCodeForTokens(code);
+  const handleIntegrationCallback = useCallback(async () => {
+    if (!user || !tenantId) {
+      return;
+    }
 
-          if (tokens) {
-            const { id_token, access_token, refresh_token, expires_in } = tokens;
-            
-            // Sign in with the ID token
-            await supabase.auth.signInWithIdToken({
-              provider: "azure",
-              token: id_token,
-            });
-            
-            // If this was part of an integration flow, update the oauth_states table
-            // and save the credentials
-            if (oauthStateId) {
-              // Get the OAuth state to retrieve service details
-              const { data: oauthState } = await supabase
-                .from("oauth_states")
-                .select("*")
-                .eq("id", oauthStateId)
-                .single();
-              
-              if (oauthState) {
-                // Update the oauth state with the token data
-                await supabase
-                  .from("oauth_states")
-                  .update({ 
-                    status: "completed",
-                    token_data: tokens 
-                  })
-                  .eq("id", oauthStateId);
-                
-                // Calculate the expiration date
-                const expiresAt = new Date();
-                expiresAt.setSeconds(expiresAt.getSeconds() + expires_in);
-                
-                // Create a connected service if it doesn't exist
-                let connectedServiceId = null;
-                
-                if (!oauthState.connected_service_id) {
-                  const { data: serviceData, error: serviceError } = await supabase
-                    .from("connected_services")
-                    .insert([{
-                      agent_id: oauthState.agent_id,
-                      service_type: oauthState.service_type,
-                      name: `${oauthState.service_type} Integration`,
-                      status: "active",
-                      auth_type: "oauth",
-                      tenant_id: oauthState.tenant_id,
-                      config: oauthState.config || {}
-                    }])
-                    .select();
-                  
-                  if (serviceError) {
-                    console.error("Error creating connected service:", serviceError);
-                  } else if (serviceData && serviceData.length > 0) {
-                    connectedServiceId = serviceData[0].id;
-                  }
-                } else {
-                  connectedServiceId = oauthState.connected_service_id;
-                }
-                
-                // Save the credentials
-                if (connectedServiceId) {
-                  // Check if a credential already exists for this service
-                  const { data: existingCreds } = await supabase
-                    .from("credentials")
-                    .select("*")
-                    .eq("connected_service_id", connectedServiceId)
-                    .maybeSingle();
-                  
-                  // Define the credential data
-                  const credentialData = {
-                    username: tokens.email || "oauth_user",
-                    password: "",
-                    domain: oauthState.service_type,
-                    type: "oauth",
-                    connected_service_id: connectedServiceId,
-                    tenant_id: oauthState.tenant_id,
-                    expires_at: expiresAt.toISOString(),
-                    access_token: access_token,
-                    refresh_token: refresh_token,
-                    scopes: tokens.scope ? tokens.scope.split(' ') : []
-                  };
-                  
-                  let credentialId = null;
-                  
-                  if (existingCreds) {
-                    // Update existing credential
-                    await supabase
-                      .from("credentials")
-                      .update(credentialData)
-                      .eq("id", existingCreds.id);
-                      
-                    credentialId = existingCreds.id;
-                  } else {
-                    // Create new credential
-                    const { data: newCred } = await supabase
-                      .from("credentials")
-                      .insert([credentialData])
-                      .select();
-                      
-                    if (newCred && newCred.length > 0) {
-                      credentialId = newCred[0].id;
-                    }
-                  }
-                  
-                  // Set a flag in session storage to indicate successful OAuth
-                  sessionStorage.setItem("oauth_success", "true");
-                  
-                  // If we have a credential ID, store it to select it automatically in the wizard
-                  if (credentialId) {
-                    sessionStorage.setItem("last_credential_id", String(credentialId));
-                  }
-                }
-              }
-            }
-          }
-        }
+    const code = getUrlParameter("code");
+    const state = getUrlParameter("state");
+    const redirectUrl = sessionStorage.getItem("integration_return_url");
+    const credentialName = sessionStorage.getItem("credential_name");
 
-        if (
-          (hash && hash.includes("access_token")) ||
-          (query && query.includes("code="))
-        ) {
-          // Process the callback
-          const { data, error } = await supabase.auth.getSession();
+    try {
+      if (!code || !state) {
+        toast.error("Invalid OAuth callback");
+        // navigate(ROUTES.AUTH);
+        return;
+      }
 
-          if (error) {
-            console.error("Error with auth callback:", error);
-            toast.error("Authentication failed: " + error.message);
-            navigate(ROUTES.AUTH);
-          } else if (data.session) {
-            toast.success("Successfully signed in!");
+      const response = await callSupabaseFunction("handle_oauth_callback", {
+        code,
+        state,
+        options: {
+          credential_name: credentialName,
+        },
+      });
 
-            // If we're returning from an integration flow, go back to the integration page
-            if (integrationReturnUrl) {
-              // Clean up session storage
-              sessionStorage.removeItem("integration_return_url");
-              sessionStorage.removeItem("oauth_state_id");
-              sessionStorage.removeItem("code_verifier");
-              sessionStorage.removeItem("oauth_state");
-              sessionStorage.removeItem("provider");
-              
-              // Navigate back to the integration page
-              toast.success("Successfully connected service!");
-              navigate(ROUTES.SETTINGS_INTEGRATIONS);
-              return;
-            }
+      const result = await response.json();
 
-            // Otherwise, go to the default destination
-            navigate(ROUTES.CONVERSATION_ASSISTANT, { replace: true });
-          } else {
-            toast.error("Authentication failed: No session found");
-            navigate(ROUTES.AUTH);
-          }
+      if (!response.ok) {
+        toast.error(result.error || "OAuth callback failed");
+        console.error("OAuth error:", result);
+        return;
+      }
+
+      // Optionally store credential ID for later use
+      if (result.credential_id) {
+        sessionStorage.setItem("credential_id", result.credential_id);
+      }
+
+      toast.success("Integration connected successfully");
+
+      window.location.href =
+        redirectUrl ||
+        ROUTES.SETTINGS_INTEGRATIONS.replace(":tenantId", tenantId);
+    } catch (error) {
+      console.error("OAuth callback exception:", error);
+      toast.error("Failed to connect integration");
+    }
+  }, [user, tenantId]);
+
+  const handleAuthCallback = useCallback(async () => {
+    const code = getUrlParameter("code");
+    const state = getUrlParameter("state");
+
+    if (sessionStorage.getItem("provider") === "azure") {
+      const response = await callSupabaseFunction("handle_oauth_callback", {
+        code,
+        state,
+        id_token_only: true,
+      });
+
+      const result = await response.json();
+
+      if (result.id_token) {
+        await supabase.auth.signInWithIdToken({
+          provider: "azure",
+          token: result.id_token,
+        });
+        navigate(ROUTES.AUTH);
+
+        return;
+      }
+    }
+
+    try {
+      const hash = window.location.hash;
+      const query = window.location.search;
+
+      if (
+        (hash && hash.includes("access_token")) ||
+        (query && query.includes("code="))
+      ) {
+        const { data, error } = await supabase.auth.getSession();
+
+        if (error) {
+          toast.error("Authentication failed: " + error.message);
+          navigate(ROUTES.AUTH);
+        } else if (data.session) {
+          toast.success("Successfully signed in!");
+          navigate(ROUTES.CONVERSATION_ASSISTANT, { replace: true });
         } else {
-          // No access token, redirect to auth page
+          toast.error("Authentication failed: No session found");
           navigate(ROUTES.AUTH);
         }
-      } catch (error) {
-        console.error("Error processing auth callback:", error);
-        toast.error("An unexpected error occurred during authentication");
+      } else {
         navigate(ROUTES.AUTH);
       }
-    };
-
-    handleAuthCallback();
+    } catch (error) {
+      console.error("Auth callback error:", error);
+      toast.error("An unexpected error occurred during authentication");
+      navigate(ROUTES.AUTH);
+    }
   }, [navigate]);
+
+  useEffect(() => {
+    if (sessionStorage.getItem("integration_return_url")) {
+      handleIntegrationCallback();
+    } else {
+      handleAuthCallback();
+    }
+  }, [navigate, handleIntegrationCallback, handleAuthCallback, user, tenantId]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">

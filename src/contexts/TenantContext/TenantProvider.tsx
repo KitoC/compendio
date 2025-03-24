@@ -234,8 +234,6 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
     isTenantOwner,
   };
 
-  console.log("contextValue", contextValue);
-
   return (
     <TenantContext.Provider value={contextValue}>
       {children}

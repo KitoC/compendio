@@ -1,4 +1,3 @@
-
 // NO_CHANGE
 
 export type FormFieldType =
@@ -11,11 +10,11 @@ export type FormFieldType =
   | "checkbox"
   | "radio"
   | "date"
-  | "integer"   // Added for custom table fields
-  | "boolean"   // Added for custom table fields
+  | "integer" // Added for custom table fields
+  | "boolean" // Added for custom table fields
   | "reference" // Added for custom table fields
   | "timestamp" // Added for custom table fields
-  | "uuid";     // Added for custom table fields
+  | "uuid"; // Added for custom table fields
 
 export interface FormFieldOption {
   label: string;
@@ -62,6 +61,13 @@ export interface FormConfig {
   resetButtonText?: string;
   cancelButtonText?: string;
   showReset?: boolean;
+  removeBorder?: boolean;
+  resetIconButtonAfter?: React.ReactNode;
+  cancelIconButtonAfter?: React.ReactNode;
+  cancelIconButtonBefore?: React.ReactNode;
+  resetIconButtonBefore?: React.ReactNode;
+  submitIconButtonBefore?: React.ReactNode;
+  submitIconButtonAfter?: React.ReactNode;
 }
 
 export interface FormBuilderProps {
@@ -74,6 +80,7 @@ export interface FormBuilderProps {
   onCancel?: () => void;
   hideSubmitButton?: boolean;
   hideTitles?: boolean;
+  footerClassname?: string;
 }
 
 export interface FormFieldProps {

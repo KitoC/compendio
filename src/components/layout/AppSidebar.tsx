@@ -31,6 +31,7 @@ import clsx from "clsx";
 import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
 import { useCustomTables } from "@/contexts/CustomTables/useCustomTables";
 import { settingsItems } from "@/lib/constants";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface SidebarItemOrGroup {
   label: string;
@@ -40,10 +41,12 @@ interface SidebarItemOrGroup {
 }
 
 const SidebarItem = (item: SidebarItemOrGroup) => {
+  const { urlTenantAlias } = useTenant();
+
   return (
     <SidebarMenuItem key={item.label}>
       <NavLink
-        to={item.url}
+        to={item.url?.replace(":tenantId", urlTenantAlias)}
         className={({ isActive, isPending }) => {
           return clsx(
             "pr-2 pl-3 w-full flex items-center gap-2 min-h-fit py-1 rounded",
