@@ -1,20 +1,10 @@
-import { SupabaseController } from "locals/controllers/SupabaseController";
-import Logger from "locals/utils/Logger";
+import { BaseController } from "locals/controllers/_BaseController";
 import { Migration, JsonSchemaPayload } from "locals/dsl/Migration";
+import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
 
-interface IConstructorParams {
-  logger?: Logger;
-}
-
-class TableBuilderController extends SupabaseController {
-  public logger: Logger;
-
-  constructor({
-    logger = new Logger({ name: "TableBuilderController" }),
-  }: IConstructorParams) {
-    super({ logger });
-
-    this.logger = logger;
+class TableBuilderController extends BaseController {
+  constructor(private req: Request, private context: AuthenticatedContext) {
+    super();
   }
 
   async generateSchemaFromResponse(schemaContent: string) {
@@ -50,25 +40,28 @@ class TableBuilderController extends SupabaseController {
   async createAndApplyMigration(schema: JsonSchemaPayload): Promise<{
     insert_custom_tables_response: { data: { [key: string]: string }[] };
   } | void> {
-    if (!this.tenant_id) {
+    if (!this.context.authService.tenantId) {
       this.throwError("Tenant ID is required to create tables", 400);
       return;
     }
 
     const migration = await Migration.fromSchemaJson(
       schema,
-      this.supabase_AS_SUPER_ADMIN
+      this.context.supabase_AS_SUPER_ADMIN
     );
 
-    return await migration.apply(this.supabase_AS_SUPER_ADMIN, this.tenant_id);
+    return await migration.apply(
+      this.context.supabase_AS_SUPER_ADMIN,
+      this.context.authService.tenantId
+    );
   }
 
   async importData(records: unknown[]) {
-    const { error } = await this.supabase_AS_SUPER_ADMIN.rpc(
+    const { error } = await this.context.supabase_AS_SUPER_ADMIN.rpc(
       "import_custom_table_data",
       {
         import_data: { records },
-        input_tenant_id: this.tenant_id,
+        input_tenant_id: this.context.authService.tenantId,
       }
     );
 
@@ -81,6 +74,3 @@ class TableBuilderController extends SupabaseController {
 }
 
 export { TableBuilderController };
-export default new TableBuilderController({
-  logger: new Logger({ name: "TableBuilderController" }),
-});

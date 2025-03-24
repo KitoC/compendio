@@ -1,13 +1,16 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import RequestController, {
-  RequestError,
-} from "locals/controllers/RequestController";
-import { ROLES } from "locals/controllers/SupabaseController";
+
+import { ROLES } from "locals/services/AuthService";
 import OpenAIController from "locals/controllers/OpenAIController";
 import type { OpenAiRole } from "../../../src/types/chat.js";
-import TableBuilderController from "locals/controllers/TableBuilderController";
+import { TableBuilderController } from "locals/controllers/TableBuilderController";
 import type { JsonSchemaPayload } from "locals/dsl/Migration";
+import { withAuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
+import { withOriginGuardedRequestHandler } from "locals/middleware/withRequestHandlers";
+import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
+import type { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
+
 const PROMPT_FOR_TABLE_CREATION_V2 = `
 You are TableSmart, an AI assistant specialized in designing database schemas for business applications.
 Your role is to return a schema definition compatible with a Migration DSL that creates custom tables, fields, and relationships for a multi-tenant system.
@@ -181,180 +184,191 @@ async function prepareDataForImport(
   }
 }
 
-serve(async (req: Request) => {
-  try {
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers":
-        "authorization, x-client-info, apikey, content-type",
-    };
+const tableBuilderHandler = async (
+  req: Request,
+  context: AuthenticatedContext
+) => {
+  const { authService } = context;
+  const { action, prompt, files, schema } = await req.json();
 
-    // Handle CORS preflight requests
-    if (req.method === "OPTIONS") {
-      return new Response(null, {
-        headers: corsHeaders,
+  const tableBuilderController = new TableBuilderController(req, context);
+
+  authService.allowedRoles([ROLES.TENANT_OWNER, ROLES.SUPER_ADMIN]);
+
+  if (!authService.tenantId) {
+    return authService.throwError(
+      "Tenant ID is required to create tables",
+      400
+    );
+  }
+
+  tableBuilderController.logger.info("action", action);
+
+  switch (action) {
+    case "generate_schema": {
+      // TODO: Add streaming at some point.
+      // Generate schema based on prompt
+      const schemaContent = await callAgent(prompt);
+
+      const parsedSchema =
+        await tableBuilderController.generateSchemaFromResponse(schemaContent);
+
+      return {
+        body: JSON.stringify(parsedSchema),
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      };
+    }
+
+    case "create_tables": {
+      if (!schema || !schema.tables || !Array.isArray(schema.tables)) {
+        return tableBuilderController.throwError(
+          "Invalid schema provided",
+          400
+        );
+      }
+
+      const response = await tableBuilderController.createAndApplyMigration({
+        schema,
       });
-    }
-    const { action, prompt, files, schema } = await req.json();
 
-    // Sets up supabase client
-    await TableBuilderController.initialize(req);
+      if (!response) {
+        return tableBuilderController.throwError(
+          "Failed to create tables",
+          500
+        );
+      }
 
-    TableBuilderController.allowedRoles([
-      ROLES.TENANT_OWNER,
-      ROLES.SUPER_ADMIN,
-    ]);
-
-    if (!TableBuilderController.tenant_id) {
-      return RequestController.throwError(
-        "Tenant ID is required to create tables",
-        400
+      const table_ids = response.insert_custom_tables_response.data.map(
+        (table: { [key: string]: string }) => Object.values(table)[0]
       );
+
+      return {
+        body: JSON.stringify({ success: true, response, table_ids }),
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      };
     }
 
-    TableBuilderController.logger.info("action", action);
-
-    switch (action) {
-      case "generate_schema": {
-        // TODO: Add streaming at some point.
-        // Generate schema based on prompt
-        const schemaContent = await callAgent(prompt);
-
-        const parsedSchema =
-          await TableBuilderController.generateSchemaFromResponse(
-            schemaContent
-          );
-
-        return RequestController.sendJsonResponse(parsedSchema, 200);
+    case "analyze_files": {
+      if (!files || !Array.isArray(files) || files.length === 0) {
+        return tableBuilderController.throwError("No files provided", 400);
       }
 
-      case "create_tables": {
-        if (!schema || !schema.tables || !Array.isArray(schema.tables)) {
-          return RequestController.throwError("Invalid schema provided", 400);
-        }
+      const schema = await analyzeFilesForSchema(files);
+      let parsedSchema;
 
-        const response = await TableBuilderController.createAndApplyMigration({
-          schema,
-        });
+      try {
+        parsedSchema = JSON.parse(schema);
+      } catch (error) {
+        // If parsing fails, try to extract JSON from the response
+        const jsonMatch =
+          schema.match(/```json\n([\s\S]*?)\n```/) ||
+          schema.match(/```\n([\s\S]*?)\n```/) ||
+          schema.match(/{[\s\S]*}/);
 
-        if (!response) {
-          return RequestController.sendError(
-            new RequestError("Failed to create tables", 500)
-          );
-        }
-
-        const table_ids = response.insert_custom_tables_response.data.map(
-          (table: { [key: string]: string }) => Object.values(table)[0]
-        );
-
-        return RequestController.sendJsonResponse(
-          { success: true, response, table_ids },
-          200
-        );
-      }
-
-      case "analyze_files": {
-        if (!files || !Array.isArray(files) || files.length === 0) {
-          return TableBuilderController.throwError("No files provided", 400);
-        }
-
-        const schema = await analyzeFilesForSchema(files);
-        let parsedSchema;
-
-        try {
-          parsedSchema = JSON.parse(schema);
-        } catch (error) {
-          // If parsing fails, try to extract JSON from the response
-          const jsonMatch =
-            schema.match(/```json\n([\s\S]*?)\n```/) ||
-            schema.match(/```\n([\s\S]*?)\n```/) ||
-            schema.match(/{[\s\S]*}/);
-
-          if (jsonMatch) {
-            try {
-              parsedSchema = JSON.parse(jsonMatch[1] || jsonMatch[0]);
-            } catch (innerError) {
-              return TableBuilderController.throwError(
-                "Failed to parse file analysis",
-                400
-              );
-            }
-          } else {
-            return TableBuilderController.throwError(
+        if (jsonMatch) {
+          try {
+            parsedSchema = JSON.parse(jsonMatch[1] || jsonMatch[0]);
+          } catch (innerError) {
+            return tableBuilderController.throwError(
               "Failed to parse file analysis",
               400
             );
           }
-        }
-
-        return RequestController.sendJsonResponse(parsedSchema, 200);
-      }
-
-      case "import_data": {
-        if (!schema || !schema.tables || !Array.isArray(schema.tables)) {
-          return TableBuilderController.throwError(
-            "Invalid schema provided",
+        } else {
+          return tableBuilderController.throwError(
+            "Failed to parse file analysis",
             400
           );
         }
-
-        if (!files || !Array.isArray(files) || files.length === 0) {
-          return TableBuilderController.throwError("No files provided", 400);
-        }
-
-        // First create the tables
-        const response = await TableBuilderController.createAndApplyMigration({
-          schema,
-        });
-
-        if (!response) {
-          return RequestController.sendError(
-            new RequestError("Failed to create tables", 500)
-          );
-        }
-
-        const table_ids = response.insert_custom_tables_response.data;
-
-        // Then prepare and import the data
-        const importData = await prepareDataForImport(files, schema);
-
-        const records: {
-          table_id: string;
-          table_name: string;
-          data: unknown;
-        }[] = [];
-
-        table_ids.forEach((table_id_and_name: { [key: string]: string }) => {
-          const table_name = Object.keys(table_id_and_name)[0];
-          const table_id = Object.values(table_id_and_name)[0];
-
-          records.push(
-            ...importData[table_name].map((record: unknown) => ({
-              table_id,
-              table_name,
-              data: record,
-            }))
-          );
-        });
-
-        const importResults = await TableBuilderController.importData(records);
-
-        return RequestController.sendJsonResponse(
-          {
-            success: true,
-            table_ids,
-            import_results: importResults,
-            message: `Created ${
-              Object.keys(table_ids).length
-            } tables and imported data`,
-          },
-          200
-        );
       }
+
+      return {
+        body: JSON.stringify(parsedSchema),
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      };
     }
 
-    return RequestController.sendJsonResponse({ success: true }, 200);
-  } catch (error) {
-    return RequestController.sendError(error as RequestError);
+    case "import_data": {
+      if (!schema || !schema.tables || !Array.isArray(schema.tables)) {
+        return tableBuilderController.throwError(
+          "Invalid schema provided",
+          400
+        );
+      }
+
+      if (!files || !Array.isArray(files) || files.length === 0) {
+        return tableBuilderController.throwError("No files provided", 400);
+      }
+
+      // First create the tables
+      const response = await tableBuilderController.createAndApplyMigration({
+        schema,
+      });
+
+      if (!response) {
+        return tableBuilderController.throwError(
+          "Failed to create tables",
+          500
+        );
+      }
+
+      const table_ids = response.insert_custom_tables_response.data;
+
+      // Then prepare and import the data
+      const importData = await prepareDataForImport(files, schema);
+
+      const records: {
+        table_id: string;
+        table_name: string;
+        data: unknown;
+      }[] = [];
+
+      table_ids.forEach((table_id_and_name: { [key: string]: string }) => {
+        const table_name = Object.keys(table_id_and_name)[0];
+        const table_id = Object.values(table_id_and_name)[0];
+
+        records.push(
+          ...importData[table_name].map((record: unknown) => ({
+            table_id,
+            table_name,
+            data: record,
+          }))
+        );
+      });
+
+      const importResults = await tableBuilderController.importData(records);
+
+      return {
+        body: JSON.stringify({
+          success: true,
+          table_ids,
+          import_results: importResults,
+          message: `Created ${
+            Object.keys(table_ids).length
+          } tables and imported data`,
+        }),
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      };
+    }
   }
-});
+
+  return {
+    body: JSON.stringify({ success: true }),
+    headers: { "Content-Type": "application/json" },
+    status: 200,
+  };
+};
+
+serve(
+  withErrorBoundary(
+    withAuthenticatedContext(
+      withOriginGuardedRequestHandler<AuthenticatedContext>()(
+        tableBuilderHandler
+      )
+    )
+  )
+);

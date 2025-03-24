@@ -2,6 +2,7 @@ import {
   SupabaseClient,
   // @ts-expect-error - Supabase client is not typed
 } from "https://esm.sh/@supabase/supabase-js@2.8.0";
+import { BaseDSLLayer } from "locals/dsl/_BaseDSLLayer";
 
 export type FieldType =
   | "text"
@@ -92,12 +93,13 @@ export interface MigrationAction {
   to_field?: string;
   relationship_type?: RelationshipType;
 }
-export class Migration {
+export class Migration extends BaseDSLLayer {
   name: string;
   actions: MigrationAction[];
   rollbackActions: MigrationAction[];
 
   constructor(name: string) {
+    super();
     this.name = name;
     this.actions = [];
     this.rollbackActions = [];
@@ -268,10 +270,26 @@ export class Migration {
       insertion_data
     );
 
+    if (insert_custom_tables_response.error) {
+      this.throwError(
+        "Failed to create tables",
+        insert_custom_tables_response.error,
+        500
+      );
+    }
+
     const migrations_response = await supabase
       .from("custom_migrations")
       .update({ success: true, applied_at: new Date() })
       .eq("name", this.name);
+
+    if (migrations_response.error) {
+      this.throwError(
+        "Failed to apply migrations",
+        migrations_response.error,
+        500
+      );
+    }
 
     return {
       insert_custom_tables_response,
