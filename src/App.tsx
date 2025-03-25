@@ -44,6 +44,7 @@ function App() {
                 <Route path={ROUTES.AUTH} element={<Auth />} />
                 <Route path={ROUTES.INDEX} element={<LandingPage />} />
                 <Route path={ROUTES.AUTH_CALLBACK} element={<AuthCallback />} />
+
                 <Route
                   path={ROUTES.FORGOT_PASSWORD}
                   element={<ForgotPassword />}

@@ -15,6 +15,7 @@
     "locals/error-types": "./_shared/error-types.ts",
     "locals/middleware/withAuthenticatedContext": "./_shared/middleware/withAuthenticatedContext.ts",
     "locals/middleware/withErrorBoundary": "./_shared/middleware/withErrorBoundary.ts",
+    "locals/middleware/withPublicContext": "./_shared/middleware/withPublicContext.ts",
     "locals/middleware/withRequestHandlers": "./_shared/middleware/withRequestHandlers.ts",
     "locals/services/AuthService": "./_shared/services/AuthService.ts",
     "locals/services/_BaseService": "./_shared/services/_BaseService.ts",

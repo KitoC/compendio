@@ -1,15 +1,21 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { ShieldCheck, ShieldAlert } from "lucide-react";
+import { ShieldCheck, ShieldAlert, RefreshCw } from "lucide-react";
 import { ICredential } from "../../types";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import clsx from "clsx";
+import { Button } from "@/components/ui/button";
 
-const CredentialCard = ({ credentialId }: { credentialId: string }) => {
+const CredentialCard = ({
+  credentialId,
+  onRefresh,
+}: {
+  credentialId: string;
+  onRefresh: (credential: ICredential) => void;
+}) => {
   const [credential, setCredential] = useState<ICredential | null>(null);
   // TODO: Show valid/refresh state
-  const [isValid, setIsValid] = useState(true);
 
   const getSelectedCredential = useCallback(async () => {
     try {
@@ -29,11 +35,13 @@ const CredentialCard = ({ credentialId }: { credentialId: string }) => {
     getSelectedCredential();
   }, [getSelectedCredential]);
 
+  const refreshFailed = credential?.refresh_failed;
+
   return (
     <Card
       className={clsx("cursor-pointer transition-colors ", {
-        "border-success bg-success/5 hover:border-success": isValid,
-        "border-warning bg-warning/5 hover:border-warning": !isValid,
+        "border-success bg-success/5 hover:border-success": !refreshFailed,
+        "border-warning bg-warning/5 hover:border-warning": refreshFailed,
       })}
     >
       {credential && (
@@ -43,21 +51,37 @@ const CredentialCard = ({ credentialId }: { credentialId: string }) => {
               <p className="font-medium">{credential.name}</p>
               <p className="font-medium">{credential.username}</p>
 
-              <p className="text-sm text-muted-foreground">
-                {credential.expires_at
-                  ? `Expires: ${new Date(
-                      credential.expires_at
-                    ).toLocaleDateString()}`
-                  : "Never expires"}
-              </p>
               {credential.scopes && credential.scopes.length > 0 && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Scopes: {credential.scopes.join(", ")}
+                  Permissions:{" "}
+                  {credential.scopes
+                    .filter((scope) => scope.includes("."))
+                    .join(", ")}
                 </p>
               )}
+              <p className="text-xs text-muted-foreground mt-1">
+                Created: {new Date(credential.created_at).toLocaleDateString()}
+              </p>
             </div>
-            {isValid && <ShieldCheck className="h-5 w-5 text-success" />}
-            {!isValid && <ShieldAlert className="h-5 w-5 text-warning" />}
+            <div className="flex gap-2 items-center">
+              {/* TODO: Add refresh button back in */}
+              {/* {isExpired && onRefresh && (
+                <Button
+                  variant="warning"
+                  size="sm"
+                  onClick={() => onRefresh(credential)}
+                >
+                  Refresh
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              )} */}
+              {!refreshFailed && (
+                <ShieldCheck className="h-5 w-5 text-success" />
+              )}
+              {refreshFailed && (
+                <ShieldAlert className="h-5 w-5 text-warning" />
+              )}
+            </div>
           </div>
         </CardContent>
       )}

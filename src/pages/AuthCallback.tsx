@@ -1,66 +1,15 @@
 import { useCallback, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ROUTES } from "@/lib/constants";
 import { toast } from "sonner";
 import { getUrlParameter } from "@/utils/oAuth/shared";
-import { useTenant } from "@/contexts/TenantContext";
-import { useAuth } from "@/hooks/useAuth";
 import { callSupabaseFunction } from "@/services/supabaseFunctionServices";
+import { OAUTH_INTEGRATION_CALLBACK_DATA_KEY } from "@/components/integrations/AddIntegrationWizard/steps/Authentication";
 
 const AuthCallback = () => {
-  const { user } = useAuth();
-  const { tenantId } = useTenant();
   const navigate = useNavigate();
-
-  const handleIntegrationCallback = useCallback(async () => {
-    if (!user || !tenantId) {
-      return;
-    }
-
-    const code = getUrlParameter("code");
-    const state = getUrlParameter("state");
-    const redirectUrl = sessionStorage.getItem("integration_return_url");
-    const credentialName = sessionStorage.getItem("credential_name");
-
-    try {
-      if (!code || !state) {
-        toast.error("Invalid OAuth callback");
-        // navigate(ROUTES.AUTH);
-        return;
-      }
-
-      const response = await callSupabaseFunction("handle_oauth_callback", {
-        code,
-        state,
-        options: {
-          credential_name: credentialName,
-        },
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        toast.error(result.error || "OAuth callback failed");
-        console.error("OAuth error:", result);
-        return;
-      }
-
-      // Optionally store credential ID for later use
-      if (result.credential_id) {
-        sessionStorage.setItem("credential_id", result.credential_id);
-      }
-
-      toast.success("Integration connected successfully");
-
-      window.location.href =
-        redirectUrl ||
-        ROUTES.SETTINGS_INTEGRATIONS.replace(":tenantId", tenantId);
-    } catch (error) {
-      console.error("OAuth callback exception:", error);
-      toast.error("Failed to connect integration");
-    }
-  }, [user, tenantId]);
+  const location = useLocation();
 
   const handleAuthCallback = useCallback(async () => {
     const code = getUrlParameter("code");
@@ -80,7 +29,7 @@ const AuthCallback = () => {
           provider: "azure",
           token: result.id_token,
         });
-        navigate(ROUTES.AUTH);
+        navigate(ROUTES.DASHBOARD, { replace: true });
 
         return;
       }
@@ -96,12 +45,16 @@ const AuthCallback = () => {
       ) {
         const { data, error } = await supabase.auth.getSession();
 
+        if (data.session) {
+          navigate(ROUTES.DASHBOARD, { replace: true });
+        }
+
         if (error) {
           toast.error("Authentication failed: " + error.message);
           navigate(ROUTES.AUTH);
         } else if (data.session) {
           toast.success("Successfully signed in!");
-          navigate(ROUTES.CONVERSATION_ASSISTANT, { replace: true });
+          navigate(ROUTES.DASHBOARD, { replace: true });
         } else {
           toast.error("Authentication failed: No session found");
           navigate(ROUTES.AUTH);
@@ -117,12 +70,19 @@ const AuthCallback = () => {
   }, [navigate]);
 
   useEffect(() => {
-    if (sessionStorage.getItem("integration_return_url")) {
-      handleIntegrationCallback();
+    if (sessionStorage.getItem(OAUTH_INTEGRATION_CALLBACK_DATA_KEY)) {
+      const oauthCallbackData = JSON.parse(
+        sessionStorage.getItem(OAUTH_INTEGRATION_CALLBACK_DATA_KEY) || "{}"
+      );
+
+      const path = oauthCallbackData.returnUrl;
+      const integrationCallbackUrl = path + location.search;
+
+      navigate(integrationCallbackUrl);
     } else {
       handleAuthCallback();
     }
-  }, [navigate, handleIntegrationCallback, handleAuthCallback, user, tenantId]);
+  }, [handleAuthCallback, location, navigate]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">

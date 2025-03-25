@@ -1,51 +1,63 @@
 // supabase/functions/handle_oauth_callback.ts
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { RequestError } from "locals/controllers/RequestController";
-import OAuthController from "locals/controllers/OAuthController";
+import { OAuthController } from "locals/controllers/OAuthController";
+import { withOriginGuardedRequestHandler } from "locals/middleware/withRequestHandlers";
+import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
+import {
+  withPublicContext,
+  PublicContext,
+} from "locals/middleware/withPublicContext";
 
-serve(async (req: Request) => {
-  try {
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers":
-        "authorization, x-client-info, apikey, content-type",
-    };
+const handleOauthCallbackHandler = async (
+  req: Request,
+  context: PublicContext
+) => {
+  const oauthController = new OAuthController(req, context);
 
-    // Handle CORS preflight requests
-    if (req.method === "OPTIONS") {
-      return new Response(null, {
-        headers: corsHeaders,
-      });
-    }
+  const { code, state, id_token_only, options } = await req.json();
 
-    const { code, state, id_token_only, options } = await req.json();
+  if (!code || !state) {
+    return oauthController.throwError("Missing code or state", 400);
+  }
 
-    if (!code || !state) {
-      return OAuthController.throwError("Missing code or state", 400);
-    }
-
-    if (id_token_only) {
-      const id_token = await OAuthController.getOAuthIdToken({
-        code,
-        state,
-        options,
-      });
-
-      return OAuthController.sendJsonResponse({ success: true, id_token }, 200);
-    }
-
-    const credential = await OAuthController.getTokenAndCreateCredential({
+  if (id_token_only) {
+    const id_token = await oauthController.getOAuthIdToken({
       code,
       state,
       options,
     });
 
-    return OAuthController.sendJsonResponse(
-      { success: true, credential_id: credential.id },
-      200
-    );
-  } catch (err) {
-    return OAuthController.sendError(err as RequestError);
+    return {
+      body: JSON.stringify({ success: true, id_token }),
+      headers: { "Content-Type": "application/json" },
+      status: 200,
+    };
   }
-});
+
+  const credential_id = await oauthController.getTokenAndCreateCredential({
+    code,
+    state,
+    options,
+  });
+
+  return {
+    body: JSON.stringify({ success: true, credential_id }),
+    headers: { "Content-Type": "application/json" },
+    status: 200,
+  };
+};
+
+serve(
+  withErrorBoundary(
+    withPublicContext(
+      withOriginGuardedRequestHandler<PublicContext>({
+        corsHeaders: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers":
+            "authorization, x-client-info, apikey, content-type",
+        },
+      })(handleOauthCallbackHandler)
+    )
+  )
+);

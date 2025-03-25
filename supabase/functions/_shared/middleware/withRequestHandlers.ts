@@ -7,23 +7,20 @@ const defaultCorsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
-const logger = new Logger({ name: "Request Handler" });
-
-const sendError = (error: RequestError) => {
-  console.log("FOOBAR");
-  logger.error(error?.message || "An unknown error occurred", error);
-  console.log("sendError", error?.message);
-
-  return new Response(JSON.stringify({ error: error?.message }), {
-    status: error?.status || 500,
-  });
-};
-
 const defaultAllowedOrigins = ["http://localhost:8080"];
 
+type Params = {
+  allowedOrigins?: string[];
+  corsHeaders?: HeadersInit;
+};
+
+export const defaultParams: Params = {
+  allowedOrigins: defaultAllowedOrigins,
+  corsHeaders: defaultCorsHeaders,
+};
+
 export function withOriginGuardedRequestHandler<Context>(
-  allowedOrigins: string[] = defaultAllowedOrigins,
-  corsHeaders: HeadersInit = defaultCorsHeaders
+  params: Params = defaultParams
 ) {
   return (
       handler: (
@@ -36,6 +33,14 @@ export function withOriginGuardedRequestHandler<Context>(
       } | void>
     ) =>
     async (req: Request, context: Context): Promise<Response> => {
+      const {
+        allowedOrigins = defaultAllowedOrigins,
+        corsHeaders = defaultCorsHeaders,
+      } = {
+        ...defaultParams,
+        ...params,
+      };
+
       const origin = req.headers.get("origin");
 
       if (origin && !allowedOrigins.includes(origin)) {

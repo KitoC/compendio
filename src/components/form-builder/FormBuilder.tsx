@@ -202,7 +202,7 @@ const FormBuilder = ({
         </Button>
       )}
       <div className="flex gap-2 ml-auto">
-        {config.cancelButtonText && (
+        {(config.cancelButtonText || onCancel) && (
           <Button
             type="button"
             variant="outline"
@@ -210,7 +210,7 @@ const FormBuilder = ({
             disabled={isSubmitting}
           >
             {config.cancelIconButtonBefore}
-            {config.cancelButtonText}
+            {config.cancelButtonText || "Cancel"}
             {config.cancelIconButtonAfter}
           </Button>
         )}

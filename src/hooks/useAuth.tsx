@@ -146,6 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const handleOAuthSignIn = useCallback(async (provider: Provider) => {
     try {
       setIsLoading(true);
+      sessionStorage.removeItem("integration_return_url");
 
       if (provider === "azure") {
         const url = await buildAzureOAuthUrl();

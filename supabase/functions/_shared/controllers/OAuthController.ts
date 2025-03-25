@@ -1,6 +1,6 @@
 import { getEnvKey } from "locals/utils/env";
-import { SupabaseController } from "locals/controllers/SupabaseController";
-import Logger from "locals/utils/Logger";
+import { BaseController } from "locals/controllers/_BaseController";
+import { PublicContext } from "locals/middleware/withPublicContext";
 
 interface IOauthState {
   provider: string;
@@ -30,18 +30,19 @@ interface ReqArgs {
   state: string;
   options: {
     credential_name: string;
+    credential_id?: string;
   };
 }
 
 // TODO: Add support for other providers
 // TODO: Add support for encryption key versioning and rotation
-class OAuthController extends SupabaseController {
+class OAuthController extends BaseController {
   private provider: string | null;
   private providerConfigs: Record<string, IOauthProviderConfig>;
   private oAuthState: IOauthState | null;
 
-  constructor({ logger = new Logger({ name: "OAuthController" }) }) {
-    super({ logger });
+  constructor(public req: Request, public context: PublicContext) {
+    super();
 
     this.provider = null;
     this.oAuthState = null;
@@ -58,7 +59,8 @@ class OAuthController extends SupabaseController {
   }
 
   async getOAuthState(stateToken: string) {
-    const { data, error } = await this.supabase_AS_SUPER_ADMIN
+    console.log("GETTING OAUTH STATE");
+    const { data, error } = await this.context.supabase_AS_SUPER_ADMIN
       .from("oauth_states")
       .select("*")
       .eq("state", stateToken)
@@ -87,17 +89,29 @@ class OAuthController extends SupabaseController {
 
     return null;
   }
+
   async getTokenAndCreateCredential(reqArgs: ReqArgs) {
     await this.getOAuthState(reqArgs.state);
 
     const tokenData = await this.getOauthToken(reqArgs);
 
-    const credential = await this.createOauthCredential(
-      tokenData,
-      reqArgs.options
-    );
+    return await this.createOauthCredential(tokenData, reqArgs.options);
+  }
 
-    return credential;
+  async getOauthCredential(options: ReqArgs["options"]) {
+    console.log("GETTING OAUTH CREDENTIAL");
+
+    const { data, error } = await this.context.supabase_AS_SUPER_ADMIN
+      .from("credentials")
+      .select("*")
+      .eq("id", options.credential_id)
+      .single();
+
+    if (error) {
+      this.logger.error("Error getting OAuth credential", error);
+    }
+
+    return data;
   }
 
   async getOauthToken(reqArgs: ReqArgs) {
@@ -153,7 +167,9 @@ class OAuthController extends SupabaseController {
   }
 
   async getLatestEncryptionVersion() {
-    const { data, error } = await this.supabase_AS_SUPER_ADMIN
+    console.log("GETTING LATEST ENCRYPTION VERSION");
+
+    const { data, error } = await this.context.supabase_AS_SUPER_ADMIN
       .from("encryption_keys")
       .select("*")
       .order("created_at", { ascending: false })
@@ -172,33 +188,61 @@ class OAuthController extends SupabaseController {
   ) {
     const latestEncryptionVersion = await this.getLatestEncryptionVersion();
 
-    const { data: credential, error: insertError } =
-      await this.supabase_AS_SUPER_ADMIN
-        .from("credentials")
-        .insert({
-          access_token: tokenData.access_token,
-          refresh_token: tokenData.refresh_token,
-          expires_at: new Date(
-            Date.now() + tokenData.expires_in * 1000
-          ).toISOString(),
-          scopes: tokenData.scope?.split(" "),
-          type: "oauth",
-          user_id: this.oAuthState?.user_id,
-          tenant_id: this.oAuthState?.tenant_id,
-          encryption_key_id: latestEncryptionVersion.id,
-          name: options.credential_name,
-        })
-        .select()
-        .single();
+    console.log("TOKEN JSON", JSON.stringify(tokenData, null, 2));
+    const { data, error } = await this.context.supabase_AS_SUPER_ADMIN.rpc(
+      "insert_credential",
+      {
+        _encryption_key_id: latestEncryptionVersion.id,
+        _encryption_key: getEnvKey("ENCRYPTION_KEY"),
+        _access_token: tokenData.access_token,
+        _refresh_token: tokenData.refresh_token,
+        _scopes: tokenData.scope?.split(" "),
+        _type: "oauth",
+        _user_id:
+          this.oAuthState?.user_id || "f54647ab-6459-4769-9f73-55f32fb7ecdc",
+        _tenant_id:
+          this.oAuthState?.tenant_id || "24d940cf-490c-4806-a46f-e995132d0883",
+        _expires_at: new Date(
+          Date.now() + tokenData.expires_in * 1000
+        ).toISOString(),
+        _provider: this.provider,
+        _name: options.credential_name,
+        _domain: null,
+        _password: null,
+        _username: null,
+      }
+    );
+
+    if (error) {
+      this.throwError("Error setting current_setting", error, 500);
+    }
+
+    return data;
+  }
+
+  async updateOauthCredential(
+    tokenData: TokenData,
+    options: ReqArgs["options"] = { credential_name: "" }
+  ) {
+    const latestEncryptionVersion = await this.getLatestEncryptionVersion();
+
+    const { data: credentialId, error: insertError } =
+      await this.context.supabase_AS_SUPER_ADMIN.rpc("update_credential", {
+        _access_token: tokenData.access_token,
+        _refresh_token: tokenData.refresh_token,
+        _expires_at: new Date(
+          Date.now() + tokenData.expires_in * 1000
+        ).toISOString(),
+        _scopes: tokenData.scope?.split(" "),
+        _encryption_key_id: latestEncryptionVersion.id,
+      });
 
     if (insertError) {
       this.throwError("Credential insert failed", insertError, 500);
     }
 
-    return credential;
+    return credentialId;
   }
 }
 
-export default new OAuthController({
-  logger: new Logger({ name: "OAuthController" }),
-});
+export { OAuthController };

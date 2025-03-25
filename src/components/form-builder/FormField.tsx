@@ -22,15 +22,24 @@ const FormField = ({
   error,
   touched,
 }: FormFieldProps) => {
-  const { id, name, label, type, placeholder, options, disabled, className } =
-    field;
+  const {
+    id,
+    name,
+    label,
+    type,
+    placeholder,
+    options,
+    disabled,
+    className,
+    props,
+  } = field;
 
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
-    let newValue = e.target.value;
+    let newValue: string | number | string[] = e.target.value;
 
     // Convert to number for number inputs
     if (type === "number" && newValue !== "") {
@@ -50,7 +59,7 @@ const FormField = ({
             id={id}
             name={name}
             type={type}
-            value={value || ""}
+            value={(value as string) || ""}
             onChange={handleChange}
             placeholder={placeholder}
             disabled={disabled}
@@ -66,7 +75,7 @@ const FormField = ({
           <Textarea
             id={id}
             name={name}
-            value={value || ""}
+            value={(value as string) || ""}
             onChange={handleChange}
             placeholder={placeholder}
             disabled={disabled}
@@ -83,7 +92,7 @@ const FormField = ({
             id={id}
             name={name}
             type="number"
-            value={value || ""}
+            value={(value as number) || ""}
             onChange={handleChange}
             placeholder={placeholder}
             disabled={disabled}
@@ -97,7 +106,7 @@ const FormField = ({
       case "select":
         return (
           <Select
-            value={value || ""}
+            value={(value as string) || ""}
             onValueChange={(val) => onChange(name, val)}
             disabled={disabled}
           >
@@ -142,9 +151,18 @@ const FormField = ({
       case "radio":
         return (
           <RadioGroup
-            value={value || ""}
+            value={(value as string) || ""}
             onValueChange={(val) => onChange(name, val)}
-            className="space-y-2"
+            className={
+              props?.orientation === "horizontal"
+                ? "flex items-center"
+                : "space-y-2"
+            }
+            {...props}
+            orientation={
+              (props?.orientation as "horizontal" | "vertical" | undefined) ||
+              "vertical"
+            }
             disabled={disabled}
           >
             {options?.map((option) => (
@@ -170,7 +188,7 @@ const FormField = ({
             id={id}
             name={name}
             type="date"
-            value={value || ""}
+            value={(value as string) || ""}
             onChange={handleChange}
             disabled={disabled}
             className={cn(

@@ -10,8 +10,13 @@ const RadioGroup = React.forwardRef<
 >(({ className, ...props }, ref) => {
   return (
     <RadioGroupPrimitive.Root
-      className={cn("grid gap-2", className)}
+      className={cn(
+        "grid gap-2",
+        className,
+        props?.orientation === "horizontal" && "flex items-center"
+      )}
       {...props}
+      orientation={props?.orientation || "vertical"}
       ref={ref}
     />
   );

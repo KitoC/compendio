@@ -18,7 +18,13 @@ export const getAzureOAuthUrl = () => {
 };
 
 // Function to generate the authorization URL for Microsoft OAuth 2.0
-export async function buildAzureOAuthUrl(redirectUri?: string, scope?: string) {
+export async function buildAzureOAuthUrl({
+  redirectUri = getRedirectUri(),
+  scope,
+}: {
+  redirectUri?: string;
+  scope?: string;
+} = {}) {
   // Generate code verifier and challenge (PKCE)
 
   const url = new URL(`${getAzureOAuthUrl()}/authorize`);
@@ -31,7 +37,7 @@ export async function buildAzureOAuthUrl(redirectUri?: string, scope?: string) {
   sessionStorage.setItem("provider", "azure");
 
   url.searchParams.append("client_id", getAzureClientId());
-  url.searchParams.append("redirect_uri", redirectUri || getRedirectUri());
+  url.searchParams.append("redirect_uri", redirectUri);
   url.searchParams.append(
     "scope",
     scope || "openid profile email offline_access"
@@ -46,7 +52,7 @@ export async function buildAzureOAuthUrl(redirectUri?: string, scope?: string) {
       provider: "azure",
       state,
       user_id: sessionStorage.getItem("user_id"),
-      redirect_uri: redirectUri || getRedirectUri(),
+      redirect_uri: redirectUri,
       agent_id: sessionStorage.getItem("agent_id"),
       service_type: sessionStorage.getItem("service_type"),
       tenant_id: sessionStorage.getItem("tenant_id"),

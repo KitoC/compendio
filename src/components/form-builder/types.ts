@@ -43,6 +43,7 @@ export interface FormField {
   disabled?: boolean;
   className?: string;
   hidden?: boolean;
+  props?: Record<string, unknown>;
 }
 
 export interface FormSection {
@@ -68,6 +69,7 @@ export interface FormConfig {
   resetIconButtonBefore?: React.ReactNode;
   submitIconButtonBefore?: React.ReactNode;
   submitIconButtonAfter?: React.ReactNode;
+  initialValues?: Record<string, unknown>;
 }
 
 export interface FormBuilderProps {

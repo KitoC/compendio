@@ -1,5 +1,5 @@
 import { FormConfig } from "@/components/form-builder/types";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, LogIn } from "lucide-react";
 
 // OAuth-based integrations
 export const gmailFormConfig: FormConfig = {
@@ -15,8 +15,64 @@ export const outlookFormConfig: FormConfig = {
   title: "Outlook OAuth Setup",
   description:
     "Authenticate with your Microsoft account to enable Outlook integration.",
-  sections: [],
+  sections: [
+    {
+      id: "connection",
+      title: "",
+      fields: [
+        {
+          id: "name",
+          name: "name",
+          label: "Name",
+          type: "text",
+          validation: { required: true },
+        },
+      ],
+    },
+    {
+      id: "access",
+      title: "Allow access to",
+      fields: [
+        {
+          id: "scope_email",
+          name: "scope_email",
+          label: "Email",
+          type: "radio",
+          options: [
+            { label: "Read", value: "Mail.Read" },
+            { label: "Read and send", value: "Mail.ReadWrite, Mail.Send" },
+          ],
+          validation: { required: true },
+          defaultValue: "Mail.Read",
+          props: {
+            orientation: "horizontal",
+          },
+        },
+        {
+          id: "scope_calendar",
+          name: "scope_calendar",
+          label: "Calendar",
+          type: "radio",
+          options: [
+            { label: "Read", value: "Calendars.Read" },
+            { label: "Read and write", value: "Calendars.ReadWrite" },
+          ],
+          validation: { required: true },
+          defaultValue: "Calendars.Read",
+          props: {
+            orientation: "horizontal",
+          },
+        },
+      ],
+    },
+  ],
   submitButtonText: "Connect with Microsoft",
+  submitIconButtonAfter: <LogIn className="ml-2 h-4 w-4" />,
+  initialValues: {
+    name: "Outlook",
+    scope_email: "Mail.Read",
+    scope_calendar: "Calendars.Read",
+  },
 };
 
 // API Key / Custom integrations

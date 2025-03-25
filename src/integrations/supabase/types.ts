@@ -443,6 +443,8 @@ export type Database = {
           user_id: string;
           username: string;
           name: string;
+          provider: string | null;
+          refresh_failed: boolean | null;
         };
         Insert: {
           access_token?: string | null;
@@ -461,6 +463,8 @@ export type Database = {
           user_id?: string;
           username?: string;
           name?: string;
+          provider?: string | null;
+          refresh_failed?: boolean | null;
         };
         Update: {
           access_token?: string | null;
@@ -479,6 +483,8 @@ export type Database = {
           user_id?: string;
           username?: string;
           name?: string;
+          provider?: string | null;
+          refresh_failed?: boolean | null;
         };
         Relationships: [
           {
@@ -1277,6 +1283,7 @@ export type Database = {
           user_email: string | null;
           user_id: string;
           workspace: string;
+          tenant_id: string;
         };
         Insert: {
           created_at?: string | null;
@@ -1286,6 +1293,7 @@ export type Database = {
           user_email?: string | null;
           user_id: string;
           workspace: string;
+          tenant_id: string;
         };
         Update: {
           created_at?: string | null;
@@ -1296,7 +1304,15 @@ export type Database = {
           user_id?: string;
           workspace?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "fk_tenant_requests_tenant";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       tenant_users: {
         Row: {
@@ -1305,6 +1321,7 @@ export type Database = {
           tenant_id: string;
           updated_at: string | null;
           user_id: string;
+          is_primary: boolean;
         };
         Insert: {
           created_at?: string | null;
@@ -1312,6 +1329,7 @@ export type Database = {
           tenant_id: string;
           updated_at?: string | null;
           user_id: string;
+          is_primary: boolean;
         };
         Update: {
           created_at?: string | null;
@@ -1319,6 +1337,7 @@ export type Database = {
           tenant_id?: string;
           updated_at?: string | null;
           user_id?: string;
+          is_primary?: boolean;
         };
         Relationships: [
           {
@@ -1774,6 +1793,14 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      get_user_tenants: {
+        Args: {
+          user_id: string;
+        };
+        Returns: (Database["public"]["Tables"]["tenants"]["Row"] & {
+          is_primary_tenant: boolean;
+        })[];
+      };
       add_default_columns: {
         Args: {
           table_name: string;
