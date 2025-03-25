@@ -1,7 +1,7 @@
 // NO_CHANGE
 
 // @ts-expect-error - Supabase client is not typed
-import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.8.0";
+import { SupabaseClient } from "supabase-js";
 import type Logger from "../shared/utils/logger.ts";
 
 class ConversationsController {

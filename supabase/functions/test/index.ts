@@ -9,7 +9,7 @@ import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
 
 const handler = async (req: Request, context: AuthenticatedContext) => {
   return {
-    body: JSON.stringify(context.authService.user),
+    body: JSON.stringify({ success: true }),
     headers: { "Content-Type": "application/json" },
     status: 200,
   };
@@ -18,9 +18,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
 serve(
   withErrorBoundary(
     withAuthenticatedContext(
-      withOriginGuardedRequestHandler<AuthenticatedContext>([
-        "http://localhost:3000",
-      ])(handler)
+      withOriginGuardedRequestHandler<AuthenticatedContext>()(handler)
     )
   )
 );

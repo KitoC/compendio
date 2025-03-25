@@ -10,10 +10,9 @@ export const getAzureClientId = () => {
 
   return "5f3cac71-f5ac-46e0-bf92-e90276a63cd7";
 };
+const DEFAULT_TENANT_ID = "consumers";
 
-export const getAzureOAuthUrl = () => {
-  const tenantId = "consumers";
-
+export const getAzureOAuthUrl = (tenantId: string) => {
   return `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0`;
 };
 
@@ -26,8 +25,9 @@ export async function buildAzureOAuthUrl({
   scope?: string;
 } = {}) {
   // Generate code verifier and challenge (PKCE)
+  const tenantId = DEFAULT_TENANT_ID;
 
-  const url = new URL(`${getAzureOAuthUrl()}/authorize`);
+  const url = new URL(`${getAzureOAuthUrl(tenantId)}/authorize`);
 
   // Generate state (to prevent CSRF attacks)
   const state = generateState();
@@ -58,6 +58,7 @@ export async function buildAzureOAuthUrl({
       tenant_id: sessionStorage.getItem("tenant_id"),
       config: {},
       status: "pending",
+      tid: tenantId,
     });
 
   if (oauthStateError) throw oauthStateError;
@@ -66,7 +67,9 @@ export async function buildAzureOAuthUrl({
 }
 
 export async function exchangeAzureCodeForTokens(code) {
-  const tokenUrl = `${getAzureOAuthUrl()}/token`;
+  const tenantId = DEFAULT_TENANT_ID;
+
+  const tokenUrl = `${getAzureOAuthUrl(tenantId)}/token`;
 
   const codeVerifier = sessionStorage.getItem("code_verifier"); // Retrieve code_verifier from sessionStorage
 

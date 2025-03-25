@@ -1,16 +1,14 @@
 import { getClient, getADMINClient } from "locals/db";
-import {
-  SupabaseClient,
-  // @ts-expect-error - Supabase client is not typed
-} from "https://esm.sh/@supabase/supabase-js@2.8.0";
-import type { User } from "locals/types";
-import { AuthorizationError } from "locals/error-types";
+// @ts-expect-error - Supabase client is not typed
+import { SupabaseClient } from "supabase-js";
 import { AuthService } from "locals/services/AuthService";
+import { CredentialsService } from "locals/services/CredentialsService";
 
 export type AuthenticatedContext = {
   supabase: SupabaseClient;
   supabase_AS_SUPER_ADMIN: SupabaseClient;
   authService: AuthService;
+  credentialsService: CredentialsService;
 };
 
 export const withAuthenticatedContext = (
@@ -20,17 +18,19 @@ export const withAuthenticatedContext = (
     const supabase_AS_SUPER_ADMIN = getADMINClient();
     const supabase = getClient(req);
 
-    const authService = new AuthService(req, {
+    const supabaseContext = {
       supabase,
       supabase_AS_SUPER_ADMIN,
-    });
+    };
 
+    const authService = new AuthService(req, supabaseContext);
+    const credentialsService = new CredentialsService(req, supabaseContext);
     await authService.initialize();
 
     const context = {
-      supabase,
-      supabase_AS_SUPER_ADMIN,
+      ...supabaseContext,
       authService,
+      credentialsService,
     };
 
     return handler(req, context);

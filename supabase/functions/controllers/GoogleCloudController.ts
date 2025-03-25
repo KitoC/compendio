@@ -2,7 +2,7 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 // @ts-expect-error - Supabase client is not typed
-import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.8.0";
+import { SupabaseClient } from "supabase-js";
 
 class GoogleCloudController {
   private supabase: SupabaseClient | null;

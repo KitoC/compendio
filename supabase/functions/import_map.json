@@ -18,11 +18,12 @@
     "locals/middleware/withPublicContext": "./_shared/middleware/withPublicContext.ts",
     "locals/middleware/withRequestHandlers": "./_shared/middleware/withRequestHandlers.ts",
     "locals/services/AuthService": "./_shared/services/AuthService.ts",
+    "locals/services/CredentialsService": "./_shared/services/CredentialsService.ts",
     "locals/services/_BaseService": "./_shared/services/_BaseService.ts",
     "locals/types": "./_shared/types/index.ts",
     "locals/utils/Logger": "./_shared/utils/Logger.ts",
     "locals/utils/env": "./_shared/utils/env.ts",
     "lodash": "https://esm.sh/lodash@4",
-    "supabase-js": "https://esm.sh/@supabase/supabase-js@2"
+    "supabase-js": "https://esm.sh/@supabase/supabase-js@2.8.0"
   }
 }

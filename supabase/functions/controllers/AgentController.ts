@@ -1,7 +1,7 @@
 // NO_CHANGE
 
 // @ts-expect-error - Supabase client is not typed
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.8.0";
+import type { SupabaseClient } from "supabase-js";
 import type SupabaseService from "../shared/services/SupabaseService";
 import type FunctionController from "./FunctionController";
 import type {

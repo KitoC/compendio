@@ -2,11 +2,8 @@
 
 import Logger from "locals/utils/Logger";
 import { BaseService } from "locals/services/_BaseService";
-import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
-import {
-  SupabaseClient,
-  // @ts-expect-error - Supabase client is not typed
-} from "https://esm.sh/@supabase/supabase-js@2.8.0";
+// @ts-expect-error - Supabase client is not typed
+import { SupabaseClient } from "supabase-js";
 
 const ROLES = {
   SUPER_ADMIN: "super-admin",

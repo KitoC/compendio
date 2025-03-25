@@ -1,8 +1,6 @@
 import { getEnvKey } from "locals/utils/env";
-import {
-  createClient,
-  // @ts-expect-error - Supabase client is not typed
-} from "https://esm.sh/@supabase/supabase-js@2.8.0";
+// @ts-expect-error - Supabase client is not typed
+import { createClient } from "supabase-js";
 
 export const getClient = (req: Request) => {
   const Authorization = req.headers.get("Authorization");

@@ -1,14 +1,19 @@
 import { getEnvKey } from "locals/utils/env";
 import { BaseController } from "locals/controllers/_BaseController";
 import { PublicContext } from "locals/middleware/withPublicContext";
+import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
+import { ICredential } from "locals/services/CredentialsService";
 
 interface IOauthState {
+  id: string;
+  state: string;
   provider: string;
   code: string;
   code_verifier: string;
   redirect_uri: string;
   user_id: string;
   tenant_id: string;
+  tid: string;
 }
 
 interface IOauthProviderConfig {
@@ -16,6 +21,7 @@ interface IOauthProviderConfig {
   clientId: string;
   clientSecret: string;
   redirectUri: string;
+  defaultTenantId: string;
 }
 
 interface TokenData {
@@ -40,40 +46,48 @@ class OAuthController extends BaseController {
   private provider: string | null;
   private providerConfigs: Record<string, IOauthProviderConfig>;
   private oAuthState: IOauthState | null;
-
-  constructor(public req: Request, public context: PublicContext) {
+  private tid: string | null;
+  constructor(
+    public req: Request,
+    public context: PublicContext | AuthenticatedContext
+  ) {
     super();
 
     this.provider = null;
     this.oAuthState = null;
+    this.tid = null;
 
     this.providerConfigs = {
       azure: {
         tokenExchangeUrl:
-          "https://login.microsoftonline.com/consumers/oauth2/v2.0/token",
+          "https://login.microsoftonline.com/{{tid}}/oauth2/v2.0/token",
         clientId: getEnvKey("AZURE_CLIENT_ID"),
         clientSecret: getEnvKey("AZURE_CLIENT_SECRET"),
         redirectUri: getEnvKey("AZURE_REDIRECT_URI"),
+        defaultTenantId: "consumers",
       },
     };
   }
 
+  getTokenExchangeUrl(provider: string) {
+    const { defaultTenantId, tokenExchangeUrl } =
+      this.providerConfigs[provider];
+
+    const tid = this.tid || defaultTenantId;
+    const url = tokenExchangeUrl.replace("{{tid}}", tid);
+
+    return url;
+  }
+
   async getOAuthState(stateToken: string) {
-    console.log("GETTING OAUTH STATE");
-    const { data, error } = await this.context.supabase_AS_SUPER_ADMIN
-      .from("oauth_states")
-      .select("*")
-      .eq("state", stateToken)
-      .single();
+    const oauthState = await this.context.credentialsService.getOAuthState(
+      stateToken
+    );
 
-    if (error) {
-      this.throwError("Error getting OAuth state", error, 500);
-    }
-
-    this.provider = data.provider;
-    this.oAuthState = data;
-
-    return data;
+    this.provider = oauthState.provider;
+    this.oAuthState = oauthState;
+    this.tid = oauthState.tid;
+    return oauthState;
   }
 
   buildTokenExchangeBody({ code }: ReqArgs) {
@@ -90,6 +104,28 @@ class OAuthController extends BaseController {
     return null;
   }
 
+  buildRefreshTokenExchangeBody({
+    refresh_token,
+    scope,
+    provider,
+  }: {
+    refresh_token: string;
+    scope: string;
+    provider: string;
+  }) {
+    if (provider === "azure") {
+      return {
+        client_id: this.providerConfigs.azure.clientId,
+        refresh_token,
+        grant_type: "refresh_token",
+        scope,
+        client_secret: this.providerConfigs.azure.clientSecret,
+      };
+    }
+
+    return null;
+  }
+
   async getTokenAndCreateCredential(reqArgs: ReqArgs) {
     await this.getOAuthState(reqArgs.state);
 
@@ -99,17 +135,46 @@ class OAuthController extends BaseController {
   }
 
   async getOauthCredential(options: ReqArgs["options"]) {
-    console.log("GETTING OAUTH CREDENTIAL");
+    const credential = await this.context.credentialsService.getCredential(
+      options.credential_id
+    );
 
-    const { data, error } = await this.context.supabase_AS_SUPER_ADMIN
-      .from("credentials")
-      .select("*")
-      .eq("id", options.credential_id)
-      .single();
-
-    if (error) {
-      this.logger.error("Error getting OAuth credential", error);
+    if (!credential) {
+      this.logger.error("No credential found", credential);
     }
+
+    return credential;
+  }
+
+  async fetchToken(
+    provider: string,
+    body: Record<string, string>,
+    fail_silently = false
+  ) {
+    if (!provider) {
+      this.throwError("Provider not found", 500);
+      return;
+    }
+
+    const tokenResponse = await fetch(this.getTokenExchangeUrl(provider), {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams(body),
+    });
+
+    if (!tokenResponse.ok) {
+      const error = await tokenResponse.json();
+
+      if (!fail_silently) {
+        this.throwError("Error getting OAuth token", error, 500);
+      }
+
+      this.logger.error("Error getting OAuth token", error);
+
+      return null;
+    }
+
+    const data = await tokenResponse.json();
 
     return data;
   }
@@ -127,31 +192,14 @@ class OAuthController extends BaseController {
       return;
     }
 
-    const { provider } = this.oAuthState as IOauthState;
+    const tokenResponse = await this.fetchToken(this.provider, body);
 
-    const tokenResponse = await fetch(
-      this.providerConfigs[provider].tokenExchangeUrl,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams(body),
-      }
-    );
-
-    if (!tokenResponse.ok) {
-      const error = await tokenResponse.json();
-
-      this.throwError("Error getting OAuth token", error, 500);
-    }
-
-    const data = await tokenResponse.json();
-
-    if (!data.access_token || !data.refresh_token) {
+    if (!tokenResponse.access_token || !tokenResponse.refresh_token) {
       this.throwError("Invalid token response", 500);
       return;
     }
 
-    return data;
+    return tokenResponse;
   }
 
   async getOAuthIdToken(reqArgs: ReqArgs) {
@@ -161,56 +209,28 @@ class OAuthController extends BaseController {
 
     const { id_token } = tokenData;
 
-    this.logger.info("id_token", id_token);
-
     return id_token;
-  }
-
-  async getLatestEncryptionVersion() {
-    console.log("GETTING LATEST ENCRYPTION VERSION");
-
-    const { data, error } = await this.context.supabase_AS_SUPER_ADMIN
-      .from("encryption_keys")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .single();
-
-    if (error) {
-      this.throwError("Error getting latest encryption version", error, 500);
-    }
-
-    return data;
   }
 
   async createOauthCredential(
     tokenData: TokenData,
     options: ReqArgs["options"] = { credential_name: "" }
   ) {
-    const latestEncryptionVersion = await this.getLatestEncryptionVersion();
+    const { data, error } =
+      await this.context.credentialsService.createOauthCredential({
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token,
+        scope: tokenData.scope,
+        expires_in: tokenData.expires_in,
+        provider: this.provider as string,
+        user_id: this.oAuthState?.user_id as string,
+        tenant_id: this.oAuthState?.tenant_id as string,
+        credential_name: options.credential_name,
+        tid: this.oAuthState?.tid as string,
+      });
 
-    console.log("TOKEN JSON", JSON.stringify(tokenData, null, 2));
-    const { data, error } = await this.context.supabase_AS_SUPER_ADMIN.rpc(
-      "insert_credential",
-      {
-        _encryption_key_id: latestEncryptionVersion.id,
-        _encryption_key: getEnvKey("ENCRYPTION_KEY"),
-        _access_token: tokenData.access_token,
-        _refresh_token: tokenData.refresh_token,
-        _scopes: tokenData.scope?.split(" "),
-        _type: "oauth",
-        _user_id:
-          this.oAuthState?.user_id || "f54647ab-6459-4769-9f73-55f32fb7ecdc",
-        _tenant_id:
-          this.oAuthState?.tenant_id || "24d940cf-490c-4806-a46f-e995132d0883",
-        _expires_at: new Date(
-          Date.now() + tokenData.expires_in * 1000
-        ).toISOString(),
-        _provider: this.provider,
-        _name: options.credential_name,
-        _domain: null,
-        _password: null,
-        _username: null,
-      }
+    await this.context.credentialsService.deleteOAuthState(
+      this.oAuthState?.id as string
     );
 
     if (error) {
@@ -220,28 +240,38 @@ class OAuthController extends BaseController {
     return data;
   }
 
-  async updateOauthCredential(
-    tokenData: TokenData,
-    options: ReqArgs["options"] = { credential_name: "" }
-  ) {
-    const latestEncryptionVersion = await this.getLatestEncryptionVersion();
+  async refreshOauthCredential(credential: ICredential) {
+    this.tid = credential.tid;
 
-    const { data: credentialId, error: insertError } =
-      await this.context.supabase_AS_SUPER_ADMIN.rpc("update_credential", {
-        _access_token: tokenData.access_token,
-        _refresh_token: tokenData.refresh_token,
-        _expires_at: new Date(
-          Date.now() + tokenData.expires_in * 1000
-        ).toISOString(),
-        _scopes: tokenData.scope?.split(" "),
-        _encryption_key_id: latestEncryptionVersion.id,
-      });
+    const refreshToken =
+      await this.context.credentialsService.decryptRefreshToken(credential.id);
 
-    if (insertError) {
-      this.throwError("Credential insert failed", insertError, 500);
+    const body = this.buildRefreshTokenExchangeBody({
+      refresh_token: refreshToken,
+      scope: credential.scopes.join(" "),
+      provider: credential.provider,
+    });
+
+    if (!body) {
+      this.throwError("Invalid provider", 500);
+      return;
     }
 
-    return credentialId;
+    const tokenData = await this.fetchToken(credential.provider, body, true);
+    let refresh_failed = false;
+
+    if (!tokenData.access_token) {
+      refresh_failed = true;
+    }
+
+    return await this.context.credentialsService.updateOauthCredential({
+      id: credential.id,
+      refresh_token: refreshToken,
+      access_token: tokenData.access_token,
+      scope: tokenData.scope,
+      expires_in: tokenData.expires_in,
+      refresh_failed,
+    });
   }
 }
 

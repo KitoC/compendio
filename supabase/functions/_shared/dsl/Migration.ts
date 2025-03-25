@@ -1,7 +1,5 @@
-import {
-  SupabaseClient,
-  // @ts-expect-error - Supabase client is not typed
-} from "https://esm.sh/@supabase/supabase-js@2.8.0";
+// @ts-expect-error - Supabase client is not typed
+import { SupabaseClient } from "supabase-js";
 import { BaseDSLLayer } from "locals/dsl/_BaseDSLLayer";
 
 export type FieldType =

@@ -1,10 +1,7 @@
 // NO_CHANGE
 
-import {
-  createClient,
-  SupabaseClient,
-  // @ts-expect-error - Supabase client is not typed
-} from "https://esm.sh/@supabase/supabase-js@2.8.0";
+// @ts-expect-error - Supabase client is not typed
+import { createClient, SupabaseClient } from "supabase-js";
 import type Logger from "../utils/logger";
 
 // CORS headers for cross-origin requests
