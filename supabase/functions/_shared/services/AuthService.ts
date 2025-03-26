@@ -28,7 +28,7 @@ class AuthService extends BaseService {
   public user: object | null;
 
   constructor(public req: Request, public context: AuthServiceContext) {
-    super();
+    super(context);
 
     this.logger = new Logger({ name: "AuthService" });
     this.token = null;
@@ -40,6 +40,7 @@ class AuthService extends BaseService {
 
   async initialize() {
     this.getToken();
+
     await this.getUserTenantAndRoles();
   }
 
@@ -53,6 +54,16 @@ class AuthService extends BaseService {
     if (!authHeader) {
       this.throwError("Authorization header is required", 401);
     }
+  }
+
+  async isSystemAdmin() {
+    const { data, error } = await this.context.supabase.rpc("is_system_admin");
+
+    if (error) {
+      this.throwError("Error getting system admin", error, 500);
+    }
+
+    return data;
   }
 
   async getUser() {

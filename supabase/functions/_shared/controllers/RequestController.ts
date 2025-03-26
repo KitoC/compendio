@@ -3,15 +3,10 @@
 import Logger from "locals/utils/Logger";
 
 // CORS headers for cross-origin requests
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
 
 export class RequestError extends Error {
   constructor(
-    message: string,
+    public message: string,
     public status: number,
     public details?: unknown
   ) {
@@ -24,9 +19,16 @@ export class RequestError extends Error {
 
 class RequestController {
   public logger: Logger;
+  public corsHeaders: object;
 
   constructor() {
     this.logger = new Logger({ name: "RequestController" });
+
+    this.corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers":
+        "authorization, x-client-info, apikey, content-type",
+    };
   }
 
   throwError(
@@ -49,13 +51,13 @@ class RequestController {
   }
 
   sendPreflightResponse() {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: this.corsHeaders as HeadersInit });
   }
 
   sendJsonResponse(data: object, status: number) {
     return new Response(JSON.stringify(data), {
       status,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...this.corsHeaders, "Content-Type": "application/json" },
     });
   }
 
@@ -65,13 +67,13 @@ class RequestController {
 
     return new Response(JSON.stringify({ error: error?.message }), {
       status: error?.status || 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...this.corsHeaders, "Content-Type": "application/json" },
     });
   }
 
   sendStreamResponse(stream: ReadableStream) {
     return new Response(stream, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+      headers: { ...this.corsHeaders, "Content-Type": "text/event-stream" },
     });
   }
 }

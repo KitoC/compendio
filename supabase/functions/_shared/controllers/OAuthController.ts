@@ -131,7 +131,12 @@ class OAuthController extends BaseController {
 
     const tokenData = await this.getOauthToken(reqArgs);
 
-    return await this.createOauthCredential(tokenData, reqArgs.options);
+    const credential = await this.createOauthCredential(
+      tokenData,
+      reqArgs.options
+    );
+
+    return credential;
   }
 
   async getOauthCredential(options: ReqArgs["options"]) {
@@ -216,7 +221,7 @@ class OAuthController extends BaseController {
     tokenData: TokenData,
     options: ReqArgs["options"] = { credential_name: "" }
   ) {
-    const { data, error } =
+    const credential =
       await this.context.credentialsService.createOauthCredential({
         access_token: tokenData.access_token,
         refresh_token: tokenData.refresh_token,
@@ -233,11 +238,7 @@ class OAuthController extends BaseController {
       this.oAuthState?.id as string
     );
 
-    if (error) {
-      this.throwError("Error setting current_setting", error, 500);
-    }
-
-    return data;
+    return credential;
   }
 
   async refreshOauthCredential(credential: ICredential) {
@@ -264,14 +265,17 @@ class OAuthController extends BaseController {
       refresh_failed = true;
     }
 
-    return await this.context.credentialsService.updateOauthCredential({
-      id: credential.id,
-      refresh_token: refreshToken,
-      access_token: tokenData.access_token,
-      scope: tokenData.scope,
-      expires_in: tokenData.expires_in,
-      refresh_failed,
-    });
+    const credentialId =
+      await this.context.credentialsService.updateOauthCredential({
+        id: credential.id,
+        refresh_token: refreshToken,
+        access_token: tokenData.access_token,
+        scope: tokenData.scope,
+        expires_in: tokenData.expires_in,
+        refresh_failed,
+      });
+
+    return { credentialId, tokenData };
   }
 }
 

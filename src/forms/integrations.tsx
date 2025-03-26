@@ -39,11 +39,15 @@ export const outlookFormConfig: FormConfig = {
           label: "Email",
           type: "radio",
           options: [
-            { label: "Read", value: "Mail.Read" },
-            { label: "Read and send", value: "Mail.ReadWrite, Mail.Send" },
+            // TODO: Find better way to do this
+            { label: "Read", value: "Mail.Read, MailboxSettings.Read" },
+            {
+              label: "Read and send",
+              value: "Mail.ReadWrite, Mail.Send, MailboxSettings.Read",
+            },
           ],
           validation: { required: true },
-          defaultValue: "Mail.Read",
+          defaultValue: "Mail.Read, MailboxSettings.Read",
           props: {
             orientation: "horizontal",
           },
@@ -54,11 +58,18 @@ export const outlookFormConfig: FormConfig = {
           label: "Calendar",
           type: "radio",
           options: [
-            { label: "Read", value: "Calendars.Read" },
-            { label: "Read and write", value: "Calendars.ReadWrite" },
+            // TODO: Find better way to do this
+            {
+              label: "Read",
+              value: "Calendars.Read, Calendars.Read.Shared",
+            },
+            {
+              label: "Read and write",
+              value: "Calendars.ReadWrite, Calendars.ReadWrite.Shared",
+            },
           ],
           validation: { required: true },
-          defaultValue: "Calendars.Read",
+          defaultValue: "Calendars.Read, Calendars.Read.Shared",
           props: {
             orientation: "horizontal",
           },
@@ -70,8 +81,8 @@ export const outlookFormConfig: FormConfig = {
   submitIconButtonAfter: <LogIn className="ml-2 h-4 w-4" />,
   initialValues: {
     name: "Outlook",
-    scope_email: "Mail.Read",
-    scope_calendar: "Calendars.Read",
+    scope_email: "Mail.Read, MailboxSettings.Read",
+    scope_calendar: "Calendars.Read, Calendars.Read.Shared",
   },
 };
 

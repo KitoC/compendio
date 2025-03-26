@@ -50,6 +50,19 @@ export class ControllerError extends Error {
   }
 }
 
+export class ProviderError extends Error {
+  public type: string;
+  constructor(
+    public origin: string,
+    public message: string,
+    public status: number,
+    public details?: unknown
+  ) {
+    super(message);
+    this.type = "ProviderError";
+  }
+}
+
 export class AuthorizationError extends RequestError {
   constructor(message: string, details?: unknown) {
     super(message, 401, details);

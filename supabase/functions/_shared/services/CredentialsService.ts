@@ -2,10 +2,8 @@
 
 import { BaseService } from "locals/services/_BaseService";
 import { getEnvKey } from "locals/utils/env";
-import {
-  SupabaseClient,
-  // @ts-expect-error - Supabase client is not typed
-} from "supabase-js";
+// @ts-expect-error - Supabase client is not typed
+import { SupabaseClient } from "supabase-js";
 
 interface RequiredContext {
   supabase: SupabaseClient;
@@ -47,7 +45,7 @@ export interface ICredential {
 
 class CredentialsService extends BaseService {
   constructor(public req: Request, public context: RequiredContext) {
-    super();
+    super(context);
   }
 
   async getOAuthState(stateToken: string) {

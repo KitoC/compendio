@@ -24,3 +24,12 @@ verify_jwt = false
 
 [functions.handle_oauth_callback]
 verify_jwt = false
+
+[functions.refresh_oauth_token]
+verify_jwt = false
+
+[functions.register_webhook]
+verify_jwt = false
+
+[functions.webhook]
+verify_jwt = false

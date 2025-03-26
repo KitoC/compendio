@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.8.0";
+// @ts-expect-error - Supabase client is not typed
+import { createClient } from "supabase-js";
 import { Database } from "../shared/types.ts";
 import Logger from "../shared/utils/logger.ts";
 import { getEnvKey } from "../shared/utils/env.ts";

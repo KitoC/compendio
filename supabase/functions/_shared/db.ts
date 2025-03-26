@@ -4,12 +4,11 @@ import { createClient } from "supabase-js";
 
 export const getClient = (req: Request) => {
   const Authorization = req.headers.get("Authorization");
-  const token = Authorization?.replace("Bearer ", "");
 
   return createClient(
     getEnvKey("SUPABASE_URL"),
     getEnvKey("SUPABASE_ANON_KEY"),
-    { global: { headers: { Authorization: token } } }
+    { global: { headers: { Authorization } } }
   );
 };
 
