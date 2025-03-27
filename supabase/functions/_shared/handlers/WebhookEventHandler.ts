@@ -5,6 +5,7 @@ import { OutlookWebhookHandler } from "locals/handlers/providers/OutlookWebhookH
 import { PublicContext } from "locals/middleware/withPublicContext";
 import { RequestHandlerResponse } from "locals/middleware/withRequestHandlers";
 import { OAuthController } from "locals/controllers/OAuthController";
+import { getWebhookProvider } from "locals/providers/WebhookProviderRegistry";
 
 export class WebhookEventHandler {
   async handle(
@@ -64,13 +65,15 @@ export class WebhookEventHandler {
     });
 
     const source = webhookController.connectedService.service_type;
+    const webhookProvider = getWebhookProvider(response.credential.provider);
 
     switch (source) {
       case "outlook":
         return new OutlookWebhookHandler(
           webhookController.connectedService,
           response.accessToken,
-          agentController
+          agentController,
+          webhookProvider
         ).handle(req, context);
       // case "gmail": return new GmailWebhookHandler().handle(...)
       default:

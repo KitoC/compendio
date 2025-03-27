@@ -10,13 +10,21 @@ export interface BaseRequiredContext {
 }
 
 type GetArgs = {
-  filter?: Record<string, string | number | boolean | null>;
+  filter?: Record<
+    string,
+    | string
+    | number
+    | boolean
+    | null
+    | Record<string, string | number | boolean | null>
+  >;
   sort?: { column: string; ascending?: boolean } | null;
   limit?: number | null;
   offset?: number | null;
   or?: string | null;
   textSearch?: { column: string; query: string } | null;
   range?: [number, number] | null;
+  columns?: string;
 };
 
 const ACCEPTABLE_OPERATORS = [
@@ -91,8 +99,9 @@ export class BaseSupabaseService {
     or = null,
     textSearch = null,
     range = null,
+    columns = this.defaultColumns,
   }: GetArgs = {}) {
-    let query = this.supabase.from(this.tableName).select(this.defaultColumns);
+    let query = this.supabase.from(this.tableName).select(columns);
 
     Object.entries(filter).forEach(([key, value]) => {
       if (typeof value === "object" && value !== null) {

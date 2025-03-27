@@ -5,7 +5,7 @@ import { AgentFunctionsService } from "locals/services/AgentFunctionsService";
 import { MessagesService } from "locals/services/MessagesService";
 import { ConversationsService } from "locals/services/ConversationsService";
 import { BaseRequiredContext } from "locals/services/_BaseSupabaseService";
-
+import { WebhookEventService } from "locals/services/WebhookEventService";
 export interface SharedServices {
   credentialsService: CredentialsService;
   connectedServicesService: ConnectedServicesService;
@@ -13,6 +13,7 @@ export interface SharedServices {
   agentFunctionsService: AgentFunctionsService;
   messagesService: MessagesService;
   conversationsService: ConversationsService;
+  webhookEventService: WebhookEventService;
 }
 
 const getSharedServices = (
@@ -28,6 +29,7 @@ const getSharedServices = (
   const agentFunctionsService = new AgentFunctionsService(req, supabaseContext);
   const messagesService = new MessagesService(req, supabaseContext);
   const conversationsService = new ConversationsService(req, supabaseContext);
+  const webhookEventService = new WebhookEventService(req, supabaseContext);
 
   return {
     credentialsService,
@@ -36,6 +38,7 @@ const getSharedServices = (
     agentFunctionsService,
     messagesService,
     conversationsService,
+    webhookEventService,
   };
 };
 

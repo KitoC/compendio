@@ -3,6 +3,7 @@ import {
   BaseRequiredContext,
   BaseSupabaseService,
 } from "locals/services/_BaseSupabaseService";
+import { ICredential } from "locals/services/CredentialsService";
 
 type CreateWebhookEventArgs = {
   source: string;
@@ -29,6 +30,8 @@ export interface ConnectedService {
   webhook_change_type: string;
   webhook_resource: string;
   agent_id: string;
+  provider: string;
+  credential?: ICredential;
 }
 
 export type UpdateConnectedServiceArgs = {
@@ -40,6 +43,7 @@ export type UpdateConnectedServiceArgs = {
 class ConnectedServicesService extends BaseSupabaseService {
   constructor(public req: Request, public context: BaseRequiredContext) {
     super(context);
+    this.tableName = "connected_services";
   }
 
   async getConnectedService(connected_service_id: string) {
@@ -55,23 +59,6 @@ class ConnectedServicesService extends BaseSupabaseService {
     }
 
     return data;
-  }
-
-  async createWebhookEvent(args: CreateWebhookEventArgs) {
-    const insert = await this.supabase.from("webhook_events").insert({
-      source: args.source,
-      event_type: args.event_type,
-      payload: args.payload,
-      headers: args.headers,
-      connected_service_id: args.connected_service_id,
-      tenant_id: args.tenant_id,
-    });
-
-    if (insert.error) {
-      this.throwError("Error creating webhook event", insert.error, 500);
-    }
-
-    return insert.data;
   }
 
   async updateConnectedService(args: UpdateConnectedServiceArgs) {

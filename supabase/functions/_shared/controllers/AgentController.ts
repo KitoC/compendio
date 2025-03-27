@@ -13,6 +13,7 @@ import { BaseController } from "locals/controllers/_BaseController";
 import { FunctionController } from "locals/controllers/FunctionController";
 import { getAgentProvider } from "locals/providers/agents/AgentProviderRegistry";
 import { IAgentProvider } from "locals/interfaces/IAgentProvider";
+import { IConversation } from "locals/services/ConversationsService";
 
 const defaultAgent: IAiAgent = {
   id: "default",
@@ -212,7 +213,7 @@ class AgentController extends BaseController {
     const response = await this.agentAdapter.createEmailMessage(email);
 
     await Promise.all(
-      agentConversations.map((conversation) => {
+      agentConversations.map((conversation: IConversation) => {
         const newMessage = {
           ...response,
           conversation_id: conversation.id,

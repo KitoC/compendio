@@ -241,6 +241,23 @@ class OAuthController extends BaseController {
     return credential;
   }
 
+  async getRefreshedAccessToken(id: string) {
+    if (!id) {
+      this.throwError("No credential id found", 500);
+      return;
+    }
+
+    const credential = await this.context.credentialsService.getCredential(id);
+    const tokenResponse = await this.refreshOauthCredential(credential);
+
+    if (!tokenResponse) {
+      this.throwError("No refresh token found", 500);
+      return;
+    }
+
+    return tokenResponse.tokenData.access_token;
+  }
+
   async refreshOauthCredential(credential: ICredential) {
     this.tid = credential.tid;
 

@@ -11,7 +11,8 @@
     "target": "ESNext",
     "baseUrl": ".",
     "paths": {
-      "locals/*": ["./functions/_shared/*"]
+      "locals/*": ["./functions/_shared/*"],
+      "@/*": ["./functions/_shared/*"]
     }
   },
   "exclude": ["node_modules", "**/*.spec.ts"],

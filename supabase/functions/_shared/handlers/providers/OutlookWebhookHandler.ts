@@ -1,15 +1,21 @@
 import { AgentController } from "locals/controllers/AgentController";
-import { FunctionController } from "locals/controllers/FunctionController";
 import { PublicContext } from "locals/middleware/withPublicContext";
 import { RequestHandlerResponse } from "locals/middleware/withRequestHandlers";
 import { ConnectedService } from "locals/services/ConnectedServicesService";
+import { IWebhookProvider } from "locals/interfaces/IWebhookProvider";
+import Logger from "locals/utils/Logger";
 
 export class OutlookWebhookHandler {
+  private logger: Logger;
+
   constructor(
     private connectedService: ConnectedService,
     private accessToken: string,
-    private agentController: AgentController
-  ) {}
+    private agentController: AgentController,
+    private webhookProvider: IWebhookProvider
+  ) {
+    this.logger = new Logger({ name: "OutlookWebhookHandler" });
+  }
 
   async handle(
     req: Request,
@@ -31,30 +37,51 @@ export class OutlookWebhookHandler {
 
     const event = body?.value?.[0];
 
+    const webhookEvent = await context.webhookEventService.createWebhookEvent({
+      tenant_id: this.connectedService.tenant_id,
+      payload: body,
+      headers: req.headers,
+      connected_service_id: this.connectedService.id,
+      status: "received",
+    });
+
     if (!event) {
-      return {
-        body: "Invalid event format",
-        headers: { "Content-Type": "text/plain" },
-        status: 400,
-      };
+      await context.webhookEventService.update(webhookEvent.id, {
+        status: "failed",
+        error_message: "No event",
+      });
+      return { body: null, headers: {}, status: 204 };
     }
 
-    if (event.subscriptionId !== this.connectedService.subscription_id) {
-      return {
-        body: "Invalid subscription id",
-        headers: { "Content-Type": "text/plain" },
-        status: 400,
-      };
+    if (
+      this.connectedService.subscription_id &&
+      event.subscriptionId !== this.connectedService.subscription_id
+    ) {
+      this.logger.warn("Cleaning up dead subscription", {
+        subscriptionId: event.subscriptionId,
+        connectedServiceId: this.connectedService.id,
+      });
+
+      await this.webhookProvider.unsubscribeFromWebhook({
+        accessToken: this.accessToken,
+        subscriptionId: this.connectedService.subscription_id,
+      });
+
+      await context.webhookEventService.update(webhookEvent.id, {
+        status: "failed",
+        error_message: "Subscription ID mismatch (unsubscribed",
+      });
+      return { body: null, headers: {}, status: 204 };
     }
 
     const messageId = event.resourceData.id;
 
     if (!messageId) {
-      return {
-        body: "Invalid message id",
-        headers: { "Content-Type": "text/plain" },
-        status: 400,
-      };
+      await context.webhookEventService.update(webhookEvent.id, {
+        status: "failed",
+        error_message: "No message ID",
+      });
+      return { body: null, headers: {}, status: 204 };
     }
 
     const response = await fetch(
@@ -69,23 +96,18 @@ export class OutlookWebhookHandler {
     );
 
     if (!response.ok) {
-      return {
-        body: "Failed to fetch email",
-        headers: { "Content-Type": "text/plain" },
-        status: 500,
-      };
+      await context.webhookEventService.update(webhookEvent.id, {
+        status: "failed",
+        error_message: "Failed to fetch message",
+      });
+
+      return { body: null, headers: {}, status: 204 };
     }
 
     const json = await response.json();
 
-    const email = await this.agentController.createEmailMessage(json);
+    await this.agentController.createEmailMessage(json);
 
-    return {
-      body: JSON.stringify(email),
-      headers: { "Content-Type": "text/json" },
-      // body: "Event received",
-      // headers: { "Content-Type": "text/plain" },
-      status: 200,
-    };
+    return { body: null, headers: {}, status: 202 };
   }
 }

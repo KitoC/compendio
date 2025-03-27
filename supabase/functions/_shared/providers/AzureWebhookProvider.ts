@@ -12,17 +12,15 @@ export class AzureWebhookProvider implements IWebhookProvider {
     webhookUrl,
     changeType = "created",
     resource = "me/mailFolders('inbox')/messages",
+    expirationDate,
   }: {
     accessToken: string;
     clientState: string;
     webhookUrl: string;
     changeType: string;
     resource: string;
+    expirationDate: string;
   }) {
-    const now = new Date();
-    const expires = new Date(now.getTime() + 11 * 60 * 60 * 1000).toISOString();
-
-    console.log("webhookUrl", webhookUrl);
     const res = await withRetry(() =>
       fetch(AZURE_GRAPH_API_URL, {
         method: "POST",
@@ -34,7 +32,7 @@ export class AzureWebhookProvider implements IWebhookProvider {
           changeType,
           notificationUrl: webhookUrl,
           resource,
-          expirationDateTime: expires,
+          expirationDateTime: expirationDate,
           clientState,
         }),
       })
@@ -55,5 +53,74 @@ export class AzureWebhookProvider implements IWebhookProvider {
       subscription_id: json.id,
       subscription_expires_at: json.expirationDateTime,
     };
+  }
+
+  refreshWebhookSubscription({
+    accessToken,
+    subscriptionId,
+    expirationDate,
+  }: {
+    accessToken: string;
+    subscriptionId: string;
+    expirationDate: string;
+  }) {
+    return withRetry(async () => {
+      const res = await fetch(`${AZURE_GRAPH_API_URL}/${subscriptionId}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          expirationDateTime: expirationDate,
+        }),
+      });
+
+      if (res.status === 204) {
+        return {
+          subscription_id: subscriptionId,
+          subscription_expires_at: expirationDate,
+        };
+      }
+
+      const error = await res.json();
+
+      throw new ProviderError(
+        "AzureWebhookProvider",
+        `Failed to refresh subscription ${subscriptionId}`,
+        res.status,
+        error
+      );
+    });
+  }
+
+  async unsubscribeFromWebhook({
+    accessToken,
+    subscriptionId,
+  }: {
+    accessToken: string;
+    subscriptionId: string;
+  }): Promise<void | true> {
+    const res = await fetch(
+      `https://graph.microsoft.com/v1.0/subscriptions/${subscriptionId}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    if (res.status === 204) {
+      return true;
+    }
+
+    const error = await res.json();
+    throw new ProviderError(
+      "AzureWebhookProvider",
+      "Failed to unsubscribe",
+      res.status,
+      error
+    );
   }
 }

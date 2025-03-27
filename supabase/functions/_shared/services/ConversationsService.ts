@@ -5,6 +5,13 @@ import {
   BaseSupabaseService,
 } from "locals/services/_BaseSupabaseService";
 
+export interface IConversation {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
 class ConversationsService extends BaseSupabaseService {
   constructor(public req: Request, public context: BaseRequiredContext) {
     super(context);

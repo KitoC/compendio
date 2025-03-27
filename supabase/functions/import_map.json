@@ -1,5 +1,6 @@
 {
   "imports": {
+    "@/SYSTEM_PROMPTS/email": "./_shared/SYSTEM_PROMPTS/email.ts",
     "deno-land": "https://deno.land/std@0.168.0/http/server.ts",
     "locals/controllers/AgentController": "./_shared/controllers/AgentController.ts",
     "locals/controllers/FunctionController": "./_shared/controllers/FunctionController.ts",
@@ -34,13 +35,16 @@
     "locals/services/ConversationsService": "./_shared/services/ConversationsService.ts",
     "locals/services/CredentialsService": "./_shared/services/CredentialsService.ts",
     "locals/services/MessagesService": "./_shared/services/MessagesService.ts",
+    "locals/services/WebhookEventService": "./_shared/services/WebhookEventService.ts",
     "locals/services/_BaseExternalService": "./_shared/services/_BaseExternalService.ts",
     "locals/services/_BaseSupabaseService": "./_shared/services/_BaseSupabaseService.ts",
     "locals/services/getSharedServices": "./_shared/middleware/_getSharedServices.ts",
     "locals/services/providers/OpenAiService": "./_shared/services/providers/OpenAiService.ts",
     "locals/types": "./_shared/types/index.ts",
     "locals/utils/Logger": "./_shared/utils/Logger.ts",
+    "locals/utils/chunkArray": "./_shared/utils/chunkArray.ts",
     "locals/utils/env": "./_shared/utils/env.ts",
+    "locals/utils/processInBatches": "./_shared/utils/processInBatches.ts",
     "locals/utils/withRetry": "./_shared/utils/withRetry.ts",
     "lodash": "https://esm.sh/lodash@4",
     "supabase-js": "https://esm.sh/@supabase/supabase-js@2.8.0"

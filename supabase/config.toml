@@ -33,3 +33,6 @@ verify_jwt = false
 
 [functions.webhook]
 verify_jwt = false
+
+[functions.refresh_webhook_subscriptions]
+verify_jwt = false

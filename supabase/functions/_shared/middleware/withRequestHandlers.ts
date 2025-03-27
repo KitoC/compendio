@@ -20,10 +20,10 @@ export const defaultParams: Params = {
 };
 
 export type RequestHandlerResponse = Promise<{
-  body: BodyInit;
+  body: BodyInit | null;
   headers: HeadersInit;
   status: number;
-}>;
+}> | null;
 
 export type RequestHandler<Context> = (
   req: Request,
@@ -61,6 +61,14 @@ export function withOriginGuardedRequestHandler<Context>(
 
       if (!res) {
         return new Response("No response from handler", { status: 500 });
+      }
+
+      if (res.status === 204) {
+        return new Response(null, { status: 204 });
+      }
+
+      if (res.status === 202) {
+        return new Response(null, { status: 202 });
       }
 
       const headers = new Headers({ ...corsHeaders, ...res.headers });
