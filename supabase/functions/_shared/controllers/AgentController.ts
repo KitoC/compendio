@@ -204,7 +204,6 @@ class AgentController extends BaseController {
   }
 
   async createEmailMessage(email: string) {
-    console.log("AGENT", this.agent);
     const agentConversations =
       await this.context.conversationsService.getAgentConversations(
         this.agent.id
@@ -220,7 +219,6 @@ class AgentController extends BaseController {
           tenant_id: this.agent.tenant_id,
           user_id: this.agent.id,
         };
-        console.log("NEW MESSAGE", newMessage);
 
         return this.context.messagesService.create(newMessage);
       })

@@ -2,13 +2,16 @@
 
 import { useChat } from "@/contexts/chat";
 import ChatMessage from "./ChatMessage";
+import { MARKUP_BUILDER_MAP_ROLES } from "./MarkupBuilder";
 
 const ChatMessages = () => {
   const { messages, messagesContainerRef } = useChat();
 
-  const filteredMessages = messages.filter((message) =>
-    ["user", "assistant"].includes(message.role)
-  );
+  const filteredMessages = messages
+    .filter((message) =>
+      ["user", "assistant", ...MARKUP_BUILDER_MAP_ROLES].includes(message.role)
+    )
+    .filter((fm) => !fm.reply_to);
 
   return (
     <div

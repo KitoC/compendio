@@ -2,10 +2,17 @@ import { ChatMessage } from "@/types/chat";
 import { FormBuilder, FormBuilderConfig } from "./FormBuilder";
 import QuickReplyBuilder, { QuickReplyConfig } from "./QuickReplyBuilder";
 import { OptionsBuilder, OptionsBuilderConfig } from "./OptionsBuilder";
-
+import EmailAgentMessage from "./EmailAgentMessage";
 export interface MarkupbuilderProps {
   message: ChatMessage;
 }
+
+export const MARKUP_BUILDER_MAP_ROLES = [
+  "form",
+  "options",
+  "quick-reply",
+  "email_agent",
+];
 
 const MarkupBuilder = ({ message }: MarkupbuilderProps) => {
   const content = message.content as unknown;
@@ -27,6 +34,10 @@ const MarkupBuilder = ({ message }: MarkupbuilderProps) => {
         config={message.content as unknown as QuickReplyConfig}
       />
     );
+  }
+
+  if (message.role === "email_agent") {
+    return <EmailAgentMessage message={message} />;
   }
 
   return <div>{message.content.text}</div>;

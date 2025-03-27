@@ -25,6 +25,17 @@ const buttonVariants = cva(
         muted: "bg-muted text-muted-foreground hover:bg-muted/90",
         "outline-warning":
           "border border-warning text-warning hover:bg-warning/10",
+        "outline-destructive":
+          "border border-destructive text-destructive hover:bg-destructive/10",
+        "outline-success":
+          "border border-success text-success hover:bg-success/10",
+        "outline-info": "border border-info text-info hover:bg-info/10",
+        "outline-muted": "border border-muted text-muted hover:bg-muted/10",
+        "outline-primary":
+          "border border-primary text-primary hover:bg-primary/10",
+        "outline-secondary":
+          "border border-secondary text-secondary hover:bg-secondary/10",
+        "outline-ghost": "border border-ghost text-ghost hover:bg-ghost/10",
       },
       size: {
         default: "h-10 px-4 py-2",

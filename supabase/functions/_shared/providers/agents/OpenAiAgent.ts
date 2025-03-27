@@ -42,7 +42,8 @@ Your response must be formatted like this:
       "from": "string",
       "subject": "string",
       "to": "string"
-    }
+    }, 
+    "reasoning": "string" // Explain why you are sending the email and why you wrote what you did. Be short and to the point but friendly. Follow up with a question if appropriate.
   },
   "conversation_id": "uuid",   // Omit or leave empty — added externally
   "metadata": {

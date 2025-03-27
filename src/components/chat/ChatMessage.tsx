@@ -2,7 +2,8 @@ import { FC, useRef } from "react";
 import { ChatMessage as ChatMessageType, MessageRole } from "@/types/chat";
 import clsx from "clsx";
 import RenderMarkdown from "./RenderMarkdown";
-import MarkupBuilder from "./MarkupBuilder";
+import MarkupBuilder, { MARKUP_BUILDER_MAP_ROLES } from "./MarkupBuilder";
+import { getContainerStyles, getMessageBubbleStyles } from "./shared.styles";
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -14,23 +15,14 @@ const ChatMessage: FC<ChatMessageProps> = ({ message, functionalMessages }) => {
   const messageRef = useRef<HTMLDivElement>(null);
   const isUser = message.role === "user";
 
+  if (MARKUP_BUILDER_MAP_ROLES.includes(message.role)) {
+    return <MarkupBuilder message={message} />;
+  }
+
   return (
     <>
-      <div
-        className={clsx("flex flex-col gap-1 mb-4 w-fit max-w-[85%]", {
-          "flex-row-reverse ml-auto": isUser,
-          "flex-row": !isUser,
-        })}
-        ref={messageRef}
-      >
-        <div
-          className={clsx("px-3 py-[3px] flex-grow w-full rounded-lg border", {
-            "bg-primary text-primary-foreground": isUser,
-            "bg-muted dark:transparent dark:text-white dark:border-slate-700":
-              !isUser,
-            "rounded-b-none": functionalMessages.length > 0,
-          })}
-        >
+      <div className={getContainerStyles({ isUser })} ref={messageRef}>
+        <div className={getMessageBubbleStyles({ isUser, functionalMessages })}>
           <RenderMarkdown
             message={message.content.text || ""}
             isUser={isUser}
