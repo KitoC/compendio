@@ -161,11 +161,10 @@ class WebhookController extends BaseController {
 
   async refreshWebhookSubscriptions() {
     const { context } = this;
-    const expirationDate = this.getOneHourFromNow();
 
-    const servicesAboutToExpire = await this.getServicesExpiringSoon(
-      expirationDate
-    );
+    const expirationDate = this.getSharedExpirationDate();
+
+    const servicesAboutToExpire = await this.getServicesExpiringSoon();
 
     const refreshResults = await this.refreshExpiringSubscriptions(
       servicesAboutToExpire,
@@ -175,12 +174,11 @@ class WebhookController extends BaseController {
     await this.nullifyFailedSubscriptions(refreshResults.failed);
 
     const servicesToResubscribe = await this.getServicesWithNullSubscriptions();
+
     const resubscribeResults = await this.resubscribeServices(
       servicesToResubscribe,
       expirationDate
     );
-
-    console.log("resubscribeResults", resubscribeResults);
 
     await this.persistUpdatedSubscriptions([
       ...refreshResults.success,
@@ -197,18 +195,23 @@ class WebhookController extends BaseController {
 
     return {
       refreshed: refreshResults.success.map((s) => s.item.id),
-      failed: refreshResults.failed,
+      failed: refreshResults.failed.map((s) => s.item.id),
       resubscribed: resubscribeResults.success.map((s) => s.item.id),
       permanentlyFailed: resubscribeResults.failed.map((s) => s.item.id),
     };
   }
 
-  async getServicesExpiringSoon(
-    expirationDate: string
-  ): Promise<ConnectedService[]> {
+  async getServicesExpiringSoon(): Promise<ConnectedService[]> {
+    const now = new Date();
+    const offset = 1.5; // 1.5 hours
+
+    const withinNextDate = new Date(
+      now.getTime() + offset * 60 * 60 * 1000
+    ).toISOString();
+
     return this.context.connectedServicesService.get({
       filter: {
-        subscription_expires_at: { lt: expirationDate },
+        subscription_expires_at: { lt: withinNextDate },
       },
       columns: "*, credential:credentials(id, provider)",
     });
@@ -276,8 +279,6 @@ class WebhookController extends BaseController {
         const accessToken = await this.oauthController.getRefreshedAccessToken(
           service.credential_id
         );
-
-        console.log("accessToken", accessToken);
 
         const result = await provider.subscribeToWebhook({
           accessToken,

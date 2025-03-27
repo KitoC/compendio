@@ -76,21 +76,21 @@ export class AzureWebhookProvider implements IWebhookProvider {
         }),
       });
 
-      if (res.status === 204) {
-        return {
-          subscription_id: subscriptionId,
-          subscription_expires_at: expirationDate,
-        };
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new ProviderError(
+          "AzureWebhookProvider",
+          `Azure subscription failed`,
+          500,
+          json
+        );
       }
 
-      const error = await res.json();
-
-      throw new ProviderError(
-        "AzureWebhookProvider",
-        `Failed to refresh subscription ${subscriptionId}`,
-        res.status,
-        error
-      );
+      return {
+        subscription_id: json.id,
+        subscription_expires_at: json.expirationDateTime,
+      };
     });
   }
 
