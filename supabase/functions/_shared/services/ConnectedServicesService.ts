@@ -1,14 +1,8 @@
 // NO_CHANGE
-
-import { BaseService } from "locals/services/_BaseService";
-import { getEnvKey } from "locals/utils/env";
-// @ts-expect-error - Supabase client is not typed
-import { SupabaseClient } from "supabase-js";
-
-interface RequiredContext {
-  supabase: SupabaseClient;
-  supabase_AS_SUPER_ADMIN: SupabaseClient;
-}
+import {
+  BaseRequiredContext,
+  BaseSupabaseService,
+} from "locals/services/_BaseSupabaseService";
 
 type CreateWebhookEventArgs = {
   source: string;
@@ -34,6 +28,7 @@ export interface ConnectedService {
   subscription_expires_at: string;
   webhook_change_type: string;
   webhook_resource: string;
+  agent_id: string;
 }
 
 export type UpdateConnectedServiceArgs = {
@@ -42,12 +37,13 @@ export type UpdateConnectedServiceArgs = {
   subscription_expires_at: string;
 };
 
-class ConnectedServicesService extends BaseService {
-  constructor(public req: Request, public context: RequiredContext) {
+class ConnectedServicesService extends BaseSupabaseService {
+  constructor(public req: Request, public context: BaseRequiredContext) {
     super(context);
   }
 
   async getConnectedService(connected_service_id: string) {
+    console.log("getConnectedService", connected_service_id);
     const { data, error } = await this.supabase
       .from("connected_services")
       .select("*")

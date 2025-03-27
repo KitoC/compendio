@@ -1,0 +1,26 @@
+{
+  "content": {
+    "email_drafted": {
+      "body": "string",
+      "to": "string"
+    },
+    "email_received": {
+      "body": "string",
+      "from": "string",
+      "subject": "string",
+      "to": "string"
+    }
+  },
+  "conversation_id": "uuid",
+  "event": "text",
+  "extension": "string",
+  "metadata": {
+    "email_id": "string",
+    "email_thread_id": "string",
+    "provider": "outlook|gmail"
+  },
+  "private": true,
+  "role": "email_agent",
+  "tenant_id": "uuid",
+  "user_id": "uuid"
+}

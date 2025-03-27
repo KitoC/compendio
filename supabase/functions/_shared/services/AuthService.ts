@@ -1,9 +1,10 @@
 // NO_CHANGE
 
 import Logger from "locals/utils/Logger";
-import { BaseService } from "locals/services/_BaseService";
-// @ts-expect-error - Supabase client is not typed
-import { SupabaseClient } from "supabase-js";
+import {
+  BaseRequiredContext,
+  BaseSupabaseService,
+} from "locals/services/_BaseSupabaseService";
 
 const ROLES = {
   SUPER_ADMIN: "super-admin",
@@ -13,12 +14,7 @@ const ROLES = {
   ADMIN: "admin",
 };
 
-interface AuthServiceContext {
-  supabase: SupabaseClient;
-  supabase_AS_SUPER_ADMIN: SupabaseClient;
-}
-
-class AuthService extends BaseService {
+class AuthService extends BaseSupabaseService {
   private token: string | null;
   private authHeader: string | null;
 
@@ -27,7 +23,7 @@ class AuthService extends BaseService {
   public tenantId: string | null;
   public user: object | null;
 
-  constructor(public req: Request, public context: AuthServiceContext) {
+  constructor(public req: Request, public context: BaseRequiredContext) {
     super(context);
 
     this.logger = new Logger({ name: "AuthService" });

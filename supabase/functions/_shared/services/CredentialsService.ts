@@ -1,14 +1,10 @@
 // NO_CHANGE
 
-import { BaseService } from "locals/services/_BaseService";
+import {
+  BaseRequiredContext,
+  BaseSupabaseService,
+} from "locals/services/_BaseSupabaseService";
 import { getEnvKey } from "locals/utils/env";
-// @ts-expect-error - Supabase client is not typed
-import { SupabaseClient } from "supabase-js";
-
-interface RequiredContext {
-  supabase: SupabaseClient;
-  supabase_AS_SUPER_ADMIN: SupabaseClient;
-}
 
 interface CreateCredentialArgs {
   access_token: string;
@@ -43,8 +39,8 @@ export interface ICredential {
   tid: string;
 }
 
-class CredentialsService extends BaseService {
-  constructor(public req: Request, public context: RequiredContext) {
+class CredentialsService extends BaseSupabaseService {
+  constructor(public req: Request, public context: BaseRequiredContext) {
     super(context);
   }
 

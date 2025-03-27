@@ -2,16 +2,16 @@ import { getClient, getADMINClient } from "locals/db";
 // @ts-expect-error - Supabase client is not typed
 import { SupabaseClient } from "supabase-js";
 import { AuthService } from "locals/services/AuthService";
-import { CredentialsService } from "locals/services/CredentialsService";
-import { ConnectedServicesService } from "locals/services/ConnectedServicesService";
+import {
+  SharedServices,
+  getSharedServices,
+} from "locals/middleware/_getSharedServices";
 
-export type AuthenticatedContext = {
+export interface AuthenticatedContext extends SharedServices {
   supabase: SupabaseClient;
   supabase_AS_SUPER_ADMIN: SupabaseClient;
   authService: AuthService;
-  credentialsService: CredentialsService;
-  connectedServicesService: ConnectedServicesService;
-};
+}
 
 export const withAuthenticatedContext = (
   handler: (req: Request, context: AuthenticatedContext) => Promise<Response>
@@ -26,11 +26,6 @@ export const withAuthenticatedContext = (
     };
 
     const authService = new AuthService(req, supabaseContext);
-    const credentialsService = new CredentialsService(req, supabaseContext);
-    const connectedServicesService = new ConnectedServicesService(
-      req,
-      supabaseContext
-    );
 
     await authService.initialize();
     await authService.getUser();
@@ -38,8 +33,7 @@ export const withAuthenticatedContext = (
     const context = {
       ...supabaseContext,
       authService,
-      credentialsService,
-      connectedServicesService,
+      ...getSharedServices(req, supabaseContext),
     };
 
     return handler(req, context);

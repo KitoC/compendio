@@ -15,7 +15,7 @@ interface ISubscribeToWebhookParams {
 
 // TODO: Add support for other providers
 class WebhookController extends BaseController {
-  private connectedService: ConnectedService | null;
+  public connectedService: ConnectedService | null;
   private credential: ICredential | null;
   private accessToken: string | null;
 

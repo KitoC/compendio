@@ -19,19 +19,21 @@ export const defaultParams: Params = {
   corsHeaders: defaultCorsHeaders,
 };
 
+export type RequestHandlerResponse = Promise<{
+  body: BodyInit;
+  headers: HeadersInit;
+  status: number;
+}>;
+
+export type RequestHandler<Context> = (
+  req: Request,
+  context: Context
+) => RequestHandlerResponse;
+
 export function withOriginGuardedRequestHandler<Context>(
   params: Params = defaultParams
 ) {
-  return (
-      handler: (
-        req: Request,
-        context: Context
-      ) => Promise<{
-        body: BodyInit;
-        headers: HeadersInit;
-        status: number;
-      } | void>
-    ) =>
+  return (handler: RequestHandler<Context>) =>
     async (req: Request, context: Context): Promise<Response> => {
       const {
         allowedOrigins = defaultAllowedOrigins,

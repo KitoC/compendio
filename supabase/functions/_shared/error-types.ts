@@ -63,6 +63,19 @@ export class ProviderError extends Error {
   }
 }
 
+export class ExternalServiceAiError extends Error {
+  public type: string;
+  constructor(
+    public origin: string,
+    public message: string,
+    public status: number,
+    public details?: unknown
+  ) {
+    super(message);
+    this.type = "ExternalServiceAiError";
+  }
+}
+
 export class AuthorizationError extends RequestError {
   constructor(message: string, details?: unknown) {
     super(message, 401, details);
