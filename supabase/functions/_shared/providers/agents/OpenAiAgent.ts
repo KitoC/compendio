@@ -9,7 +9,7 @@ import type {
 import { FunctionController } from "locals/controllers/FunctionController";
 import { OpenAiService } from "locals/services/providers/OpenAiService";
 
-import { EMAIL_AGENT_PROMPT } from "@/SYSTEM_PROMPTS/email";
+import { EMAIL_AGENT_PROMPT } from "@/SYSTEM_PROMPTS/EMAIL_AGENT_PROMPT";
 // TODO: Move this to a file or DB and inject schema for Email.
 
 export class OpenAiAgent implements IAgentProvider {
@@ -51,6 +51,10 @@ export class OpenAiAgent implements IAgentProvider {
       model: this.agent.model,
       options: {
         response_format: { type: "json_object" },
+        // response_format: {
+        //   type: "json_schema",
+        //   json_schema: EMAIL_AGENT_JSON_SCHEMA,
+        // },
       },
     });
 

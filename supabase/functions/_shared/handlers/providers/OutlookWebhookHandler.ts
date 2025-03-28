@@ -3,6 +3,7 @@ import { RequestHandlerResponse } from "locals/middleware/withRequestHandlers";
 import { ConnectedService } from "locals/services/ConnectedServicesService";
 import { IWebhookProvider } from "locals/interfaces/IWebhookProvider";
 import Logger from "locals/utils/Logger";
+import type { IEmailEvent } from "../WebhookEventHandler";
 
 export class OutlookWebhookHandler {
   private logger: Logger;
@@ -12,7 +13,7 @@ export class OutlookWebhookHandler {
     private accessToken: string,
     private webhookProvider: IWebhookProvider,
     private processEmailReceivedEvent: (
-      emailEvent: JSON
+      emailEvent: IEmailEvent
     ) => Promise<RequestHandlerResponse>
   ) {
     this.logger = new Logger({ name: "OutlookWebhookHandler" });
@@ -72,6 +73,7 @@ export class OutlookWebhookHandler {
         status: "failed",
         error_message: "Subscription ID mismatch (unsubscribed",
       });
+
       return { body: null, headers: {}, status: 204 };
     }
 
@@ -82,10 +84,14 @@ export class OutlookWebhookHandler {
         status: "failed",
         error_message: "No message ID",
       });
+
       return { body: null, headers: {}, status: 204 };
     }
 
-    await this.processEmailReceivedEvent(event);
+    await this.processEmailReceivedEvent({
+      email_id: messageId,
+      e_tag: event.resourceData["@odata.etag"],
+    });
 
     return { body: null, headers: {}, status: 202 };
   }

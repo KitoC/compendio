@@ -10,12 +10,8 @@ import {
 } from "locals/middleware/withPublicContext";
 
 const handler = async (req: Request, context: PublicContext) => {
-  const oauthController = new OAuthController(req, context);
-  const webhookController = new WebhookController(
-    req,
-    context,
-    oauthController
-  );
+  const oauthController = new OAuthController(context);
+  const webhookController = new WebhookController(context, oauthController);
 
   const subscriptionJson =
     await webhookController.refreshWebhookSubscriptions();

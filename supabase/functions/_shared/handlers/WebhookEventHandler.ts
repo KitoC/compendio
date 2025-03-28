@@ -5,6 +5,11 @@ import { RequestHandlerResponse } from "locals/middleware/withRequestHandlers";
 import { OAuthController } from "locals/controllers/OAuthController";
 import { getWebhookProvider } from "locals/providers/WebhookProviderRegistry";
 
+export interface IEmailEvent {
+  email_id: string;
+  e_tag: string;
+}
+
 export class WebhookEventHandler {
   async handle(
     req: Request,
@@ -26,9 +31,8 @@ export class WebhookEventHandler {
     // Determine source from headers or body
 
     const webhookController = new WebhookController(
-      req,
       context,
-      new OAuthController(req, context)
+      new OAuthController(context)
     );
 
     const response = await webhookController.getConnectedServiceAndRefreshToken(
@@ -65,11 +69,11 @@ export class WebhookEventHandler {
     const source = webhookController.connectedService.service_type;
     const webhookProvider = getWebhookProvider(response.credential.provider);
 
-    const processEmailReceivedEvent = async (emailEvent: JSON) => {
+    const processEmailReceivedEvent = async (email_event: IEmailEvent) => {
       const res = await context.functionQueueService.enqueueTask(
         "process_email_received",
         {
-          emailEvent,
+          email_event,
           tenant_id,
           connected_service_id,
           agentId: webhookController.connectedService?.agent_id,

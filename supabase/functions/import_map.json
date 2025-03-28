@@ -2,6 +2,7 @@
   "imports": {
     "@/SYSTEM_JSON_SCHEMAS/EMAIL_AGENT_JSON_SCHEMA": "./_shared/SYSTEM_JSON_SCHEMAS/EMAIL_AGENT_JSON_SCHEMA.ts",
     "@/SYSTEM_PROMPTS/EMAIL_AGENT_PROMPT": "./_shared/SYSTEM_PROMPTS/EMAIL_AGENT_PROMPT.ts",
+    "@/controllers/ConnectedServiceController": "./_shared/controllers/ConnectedServiceController.ts",
     "@/queue/tasks/EmailReceivedHandler": "./_shared/handlers/ProcessQueueHandler/tasks/EmailReceivedHandler.ts",
     "deno-land": "https://deno.land/std@0.168.0/http/server.ts",
     "locals/controllers/AgentController": "./_shared/controllers/AgentController.ts",

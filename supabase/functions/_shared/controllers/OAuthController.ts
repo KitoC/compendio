@@ -47,10 +47,7 @@ class OAuthController extends BaseController {
   private providerConfigs: Record<string, IOauthProviderConfig>;
   private oAuthState: IOauthState | null;
   private tid: string | null;
-  constructor(
-    public req: Request,
-    public context: PublicContext | AuthenticatedContext
-  ) {
+  constructor(public context: PublicContext | AuthenticatedContext) {
     super();
 
     this.provider = null;

@@ -11,14 +11,14 @@ import { getEnvKey } from "locals/utils/env";
 import { ProcessQueueHandler } from "locals/handlers/ProcessQueueHandler";
 
 const handler = async (req: Request, context: PublicContext) => {
-  const processQueueHandler = new ProcessQueueHandler();
+  const processQueueHandler = new ProcessQueueHandler(context);
 
-  await processQueueHandler.handle(req, context);
+  const result = await processQueueHandler.handle(req, context);
 
   return {
-    body: null,
-    headers: { "Content-Type": "text/plain" },
-    status: 202,
+    body: JSON.stringify(result),
+    headers: { "Content-Type": "application/json" },
+    status: 200,
   };
 };
 

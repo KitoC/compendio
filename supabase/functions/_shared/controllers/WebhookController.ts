@@ -21,7 +21,6 @@ class WebhookController extends BaseController {
   private accessToken: string | null;
 
   constructor(
-    public req: Request,
     public context: PublicContext | AuthenticatedContext,
     public oauthController: OAuthController
   ) {

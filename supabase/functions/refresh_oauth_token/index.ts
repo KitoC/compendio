@@ -10,7 +10,7 @@ import { withPublicContext } from "locals/middleware/withPublicContext";
 const handler = async (req: Request, context: PublicContext) => {
   const { credentialId } = await req.json();
 
-  const oAuthController = new OAuthController(req, context);
+  const oAuthController = new OAuthController(context);
 
   await context.supabase_AS_SUPER_ADMIN.rpc("cleanup_oauth_states");
 

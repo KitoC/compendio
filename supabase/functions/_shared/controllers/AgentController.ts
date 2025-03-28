@@ -14,6 +14,7 @@ import { FunctionController } from "locals/controllers/FunctionController";
 import { getAgentProvider } from "locals/providers/agents/AgentProviderRegistry";
 import { IAgentProvider } from "locals/interfaces/IAgentProvider";
 import { IConversation } from "locals/services/ConversationsService";
+import { EMAIL_AGENT_JSON_SCHEMA } from "@/SYSTEM_JSON_SCHEMAS/EMAIL_AGENT_JSON_SCHEMA";
 
 const defaultAgent: IAiAgent = {
   id: "default",
@@ -38,7 +39,6 @@ interface SendMessageArgs {
 }
 
 interface AgentControllerFactoryArgs {
-  req: Request;
   context: PublicContext | AuthenticatedContext;
   functionController: FunctionController;
   agentId: string;
@@ -50,7 +50,6 @@ class AgentController extends BaseController {
   private agentAdapter: IAgentProvider;
 
   constructor(
-    public req: Request,
     public context: PublicContext | AuthenticatedContext,
     public functionController: FunctionController,
     agent: IAiAgent,
@@ -64,7 +63,6 @@ class AgentController extends BaseController {
   }
 
   static async create({
-    req,
     context,
     functionController,
     agentId,
@@ -80,7 +78,6 @@ class AgentController extends BaseController {
     const agentAdapter = adapterFactory(agent);
 
     return new AgentController(
-      req,
       context,
       functionController,
       agent,
@@ -144,13 +141,14 @@ class AgentController extends BaseController {
   }
 
   async getLastNMessages(conversationId: string, n: number) {
-    const messages = await this.context.messagesService.get({
-      filter: { conversation_id: conversationId },
-      sort: { column: "created_at", ascending: false },
-      limit: n,
-    });
+    const { data, error } = await this.context.supabase
+      .from("conversation_messages_view")
+      .select("*")
+      .eq("conversation_id", conversationId)
+      .order("created_at", { ascending: true }) // or false for descending
+      .range(0, n - 1);
 
-    return messages.map((message: ChatMessage) => ({
+    return data.map((message: ChatMessage) => ({
       role: message.role as OpenAiRole,
       content: message.content,
     }));
@@ -210,22 +208,41 @@ class AgentController extends BaseController {
         this.agent.id
       );
 
-    const response = await this.agentAdapter.createEmailMessage(email);
-
-    await Promise.all(
-      agentConversations.map((conversation: IConversation) => {
-        const newMessage = {
-          ...response,
-          conversation_id: conversation.id,
-          tenant_id: this.agent.tenant_id,
-          user_id: this.agent.id,
-        };
-
-        return this.context.messagesService.create(newMessage);
-      })
+    const response = await this.agentAdapter.createEmailMessage(
+      email,
+      EMAIL_AGENT_JSON_SCHEMA as unknown as JSON
     );
 
-    return response;
+    const messages = await this.context.messagesService.get({
+      filter: {
+        "metadata->>email_id": {
+          eq: response.email_id,
+        },
+      },
+    });
+
+    const message = messages?.[0];
+
+    if (message) {
+      return await this.context.messagesService.update(message.id, message);
+    } else {
+      const conversation_ids = agentConversations.map(
+        (conversation: IConversation) => conversation.id
+      );
+
+      const newMessage = {
+        content: response,
+        role: "email_agent",
+        tenant_id: this.agent.tenant_id,
+        user_id: this.agent.id,
+        metadata: {},
+      };
+
+      return this.context.messagesService.createMessageForConversations(
+        conversation_ids,
+        newMessage
+      );
+    }
   }
 }
 

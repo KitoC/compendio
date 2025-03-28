@@ -13,7 +13,7 @@ const handleOauthCallbackHandler = async (
   req: Request,
   context: PublicContext
 ) => {
-  const oauthController = new OAuthController(req, context);
+  const oauthController = new OAuthController(context);
 
   const { code, state, id_token_only, options } = await req.json();
 

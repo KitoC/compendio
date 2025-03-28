@@ -12,12 +12,8 @@ import {
 const handler = async (req: Request, context: AuthenticatedContext) => {
   const { connected_service_id, tenant_id } = await req.json();
 
-  const oauthController = new OAuthController(req, context);
-  const webhookController = new WebhookController(
-    req,
-    context,
-    oauthController
-  );
+  const oauthController = new OAuthController(context);
+  const webhookController = new WebhookController(context, oauthController);
 
   const subscriptionJson = await webhookController.subscribeToWebhook({
     connected_service_id,

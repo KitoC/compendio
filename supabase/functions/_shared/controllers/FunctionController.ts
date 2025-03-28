@@ -12,10 +12,7 @@ class FunctionController extends BaseController {
   private markup: { [key: string]: unknown };
   private functionsMap: { [key: string]: IFunction };
 
-  constructor(
-    public req: Request,
-    public context: PublicContext | AuthenticatedContext
-  ) {
+  constructor(public context: PublicContext | AuthenticatedContext) {
     super();
     this.markup = {};
     this.functionsMap = {};

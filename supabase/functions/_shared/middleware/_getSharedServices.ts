@@ -6,6 +6,9 @@ import { MessagesService } from "locals/services/MessagesService";
 import { ConversationsService } from "locals/services/ConversationsService";
 import { BaseRequiredContext } from "locals/services/_BaseSupabaseService";
 import { WebhookEventService } from "locals/services/WebhookEventService";
+import { FunctionQueueService } from "locals/services/FunctionQueueService";
+import { AzureService } from "locals/services/providers/AzureService";
+
 export interface SharedServices {
   credentialsService: CredentialsService;
   connectedServicesService: ConnectedServicesService;
@@ -14,6 +17,8 @@ export interface SharedServices {
   messagesService: MessagesService;
   conversationsService: ConversationsService;
   webhookEventService: WebhookEventService;
+  functionQueueService: FunctionQueueService;
+  azureService: AzureService;
 }
 
 const getSharedServices = (
@@ -30,7 +35,8 @@ const getSharedServices = (
   const messagesService = new MessagesService(req, supabaseContext);
   const conversationsService = new ConversationsService(req, supabaseContext);
   const webhookEventService = new WebhookEventService(req, supabaseContext);
-
+  const functionQueueService = new FunctionQueueService(req, supabaseContext);
+  const azureService = new AzureService();
   return {
     credentialsService,
     connectedServicesService,
@@ -39,6 +45,8 @@ const getSharedServices = (
     messagesService,
     conversationsService,
     webhookEventService,
+    functionQueueService,
+    azureService,
   };
 };
 
