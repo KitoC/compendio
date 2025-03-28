@@ -1,0 +1,5 @@
+{
+  "endpoint": "process-queue",
+  "name": "process_queue",
+  "schedule": "* * * * *"
+}

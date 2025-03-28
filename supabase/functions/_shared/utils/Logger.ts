@@ -74,7 +74,7 @@ class Logger {
   // Warning logs
   warn(message: string, data?: unknown): void {
     if (this.currentLogLevel >= LogLevel.WARN) {
-      console.warn(this.formatLogMessage("WARN", message, data));
+      console.info(this.formatLogMessage("WARN", message, data));
     }
   }
 

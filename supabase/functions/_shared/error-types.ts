@@ -63,6 +63,19 @@ export class ProviderError extends Error {
   }
 }
 
+export class ProcessQueueError extends Error {
+  public type: string;
+  constructor(
+    public origin: string,
+    public message: string,
+    public status: number,
+    public details?: unknown
+  ) {
+    super(message);
+    this.type = "ProcessQueueError";
+  }
+}
+
 export class ExternalServiceAiError extends Error {
   public type: string;
   constructor(

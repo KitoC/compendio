@@ -12,7 +12,8 @@
     "baseUrl": ".",
     "paths": {
       "locals/*": ["./functions/_shared/*"],
-      "@/*": ["./functions/_shared/*"]
+      "@/*": ["./functions/_shared/*"],
+      "@/queue/*": ["./functions/_shared/handlers/ProcessQueueHandler/*"]
     }
   },
   "exclude": ["node_modules", "**/*.spec.ts"],
