@@ -48,11 +48,15 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     if (!conversationId) return;
 
     try {
+      const offset = 0;
+      const limit = 10;
+
       const { data, error } = await supabase
-        .from("messages")
+        .from("conversation_messages_view")
         .select("*")
         .eq("conversation_id", conversationId)
-        .order("created_at", { ascending: true });
+        .order("updated_at", { ascending: true }) // or false for descending
+        .range(offset, offset + limit - 1);
 
       if (error) {
         throw error;
@@ -266,6 +270,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
 
   const userId = user?.id || "";
 
+  console.log("messages", messages);
   return {
     messages,
     isTyping,

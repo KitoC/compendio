@@ -14,6 +14,12 @@ import {
 } from "@/components/ui/collapsible";
 import { FoldVertical, UnfoldVertical } from "lucide-react";
 import { useState } from "react";
+import RenderMarkdown from "../RenderMarkdown";
+import {
+  NormalizedEmailResponse,
+  NormalizedEmailThreadItem,
+} from "@/types/emailAgentMessage";
+
 export interface QuickReplyConfig {
   replies: string[];
   isInline: boolean;
@@ -23,63 +29,67 @@ interface QuickReplyBuilderProps {
   message: ChatMessage;
 }
 
-interface EmailAgentMessageContent {
-  email_received: {
-    subject: string;
-    body: string;
-    from: string;
-    to: string;
-  };
-  email_drafted: {
-    to: string;
-    subject: string;
-    body: string;
-  };
-  reasoning: string;
-}
-
 interface EmailContentProps {
   from?: string;
   to: string;
-  subject: string;
+  subject?: string;
   body: string;
   header: string;
+  thread?: NormalizedEmailThreadItem[];
 }
+
 const EmailContent = ({
   from,
   to,
   subject,
   body,
   header,
+  thread,
 }: EmailContentProps) => {
+  console.log("thread -->", thread);
   return (
     <div className="flex flex-col gap-3">
       <div>
         <h3 className="text-sm font-bold">{header}</h3>
       </div>
+      {from && (
+        <p className="text-sm text-muted-foreground">
+          <strong>From: </strong>
+          {from}
+        </p>
+      )}
+      {to && (
+        <p className="text-sm text-muted-foreground">
+          <strong>To: </strong>
+          {to}
+        </p>
+      )}
       <div className="pl-6">
         <div className="flex flex-col gap-1">
-          {from && (
-            <p className="text-sm text-muted-foreground">
-              <strong>From: </strong>
-              {from}
-            </p>
-          )}
-          {to && (
-            <p className="text-sm text-muted-foreground">
-              <strong>To: </strong>
-              {to}
-            </p>
-          )}
           {subject && (
             <p>
               <strong>Subject: </strong>
               {subject}
             </p>
           )}
+
           {body && (
             <div className="mt-1">
-              <p>{body}</p>
+              <RenderMarkdown message={body} isUser={false} />
+            </div>
+          )}
+          {!!thread?.length && (
+            <div className="mt-1">
+              <p>Thread:</p>
+              {thread.map(({ from, timestamp, body }) => (
+                <div className="mt-1">
+                  <div className="border-t border-slate-700 w-full my-2"></div>
+                  <p className="text-xs text-muted-foreground">
+                    {from} - {new Date(timestamp).toLocaleDateString()}
+                  </p>
+                  <RenderMarkdown message={body} isUser={false} />
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -89,8 +99,8 @@ const EmailContent = ({
 };
 
 const QuickReplyBuilder = ({ message }: QuickReplyBuilderProps) => {
-  const { email_received, email_drafted } =
-    message.content as unknown as EmailAgentMessageContent;
+  const { email_received, email_drafted, reasoning } =
+    message.content as unknown as NormalizedEmailResponse;
 
   const [open, setOpen] = useState(true);
 
@@ -119,6 +129,7 @@ const QuickReplyBuilder = ({ message }: QuickReplyBuilderProps) => {
     },
   ];
 
+  console.log("email_drafted -->", email_drafted);
   return (
     <div className={getContainerStyles({ isUser: false }) + " w-full"}>
       <div
@@ -152,15 +163,19 @@ const QuickReplyBuilder = ({ message }: QuickReplyBuilderProps) => {
               from={email_received.from}
               to={email_received.to}
               subject={email_received.subject}
-              body={email_received.body}
+              body={email_received.latest_message.body}
+              thread={email_received.thread}
             />
-            <div className="border-t border-slate-700 w-full my-2"></div>
-            <EmailContent
-              header="I drafted this reply:"
-              to={email_drafted.to}
-              subject={email_drafted.subject}
-              body={email_drafted.body}
-            />
+            {email_drafted && (
+              <>
+                <div className="border-t border-slate-700 w-full my-2"></div>
+                <EmailContent
+                  header="I drafted this reply:"
+                  to={email_drafted.to}
+                  body={email_drafted.body}
+                />
+              </>
+            )}
           </CollapsibleContent>
         </Collapsible>
       </div>
@@ -171,7 +186,7 @@ const QuickReplyBuilder = ({ message }: QuickReplyBuilderProps) => {
           "flex flex-col gap-3 !py-4 rounded-t-none"
         )}
       >
-        <p>{message.content.reasoning}</p>
+        <p>{reasoning}</p>
         <p>What would you like me to do?</p>
       </div>
       <div className={`flex gap-2 justify-end mt-2`}>

@@ -1,3 +1,5 @@
+import { NormalizedEmailResponse } from "./emailAgentMessage";
+
 export enum MessageRole {
   SYSTEM = "system",
   USER = "user",
@@ -6,6 +8,7 @@ export enum MessageRole {
   FUNCTION = "function",
   QUICK_REPLY = "quick-reply",
   OPTIONS = "options",
+  EMAIL_AGENT = "email_agent",
 }
 
 export type OpenAiRole =
@@ -19,15 +22,16 @@ export type OpenAiMessage = {
   role: OpenAiRole;
 };
 
+export interface NormalChatContent {
+  text?: string;
+  [key: string]: unknown;
+}
+
 export interface ChatMessage {
   id: string;
-  conversation_id: string;
   user_id?: string;
   role: MessageRole | string;
-  content: {
-    text?: string;
-    [key: string]: unknown;
-  };
+  content: NormalChatContent | NormalizedEmailResponse;
   metadata: Record<string, unknown>;
   created_at?: string;
   updated_at?: string;

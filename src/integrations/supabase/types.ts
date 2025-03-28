@@ -425,6 +425,43 @@ export type Database = {
           }
         ];
       };
+      conversation_messages: {
+        Row: {
+          id: string;
+          conversation_id: string;
+          message_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          conversation_id: string;
+          message_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          conversation_id?: string;
+          message_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversation_messages_conversation_id_fkey";
+            columns: ["conversation_id"];
+            isOneToOne: false;
+            referencedRelation: "conversations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversation_messages_message_id_fkey";
+            columns: ["message_id"];
+            isOneToOne: false;
+            referencedRelation: "messages";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+
       credentials: {
         Row: {
           access_token: string | null;
@@ -967,7 +1004,6 @@ export type Database = {
       messages: {
         Row: {
           content: Json;
-          conversation_id: string;
           created_at: string | null;
           deleted_at: string | null;
           id: string;
@@ -980,7 +1016,6 @@ export type Database = {
         };
         Insert: {
           content: Json;
-          conversation_id: string;
           created_at?: string | null;
           deleted_at?: string | null;
           id?: string;
@@ -993,7 +1028,6 @@ export type Database = {
         };
         Update: {
           content?: Json;
-          conversation_id?: string;
           created_at?: string | null;
           deleted_at?: string | null;
           id?: string;
@@ -1005,13 +1039,6 @@ export type Database = {
           user_id?: string | null;
         };
         Relationships: [
-          {
-            foreignKeyName: "fk_conversation";
-            columns: ["conversation_id"];
-            isOneToOne: false;
-            referencedRelation: "conversations";
-            referencedColumns: ["id"];
-          },
           {
             foreignKeyName: "fk_messages_tenant";
             columns: ["tenant_id"];
@@ -1790,7 +1817,27 @@ export type Database = {
       };
     };
     Views: {
-      [_ in never]: never;
+      conversation_messages_view: {
+        Row: {
+          conversation_id: string;
+          id: string;
+          content: Json;
+          created_at: string | null;
+          deleted_at: string | null;
+          metadata: Json;
+          reply_to: string | null;
+          role: string;
+          tenant_id: string;
+          updated_at: string | null;
+          user_id: string | null;
+          username: string | null;
+          avatar_url: string | null;
+          display_name: string | null;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: never;
+      };
     };
     Functions: {
       get_user_tenants: {
