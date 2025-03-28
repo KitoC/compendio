@@ -196,10 +196,7 @@ const tableBuilderHandler = async (
   authService.allowedRoles([ROLES.TENANT_OWNER, ROLES.SUPER_ADMIN]);
 
   if (!authService.tenantId) {
-    return authService.throwError(
-      "Tenant ID is required to create tables",
-      400
-    );
+    authService.throwError("Tenant ID is required to create tables", 400);
   }
 
   tableBuilderController.logger.info("action", action);
@@ -222,24 +219,18 @@ const tableBuilderHandler = async (
 
     case "create_tables": {
       if (!schema || !schema.tables || !Array.isArray(schema.tables)) {
-        return tableBuilderController.throwError(
-          "Invalid schema provided",
-          400
-        );
+        tableBuilderController.throwError("Invalid schema provided", 400);
       }
 
       const response = await tableBuilderController.createAndApplyMigration({
         schema,
       });
 
-      if (!response) {
-        return tableBuilderController.throwError(
-          "Failed to create tables",
-          500
-        );
+      if (!response?.insert_custom_tables_response) {
+        tableBuilderController.throwError("Failed to create tables", 500);
       }
 
-      const table_ids = response.insert_custom_tables_response.data.map(
+      const table_ids = response!.insert_custom_tables_response.data.map(
         (table: { [key: string]: string }) => Object.values(table)[0]
       );
 
@@ -252,7 +243,7 @@ const tableBuilderHandler = async (
 
     case "analyze_files": {
       if (!files || !Array.isArray(files) || files.length === 0) {
-        return tableBuilderController.throwError("No files provided", 400);
+        tableBuilderController.throwError("No files provided", 400);
       }
 
       const schema = await analyzeFilesForSchema(files);
@@ -271,13 +262,13 @@ const tableBuilderHandler = async (
           try {
             parsedSchema = JSON.parse(jsonMatch[1] || jsonMatch[0]);
           } catch (innerError) {
-            return tableBuilderController.throwError(
+            tableBuilderController.throwError(
               "Failed to parse file analysis",
               400
             );
           }
         } else {
-          return tableBuilderController.throwError(
+          tableBuilderController.throwError(
             "Failed to parse file analysis",
             400
           );
@@ -293,14 +284,11 @@ const tableBuilderHandler = async (
 
     case "import_data": {
       if (!schema || !schema.tables || !Array.isArray(schema.tables)) {
-        return tableBuilderController.throwError(
-          "Invalid schema provided",
-          400
-        );
+        tableBuilderController.throwError("Invalid schema provided", 400);
       }
 
       if (!files || !Array.isArray(files) || files.length === 0) {
-        return tableBuilderController.throwError("No files provided", 400);
+        tableBuilderController.throwError("No files provided", 400);
       }
 
       // First create the tables
@@ -308,14 +296,11 @@ const tableBuilderHandler = async (
         schema,
       });
 
-      if (!response) {
-        return tableBuilderController.throwError(
-          "Failed to create tables",
-          500
-        );
+      if (!response?.insert_custom_tables_response) {
+        tableBuilderController.throwError("Failed to create tables", 500);
       }
 
-      const table_ids = response.insert_custom_tables_response.data;
+      const table_ids = response!.insert_custom_tables_response.data;
 
       // Then prepare and import the data
       const importData = await prepareDataForImport(files, schema);

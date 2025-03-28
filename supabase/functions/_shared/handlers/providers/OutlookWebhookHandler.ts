@@ -1,4 +1,3 @@
-import { AgentController } from "locals/controllers/AgentController";
 import { PublicContext } from "locals/middleware/withPublicContext";
 import { RequestHandlerResponse } from "locals/middleware/withRequestHandlers";
 import { ConnectedService } from "locals/services/ConnectedServicesService";
@@ -11,8 +10,10 @@ export class OutlookWebhookHandler {
   constructor(
     private connectedService: ConnectedService,
     private accessToken: string,
-    private agentController: AgentController,
-    private webhookProvider: IWebhookProvider
+    private webhookProvider: IWebhookProvider,
+    private processEmailReceivedEvent: (
+      emailEvent: JSON
+    ) => Promise<RequestHandlerResponse>
   ) {
     this.logger = new Logger({ name: "OutlookWebhookHandler" });
   }
@@ -84,29 +85,7 @@ export class OutlookWebhookHandler {
       return { body: null, headers: {}, status: 204 };
     }
 
-    const response = await fetch(
-      `https://graph.microsoft.com/v1.0/me/messages/${messageId}?$select=subject,body,from,toRecipients`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${this.accessToken}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    if (!response.ok) {
-      await context.webhookEventService.update(webhookEvent.id, {
-        status: "failed",
-        error_message: "Failed to fetch message",
-      });
-
-      return { body: null, headers: {}, status: 204 };
-    }
-
-    const json = await response.json();
-
-    await this.agentController.createEmailMessage(json);
+    await this.processEmailReceivedEvent(event);
 
     return { body: null, headers: {}, status: 202 };
   }

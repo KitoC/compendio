@@ -1,6 +1,4 @@
-import { AgentController } from "locals/controllers/AgentController";
 import { WebhookController } from "locals/controllers/WebhookController";
-import { FunctionController } from "locals/controllers/FunctionController";
 import { OutlookWebhookHandler } from "locals/handlers/providers/OutlookWebhookHandler";
 import { PublicContext } from "locals/middleware/withPublicContext";
 import { RequestHandlerResponse } from "locals/middleware/withRequestHandlers";
@@ -53,27 +51,42 @@ export class WebhookEventHandler {
       };
     }
 
-    const agentController = await AgentController.create({
-      req,
-      context,
-      functionController: new FunctionController(req, context),
-      agentId: webhookController.connectedService.agent_id,
-      sessionContext: {
-        connected_service_id,
-        tenant_id,
-      },
-    });
+    // const agentController = await AgentController.create({
+    //   req,
+    //   context,
+    //   functionController: new FunctionController(req, context),
+    //   agentId: webhookController.connectedService.agent_id,
+    //   sessionContext: {
+    //     connected_service_id,
+    //     tenant_id,
+    //   },
+    // });
 
     const source = webhookController.connectedService.service_type;
     const webhookProvider = getWebhookProvider(response.credential.provider);
+
+    const processEmailReceivedEvent = async (emailEvent: JSON) => {
+      const res = await context.functionQueueService.enqueueTask(
+        "process_email_received",
+        {
+          emailEvent,
+          tenant_id,
+          connected_service_id,
+          agentId: webhookController.connectedService?.agent_id,
+          provider: response.credential.provider,
+        }
+      );
+
+      return res;
+    };
 
     switch (source) {
       case "outlook":
         return new OutlookWebhookHandler(
           webhookController.connectedService,
           response.accessToken,
-          agentController,
-          webhookProvider
+          webhookProvider,
+          processEmailReceivedEvent
         ).handle(req, context);
       // case "gmail": return new GmailWebhookHandler().handle(...)
       default:
