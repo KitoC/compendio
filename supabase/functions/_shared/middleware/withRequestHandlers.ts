@@ -81,14 +81,20 @@ export function withRequestHandlers<Context extends CorsContext>(
 
       console.log("corsHeaders ERROR", corsHeaders);
 
-      return new Response(JSON.stringify({ error: "Internal Server Error" }), {
-        status: 500,
-        headers: {
-          ...corsHeaders,
-          "Access-Control-Allow-Headers":
-            "authorization, x-client-info, apikey, content-type",
-        },
-      });
+      return new Response(
+        JSON.stringify({
+          error: "Internal Server Error",
+          details: error,
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Access-Control-Allow-Headers":
+              "authorization, x-client-info, apikey, content-type",
+          },
+        }
+      );
     }
   };
 }

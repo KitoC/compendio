@@ -1,4 +1,5 @@
 import { SupabaseFunctionService } from "./supabaseFunctionServices";
+import { ChatMessage } from "@/types/chat";
 
 interface MessageQuery {
   conversation_id: string;
@@ -7,6 +8,7 @@ interface MessageQuery {
   role?: string;
   search?: string;
 }
+
 export const MessageService = {
   async getMessages(conversationId: string, query: MessageQuery) {
     const response = await SupabaseFunctionService.get("messages", {
@@ -16,6 +18,15 @@ export const MessageService = {
 
     if (!response.ok) {
       throw new Error("Failed to fetch messages");
+    }
+
+    return response.json();
+  },
+  async createMessage(message: ChatMessage) {
+    const response = await SupabaseFunctionService.post("messages", message);
+
+    if (!response.ok) {
+      throw new Error("Failed to create message");
     }
 
     return response.json();

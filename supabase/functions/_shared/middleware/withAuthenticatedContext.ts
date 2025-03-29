@@ -7,6 +7,9 @@ import {
   SharedServices,
 } from "locals/middleware/_getSharedServices";
 import { CorsContext } from "locals/middleware/withCors";
+import Logger from "locals/utils/Logger";
+
+const logger = new Logger({ name: "withAuthenticatedContext" });
 
 export interface AuthenticatedContext extends SharedServices {
   supabase: SupabaseClient;
@@ -35,6 +38,9 @@ export const withAuthenticatedContext = (
 
     await authService.initialize();
     const user = await authService.getUser();
+
+    logger.debug("currentUser", JSON.stringify(user));
+    logger.debug("currentUser.tenant_id", user.tenant_id);
 
     const context = {
       ...corsContext,

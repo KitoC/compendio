@@ -14,9 +14,11 @@ const getFunctionUrl = (functionName: string, searchParams?: string) => {
 };
 
 const getHeaders = async () => {
-  const token =
-    (await supabase.auth.getSession()).data.session?.access_token ||
-    import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const session = await supabase.auth.getSession();
+
+  const userToken = session?.data?.session?.access_token;
+
+  const token = userToken || import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   return {
     "Content-Type": "application/json",
@@ -47,6 +49,17 @@ export const SupabaseFunctionService = {
     const response = await fetch(getFunctionUrl(functionName, query), {
       method: "GET",
       headers,
+    });
+
+    return response;
+  },
+
+  async post(functionName: string, body: object) {
+    const headers = await getHeaders();
+    const response = await fetch(getFunctionUrl(functionName), {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
     });
 
     return response;

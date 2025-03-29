@@ -92,11 +92,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       try {
         console.log("useChatState.tsx - newMessage", newMessage);
         // Save the user message to the database
-        await supabase
-          .from("messages")
-          .insert([
-            newMessage as Database["public"]["Tables"]["messages"]["Insert"],
-          ]);
+        await MessageService.createMessage(newMessage);
 
         // Create a placeholder message for the AI response
         const aiMessage = createAiMessage("");

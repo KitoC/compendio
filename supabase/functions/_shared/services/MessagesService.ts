@@ -23,6 +23,12 @@ class MessagesService extends BaseSupabaseService {
 
     const encryption_key = getEnvKey("ENCRYPTION_KEY");
 
+    this.logger.debug("createMessageForConversations", {
+      conversation_ids,
+      message_data,
+      encryption_key,
+    });
+
     const { data, error } = await this.supabase.rpc(
       "create_message_for_conversations",
       { conversation_ids, message_data, encryption_key }
