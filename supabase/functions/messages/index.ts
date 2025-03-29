@@ -47,9 +47,10 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
     case "POST": {
       const body = await req.json();
 
-      const { conversation_ids, ...message_data } = body;
+      const { conversation_ids, conversation_id, ...message_data } = body;
+
       const result = await messagesService.createMessageForConversations(
-        conversation_ids,
+        conversation_ids || [conversation_id],
         message_data
       );
 

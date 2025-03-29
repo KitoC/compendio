@@ -49,13 +49,14 @@ const handleOauthCallbackHandler = async (
 };
 
 serve(
-  withErrorBoundary(
-    withCors({
-      corsHeaders: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers":
-          "authorization, x-client-info, apikey, content-type",
-      },
-    })(withPublicContext(withRequestHandlers(handleOauthCallbackHandler)))
+  withCors({
+    corsHeaders: {
+      "Access-Control-Allow-Headers":
+        "authorization, x-client-info, apikey, content-type",
+    },
+  })(
+    withErrorBoundary(
+      withPublicContext(withRequestHandlers(handleOauthCallbackHandler))
+    )
   )
 );

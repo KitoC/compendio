@@ -4,12 +4,14 @@ import { CorsContext } from "locals/middleware/withCors";
 
 const logger = new Logger({ name: "Request Handler" });
 
-const sendError = (error: RequestError) => {
+const sendError = (error: RequestError, headers: HeadersInit) => {
+  logger.debug("SENDING ERROR RESPONSE", headers);
+
   logger.error(error?.message || "An unknown error occurred", error);
 
   return new Response(JSON.stringify(error), {
     status: error?.status || 500,
-    headers: { "Content-Type": "application/json" },
+    headers: { ...headers, "Content-Type": "application/json" },
   });
 };
 
@@ -23,7 +25,7 @@ export const withErrorBoundary = (handler: ErrorBoundaryChildHandler) => {
     try {
       return await handler(req, context);
     } catch (e) {
-      return sendError(e as RequestError);
+      return sendError(e as RequestError, context.corsHeaders);
     }
   };
 };

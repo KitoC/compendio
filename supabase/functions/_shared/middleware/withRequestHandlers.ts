@@ -21,6 +21,7 @@ export function withRequestHandlers<Context extends CorsContext>(
     const { corsHeaders } = context;
 
     const logger = new Logger({ name: "RequestAudit" });
+    const origin = req.headers.get("origin");
 
     const start = performance.now();
     const method = req.method;
@@ -31,19 +32,17 @@ export function withRequestHandlers<Context extends CorsContext>(
     try {
       const res = await handler(req, context);
 
+      console.log("res", res);
+
       if (!res) {
         return new Response("No response from handler", { status: 500 });
       }
 
-      const headers = corsHeaders;
-
-      // @ts-expect-error Headers is not typed
-      res.headers.forEach((value, key) => {
-        // @ts-expect-error Headers is not typed
-        headers.set(key, value);
-      });
+      const headers = { ...corsHeaders, ...res.headers };
 
       const duration = `${(performance.now() - start).toFixed(2)}ms`;
+
+      console.log("SENDING RESPONSE", corsHeaders);
 
       if (shouldLog) {
         logger.info("Request handled", {
@@ -65,6 +64,7 @@ export function withRequestHandlers<Context extends CorsContext>(
       return new Response(res.body, { status: res.status, headers });
     } catch (error) {
       const duration = `${(performance.now() - start).toFixed(2)}ms`;
+
       logger.error(
         "Request failed",
         new RequestError("Request failed", 500, {
@@ -79,9 +79,15 @@ export function withRequestHandlers<Context extends CorsContext>(
         })
       );
 
+      console.log("corsHeaders ERROR", corsHeaders);
+
       return new Response(JSON.stringify({ error: "Internal Server Error" }), {
         status: 500,
-        headers: { ...corsHeaders },
+        headers: {
+          ...corsHeaders,
+          "Access-Control-Allow-Headers":
+            "authorization, x-client-info, apikey, content-type",
+        },
       });
     }
   };
