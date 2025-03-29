@@ -2,13 +2,13 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { getEnvKey } from "../shared/utils/env.ts";
-import OpenAIService from "../shared/services/OpenAIService.ts";
-import AgentController from "../controllers/AgentController.ts";
-import ConversationsController from "../controllers/ConversationsController.ts";
-import SupabaseService from "../shared/services/SupabaseService.ts";
-import FunctionController from "../controllers/FunctionController.ts";
-import Logger from "../shared/utils/logger.ts";
+import { getEnvKey } from "../_deprecated/shared/utils/env.ts";
+import OpenAIService from "../_deprecated/shared/services/OpenAIService.ts";
+import AgentController from "../_deprecated/controllers/AgentController.ts";
+import ConversationsController from "../_deprecated/controllers/ConversationsController.ts";
+import SupabaseService from "../_deprecated/shared/services/SupabaseService.ts";
+import FunctionController from "../_deprecated/controllers/FunctionController.ts";
+import Logger from "../_deprecated/shared/utils/logger.ts";
 
 // Environment variables
 const supabaseUrl = getEnvKey("SUPABASE_URL");

@@ -10,6 +10,8 @@ import useChatHelpers from "./useChatHelpers";
 import { User } from "@/types/user";
 import { aiChatService } from "@/services/aiChatService";
 import { useTenant } from "@/contexts/TenantContext";
+import { MessageService } from "@/services/MessageService";
+
 interface UseChatOptions {
   conversationId: string;
 }
@@ -48,22 +50,22 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     if (!conversationId) return;
 
     try {
-      const offset = 0;
-      const limit = 10;
+      // TODO: Add proper infinite scroll
+      const query = {
+        conversation_id: conversationId,
+        limit: "20",
+        offset: "0",
+        // role: "user",
+        // search: "hello",
+      };
 
-      const { data, error } = await supabase
-        .from("conversation_messages_view")
-        .select("*")
-        .eq("conversation_id", conversationId)
-        .order("updated_at", { ascending: true }) // or false for descending
-        .range(offset, offset + limit - 1);
+      const loadedMessages = await MessageService.getMessages(
+        conversationId,
+        query
+      );
 
-      if (error) {
-        throw error;
-      }
-
-      if (data) {
-        setMessages(data as ChatMessage[]);
+      if (loadedMessages) {
+        setMessages(loadedMessages as ChatMessage[]);
 
         // Scroll to bottom after messages load
         setTimeout(() => scrollToOptimalPosition({ behavior: "instant" }), 100);

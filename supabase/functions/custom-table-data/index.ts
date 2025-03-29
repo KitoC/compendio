@@ -1,9 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 // @ts-expect-error - Supabase client is not typed
 import { createClient } from "supabase-js";
-import { Database } from "../shared/types.ts";
-import Logger from "../shared/utils/logger.ts";
-import { getEnvKey } from "../shared/utils/env.ts";
+import { Database } from "../_deprecated/shared/types.ts";
+import Logger from "../_deprecated/shared/utils/logger.ts";
+import { getEnvKey } from "../_deprecated/shared/utils/env.ts";
 
 const logger = new Logger({ debug: getEnvKey("DEBUG") });
 

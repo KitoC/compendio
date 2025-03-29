@@ -2,13 +2,13 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { OAuthController } from "locals/controllers/OAuthController";
-import { withOriginGuardedRequestHandler } from "locals/middleware/withRequestHandlers";
+import { withRequestHandlers } from "locals/middleware/withRequestHandlers";
 import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
 import {
   withPublicContext,
   PublicContext,
 } from "locals/middleware/withPublicContext";
-
+import { withCors } from "locals/middleware/withCors";
 const handleOauthCallbackHandler = async (
   req: Request,
   context: PublicContext
@@ -18,7 +18,7 @@ const handleOauthCallbackHandler = async (
   const { code, state, id_token_only, options } = await req.json();
 
   if (!code || !state) {
-    return oauthController.throwError("Missing code or state", 400);
+    oauthController.throwError("Missing code or state", 400);
   }
 
   if (id_token_only) {
@@ -50,14 +50,12 @@ const handleOauthCallbackHandler = async (
 
 serve(
   withErrorBoundary(
-    withPublicContext(
-      withOriginGuardedRequestHandler<PublicContext>({
-        corsHeaders: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Headers":
-            "authorization, x-client-info, apikey, content-type",
-        },
-      })(handleOauthCallbackHandler)
-    )
+    withCors({
+      corsHeaders: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers":
+          "authorization, x-client-info, apikey, content-type",
+      },
+    })(withPublicContext(withRequestHandlers(handleOauthCallbackHandler)))
   )
 );

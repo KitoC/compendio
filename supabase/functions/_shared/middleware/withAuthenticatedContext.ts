@@ -3,9 +3,10 @@ import { getClient, getADMINClient } from "locals/db";
 import { SupabaseClient } from "supabase-js";
 import { AuthService } from "locals/services/AuthService";
 import {
-  SharedServices,
   getSharedServices,
+  SharedServices,
 } from "locals/middleware/_getSharedServices";
+import { CorsContext } from "locals/middleware/withCors";
 
 export interface AuthenticatedContext extends SharedServices {
   supabase: SupabaseClient;
@@ -13,10 +14,15 @@ export interface AuthenticatedContext extends SharedServices {
   authService: AuthService;
 }
 
+export type AuthenticatedContextChildHandler = (
+  req: Request,
+  context: AuthenticatedContext
+) => Promise<Response>;
+
 export const withAuthenticatedContext = (
-  handler: (req: Request, context: AuthenticatedContext) => Promise<Response>
+  handler: AuthenticatedContextChildHandler
 ) => {
-  return async (req: Request): Promise<Response> => {
+  return async (req: Request, corsContext: CorsContext): Promise<Response> => {
     const supabase_AS_SUPER_ADMIN = getADMINClient();
     const supabase = getClient(req);
 
@@ -28,11 +34,14 @@ export const withAuthenticatedContext = (
     const authService = new AuthService(req, supabaseContext);
 
     await authService.initialize();
-    await authService.getUser();
+    const user = await authService.getUser();
 
     const context = {
+      ...corsContext,
       ...supabaseContext,
       authService,
+      user,
+      tenant_id: user.tenant_id,
       ...getSharedServices(req, supabaseContext),
     };
 

@@ -5,6 +5,7 @@ import {
   BaseRequiredContext,
   BaseSupabaseService,
 } from "locals/services/_BaseSupabaseService";
+import type { User } from "locals/types";
 
 const ROLES = {
   SUPER_ADMIN: "super-admin",
@@ -21,7 +22,7 @@ class AuthService extends BaseSupabaseService {
   public logger: Logger;
   public roles: string[] | null;
   public tenantId: string | null;
-  public user: object | null;
+  public user: User | null;
 
   constructor(public req: Request, public context: BaseRequiredContext) {
     super(context);

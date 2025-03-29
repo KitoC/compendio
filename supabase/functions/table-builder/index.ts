@@ -7,9 +7,10 @@ import type { OpenAiRole } from "../../../src/types/chat.js";
 import { TableBuilderController } from "locals/controllers/TableBuilderController";
 import type { JsonSchemaPayload } from "locals/dsl/Migration";
 import { withAuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
-import { withOriginGuardedRequestHandler } from "locals/middleware/withRequestHandlers";
+import { withRequestHandlers } from "locals/middleware/withRequestHandlers";
 import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
 import type { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
+import { withCors } from "locals/middleware/withCors.js";
 
 const PROMPT_FOR_TABLE_CREATION_V2 = `
 You are TableSmart, an AI assistant specialized in designing database schemas for business applications.
@@ -184,10 +185,7 @@ async function prepareDataForImport(
   }
 }
 
-const tableBuilderHandler = async (
-  req: Request,
-  context: AuthenticatedContext
-) => {
+const handler = async (req: Request, context: AuthenticatedContext) => {
   const { authService } = context;
   const { action, prompt, files, schema } = await req.json();
 
@@ -349,10 +347,10 @@ const tableBuilderHandler = async (
 };
 
 serve(
-  withErrorBoundary(
-    withAuthenticatedContext(
-      withOriginGuardedRequestHandler<AuthenticatedContext>()(
-        tableBuilderHandler
+  withCors()(
+    withErrorBoundary(
+      withAuthenticatedContext(
+        withRequestHandlers<AuthenticatedContext>(handler)
       )
     )
   )

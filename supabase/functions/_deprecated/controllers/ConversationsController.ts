@@ -3,11 +3,12 @@
 // @ts-expect-error - Supabase client is not typed
 import { SupabaseClient } from "supabase-js";
 import type Logger from "../shared/utils/logger.ts";
+import type { User } from "locals/types";
 
 class ConversationsController {
   private supabase: SupabaseClient | null;
   private userId: string | null;
-  private user: object | null;
+  private user: User | null;
   private logger: Logger;
 
   constructor({ logger }: { logger: Logger }) {

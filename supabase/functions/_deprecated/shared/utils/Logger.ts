@@ -26,8 +26,7 @@ class Logger {
     level?: LogLevel;
     name?: string;
   }) {
-    console.log("debug", debug);
-    this.currentLogLevel = debug ? LogLevel.DEBUG : level;
+s    this.currentLogLevel = debug ? LogLevel.DEBUG : level;
     this.name = name;
   }
 

@@ -203,16 +203,24 @@ class AgentController extends BaseController {
   }
 
   async createEmailMessage(email: string) {
+    this.logger.info("Creating email message", {
+      agentId: this.agent.id,
+    });
+
     const agentConversations =
       await this.context.conversationsService.getAgentConversations(
         this.agent.id
       );
 
+    this.logger.info("Sending to chatGPT");
+
     const response = await this.agentAdapter.createEmailMessage(
       email,
       EMAIL_AGENT_JSON_SCHEMA as unknown as JSON
     );
+    this.logger.info("Received response from chatGPT");
 
+    this.logger.info("Getting messages");
     const messages = await this.context.messagesService.get({
       filter: {
         "metadata->>email_id": {
@@ -224,8 +232,10 @@ class AgentController extends BaseController {
     const message = messages?.[0];
 
     if (message) {
+      this.logger.info("Message found, updating message");
       return await this.context.messagesService.update(message.id, message);
     } else {
+      this.logger.info("No message found, creating new message");
       const conversation_ids = agentConversations.map(
         (conversation: IConversation) => conversation.id
       );

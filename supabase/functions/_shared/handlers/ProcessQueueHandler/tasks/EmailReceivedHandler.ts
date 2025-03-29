@@ -12,6 +12,7 @@ import type { IEmailEvent } from "locals/handlers/WebhookEventHandler";
 import { AzureService } from "locals/services/providers/AzureService";
 import { AgentController } from "locals/controllers/AgentController";
 import { FunctionController } from "locals/controllers/FunctionController";
+import Logger from "locals/utils/Logger";
 
 export interface ITaskPayload {
   connected_service_id: string;
@@ -31,8 +32,9 @@ type EmailProviderServiceMap = {
 
 export class EmailReceivedHandler implements ITaskHandler {
   emailProviderServiceMap: EmailProviderServiceMap;
-
+  logger: Logger;
   constructor(private context: PublicContext) {
+    this.logger = new Logger({ name: "EmailReceivedHandler" });
     this.emailProviderServiceMap = {
       azure: context.azureService,
     };
@@ -51,6 +53,7 @@ export class EmailReceivedHandler implements ITaskHandler {
       new OAuthController(context)
     );
 
+    this.logger.info("Getting connected service");
     const response =
       await connectedServiceController.getConnectedServiceAndRefreshToken(
         connected_service_id
@@ -62,10 +65,12 @@ export class EmailReceivedHandler implements ITaskHandler {
 
     const { accessToken } = response;
 
+    this.logger.info("Getting email provider service");
     const emailProviderService = this.emailProviderServiceMap[provider];
 
     emailProviderService.setAccessToken(accessToken);
 
+    this.logger.info("Getting email");
     const email = await emailProviderService.getEmail(email_event.email_id);
 
     const agentController = await AgentController.create({
@@ -77,6 +82,7 @@ export class EmailReceivedHandler implements ITaskHandler {
 
     await agentController.createEmailMessage(email);
 
+    this.logger.info("Email received handler completed");
     return { success: true };
   }
 }

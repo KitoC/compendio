@@ -4,8 +4,9 @@ import {
   withAuthenticatedContext,
   type AuthenticatedContext,
 } from "locals/middleware/withAuthenticatedContext";
-import { withOriginGuardedRequestHandler } from "locals/middleware/withRequestHandlers";
+import { withRequestHandlers } from "locals/middleware/withRequestHandlers";
 import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
+import { withCors } from "locals/middleware/withCors";
 
 const handler = async (req: Request, context: AuthenticatedContext) => {
   return {
@@ -16,9 +17,11 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
 };
 
 serve(
-  withErrorBoundary(
-    withAuthenticatedContext(
-      withOriginGuardedRequestHandler<AuthenticatedContext>()(handler)
+  withCors()(
+    withErrorBoundary(
+      withAuthenticatedContext(
+        withRequestHandlers<AuthenticatedContext>(handler)
+      )
     )
   )
 );

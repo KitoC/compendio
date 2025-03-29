@@ -1,15 +1,21 @@
-import { AgentsService } from "locals/services/AgentsService";
-import { ConnectedServicesService } from "locals/services/ConnectedServicesService";
-import { CredentialsService } from "locals/services/CredentialsService";
-import { AgentFunctionsService } from "locals/services/AgentFunctionsService";
+// @ts-expect-error - Supabase client is not typed
+import { SupabaseClient } from "supabase-js";
 import { MessagesService } from "locals/services/MessagesService";
-import { ConversationsService } from "locals/services/ConversationsService";
-import { BaseRequiredContext } from "locals/services/_BaseSupabaseService";
-import { WebhookEventService } from "locals/services/WebhookEventService";
 import { FunctionQueueService } from "locals/services/FunctionQueueService";
+import { ConnectedServicesService } from "locals/services/ConnectedServicesService";
 import { AzureService } from "locals/services/providers/AzureService";
+import { CredentialsService } from "locals/services/CredentialsService";
+import { AgentsService } from "locals/services/AgentsService";
+import { AgentFunctionsService } from "locals/services/AgentFunctionsService";
+import { ConversationsService } from "locals/services/ConversationsService";
+import { WebhookEventService } from "locals/services/WebhookEventService";
+import { CorsContext } from "locals/middleware/withCors";
+interface SupabaseContext {
+  supabase: SupabaseClient;
+  supabase_AS_SUPER_ADMIN: SupabaseClient;
+}
 
-export interface SharedServices {
+export interface SharedServices extends CorsContext {
   credentialsService: CredentialsService;
   connectedServicesService: ConnectedServicesService;
   agentsService: AgentsService;
@@ -21,9 +27,9 @@ export interface SharedServices {
   azureService: AzureService;
 }
 
-const getSharedServices = (
+export const getSharedServices = (
   req: Request,
-  supabaseContext: BaseRequiredContext
+  supabaseContext: SupabaseContext
 ) => {
   const credentialsService = new CredentialsService(req, supabaseContext);
   const connectedServicesService = new ConnectedServicesService(
@@ -49,5 +55,3 @@ const getSharedServices = (
     azureService,
   };
 };
-
-export { getSharedServices };

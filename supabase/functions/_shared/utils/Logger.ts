@@ -102,7 +102,14 @@ class Logger {
   }
 
   throwAndLog(error?: Error, message?: string): void {
-    this.error(error?.message || message || "An unknown error occurred", error);
+    this.error(
+      JSON.stringify(
+        error?.message || message || "An unknown error occurred",
+        null,
+        2
+      ),
+      error
+    );
 
     throw error;
   }

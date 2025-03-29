@@ -1,6 +1,5 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { withOriginGuardedRequestHandler } from "locals/middleware/withRequestHandlers";
 import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
 import { OAuthController } from "locals/controllers/OAuthController";
 import { WebhookController } from "locals/controllers/WebhookController";
@@ -8,6 +7,8 @@ import {
   withAuthenticatedContext,
   AuthenticatedContext,
 } from "locals/middleware/withAuthenticatedContext";
+import { withCors } from "locals/middleware/withCors";
+import { withRequestHandlers } from "locals/middleware/withRequestHandlers";
 
 const handler = async (req: Request, context: AuthenticatedContext) => {
   const { connected_service_id, tenant_id } = await req.json();
@@ -28,9 +29,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
 };
 
 serve(
-  withErrorBoundary(
-    withAuthenticatedContext(
-      withOriginGuardedRequestHandler<AuthenticatedContext>()(handler)
-    )
+  withCors()(
+    withErrorBoundary(withAuthenticatedContext(withRequestHandlers(handler)))
   )
 );

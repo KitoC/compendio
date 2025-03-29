@@ -1,6 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { withOriginGuardedRequestHandler } from "locals/middleware/withRequestHandlers";
+import { withRequestHandlers } from "locals/middleware/withRequestHandlers";
 import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
 
 import {
@@ -9,6 +9,7 @@ import {
 } from "locals/middleware/withPublicContext";
 import { getEnvKey } from "locals/utils/env";
 import { ProcessQueueHandler } from "locals/handlers/ProcessQueueHandler";
+import { withCors } from "locals/middleware/withCors";
 
 const handler = async (req: Request, context: PublicContext) => {
   const processQueueHandler = new ProcessQueueHandler(context);
@@ -23,10 +24,11 @@ const handler = async (req: Request, context: PublicContext) => {
 };
 
 serve(
-  withErrorBoundary(
-    withPublicContext(
-      withOriginGuardedRequestHandler<PublicContext>()(handler),
-      { RUN_AS_SUPER_ADMIN: true }
+  withCors()(
+    withErrorBoundary(
+      withPublicContext(withRequestHandlers<PublicContext>(handler), {
+        RUN_AS_SUPER_ADMIN: true,
+      })
     )
   )
 );

@@ -1,5 +1,6 @@
 import { RequestError } from "locals/controllers/RequestController";
 import Logger from "locals/utils/Logger";
+import { CorsContext } from "locals/middleware/withCors";
 
 const logger = new Logger({ name: "Request Handler" });
 
@@ -12,12 +13,15 @@ const sendError = (error: RequestError) => {
   });
 };
 
-export const withErrorBoundary = (
-  handler: (req: Request) => Promise<Response>
-) => {
-  return async (req: Request): Promise<Response> => {
+export type ErrorBoundaryChildHandler = (
+  req: Request,
+  context: CorsContext
+) => Promise<Response>;
+
+export const withErrorBoundary = (handler: ErrorBoundaryChildHandler) => {
+  return async (req: Request, context: CorsContext): Promise<Response> => {
     try {
-      return await handler(req);
+      return await handler(req, context);
     } catch (e) {
       return sendError(e as RequestError);
     }

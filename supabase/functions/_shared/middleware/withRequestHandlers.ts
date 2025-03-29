@@ -1,85 +1,88 @@
 import Logger from "locals/utils/Logger";
 import { RequestError } from "locals/controllers/RequestController";
+import { getEnvKey } from "locals/utils/env";
+import { CorsContext } from "locals/middleware/withCors";
 
-const defaultCorsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
-};
-
-const defaultAllowedOrigins = ["http://localhost:8080"];
-
-type Params = {
-  allowedOrigins?: string[];
-  corsHeaders?: HeadersInit;
-};
-
-export const defaultParams: Params = {
-  allowedOrigins: defaultAllowedOrigins,
-  corsHeaders: defaultCorsHeaders,
-};
-
-export type RequestHandlerResponse = Promise<{
+export type RequestHandlerResponse = {
   body: BodyInit | null;
   headers: HeadersInit;
   status: number;
-}> | null;
+};
 
-export type RequestHandler<Context> = (
+export type RequestChildHandler<Context> = (
   req: Request,
   context: Context
-) => RequestHandlerResponse;
+) => Promise<RequestHandlerResponse>;
 
-export function withOriginGuardedRequestHandler<Context>(
-  params: Params = defaultParams
+export function withRequestHandlers<Context extends CorsContext>(
+  handler: RequestChildHandler<Context>
 ) {
-  return (handler: RequestHandler<Context>) =>
-    async (req: Request, context: Context): Promise<Response> => {
-      const {
-        allowedOrigins = defaultAllowedOrigins,
-        corsHeaders = defaultCorsHeaders,
-      } = {
-        ...defaultParams,
-        ...params,
-      };
+  return async (req: Request, context: Context): Promise<Response> => {
+    const { corsHeaders } = context;
 
-      const origin = req.headers.get("origin");
+    const logger = new Logger({ name: "RequestAudit" });
 
-      if (origin && !allowedOrigins.includes(origin)) {
-        return new Response("Forbidden: invalid origin", { status: 403 });
-      }
+    const start = performance.now();
+    const method = req.method;
+    const path = new URL(req.url).pathname;
+    const isMutation = ["POST", "PATCH", "DELETE"].includes(method);
+    const shouldLog = getEnvKey("LOG_ALL_REQUESTS") || isMutation;
 
-      // Handle HTTP preflight CORS
-      if (req.method === "OPTIONS") {
-        return new Response(null, {
-          status: 204,
-          headers: { ...corsHeaders },
-        });
-      }
-
+    try {
       const res = await handler(req, context);
 
       if (!res) {
         return new Response("No response from handler", { status: 500 });
       }
 
-      if (res.status === 204) {
-        return new Response(null, { status: 204 });
-      }
+      const headers = corsHeaders;
 
-      if (res.status === 202) {
-        return new Response(null, { status: 202 });
-      }
-
-      const headers = new Headers({ ...corsHeaders, ...res.headers });
-
-      if (origin) {
-        headers.set("Access-Control-Allow-Origin", origin);
-      }
-
-      return new Response(res.body, {
-        status: res.status,
-        headers,
+      // @ts-expect-error Headers is not typed
+      res.headers.forEach((value, key) => {
+        // @ts-expect-error Headers is not typed
+        headers.set(key, value);
       });
-    };
+
+      const duration = `${(performance.now() - start).toFixed(2)}ms`;
+
+      if (shouldLog) {
+        logger.info("Request handled", {
+          method,
+          path,
+          status: res.status,
+          // @ts-expect-error Does not exist on context
+          user_id: context?.authService?.user?.id || "anonymous",
+          // @ts-expect-error Does not exist on context
+          tenant_id: context?.authService?.tenantId || null,
+          duration,
+        });
+      }
+
+      if (res.status === 204 || res.status === 202) {
+        return new Response(null, { status: res.status, headers });
+      }
+
+      return new Response(res.body, { status: res.status, headers });
+    } catch (error) {
+      const duration = `${(performance.now() - start).toFixed(2)}ms`;
+      logger.error(
+        "Request failed",
+        new RequestError("Request failed", 500, {
+          method,
+          path,
+          error,
+          // @ts-expect-error Does not exist on context
+          user_id: context?.authService?.user?.id || "anonymous",
+          // @ts-expect-error Does not exist on context
+          tenant_id: context?.authService?.tenantId || null,
+          duration,
+        })
+      );
+
+      return new Response(JSON.stringify({ error: "Internal Server Error" }), {
+        status: 500,
+        headers: { ...corsHeaders },
+      });
+    }
+  };
 }

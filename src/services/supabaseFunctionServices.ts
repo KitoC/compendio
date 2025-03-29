@@ -1,26 +1,54 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getSupabaseFunctionsUrl } from "@/utils/supabaseUtils";
 
-export const callSupabaseFunction = async (
-  functionName: string,
-  body: object
-) => {
-  const functionUrl = getSupabaseFunctionsUrl();
+const getFunctionUrl = (functionName: string, searchParams?: string) => {
+  let functionUrl = `${getSupabaseFunctionsUrl()}/${functionName}`;
+
+  if (searchParams) {
+    functionUrl += `?${searchParams}`;
+  }
 
   console.log("Calling AI chat function at:", functionUrl);
 
+  return functionUrl;
+};
+
+const getHeaders = async () => {
   const token =
     (await supabase.auth.getSession()).data.session?.access_token ||
     import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-  const response = await fetch(`${functionUrl}/${functionName}`, {
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+};
+
+export const callSupabaseFunction = async (
+  functionName: string,
+  body: object
+) => {
+  const headers = await getHeaders();
+  const response = await fetch(getFunctionUrl(functionName), {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
+    headers,
     body: JSON.stringify(body),
   });
 
   return response;
+};
+
+export const SupabaseFunctionService = {
+  async get(functionName: string, searchParams: Record<string, string>) {
+    const query = new URLSearchParams(searchParams).toString();
+
+    const headers = await getHeaders();
+
+    const response = await fetch(getFunctionUrl(functionName, query), {
+      method: "GET",
+      headers,
+    });
+
+    return response;
+  },
 };
