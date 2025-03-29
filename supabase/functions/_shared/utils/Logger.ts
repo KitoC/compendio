@@ -1,4 +1,5 @@
 // NO_CHANGE
+import { ProviderError } from "locals/error-types";
 import { getEnvKey } from "locals/utils/env";
 /**
  * Logger utility for consistent logging across the application
@@ -112,6 +113,19 @@ class Logger {
     );
 
     throw error;
+  }
+
+  throwProviderError(
+    name: string,
+    message: string,
+    errorOrStatus: object | number,
+    status: number = 401
+  ) {
+    if (typeof errorOrStatus === "object") {
+      this.throwAndLog(new ProviderError(name, message, status, errorOrStatus));
+    } else {
+      this.throwAndLog(new ProviderError(name, message, errorOrStatus));
+    }
   }
 }
 

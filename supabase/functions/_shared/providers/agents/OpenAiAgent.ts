@@ -1,6 +1,14 @@
 // providers/AzureWebhookProvider.ts
-import type { IAgentProvider } from "locals/interfaces/IAgentProvider";
-import type { IAiAgent } from "../../../../../src/types/aiAgents";
+import type {
+  IAgentProvider,
+  ItTalkToAgentParams,
+} from "locals/interfaces/IAgentProvider";
+import type {
+  IAiAgent,
+  IFunction,
+  IFunctionCall,
+  IOpenAiFunction,
+} from "../../../../../src/types/aiAgents";
 import type {
   ChatMessage,
   OpenAiMessage,
@@ -10,26 +18,58 @@ import { FunctionController } from "locals/controllers/FunctionController";
 import { OpenAiService } from "locals/services/providers/OpenAiService";
 
 import { EMAIL_AGENT_PROMPT } from "@/SYSTEM_PROMPTS/EMAIL_AGENT_PROMPT";
+import Logger from "locals/utils/Logger";
 // TODO: Move this to a file or DB and inject schema for Email.
+const VALID_OPENAI_ROLES = ["user", "assistant", "function", "system"];
 
 export class OpenAiAgent implements IAgentProvider {
   openAiService: OpenAiService;
+  logger: Logger;
   constructor(
     public agent: IAiAgent,
     public functionController: FunctionController
   ) {
+    this.logger = new Logger({ name: "OpenAiAgent" });
     this.openAiService = new OpenAiService();
   }
 
-  async talkToAgent(newMessage: ChatMessage) {
-    return {
-      id: "1",
-      conversation_id: "1",
-      metadata: {},
-      tenant_id: "1",
-      role: "assistant",
-      content: { text: "Hello, how can I help you today?" },
-    };
+  throwError(
+    message: string,
+    errorOrStatus?: object | number,
+    status?: number
+  ) {
+    this.logger.throwProviderError(
+      this.constructor.name,
+      message,
+      errorOrStatus || 500,
+      status
+    );
+  }
+
+  async talkToAgent(
+    talkToAgentParams: ItTalkToAgentParams,
+    onFunctionCall: (functionCall: IFunctionCall) => Promise<object | undefined>
+  ) {
+    const { messages, model, functions } = talkToAgentParams;
+
+    const cleanedMessages = messages
+      .filter((message) => VALID_OPENAI_ROLES.includes(message.role))
+      .map((message) => ({
+        role: message.role as OpenAiRole,
+        // @ts-expect-error - TODO: Fix this
+        content: message.content?.text || JSON.stringify(message.content),
+      }));
+
+    const stream = await this.openAiService.streamAndCallFunction({
+      onFunctionCall,
+      requestArgs: {
+        messages: cleanedMessages,
+        model,
+        functions: functions as IOpenAiFunction[],
+      },
+    });
+
+    return stream;
   }
 
   async createEmailMessage(email: string) {

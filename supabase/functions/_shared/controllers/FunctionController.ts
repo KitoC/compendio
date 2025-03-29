@@ -8,6 +8,10 @@ import { BaseController } from "locals/controllers/_BaseController";
 import { PublicContext } from "locals/middleware/withPublicContext";
 import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
 
+export type ExecuteFunctionCallback = (
+  functionCall: IFunctionCall
+) => Promise<object | string | undefined>;
+
 class FunctionController extends BaseController {
   private markup: { [key: string]: unknown };
   private functionsMap: { [key: string]: IFunction };
@@ -30,8 +34,11 @@ class FunctionController extends BaseController {
     }
   }
 
-  async executeFunction(fnCall: IFunctionCall): Promise<object | undefined> {
+  async executeFunction(fnCall: IFunctionCall) {
     const fn = this.functionsMap[fnCall.name];
+
+    this.logger.info("🔹 Executing function", fnCall.name);
+    this.logger.info("🔹 Function", fn);
 
     if (!fn) {
       throw new Error(`Function ${fnCall.name} not found`);
@@ -44,7 +51,7 @@ class FunctionController extends BaseController {
 
       case "form":
         // console.log("SENDING FORM");
-        return fn;
+        return "form sent successfully";
 
       case "retrieval":
         // console.log("SENDING RETRIEVAL");
@@ -70,7 +77,7 @@ class FunctionController extends BaseController {
     }
 
     if (!data || data.length === 0) {
-      return this.throwError("No functions found", 404);
+      return [];
     }
 
     if (data && data.length > 0) {

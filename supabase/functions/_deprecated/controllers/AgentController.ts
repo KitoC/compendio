@@ -226,24 +226,19 @@ class AgentController {
   }
 
   async talkToAgent({ newMessage, conversationId, agentId }: SendMessageArgs) {
-    try {
-      const requestArgs = await this.getRequestArgs({
-        conversationId,
-        agentId,
-        newMessage,
-      });
+    const requestArgs = await this.getRequestArgs({
+      conversationId,
+      agentId,
+      newMessage,
+    });
 
-      const stream = await this.openAiService.streamAndCallFunction({
-        onFunctionCall: (functionCall) =>
-          this.functionController.executeFunction(functionCall),
-        requestArgs,
-      });
+    const stream = await this.openAiService.streamAndCallFunction({
+      onFunctionCall: (functionCall) =>
+        this.functionController.executeFunction(functionCall),
+      requestArgs,
+    });
 
-      return this.supabaseService.sendStreamResponse(stream);
-    } catch (error) {
-      this.logger.error("Error in AgentController.talkToAgent:", error);
-      throw error;
-    }
+    return this.supabaseService.sendStreamResponse(stream);
   }
 
   async messageAgent({ conversationId, agentId, newMessage }: SendMessageArgs) {

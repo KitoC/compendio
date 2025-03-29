@@ -5,6 +5,7 @@ import type {
   IContext,
   IOpenAiFunction,
   IAiAgentFunction,
+  IFunction,
 } from "../../../../src/types/aiAgents.js";
 import type { ChatMessage, OpenAiRole } from "../../../../src/types/chat.js";
 import { PublicContext } from "locals/middleware/withPublicContext";
@@ -15,6 +16,7 @@ import { getAgentProvider } from "locals/providers/agents/AgentProviderRegistry"
 import { IAgentProvider } from "locals/interfaces/IAgentProvider";
 import { IConversation } from "locals/services/ConversationsService";
 import { EMAIL_AGENT_JSON_SCHEMA } from "@/SYSTEM_JSON_SCHEMAS/EMAIL_AGENT_JSON_SCHEMA";
+import Logger from "locals/utils/Logger";
 
 const defaultAgent: IAiAgent = {
   id: "default",
@@ -30,10 +32,9 @@ const defaultAgent: IAiAgent = {
   updated_at: "",
 };
 
-const VALID_ROLES = ["user", "assistant", "function", "system"];
+const VALID_ROLES = ["user", "assistant", "function", "system", "email_agent"];
 
 interface SendMessageArgs {
-  newMessage: ChatMessage;
   conversationId: string;
   agentId: string;
 }
@@ -60,6 +61,7 @@ class AgentController extends BaseController {
     this.agent = agent;
     this.agentAdapter = agentAdapter;
     this.sessionContext = sessionContext;
+    this.logger = new Logger({ name: "AgentController" });
   }
 
   static async create({
@@ -86,8 +88,14 @@ class AgentController extends BaseController {
     );
   }
 
-  talkToAgent(newMessage: ChatMessage) {
-    return this.agentAdapter.talkToAgent(newMessage);
+  async talkToAgent(conversation_id: string) {
+    const result = await this.getRequestArgs(conversation_id);
+
+    this.logger.info("🔹 Result", JSON.stringify(result, null, 2));
+
+    return this.agentAdapter.talkToAgent(result, (functionCall) =>
+      this.functionController.executeFunction(functionCall)
+    );
   }
 
   getAgent() {
@@ -140,63 +148,59 @@ class AgentController extends BaseController {
     return interpolatedPrompt;
   }
 
-  async getLastNMessages(conversationId: string, n: number) {
-    const { data, error } = await this.context.supabase
-      .from("conversation_messages_view")
-      .select("*")
-      .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: true }) // or false for descending
-      .range(0, n - 1);
+  async getLastNMessages(conversation_id: string, n: number) {
+    // TODO: Add search, metadata_search, role, include_deleted
+    const data = await this.context.messagesService.getConversationMessages({
+      conversation_id,
+      // search,
+      // metadata_search,
+      // role,
+      limit: n,
+      offset: 0,
+      order: "created_at",
+      sort_direction: "desc",
 
-    return data.map((message: ChatMessage) => ({
+      // include_deleted,
+    });
+
+    return data.reverse().map((message: ChatMessage) => ({
       role: message.role as OpenAiRole,
       content: message.content,
     }));
   }
 
-  async getRequestArgs({
-    conversationId,
-    agentId,
-    newMessage,
-  }: SendMessageArgs) {
+  async getRequestArgs(conversationId: string) {
     const { prompt, model = "gpt-4o-mini" } = await this.agent;
 
     // Get function IDs associated with this agent
-    const agentFunctionIds = await this.getAgentFunctions(agentId);
+    const agentFunctionIds = await this.getAgentFunctions(this.agent.id);
 
     // Get all available functions
-    const allFunctions =
-      (await this.functionController.getFunctions()) as IOpenAiFunction[];
+    const allFunctions = await this.functionController.getFunctions();
 
     // Filter functions to only include those associated with this agent
     // If no specific functions are associated, use all functions
     const functions =
       agentFunctionIds.length > 0
-        ? allFunctions.filter((fn) => agentFunctionIds.includes(fn.name))
+        ? allFunctions.filter((fn: IFunction) =>
+            agentFunctionIds.includes(fn.name)
+          )
         : allFunctions;
 
-    const agentPrompt = await this.buildAgentPrompt(agentId, {
+    const agentPrompt = await this.buildAgentPrompt(this.agent.id, {
       functions,
       session: "",
     });
 
-    const LAST_N = 10; // TODO: make this dynamic
+    const LAST_N = 5; // TODO: make this dynamic
 
-    const messages = await this.getLastNMessages(conversationId, LAST_N);
-
-    const cleanedMessages = [
+    const messages = [
       ...(agentPrompt ? [{ role: "system", content: agentPrompt }] : []),
-      ...messages.slice(Math.max(messages.length - LAST_N, 0)),
-      newMessage,
-    ]
-      .filter((message) => VALID_ROLES.includes(message?.role))
-      .map((message) => ({
-        role: message.role as OpenAiRole,
-        content: message.content?.text || JSON.stringify(message.content),
-      }));
+      ...(await this.getLastNMessages(conversationId, LAST_N)),
+    ];
 
     return {
-      messages: cleanedMessages,
+      messages,
       model,
       functions,
     };
@@ -221,6 +225,7 @@ class AgentController extends BaseController {
     this.logger.info("Received response from chatGPT");
 
     this.logger.info("Getting messages");
+
     const messages = await this.context.messagesService.get({
       filter: {
         "metadata->>email_id": {

@@ -1,10 +1,10 @@
 // NO_CHANGE
 
-import { supabase } from "@/integrations/supabase/client";
 import { ChatMessage } from "@/types/chat";
 import { Database, Json } from "@/integrations/supabase/types";
 import { v4 as uuidv4 } from "uuid";
 import { callSupabaseFunction } from "./supabaseFunctionServices";
+import { MessageService } from "./MessageService";
 
 interface ListenForFunctionCallsProps {
   conversationId: string;
@@ -54,16 +54,13 @@ const listenForFunctionCalls = async ({
     reply_to: messageId,
   };
 
+  console.log("🔹 Function call message", functionCallMessage);
   onFunctionCall({
     response: data,
     message: functionCallMessage,
   });
 
-  await supabase
-    .from("messages")
-    .insert([
-      functionCallMessage as Database["public"]["Tables"]["messages"]["Insert"],
-    ]);
+  await MessageService.createMessage(functionCallMessage);
 };
 
 const streamAiResponse = async ({
@@ -198,11 +195,7 @@ export const sendMessageToAI = async ({
     };
 
     // Save the complete message to the database
-    await supabase
-      .from("messages")
-      .insert([
-        finalMessage as Database["public"]["Tables"]["messages"]["Insert"],
-      ]);
+    await MessageService.createMessage(finalMessage);
 
     // Call the onComplete callback
     await onComplete(finalMessage);
@@ -252,7 +245,7 @@ export const saveVoiceMessageResponse = async ({
     });
 
     // Save the complete message to the database
-    await supabase.from("messages").insert([message]);
+    await MessageService.createMessage(message);
   } catch (error: unknown) {
     console.error("Error in sendMessageToAI:", error);
     // TODO: Handle errored messages

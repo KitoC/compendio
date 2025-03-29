@@ -30,6 +30,7 @@ export interface NormalChatContent {
 export interface ChatMessage {
   id: string;
   user_id?: string;
+  conversation_id?: string;
   role: MessageRole | string;
   content: NormalChatContent | NormalizedEmailResponse;
   metadata: Record<string, unknown>;

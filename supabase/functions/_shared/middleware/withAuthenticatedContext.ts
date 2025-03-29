@@ -39,15 +39,15 @@ export const withAuthenticatedContext = (
     await authService.initialize();
     const user = await authService.getUser();
 
-    logger.debug("currentUser", JSON.stringify(user));
-    logger.debug("currentUser.tenant_id", user.tenant_id);
+    logger.debug("currentUser", user?.user?.id);
+    logger.debug("authService.tenantId", authService.tenantId);
 
     const context = {
       ...corsContext,
       ...supabaseContext,
       authService,
       user,
-      tenant_id: user.tenant_id,
+      tenant_id: authService.tenantId,
       ...getSharedServices(req, supabaseContext),
     };
 

@@ -4,7 +4,7 @@ import { getEnvKey } from "locals/utils/env";
 import { CorsContext } from "locals/middleware/withCors";
 
 export type RequestHandlerResponse = {
-  body: BodyInit | null;
+  body: BodyInit | ReadableStream<Uint8Array> | null;
   headers: HeadersInit;
   status: number;
 };
@@ -21,7 +21,6 @@ export function withRequestHandlers<Context extends CorsContext>(
     const { corsHeaders } = context;
 
     const logger = new Logger({ name: "RequestAudit" });
-    const origin = req.headers.get("origin");
 
     const start = performance.now();
     const method = req.method;
@@ -41,8 +40,6 @@ export function withRequestHandlers<Context extends CorsContext>(
       const headers = { ...corsHeaders, ...res.headers };
 
       const duration = `${(performance.now() - start).toFixed(2)}ms`;
-
-      console.log("SENDING RESPONSE", corsHeaders);
 
       if (shouldLog) {
         logger.info("Request handled", {
@@ -79,8 +76,6 @@ export function withRequestHandlers<Context extends CorsContext>(
         })
       );
 
-      console.log("corsHeaders ERROR", corsHeaders);
-
       return new Response(
         JSON.stringify({
           error: "Internal Server Error",
@@ -90,6 +85,7 @@ export function withRequestHandlers<Context extends CorsContext>(
           status: 500,
           headers: {
             ...corsHeaders,
+            "Content-Type": "application/json",
             "Access-Control-Allow-Headers":
               "authorization, x-client-info, apikey, content-type",
           },

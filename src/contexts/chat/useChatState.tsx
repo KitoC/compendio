@@ -53,8 +53,11 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       // TODO: Add proper infinite scroll
       const query = {
         conversation_id: conversationId,
-        limit: "20",
+        limit: "10",
         offset: "0",
+        order: "created_at",
+        sort_direction: "desc",
+
         // role: "user",
         // search: "hello",
       };
@@ -65,7 +68,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       );
 
       if (loadedMessages) {
-        setMessages(loadedMessages as ChatMessage[]);
+        setMessages(loadedMessages.reverse() as ChatMessage[]);
 
         // Scroll to bottom after messages load
         setTimeout(() => scrollToOptimalPosition({ behavior: "instant" }), 100);
@@ -90,7 +93,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       setTimeout(scrollToOptimalPosition, 100);
 
       try {
-        console.log("useChatState.tsx - newMessage", newMessage);
         // Save the user message to the database
         await MessageService.createMessage(newMessage);
 
@@ -268,7 +270,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
 
   const userId = user?.id || "";
 
-  console.log("messages", messages);
   return {
     messages,
     isTyping,

@@ -1,80 +1,50 @@
-// NO_CHANGE
-
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { getEnvKey } from "../_deprecated/shared/utils/env.ts";
-import OpenAIService from "../_deprecated/shared/services/OpenAIService.ts";
-import AgentController from "../_deprecated/controllers/AgentController.ts";
-import ConversationsController from "../_deprecated/controllers/ConversationsController.ts";
-import SupabaseService from "../_deprecated/shared/services/SupabaseService.ts";
-import FunctionController from "../_deprecated/controllers/FunctionController.ts";
-import Logger from "../_deprecated/shared/utils/logger.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-// Environment variables
-const supabaseUrl = getEnvKey("SUPABASE_URL");
-const supabaseAnonKey = getEnvKey("SUPABASE_ANON_KEY");
+import { withAuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
+import { withRequestHandlers } from "locals/middleware/withRequestHandlers";
+import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
+import type { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
+import { withCors } from "locals/middleware/withCors";
+import { AgentController } from "locals/controllers/AgentController";
+import { FunctionController } from "locals/controllers/FunctionController";
 
-const logger = new Logger({ debug: getEnvKey("DEBUG") });
-const openAiService = new OpenAIService({
-  apiKey: getEnvKey("OPENAI_API_KEY"),
-  logger,
-});
-const agentController = new AgentController({ logger });
-const conversationsController = new ConversationsController({ logger });
-const supabaseService = new SupabaseService({ logger });
-const functionController = new FunctionController({ logger });
+const handler = async (req: Request, context: AuthenticatedContext) => {
+  const { conversation_id, agent_id, messages } = await req.json();
 
-/**
- * Main handler for the AI chat edge function
- */
-serve(async (req: Request) => {
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return supabaseService.sendPreflightResponse();
-  }
+  const agentController = await AgentController.create({
+    context,
+    functionController: new FunctionController(context),
+    agentId: agent_id,
+    sessionContext: {},
+  });
 
-  try {
-    const { conversation_id, agent_id, messages } = await req.json();
+  const result = await agentController.talkToAgent(conversation_id);
 
-    supabaseService.checkAuthHeaderPresent(req);
+  // const stream = new ReadableStream({
+  //   start(controller) {
+  //     const encoder = new TextEncoder();
+  //     controller.enqueue(encoder.encode(JSON.stringify({ message: "Hello" }) + "\n"));
+  //     controller.enqueue(encoder.encode(JSON.stringify({ message: "World" }) + "\n"));
+  //     controller.close();
+  //   },
+  // });
 
-    supabaseService.initializeSupabase({
-      url: supabaseUrl,
-      key: supabaseAnonKey,
-    });
+  return {
+    body: result,
+    headers: {
+      "Content-Type": "text/event-stream",
+    },
+    status: 200,
+  };
+};
 
-    // Initialize Supabase client with the user's JWT
-
-    await conversationsController.setDependencies({
-      supabase: supabaseService.supabase,
-    });
-
-    await functionController.setDependencies({
-      supabaseService,
-    });
-    await agentController.setDependenciesAndGetAgents({
-      supabaseService,
-      openAiService,
-      functionController,
-    });
-
-    // Validate conversation exists or create it
-    await conversationsController.validateOrCreateConversation(conversation_id);
-
-    const newMessage = messages[messages.length - 1];
-
-    // Call OpenAI API
-    return agentController.talkToAgent({
-      conversationId: conversation_id,
-      agentId: agent_id,
-      newMessage,
-    });
-  } catch (error) {
-    console.error("Error in AI chat function:", error);
-
-    return supabaseService.sendJsonResponse(
-      { error: error.message || "An unknown error occurred" },
-      error.status
-    );
-  }
-});
+serve(
+  withCors()(
+    withErrorBoundary(
+      withAuthenticatedContext(
+        withRequestHandlers<AuthenticatedContext>(handler)
+      )
+    )
+  )
+);

@@ -146,6 +146,8 @@ export class BaseSupabaseService {
   }
 
   async getById(id: string, columns: string = this.defaultColumns) {
+    this.logger.debug("getById", id);
+
     const { data, error } = await this.supabase
       .from(this.tableName)
       .select(columns)
