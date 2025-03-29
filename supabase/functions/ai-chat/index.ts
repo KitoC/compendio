@@ -21,15 +21,6 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
 
   const result = await agentController.talkToAgent(conversation_id);
 
-  // const stream = new ReadableStream({
-  //   start(controller) {
-  //     const encoder = new TextEncoder();
-  //     controller.enqueue(encoder.encode(JSON.stringify({ message: "Hello" }) + "\n"));
-  //     controller.enqueue(encoder.encode(JSON.stringify({ message: "World" }) + "\n"));
-  //     controller.close();
-  //   },
-  // });
-
   return {
     body: result,
     headers: {

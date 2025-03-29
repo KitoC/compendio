@@ -8,9 +8,14 @@ import { BaseController } from "locals/controllers/_BaseController";
 import { PublicContext } from "locals/middleware/withPublicContext";
 import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
 
+export type ExecuteFunctionResult = {
+  result: object | string | undefined;
+  functionMessage?: string;
+};
+
 export type ExecuteFunctionCallback = (
   functionCall: IFunctionCall
-) => Promise<object | string | undefined>;
+) => Promise<ExecuteFunctionResult>;
 
 class FunctionController extends BaseController {
   private markup: { [key: string]: unknown };
@@ -34,7 +39,7 @@ class FunctionController extends BaseController {
     }
   }
 
-  async executeFunction(fnCall: IFunctionCall) {
+  async executeFunction(fnCall: IFunctionCall): Promise<ExecuteFunctionResult> {
     const fn = this.functionsMap[fnCall.name];
 
     this.logger.info("🔹 Executing function", fnCall.name);
@@ -47,19 +52,22 @@ class FunctionController extends BaseController {
     switch (fn.type) {
       case "markup":
         // console.log("SENDING MARKUP");
-        return fn;
+        return { result: fn, functionMessage: "Markup sent successfully" };
 
       case "form":
         // console.log("SENDING FORM");
-        return "form sent successfully";
+        return {
+          result: fn,
+          functionMessage: "Tell user you are getting the form ready.",
+        };
 
       case "retrieval":
         // console.log("SENDING RETRIEVAL");
-        return fn;
+        return { result: fn, functionMessage: "Retrieval sent successfully" };
 
       case "function":
         // console.log("SENDING FUNCTION");
-        return fn;
+        return { result: fn, functionMessage: "Function sent successfully" };
 
       default:
         throw new Error(`Function ${fnCall.name} not found`);

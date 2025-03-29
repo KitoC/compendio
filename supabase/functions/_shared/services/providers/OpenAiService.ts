@@ -5,7 +5,10 @@ import type {
 import type { OpenAiMessage, OpenAiRole } from "../../../../../src/types/chat";
 import { BaseExternalService } from "locals/services/_BaseExternalService";
 import { getEnvKey } from "locals/utils/env";
-import { ExecuteFunctionCallback } from "locals/controllers/FunctionController";
+import {
+  ExecuteFunctionCallback,
+  ExecuteFunctionResult,
+} from "locals/controllers/FunctionController";
 
 const OPEN_AI_URL = "https://api.openai.com";
 
@@ -163,7 +166,7 @@ export class OpenAiService extends BaseExternalService {
       start: async (controller) => {
         this.logger.info("🔹 Starting streamAndCallFunction");
         let functionCallDetected: IFunctionCall | null = null;
-        let functionResult: unknown | null = null;
+        let functionResult: ExecuteFunctionResult | null = null;
 
         const encoder = new TextEncoder();
 
@@ -224,7 +227,9 @@ export class OpenAiService extends BaseExternalService {
           updatedMessages.push({
             role: "function" as OpenAiRole,
             name: functionCallDetected.name,
-            content: JSON.stringify(functionResult),
+            content:
+              functionResult.functionMessage ||
+              JSON.stringify(functionResult.result),
           });
         }
 

@@ -222,7 +222,9 @@ class OpenAIService {
           updatedMessages.push({
             role: "function" as OpenAiRole,
             name: functionCallDetected.name,
-            content: JSON.stringify(functionResult),
+            content:
+              functionResult.functionMessage ||
+              JSON.stringify(functionResult.result),
           });
         }
 
