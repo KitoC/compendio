@@ -78,6 +78,7 @@ Your response must be formatted like this:
 4. **If the email is a thread (multiple replies quoted in the body)**:
 
    - Place the most recent message in \`latest_message\`.
+    - ONLY THE LATEST MESSAGE. DO NOT INCLUDE ANY QUOTED REPLIES FROM THE THREAD.
    - Parse and include earlier messages in the \`thread\` array.
      - Each item must include the \`from\` field, \`timestamp\`, and \`body\`.
    - If the latest message is short or lacks context (e.g., “test” or “see below”), use the earlier thread to determine if a reply is needed.

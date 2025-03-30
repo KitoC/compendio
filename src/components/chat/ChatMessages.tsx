@@ -13,8 +13,6 @@ const ChatMessages = () => {
     )
     .filter((fm) => !fm.reply_to);
 
-  console.log("filteredMessages", filteredMessages);
-  console.log("messages", messages);
   return (
     <div
       className="flex-1 px-4 py-6 overflow-y-auto scroll-smooth space-y-4"

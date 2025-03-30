@@ -10,7 +10,7 @@ import { withAuthenticatedContext } from "locals/middleware/withAuthenticatedCon
 import { withRequestHandlers } from "locals/middleware/withRequestHandlers";
 import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
 import type { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
-import { withCors } from "locals/middleware/withCors.js";
+import { withCors } from "locals/middleware/withCors";
 
 const PROMPT_FOR_TABLE_CREATION_V2 = `
 You are TableSmart, an AI assistant specialized in designing database schemas for business applications.

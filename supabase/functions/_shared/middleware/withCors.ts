@@ -58,7 +58,6 @@ export function withCors<Context>(params: Params = defaultParams) {
         });
       }
 
-      logger.debug("SENDING RESPONSE", headers);
       return await handler(req, {
         ...context,
         allowedOrigins: allowedOrigins || defaultAllowedOrigins,

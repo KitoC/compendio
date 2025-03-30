@@ -13,8 +13,6 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
   const { searchParams } = new URL(req.url);
   const method = req.method.toUpperCase();
 
-  console.log("REQUEST", req);
-
   switch (method) {
     case "GET": {
       const conversation_id = searchParams.get("conversation_id")!;

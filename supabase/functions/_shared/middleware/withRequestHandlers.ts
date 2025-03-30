@@ -31,8 +31,6 @@ export function withRequestHandlers<Context extends CorsContext>(
     try {
       const res = await handler(req, context);
 
-      console.log("res", res);
-
       if (!res) {
         return new Response("No response from handler", { status: 500 });
       }
