@@ -9,6 +9,7 @@ import type { User } from "locals/types";
 
 const ROLES = {
   SUPER_ADMIN: "super-admin",
+  SYSTEM_ADMIN: "system-admin",
   TENANT_OWNER: "tenant-owner",
   MEMBER: "member",
   GUEST: "guest",
@@ -53,14 +54,8 @@ class AuthService extends BaseSupabaseService {
     }
   }
 
-  async isSystemAdmin() {
-    const { data, error } = await this.context.supabase.rpc("is_system_admin");
-
-    if (error) {
-      this.throwError("Error getting system admin", error, 500);
-    }
-
-    return data;
+  isSystemAdmin() {
+    return this.roles?.includes(ROLES.SYSTEM_ADMIN);
   }
 
   async getUser() {
@@ -93,8 +88,9 @@ class AuthService extends BaseSupabaseService {
         .from("user_roles")
         .select("*")
         .eq("user_id", user.user.id)
-        .eq("tenant_id", tenantId);
+        .or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
 
+    console.log("roles LOADED", roles);
     if (rolesError) {
       this.throwError("Error getting roles", rolesError, 500);
     }
@@ -135,7 +131,7 @@ class AuthService extends BaseSupabaseService {
   }
 
   requireRole(role: string) {
-    if (this.isSuperAdmin()) {
+    if (this.isSystemAdmin()) {
       return;
     }
 
@@ -147,7 +143,7 @@ class AuthService extends BaseSupabaseService {
   }
 
   allowedRoles(roles: string[]) {
-    if (this.isSuperAdmin()) {
+    if (this.isSystemAdmin()) {
       return;
     }
 
