@@ -41,7 +41,7 @@ export type UpdateConnectedServiceArgs = {
 };
 
 class ConnectedServicesService extends BaseSupabaseService {
-  constructor(public req: Request, public context: BaseRequiredContext) {
+  constructor(public context: BaseRequiredContext) {
     super(context);
     this.tableName = "connected_services";
   }

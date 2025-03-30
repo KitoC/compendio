@@ -10,9 +10,22 @@ import { AgentFunctionsService } from "locals/services/AgentFunctionsService";
 import { ConversationsService } from "locals/services/ConversationsService";
 import { WebhookEventService } from "locals/services/WebhookEventService";
 import { CorsContext } from "locals/middleware/withCors";
+
 interface SupabaseContext {
   supabase: SupabaseClient;
   supabase_AS_SUPER_ADMIN: SupabaseClient;
+}
+
+export interface WSSContext {
+  credentialsService: CredentialsService;
+  connectedServicesService: ConnectedServicesService;
+  agentsService: AgentsService;
+  agentFunctionsService: AgentFunctionsService;
+  messagesService: MessagesService;
+  conversationsService: ConversationsService;
+  webhookEventService: WebhookEventService;
+  functionQueueService: FunctionQueueService;
+  azureService: AzureService;
 }
 
 export interface SharedServices extends CorsContext {
@@ -27,22 +40,19 @@ export interface SharedServices extends CorsContext {
   azureService: AzureService;
 }
 
-export const getSharedServices = (
-  req: Request,
-  supabaseContext: SupabaseContext
-) => {
-  const credentialsService = new CredentialsService(req, supabaseContext);
+export const getSharedServices = (supabaseContext: SupabaseContext) => {
+  const credentialsService = new CredentialsService(supabaseContext);
   const connectedServicesService = new ConnectedServicesService(
-    req,
     supabaseContext
   );
-  const agentsService = new AgentsService(req, supabaseContext);
-  const agentFunctionsService = new AgentFunctionsService(req, supabaseContext);
-  const messagesService = new MessagesService(req, supabaseContext);
-  const conversationsService = new ConversationsService(req, supabaseContext);
-  const webhookEventService = new WebhookEventService(req, supabaseContext);
-  const functionQueueService = new FunctionQueueService(req, supabaseContext);
+  const agentsService = new AgentsService(supabaseContext);
+  const agentFunctionsService = new AgentFunctionsService(supabaseContext);
+  const messagesService = new MessagesService(supabaseContext);
+  const conversationsService = new ConversationsService(supabaseContext);
+  const webhookEventService = new WebhookEventService(supabaseContext);
+  const functionQueueService = new FunctionQueueService(supabaseContext);
   const azureService = new AzureService();
+
   return {
     credentialsService,
     connectedServicesService,

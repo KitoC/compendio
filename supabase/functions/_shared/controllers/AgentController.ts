@@ -91,8 +91,6 @@ class AgentController extends BaseController {
   async talkToAgent(conversation_id: string) {
     const result = await this.getRequestArgs(conversation_id);
 
-    this.logger.info("🔹 Result", JSON.stringify(result, null, 2));
-
     return this.agentAdapter.talkToAgent(result, (functionCall) =>
       this.functionController.executeFunction(functionCall)
     );

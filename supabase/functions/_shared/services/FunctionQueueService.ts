@@ -6,7 +6,7 @@ import {
 import { getEnvKey } from "locals/utils/env";
 
 class FunctionQueueService extends BaseSupabaseService {
-  constructor(public req: Request, public context: BaseRequiredContext) {
+  constructor(public context: BaseRequiredContext) {
     super(context);
     this.tableName = "messages";
   }

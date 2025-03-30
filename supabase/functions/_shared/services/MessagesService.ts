@@ -8,7 +8,7 @@ import type { ChatMessage } from "../../../../src/types/chat";
 import { getEnvKey } from "locals/utils/env";
 
 class MessagesService extends BaseSupabaseService {
-  constructor(public req: Request, public context: BaseRequiredContext) {
+  constructor(public context: BaseRequiredContext) {
     super(context);
     this.tableName = "messages";
   }

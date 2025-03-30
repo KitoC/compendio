@@ -44,7 +44,7 @@ verify_jwt = false
 [functions.process-queue]
 verify_jwt = false
 
-[functions.wss-handler]
+[functions.wss]
 verify_jwt = false
 
 [edge_runtime]

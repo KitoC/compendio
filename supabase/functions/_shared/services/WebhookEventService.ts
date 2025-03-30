@@ -15,7 +15,7 @@ interface WebhookEvent {
 }
 
 class WebhookEventService extends BaseSupabaseService {
-  constructor(public req: Request, public context: BaseRequiredContext) {
+  constructor(public context: BaseRequiredContext) {
     super(context);
     this.tableName = "webhook_events";
   }

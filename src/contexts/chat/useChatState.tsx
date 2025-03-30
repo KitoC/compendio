@@ -1,16 +1,18 @@
-// NO_CHANGE
+// We'll refactor this hook to use the new SocketProvider + useSocket
+// And cleanly separate out the message handling logic
+
 import { useState, useRef, useCallback, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { ChatMessage, MessageRole } from "@/types/chat";
-import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
-import { Database } from "@/integrations/supabase/types";
-import useChatHelpers from "./useChatHelpers";
-import { User } from "@/types/user";
-import { aiChatService } from "@/services/aiChatService";
 import { useTenant } from "@/contexts/TenantContext";
+import { useSocket, SocketData } from "@/contexts/SocketProvider";
+import useChatHelpers from "./useChatHelpers";
 import { MessageService } from "@/services/MessageService";
+import { toast } from "sonner";
+import { listenForFunctionCalls } from "@/services/aiChatService";
+import { User } from "@/types/user";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UseChatOptions {
   conversationId: string;
@@ -19,9 +21,16 @@ interface UseChatOptions {
 export const useChatState = ({ conversationId }: UseChatOptions) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const { currentAgent } = useAiAgents();
+  const [messagesLoaded, setMessagesLoaded] = useState(false);
   const { user } = useAuth();
+  const { currentAgent } = useAiAgents();
   const { tenantId } = useTenant();
+  const { sendMessage, addMessageListener, removeMessageListener } =
+    useSocket();
+
+  const aiMessageRef = useRef<ChatMessage | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const { createAiMessage, createHumanMessage } = useChatHelpers({
     conversationId,
@@ -29,217 +38,142 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     tenantId,
   });
 
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const scrollToBottom = useCallback((instant = false) => {
+    if (messagesContainerRef.current) {
+      const container = messagesContainerRef.current;
 
-  const scrollToOptimalPosition = useCallback(
-    ({ behavior = "smooth" }: { behavior?: ScrollBehavior } = {}) => {
-      if (messagesContainerRef.current) {
-        const container = messagesContainerRef.current;
-
-        container.scrollTo({
-          top: container.scrollHeight,
-          behavior,
-        });
-      }
-    },
-    []
-  );
-
-  const loadMessages = useCallback(async () => {
-    if (!conversationId) return;
-
-    try {
-      // TODO: Add proper infinite scroll
-      const query = {
-        conversation_id: conversationId,
-        limit: "10",
-        offset: "0",
-        order: "created_at",
-        sort_direction: "desc",
-
-        // role: "user",
-        // search: "hello",
-      };
-
-      const loadedMessages = await MessageService.getMessages(
-        conversationId,
-        query
-      );
-
-      if (loadedMessages) {
-        setMessages(loadedMessages.reverse() as ChatMessage[]);
-
-        // Scroll to bottom after messages load
-        setTimeout(() => scrollToOptimalPosition({ behavior: "instant" }), 100);
-      }
-    } catch (error: unknown) {
-      console.error("Error loading messages:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to load messages"
-      );
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: instant ? "instant" : "smooth",
+      });
     }
-  }, [conversationId, scrollToOptimalPosition]);
+  }, []);
 
   const handleSendMessage = useCallback(
-    async (content: string, role: MessageRole = MessageRole.USER) => {
-      if (!content.trim() || !conversationId || !user || !tenantId) return;
+    async (text: string) => {
+      if (!text.trim() || !user || !tenantId || !conversationId) return;
 
-      const newMessage: ChatMessage = createHumanMessage(content);
+      const humanMessage = createHumanMessage(text);
+      const aiMessage = createAiMessage("");
 
-      // Add the user message to the UI
-      setMessages((prev) => [...prev, newMessage]);
+      aiMessageRef.current = aiMessage;
+
+      setMessages((prev) => [...prev, humanMessage, aiMessage]);
       setIsTyping(true);
-      setTimeout(scrollToOptimalPosition, 100);
 
       try {
-        // Save the user message to the database
-        await MessageService.createMessage(newMessage);
-
-        // Create a placeholder message for the AI response
-        const aiMessage = createAiMessage("");
-
-        setMessages((prev) => [...prev, aiMessage]);
-
-        // Send messages to AI and handle streaming response
-        await aiChatService.sendMessageToAI({
-          messageId: aiMessage.id,
-          messagesToSend: [...messages, newMessage],
-          conversationId,
-          agentId: currentAgent?.id || "",
-          userId: user.id,
-          tenantId,
-          // Update callback - updates the UI as content streams in
-          onUpdate: (text) => {
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === aiMessage.id ? { ...msg, content: { text } } : msg
-              )
-            );
-
-            scrollToOptimalPosition();
-          },
-          onFunctionCall: ({ message }) => {
-            if (message) {
-              setMessages((prev) => [...prev, message]);
-            }
-          },
-          // Complete callback - updates UI when streaming is done
-          onComplete: async (finalMessage) => {
-            setMessages((prev) =>
-              prev.map((msg) => (msg.id === aiMessage.id ? finalMessage : msg))
-            );
-          },
+        await MessageService.createMessage(humanMessage);
+        sendMessage({
+          type: "chat:start",
+          conversation_id: conversationId,
+          agent_id: currentAgent?.id,
+          userMessage: humanMessage,
         });
-      } catch (error: unknown) {
-        console.error("Error in handleSendMessage:", error);
-        toast.error(
-          error instanceof Error ? error.message : "Failed to send message"
-        );
 
-        // Update the AI message to show the error
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.role === MessageRole.ASSISTANT && msg.loading
-              ? {
-                  ...msg,
-                  content: {
-                    text: "Sorry, I encountered an error. Please try again.",
-                  },
-                  loading: false,
-                }
-              : msg
-          )
-        );
-      } finally {
-        setIsTyping(false);
-
-        setTimeout(scrollToOptimalPosition, 100);
+        scrollToBottom();
+      } catch (err) {
+        console.error("send error", err);
+        toast.error("Message failed to send");
       }
     },
     [
-      messages,
-      conversationId,
-      scrollToOptimalPosition,
       user,
       tenantId,
-      currentAgent,
+      conversationId,
       createAiMessage,
       createHumanMessage,
-    ]
-  );
-
-  const handleHumanVoiceMessage = useCallback(
-    async (voiceMessage: string) => {
-      if (!voiceMessage.trim() || !conversationId || !user || !tenantId) return;
-
-      const newMessage = createHumanMessage(voiceMessage);
-
-      setMessages((prev) => [...prev, newMessage]);
-
-      try {
-        await supabase.from("messages").insert([newMessage]);
-      } catch (error: unknown) {
-        console.error("Error in handleHumanVoiceMessage:", error);
-      } finally {
-        setTimeout(scrollToOptimalPosition, 100);
-      }
-    },
-    [
-      conversationId,
-      user,
-      tenantId,
-      createHumanMessage,
-      setMessages,
-      scrollToOptimalPosition,
-    ]
-  );
-
-  const handleAgentVoiceMessage = useCallback(
-    async (voiceMessage: string, functionCall?: object) => {
-      if (!voiceMessage.trim() || !conversationId || !user || !tenantId) return;
-
-      const newMessage = createAiMessage(voiceMessage);
-
-      setMessages((prev) => [...prev, newMessage]);
-
-      try {
-        await aiChatService.saveVoiceMessageResponse({
-          messageId: newMessage.id,
-          message: newMessage,
-          conversationId,
-          agentId: currentAgent?.id || "",
-          userId: user.id,
-          functionCall,
-          tenantId,
-          onFunctionCall: ({ message }) => {
-            if (message) {
-              setMessages((prev) => [...prev, message]);
-            }
-          },
-        });
-      } catch (error: unknown) {
-        console.error("Error in handleHumanVoiceMessage:", error);
-      } finally {
-        setTimeout(scrollToOptimalPosition, 100);
-      }
-    },
-    [
-      conversationId,
-      user,
-      tenantId,
-      createAiMessage,
-      setMessages,
-      scrollToOptimalPosition,
       currentAgent,
+      sendMessage,
+      scrollToBottom,
     ]
   );
 
   useEffect(() => {
-    if (!conversationId) return;
+    const listener = (
+      data: SocketData<{ text: string; function_call: { name: string } }>
+    ) => {
+      if (!aiMessageRef.current) return;
 
-    loadMessages();
+      switch (data.type) {
+        case "chat:update":
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === aiMessageRef.current!.id
+                ? { ...msg, content: { text: data.value.text } }
+                : msg
+            )
+          );
+          scrollToBottom();
+          break;
 
+        case "chat:done":
+          setIsTyping(false);
+          MessageService.createMessage({
+            ...aiMessageRef.current,
+            content: { text: data.value.text },
+          });
+          break;
+
+        case "function_call":
+          listenForFunctionCalls({
+            conversationId,
+            agentId: currentAgent?.id || "",
+            userId: user.id,
+            tenantId,
+            messageId: aiMessageRef.current?.id || "",
+            functionCall: data.value.function_call,
+            onFunctionCall: ({ message }) => {
+              if (message) {
+                setMessages((prev) => [...prev, message]);
+              }
+            },
+          });
+          break;
+      }
+    };
+
+    addMessageListener(listener);
+    return () => removeMessageListener(listener);
+  }, [
+    addMessageListener,
+    removeMessageListener,
+    scrollToBottom,
+    currentAgent,
+    user,
+    tenantId,
+    conversationId,
+  ]);
+
+  // 🔁 Load initial messages on mount
+  useEffect(() => {
+    const loadMessages = async () => {
+      try {
+        const query = {
+          conversation_id: conversationId,
+          limit: "20",
+          offset: "0",
+          order: "created_at",
+          sort_direction: "desc",
+        };
+
+        const loaded = await MessageService.getMessages(conversationId, query);
+
+        if (loaded) {
+          setMessages(loaded.reverse());
+          setTimeout(() => scrollToBottom(true), 100);
+          setMessagesLoaded(true);
+        }
+      } catch (err) {
+        console.error("Error loading messages:", err);
+        toast.error("Failed to load messages");
+      }
+    };
+
+    if (conversationId) loadMessages();
+  }, [conversationId, scrollToBottom]);
+
+  // 🔁 Subscribe to new messages in this conversation (optional if you're also streaming via WS)
+  useEffect(() => {
     const channel = supabase
       .channel("messages-channel")
       .on(
@@ -252,9 +186,8 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         },
         (payload) => {
           const newMessage = payload.new as ChatMessage;
-
           setMessages((prev) => {
-            if (!prev.some((msg) => msg.id === newMessage.id)) {
+            if (!prev.some((m) => m.id === newMessage.id)) {
               return [...prev, newMessage];
             }
             return prev;
@@ -266,19 +199,15 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [conversationId, loadMessages]);
-
-  const userId = user?.id || "";
+  }, [conversationId]);
 
   return {
     messages,
     isTyping,
-    userId,
-    messagesContainerRef,
+    userId: user?.id || "",
     inputRef,
+    messagesContainerRef,
     handleSendMessage,
-    conversationId,
-    handleHumanVoiceMessage,
-    handleAgentVoiceMessage,
+    messagesLoaded,
   };
 };

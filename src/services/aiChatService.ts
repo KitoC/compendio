@@ -13,10 +13,16 @@ interface ListenForFunctionCallsProps {
   tenantId: string;
   messageId: string;
   functionCall: object;
-  onFunctionCall: (functionCall: object) => void;
+  onFunctionCall: ({
+    message,
+    response,
+  }: {
+    message: ChatMessage;
+    response: object;
+  }) => void;
 }
 
-const listenForFunctionCalls = async ({
+export const listenForFunctionCalls = async ({
   conversationId,
   agentId,
   userId,

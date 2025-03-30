@@ -25,7 +25,10 @@ class AuthService extends BaseSupabaseService {
   public tenantId: string | null;
   public user: User | null;
 
-  constructor(public req: Request, public context: BaseRequiredContext) {
+  constructor(
+    public context: BaseRequiredContext,
+    public tokenFromHeader?: string
+  ) {
     super(context);
 
     this.logger = new Logger({ name: "AuthService" });
@@ -43,15 +46,16 @@ class AuthService extends BaseSupabaseService {
   }
 
   getToken() {
-    const authHeader = this.req.headers.get("Authorization");
+    const authHeader = this.tokenFromHeader;
     const token = authHeader?.replace("Bearer ", "");
-
-    this.authHeader = authHeader;
-    this.token = token || null;
 
     if (!authHeader) {
       this.throwError("Authorization header is required", 401);
+      return;
     }
+
+    this.authHeader = authHeader;
+    this.token = token || null;
   }
 
   isSystemAdmin() {
@@ -90,7 +94,6 @@ class AuthService extends BaseSupabaseService {
         .eq("user_id", user.user.id)
         .or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
 
-    console.log("roles LOADED", roles);
     if (rolesError) {
       this.throwError("Error getting roles", rolesError, 500);
     }

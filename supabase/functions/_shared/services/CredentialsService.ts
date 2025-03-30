@@ -40,7 +40,7 @@ export interface ICredential {
 }
 
 class CredentialsService extends BaseSupabaseService {
-  constructor(public req: Request, public context: BaseRequiredContext) {
+  constructor(public context: BaseRequiredContext) {
     super(context);
   }
 

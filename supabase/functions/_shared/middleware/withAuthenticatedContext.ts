@@ -1,15 +1,10 @@
-import { getClient, getADMINClient } from "locals/db";
 // @ts-expect-error - Supabase client is not typed
 import { SupabaseClient } from "supabase-js";
 import { AuthService } from "locals/services/AuthService";
-import {
-  getSharedServices,
-  SharedServices,
-} from "locals/middleware/_getSharedServices";
+import { SharedServices } from "locals/middleware/_getSharedServices";
 import { CorsContext } from "locals/middleware/withCors";
 import Logger from "locals/utils/Logger";
-
-const logger = new Logger({ name: "withAuthenticatedContext" });
+import { getAuthenticatedContext } from "locals/middleware/_getAuthenticatedContext";
 
 export interface AuthenticatedContext extends SharedServices {
   supabase: SupabaseClient;
@@ -26,29 +21,13 @@ export const withAuthenticatedContext = (
   handler: AuthenticatedContextChildHandler
 ) => {
   return async (req: Request, corsContext: CorsContext): Promise<Response> => {
-    const supabase_AS_SUPER_ADMIN = getADMINClient();
-    const supabase = getClient(req);
+    const Authorization = req.headers.get("Authorization");
 
-    const supabaseContext = {
-      supabase,
-      supabase_AS_SUPER_ADMIN,
-    };
-
-    const authService = new AuthService(req, supabaseContext);
-
-    await authService.initialize();
-    const user = await authService.getUser();
-
-    logger.debug("currentUser", user?.user?.id);
-    logger.debug("authService.tenantId", authService.tenantId);
+    const authenticatedContext = await getAuthenticatedContext(Authorization);
 
     const context = {
       ...corsContext,
-      ...supabaseContext,
-      authService,
-      user,
-      tenant_id: authService.tenantId,
-      ...getSharedServices(req, supabaseContext),
+      ...authenticatedContext,
     };
 
     return handler(req, context);

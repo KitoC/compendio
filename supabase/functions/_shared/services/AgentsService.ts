@@ -6,7 +6,7 @@ import {
 } from "locals/services/_BaseSupabaseService";
 
 class AgentsService extends BaseSupabaseService {
-  constructor(public req: Request, public context: BaseRequiredContext) {
+  constructor(public context: BaseRequiredContext) {
     super(context);
     this.tableName = "ai_agents";
   }
