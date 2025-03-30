@@ -1,19 +1,11 @@
 // NO_CHANGE
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-// @ts-expect-error - Supabase client is not typed
-import { SupabaseClient } from "supabase-js";
 
 class GoogleCloudController {
-  private supabase: SupabaseClient | null;
   private apiKey: string;
   constructor({ apiKey }: { apiKey: string }) {
-    this.supabase = null;
     this.apiKey = apiKey;
-  }
-
-  async setDependencies({ supabase }: { supabase: SupabaseClient }) {
-    this.supabase = supabase;
   }
 
   async generateSpeech(text: string) {

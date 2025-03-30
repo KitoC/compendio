@@ -1,11 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 // @ts-expect-error - Supabase client is not typed
 import { createClient } from "supabase-js";
-import { Database } from "../_deprecated/shared/types.ts";
-import Logger from "../_deprecated/shared/utils/logger.ts";
-import { getEnvKey } from "../_deprecated/shared/utils/env.ts";
+import Logger from "locals/utils/Logger";
+import { getEnvKey } from "locals/utils/env";
 
-const logger = new Logger({ debug: getEnvKey("DEBUG") });
+const logger = new Logger({
+  name: "custom-table-data",
+});
 
 // CORS headers for cross-origin requests
 const corsHeaders = {
@@ -26,7 +27,7 @@ const createSupabaseClient = (req: Request) => {
   const supabaseUrl = getEnvKey("SUPABASE_URL");
   const supabaseAnonKey = getEnvKey("SUPABASE_ANON_KEY");
 
-  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  return createClient(supabaseUrl, supabaseAnonKey, {
     global: { headers: { Authorization: authHeader } },
   });
 };

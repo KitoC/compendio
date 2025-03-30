@@ -13,6 +13,8 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
   const { searchParams } = new URL(req.url);
   const method = req.method.toUpperCase();
 
+  console.log("REQUEST", req);
+
   switch (method) {
     case "GET": {
       const conversation_id = searchParams.get("conversation_id")!;
@@ -38,10 +40,11 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
         include_deleted,
       });
 
-      return new Response(JSON.stringify(result), {
+      return {
+        body: JSON.stringify(result),
         headers: { "Content-Type": "application/json" },
         status: 200,
-      });
+      };
     }
 
     case "POST": {
@@ -54,10 +57,11 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
         message_data
       );
 
-      return new Response(JSON.stringify(result), {
+      return {
+        body: JSON.stringify(result),
         headers: { "Content-Type": "application/json" },
         status: 201,
-      });
+      };
     }
 
     case "PATCH": {
@@ -71,19 +75,22 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
         metadata,
       });
 
-      return new Response(JSON.stringify({ message: "Message updated" }), {
+      return {
+        body: JSON.stringify({ message: "Message updated" }),
         headers: { "Content-Type": "application/json" },
         status: 200,
-      });
+      };
     }
 
     case "DELETE": {
       const message_id = searchParams.get("message_id");
 
       if (!message_id) {
-        return new Response(JSON.stringify({ error: "Missing message_id" }), {
+        return {
+          body: JSON.stringify({ error: "Missing message_id" }),
+          headers: { "Content-Type": "application/json" },
           status: 400,
-        });
+        };
       }
 
       // Soft delete = set deleted_at
@@ -92,14 +99,19 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
         .update({ deleted_at: new Date().toISOString() })
         .eq("id", message_id);
 
-      return new Response(
-        JSON.stringify({ message: "Message deleted (soft)" }),
-        { headers: { "Content-Type": "application/json" }, status: 200 }
-      );
+      return {
+        body: JSON.stringify({ message: "Message deleted (soft)" }),
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      };
     }
 
     default:
-      return new Response("Method Not Allowed", { status: 405 });
+      return {
+        body: JSON.stringify({ error: "Method Not Allowed" }),
+        headers: { "Content-Type": "application/json" },
+        status: 405,
+      };
   }
 };
 
