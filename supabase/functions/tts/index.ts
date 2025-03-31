@@ -13,12 +13,11 @@ import { withCors } from "locals/middleware/withCors";
 import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
 import { withRequestHandlers } from "locals/middleware/withRequestHandlers";
 
-// Environment variables
-
+// functions/v1/tts
 const handler = async (req: Request, context: AuthenticatedContext) => {
   const { message } = await req.json();
 
-  const logger = new Logger({ name: "voice-chat" });
+  const logger = new Logger({ name: "tts" });
 
   const googleCloudController = new GoogleCloudController({
     apiKey: getEnvKey("GOOGLE_CLOUD_API_KEY"),
@@ -30,6 +29,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
   try {
     const ttsResponse = await googleCloudController.generateSpeech(message);
 
+    console.log("🔊 TTS response:", ttsResponse);
     if (ttsResponse.ok) {
       const ttsData = await ttsResponse.json();
       audioContent = ttsData.audioContent; // Already in base64 format

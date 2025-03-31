@@ -23,11 +23,11 @@ class GoogleCloudController {
           audioConfig: {
             audioEncoding: "LINEAR16",
             effectsProfileId: ["small-bluetooth-speaker-class-device"],
-            pitch: 0,
-            speakingRate: 1.2,
+            // pitch: 0,
+            // speakingRate: 1.2,
           },
           input: { text },
-          voice: { languageCode: "en-AU", name: "en-AU-Chirp3-HD-Puck" },
+          voice: { languageCode: "en-AU", name: "en-AU-Standard-B" },
         }),
       }
     );

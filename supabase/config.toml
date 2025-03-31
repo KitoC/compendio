@@ -4,7 +4,7 @@ project_id = "zgtukvtbfucrvdpicvxx"
 [functions.ai-chat]
 verify_jwt = false
 
-[functions.voice-chat]
+[functions.tts]
 verify_jwt = false
 
 [functions.ai-chat-v2]

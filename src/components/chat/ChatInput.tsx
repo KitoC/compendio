@@ -237,6 +237,10 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
           {!isVoiceMode && (
             <IconButton
               onClick={(e) => {
+                if (message.length > 0) {
+                  handleSubmit(e);
+                  return;
+                }
                 if (isVoiceMode) {
                   setIsVoiceMode(false);
                   closeVoiceMode(e);

@@ -13,10 +13,14 @@ import { toast } from "sonner";
 import { listenForFunctionCalls } from "@/services/aiChatService";
 import { User } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
+import { playTTSQueue, resetTTS } from "./useTTSPlayback";
+import { getSentenceChunks } from "./getGroupedSentences";
 
 interface UseChatOptions {
   conversationId: string;
 }
+
+const sentenceEndRegex = /([.!?])(?=\s|$)/g;
 
 export const useChatState = ({ conversationId }: UseChatOptions) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -28,9 +32,19 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
   const { sendMessage, addMessageListener, removeMessageListener } =
     useSocket();
 
+  // const { playTTS, stopTTS } = useTTSPlayback(); // 🔊 Inject TTS hook
+
   const aiMessageRef = useRef<ChatMessage | null>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  // Add this at the top of the file if it's not there already:
+  const lastProcessedText = useRef(""); // to track what's already spoken
+  const spokenTextMap = useRef<Set<string>>(new Set()); // dedup by actual text
+
+  const resetLocalTTS = useCallback(() => {
+    spokenTextMap.current.clear();
+    lastProcessedText.current = "";
+  }, []);
 
   const { createAiMessage, createHumanMessage } = useChatHelpers({
     conversationId,
@@ -52,6 +66,8 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
   const handleSendMessage = useCallback(
     async (text: string) => {
       if (!text.trim() || !user || !tenantId || !conversationId) return;
+      resetLocalTTS();
+      resetTTS();
 
       const humanMessage = createHumanMessage(text);
       const aiMessage = createAiMessage("");
@@ -85,29 +101,54 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       currentAgent,
       sendMessage,
       scrollToBottom,
+      resetLocalTTS,
     ]
   );
 
   useEffect(() => {
-    const listener = (
+    const listener = async (
       data: SocketData<{ text: string; function_call: { name: string } }>
     ) => {
       if (!aiMessageRef.current) return;
 
       switch (data.type) {
-        case "chat:update":
+        case "chat:update": {
+          const newText = data.value.text;
+
           setMessages((prev) =>
             prev.map((msg) =>
-              msg.id === aiMessageRef.current!.id
-                ? { ...msg, content: { text: data.value.text } }
+              msg.id === aiMessageRef.current?.id
+                ? { ...msg, content: { text: newText } }
                 : msg
             )
           );
-          scrollToBottom();
+
+          // ✂️ Split into sentence chunks
+          const chunks = getSentenceChunks(newText);
+
+          console.log("chunks", chunks);
+          // 🆕 Filter only the new ones by text
+          const newChunks = chunks.filter((chunk) => chunk.isDone);
+
+          if (newChunks.length > 0) {
+            // ✅ Queue for speech
+            playTTSQueue(newChunks);
+
+            // 💾 Track what's been spoken
+            for (const chunk of newChunks) {
+              spokenTextMap.current.add(chunk.text);
+            }
+
+            lastProcessedText.current = newText;
+          }
+
+          // scrollToBottom();
           break;
+        }
 
         case "chat:done":
           setIsTyping(false);
+          // stopTTS(); // 🆕 Stop any queued playback
           MessageService.createMessage({
             ...aiMessageRef.current,
             content: { text: data.value.text },

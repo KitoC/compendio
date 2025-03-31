@@ -1,5 +1,6 @@
 import { FC, useRef } from "react";
 import { ChatMessage as ChatMessageType, MessageRole } from "@/types/chat";
+import { NormalChatContent } from "@/types/chat";
 import clsx from "clsx";
 import RenderMarkdown from "./RenderMarkdown";
 import MarkupBuilder, { MARKUP_BUILDER_MAP_ROLES } from "./MarkupBuilder";
@@ -24,7 +25,7 @@ const ChatMessage: FC<ChatMessageProps> = ({ message, functionalMessages }) => {
       <div className={getContainerStyles({ isUser })} ref={messageRef}>
         <div className={getMessageBubbleStyles({ isUser, functionalMessages })}>
           <RenderMarkdown
-            message={message.content.text || ""}
+            message={(message.content as NormalChatContent).text || ""}
             isUser={isUser}
             isStreamedMessage={
               message.role === MessageRole.ASSISTANT && message.loading

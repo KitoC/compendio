@@ -1,7 +1,14 @@
-import { FC } from "react";
+import { FC, useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { getSentenceChunks } from "@/contexts/chat/getGroupedSentences";
+import {
+  setPlaybackListener,
+  stripEmojis,
+  stripMarkdown,
+} from "@/contexts/chat/useTTSPlayback"; // 👈
+import classNames from "clsx"; // optional utility
 
 interface RenderMarkdownProps {
   message: string;
@@ -9,26 +16,111 @@ interface RenderMarkdownProps {
   isStreamedMessage?: boolean;
 }
 
+export function balanceMarkdown(md: string): string {
+  const pairs: Record<string, string> = {
+    "**": "**",
+    "*": "*",
+    __: "__",
+    _: "_",
+    "`": "`",
+    "```": "```",
+  };
+
+  for (const opener of Object.keys(pairs)) {
+    const count = (md.match(new RegExp(`\\${opener}`, "g")) || []).length;
+    if (count % 2 !== 0) {
+      md += pairs[opener]; // close it
+    }
+  }
+
+  return md;
+}
+
+const highlightRegex = /{{([^}]+)}}/g;
+
+const replaceHighlightedText = (text: string) => {
+  if (!text.includes("{{")) return text;
+
+  const parts: (string | JSX.Element)[] = [];
+  let lastIndex = 0;
+  let match;
+
+  // Reset regex state
+  highlightRegex.lastIndex = 0;
+
+  while ((match = highlightRegex.exec(text)) !== null) {
+    // Add text before the match
+    if (match.index > lastIndex) {
+      parts.push(text.substring(lastIndex, match.index));
+    }
+
+    // Add the highlighted text
+    parts.push(<span className="text-primary">{match[1]}</span>);
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Add any remaining text after the last match
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex));
+  }
+
+  return parts.length === 1 ? parts[0] : parts;
+};
+
 const RenderMarkdown: FC<RenderMarkdownProps> = ({
   message,
   isUser,
   isStreamedMessage,
 }) => {
   const isMobile = useIsMobile();
+  const [chunks, setChunks] = useState<
+    { id: string; text: string; isParagraphBreak: boolean }[]
+  >([]);
+  const [currentIndex, setCurrentIndex] = useState<number | null>(null);
 
-  // Handle case when message is not a string
-  if (typeof message !== "string") {
-    console.warn("RenderMarkdown received non-string message:", message);
-    return null;
-  }
+  useEffect(() => {
+    let active = true;
+
+    const result = getSentenceChunks(message);
+
+    setChunks(result);
+
+    return () => {
+      active = false;
+    };
+  }, [message]);
+
+  useEffect(() => {
+    setPlaybackListener((index) => {
+      console.log("index", index);
+      if (index !== null) setCurrentIndex(index);
+    });
+
+    return () => setPlaybackListener(null);
+  }, []);
+
+  const textWithHighlightedChunks = chunks
+    .map((chunk, i) => {
+      const highlighted = i === currentIndex;
+
+      const highlightedText = highlighted ? `{{${chunk.text}}}` : chunk.text;
+      if (chunk.isParagraphBreak) {
+        return `${highlightedText}\n\n`;
+      }
+
+      return highlightedText;
+    })
+    .join(" ");
 
   return (
     <div
-      className={`prose-sm max-w-none dark:prose-invert ${
-        isStreamedMessage ? "streamed-message" : ""
-      } ${isMobile ? "text-sm" : ""} safari-text-rendering-fix`}
+      className={classNames(
+        "prose-sm max-w-none dark:prose-invert safari-text-rendering-fix",
+        isStreamedMessage && "streamed-message",
+        isMobile && "text-sm"
+      )}
       style={{
-        // Apply Safari-specific style fixes
         WebkitTextSizeAdjust: "100%",
         WebkitFontSmoothing: "antialiased",
       }}
@@ -36,10 +128,26 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
+          span: ({ children }) => {
+            if (typeof children === "string") {
+              return replaceHighlightedText(children);
+            }
+
+            return children;
+          },
+          strong: ({ children }) => {
+            if (typeof children === "string") {
+              return replaceHighlightedText(children);
+            }
+
+            return children;
+          },
           p: ({ children }) => {
-            return (
-              <p className="my-1 break-words whitespace-pre-line">{children}</p>
-            );
+            if (typeof children === "string") {
+              return <p className="mb-3">{replaceHighlightedText(children)}</p>;
+            }
+
+            return <p className="mb-3">{children}</p>;
           },
           a: ({ href, children }) => (
             <a
@@ -113,8 +221,9 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
           ),
         }}
       >
-        {message}
+        {textWithHighlightedChunks}
       </ReactMarkdown>
+
       {isStreamedMessage && (
         <span className="inline-block h-2 w-2 rounded-full bg-current animate-pulse ml-1" />
       )}
