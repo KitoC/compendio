@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from "uuid";
 import { useAuth } from "@/hooks/useAuth";
 import { useChat } from "@/contexts/chat/useChat";
 import { useTenant } from "@/contexts/TenantContext";
+
 interface VoiceChatToggleProps {
   agentId?: string;
   onMessageReceived?: (message: string) => void;

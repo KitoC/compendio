@@ -13,14 +13,14 @@ import { toast } from "sonner";
 import { listenForFunctionCalls } from "@/services/aiChatService";
 import { User } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
-import { playTTSQueue, resetTTS } from "./useTTSPlayback";
+import { useVoiceContext } from "@/contexts/VoiceProvider";
 import { getSentenceChunks } from "./getGroupedSentences";
+import { useTTS } from "../TTSProvider";
+import { useDebouncedCallback } from "use-debounce";
 
 interface UseChatOptions {
   conversationId: string;
 }
-
-const sentenceEndRegex = /([.!?])(?=\s|$)/g;
 
 export const useChatState = ({ conversationId }: UseChatOptions) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -31,20 +31,35 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
   const { tenantId } = useTenant();
   const { sendMessage, addMessageListener, removeMessageListener } =
     useSocket();
+  const { playQueue, reset } = useTTS();
+  const { hasSpoken, transcript, sendTranscript } = useVoiceContext();
 
-  // const { playTTS, stopTTS } = useTTSPlayback(); // 🔊 Inject TTS hook
+  const sendFinalTranscript = useDebouncedCallback(() => {
+    const cleaned = transcript.trim();
+    if (hasSpoken && cleaned.length > 0) {
+      console.log("🎙️ Sending:", cleaned);
+      handleSendMessage(cleaned);
+      sendTranscript(); // Reset logic
+    }
+  }, 1200); // Delay in ms — adjust as needed
+
+  useEffect(() => {
+    if (!hasSpoken || !transcript.trim()) return;
+
+    sendFinalTranscript(); // ✅ debounce will control timing
+  }, [transcript, hasSpoken, sendFinalTranscript]);
 
   const aiMessageRef = useRef<ChatMessage | null>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  // Add this at the top of the file if it's not there already:
-  const lastProcessedText = useRef(""); // to track what's already spoken
-  const spokenTextMap = useRef<Set<string>>(new Set()); // dedup by actual text
 
-  const resetLocalTTS = useCallback(() => {
-    spokenTextMap.current.clear();
-    lastProcessedText.current = "";
-  }, []);
+  const interruptAiAgent = useCallback(() => {
+    sendMessage({
+      type: "chat:stop",
+      conversation_id: conversationId,
+      agent_id: currentAgent?.id,
+    });
+  }, [sendMessage, conversationId, currentAgent?.id]);
 
   const { createAiMessage, createHumanMessage } = useChatHelpers({
     conversationId,
@@ -66,8 +81,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
   const handleSendMessage = useCallback(
     async (text: string) => {
       if (!text.trim() || !user || !tenantId || !conversationId) return;
-      resetLocalTTS();
-      resetTTS();
+      reset();
 
       const humanMessage = createHumanMessage(text);
       const aiMessage = createAiMessage("");
@@ -101,7 +115,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       currentAgent,
       sendMessage,
       scrollToBottom,
-      resetLocalTTS,
+      reset,
     ]
   );
 
@@ -124,25 +138,14 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
           );
 
           // ✂️ Split into sentence chunks
-          const chunks = getSentenceChunks(newText);
+          // TODO: Turn this one via useTTS
+          // const chunks = getSentenceChunks(newText);
+          // const completeChunks = chunks.filter((chunk) => chunk.isDone);
+          // if (completeChunks.length) {
+          //   playQueue(completeChunks);
+          // }
 
-          console.log("chunks", chunks);
-          // 🆕 Filter only the new ones by text
-          const newChunks = chunks.filter((chunk) => chunk.isDone);
-
-          if (newChunks.length > 0) {
-            // ✅ Queue for speech
-            playTTSQueue(newChunks);
-
-            // 💾 Track what's been spoken
-            for (const chunk of newChunks) {
-              spokenTextMap.current.add(chunk.text);
-            }
-
-            lastProcessedText.current = newText;
-          }
-
-          // scrollToBottom();
+          scrollToBottom();
           break;
         }
 
@@ -183,6 +186,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     user,
     tenantId,
     conversationId,
+    playQueue,
   ]);
 
   // 🔁 Load initial messages on mount
@@ -250,5 +254,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     messagesContainerRef,
     handleSendMessage,
     messagesLoaded,
+    interruptAiAgent,
   };
 };

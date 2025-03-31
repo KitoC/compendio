@@ -8,14 +8,16 @@ import {
   SendHorizontal,
   X,
   Activity,
+  StopCircle,
 } from "lucide-react";
 import { IconButton } from "../ui/IconButton";
 import { CHAT_COMMANDS } from "@/lib/chat-commands";
 import { CommandSuggestions } from "./CommandSuggestions";
 import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
-import useVoiceToggle from "./useVoiceToggle";
 import clsx from "clsx";
-
+import { useChatState } from "@/contexts/chat/useChatState";
+import { useTTS } from "@/contexts/TTSProvider";
+import { useVoiceContext } from "@/contexts/VoiceProvider";
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   disabled?: boolean;
@@ -54,6 +56,9 @@ const buttonWrapperClass =
 
 const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
   ({ onSendMessage, disabled, agentId, conversationId }, ref) => {
+    const { interruptAiAgent, isTyping } = useChatState({
+      conversationId,
+    });
     const [message, setMessage] = useState("");
     const [showCommands, setShowCommands] = useState(false);
     const [isVoiceMode, setIsVoiceMode] = useState(false);
@@ -63,24 +68,15 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
       cmd.command.toLowerCase().includes(commandFilter.toLowerCase())
     );
     const { currentAgent } = useAiAgents();
-
+    const { isPlaying } = useTTS();
     const {
-      listening,
-      transcript,
       startListening,
-      closeVoiceMode,
+      stopListening,
+      transcript,
+      isListening,
       toggleMute,
       isMuted,
-      isAgentSpeaking,
-    } = useVoiceToggle({
-      agentId: currentAgent?.id,
-      voiceConfig: {
-        languageCode: "en-US",
-        name: "en-US-Standard-C",
-        ssmlGender: "FEMALE",
-      },
-      conversationId,
-    });
+    } = useVoiceContext();
 
     useEffect(() => {
       if (message.startsWith("/")) {
@@ -142,6 +138,7 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
       }
     };
 
+    const showStopButton = isTyping || isPlaying;
     return (
       <form
         onSubmit={handleSubmit}
@@ -213,15 +210,15 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
                 </div>
                 <div className={buttonWrapperClass}>
                   <AudioVisualizer
-                    listening={listening}
-                    isAgentSpeaking={isAgentSpeaking}
+                    listening={isListening}
+                    isAgentSpeaking={isPlaying}
                   />
                 </div>
                 <div className={buttonWrapperClass}>
                   <IconButton
                     onClick={(e) => {
                       setIsVoiceMode(false);
-                      closeVoiceMode(e);
+                      stopListening();
                     }}
                     variant="secondary"
                     size="sm"
@@ -234,34 +231,46 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
               <p className="text-xs text-muted-foreground">{transcript}</p>
             </div>
           )}
-          {!isVoiceMode && (
+          {!isVoiceMode && showStopButton && (
             <IconButton
-              onClick={(e) => {
-                if (message.length > 0) {
-                  handleSubmit(e);
-                  return;
-                }
-                if (isVoiceMode) {
-                  setIsVoiceMode(false);
-                  closeVoiceMode(e);
-                } else {
-                  setIsVoiceMode(true);
-                  startListening();
-                }
-              }}
-              type={isVoiceMode ? "button" : "submit"}
-              variant="primary"
-              size="lg"
-              disabled={disabled}
-              className="h-[40px] w-[40px] min-h-[40px] min-w-[40px]"
-              icon={
-                message.length > 0 ? (
-                  <SendHorizontal className="h-5 w-5 -rotate-90" />
-                ) : (
-                  <AudioLines className="h-5 w-5" />
-                )
-              }
+              onClick={interruptAiAgent}
+              icon={<StopCircle className="h-5 w-5" />}
             />
+          )}
+          {!showStopButton && (
+            <>
+              {!isVoiceMode && message.length === 0 && (
+                <IconButton
+                  onClick={(e) => {
+                    setIsVoiceMode(true);
+                    startListening();
+                  }}
+                  type={isVoiceMode ? "button" : "submit"}
+                  variant="primary"
+                  size="lg"
+                  disabled={disabled}
+                  className="h-[40px] w-[40px] min-h-[40px] min-w-[40px]"
+                  icon={<AudioLines className="h-5 w-5" />}
+                />
+              )}
+
+              {!isVoiceMode && message.length > 0 && (
+                <IconButton
+                  onClick={(e) => {
+                    if (message.length > 0) {
+                      handleSubmit(e);
+                      return;
+                    }
+                  }}
+                  type={isVoiceMode ? "button" : "submit"}
+                  variant="primary"
+                  size="lg"
+                  disabled={disabled}
+                  className="h-[40px] w-[40px] min-h-[40px] min-w-[40px]"
+                  icon={<SendHorizontal className="h-5 w-5 -rotate-90" />}
+                />
+              )}
+            </>
           )}
         </div>
       </form>

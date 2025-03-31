@@ -21,9 +21,6 @@ export const CustomTablesProvider: React.FC<{
       .select("*")
       .eq("tenant_id", tenantId);
 
-    console.log("data", data);
-    console.log("error", error);
-
     setCustomTables(data);
   }, [tenantId]);
 

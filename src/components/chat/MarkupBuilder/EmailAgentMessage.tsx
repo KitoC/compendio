@@ -46,7 +46,6 @@ const EmailContent = ({
   header,
   thread,
 }: EmailContentProps) => {
-  console.log("thread -->", thread);
   return (
     <div className="flex flex-col gap-3">
       <div>
@@ -129,7 +128,6 @@ const QuickReplyBuilder = ({ message }: QuickReplyBuilderProps) => {
     },
   ];
 
-  console.log("email_drafted -->", email_drafted);
   return (
     <div className={getContainerStyles({ isUser: false }) + " w-full"}>
       <div

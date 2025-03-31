@@ -3,12 +3,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getSentenceChunks } from "@/contexts/chat/getGroupedSentences";
-import {
-  setPlaybackListener,
-  stripEmojis,
-  stripMarkdown,
-} from "@/contexts/chat/useTTSPlayback"; // 👈
 import classNames from "clsx"; // optional utility
+import { useTTS } from "@/contexts/TTSProvider";
 
 interface RenderMarkdownProps {
   message: string;
@@ -77,7 +73,7 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
   const [chunks, setChunks] = useState<
     { id: string; text: string; isParagraphBreak: boolean }[]
   >([]);
-  const [currentIndex, setCurrentIndex] = useState<number | null>(null);
+  const { currentIndex } = useTTS();
 
   useEffect(() => {
     let active = true;
@@ -90,15 +86,6 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
       active = false;
     };
   }, [message]);
-
-  useEffect(() => {
-    setPlaybackListener((index) => {
-      console.log("index", index);
-      if (index !== null) setCurrentIndex(index);
-    });
-
-    return () => setPlaybackListener(null);
-  }, []);
 
   const textWithHighlightedChunks = chunks
     .map((chunk, i) => {

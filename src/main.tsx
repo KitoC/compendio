@@ -17,10 +17,8 @@ const renderApp = () => {
       document.body.appendChild(newRoot);
 
       createRoot(newRoot).render(<App />);
-      console.log("Created new root element for rendering");
     } else {
       createRoot(rootElement).render(<App />);
-      console.log("Rendered into existing root element");
     }
   } catch (error) {
     console.error("Failed to render application:", error);
