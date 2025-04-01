@@ -39,7 +39,8 @@ export interface IOpenAiFunction {
 
 export interface IFunctionCall {
   name: string;
-  arguments: object;
+  arguments: string;
+  manual?: boolean;
 }
 
 export interface IContext {

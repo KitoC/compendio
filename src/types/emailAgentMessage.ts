@@ -17,12 +17,19 @@ export interface NormalizedEmailDrafted {
   to: string;
 }
 
+export interface NormalizedEmailSent {
+  body: string;
+  to: string;
+  sent_at: string;
+}
+
 export interface NormalizedEmailResponse {
   email_drafted?: NormalizedEmailDrafted | null;
+  email_sent?: NormalizedEmailSent | null;
   email_id: string;
   email_received: NormalizedEmailReceived;
   email_thread_id: string;
-  event: "email_received" | "email_drafted" | "both";
+  event: "email_received" | "email_drafted" | "email_sent" | "both";
   provider: "outlook" | "gmail";
   reasoning: string;
 }

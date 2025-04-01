@@ -210,11 +210,6 @@ export class OpenAiService extends BaseExternalService {
           functionResult = await onFunctionCall(functionCallDetected);
         }
 
-        console.log(
-          "🔹 Function result --> ",
-          JSON.stringify(functionResult, null, 2)
-        );
-
         const updatedMessages: Partial<OpenAiMessage & { name: string }>[] = [
           ...requestArgs.messages,
           {

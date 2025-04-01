@@ -76,4 +76,28 @@ export class ChatSocketHandler {
       this.socket.send(JSON.stringify({ type: "chat:stopped", value: true }));
     }
   }
+
+  async triggerFunctionCall(payload: {
+    agent_id: string;
+    payload: {
+      function_context: unknown;
+      type: string;
+    };
+  }) {
+    const agentController = await AgentController.create({
+      context: this.context,
+      functionController: new FunctionController(this.context),
+      agentId: payload.agent_id,
+      sessionContext: {},
+    });
+
+    await agentController.triggerFunctionCall(payload.payload);
+
+    // this.socket.send(
+    //   JSON.stringify({
+    //     type: "chat:trigger_function_call",
+    //     value: payload,
+    //   })
+    // );
+  }
 }

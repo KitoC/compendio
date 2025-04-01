@@ -7,9 +7,12 @@ import type {
 import { BaseController } from "locals/controllers/_BaseController";
 import { PublicContext } from "locals/middleware/withPublicContext";
 import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
+import { SendEmailHandler } from "locals/handlers/ai_functions/SendEmailHandler";
+import { IAgentFunctionHandler } from "locals/interfaces/IAgentFunctionHandler";
+import { FUNCTION_TYPES } from "locals/consts";
 
 export type ExecuteFunctionResult = {
-  result: object | string | undefined;
+  result: object | string | undefined | null;
   functionMessage?: string;
 };
 
@@ -20,11 +23,16 @@ export type ExecuteFunctionCallback = (
 class FunctionController extends BaseController {
   private markup: { [key: string]: unknown };
   private functionsMap: { [key: string]: IFunction };
+  private FUNCTION_HANDLERS: { [key: string]: IAgentFunctionHandler };
 
   constructor(public context: PublicContext | AuthenticatedContext) {
     super();
     this.markup = {};
     this.functionsMap = {};
+
+    this.FUNCTION_HANDLERS = {
+      [FUNCTION_TYPES.SEND_EMAIL]: new SendEmailHandler(this.context),
+    };
   }
 
   throwError(
@@ -66,8 +74,11 @@ class FunctionController extends BaseController {
         return { result: fn, functionMessage: "Retrieval sent successfully" };
 
       case "function":
+        if (!this.FUNCTION_HANDLERS[fnCall.name]) {
+          throw new Error(`Function handler ${fnCall.name} not found`);
+        }
         // console.log("SENDING FUNCTION");
-        return { result: fn, functionMessage: "Function sent successfully" };
+        return this.FUNCTION_HANDLERS[fnCall.name].handle(fnCall, fn);
 
       default:
         throw new Error(`Function ${fnCall.name} not found`);

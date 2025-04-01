@@ -5,18 +5,19 @@ import type {
 } from "locals/interfaces/IAgentProvider";
 import type {
   IAiAgent,
-  IFunction,
-  IFunctionCall,
   IOpenAiFunction,
 } from "../../../../../src/types/aiAgents";
 import type {
-  ChatMessage,
   OpenAiMessage,
   OpenAiRole,
+  ChatMessage,
+  NormalChatContent,
 } from "../../../../../src/types/chat";
-import { FunctionController } from "locals/controllers/FunctionController";
+import {
+  ExecuteFunctionCallback,
+  FunctionController,
+} from "locals/controllers/FunctionController";
 import { OpenAiService } from "locals/services/providers/OpenAiService";
-
 import { EMAIL_AGENT_PROMPT } from "@/SYSTEM_PROMPTS/EMAIL_AGENT_PROMPT";
 import Logger from "locals/utils/Logger";
 // TODO: Move this to a file or DB and inject schema for Email.
@@ -46,24 +47,33 @@ export class OpenAiAgent implements IAgentProvider {
     );
   }
 
+  normalizeMessage(message: ChatMessage) {
+    return {
+      role: message.role as OpenAiRole,
+      content:
+        (message.content as NormalChatContent)?.text ||
+        JSON.stringify(message.content),
+    };
+  }
+
+  normalizeMessages(messages: ChatMessage[]) {
+    return messages
+      .filter((message) => VALID_OPENAI_ROLES.includes(message.role))
+      .map((message) => this.normalizeMessage(message));
+  }
+
   async talkToAgent(
     talkToAgentParams: ItTalkToAgentParams,
-    onFunctionCall: (functionCall: IFunctionCall) => Promise<object | undefined>
+    onFunctionCall: ExecuteFunctionCallback
   ) {
     const { messages, model, functions } = talkToAgentParams;
 
-    const cleanedMessages = messages
-      .filter((message) => VALID_OPENAI_ROLES.includes(message.role))
-      .map((message) => ({
-        role: message.role as OpenAiRole,
-        // @ts-expect-error - TODO: Fix this
-        content: message.content?.text || JSON.stringify(message.content),
-      }));
+    const normalizedMessages = this.normalizeMessages(messages);
 
     const stream = await this.openAiService.streamAndCallFunction({
       onFunctionCall,
       requestArgs: {
-        messages: cleanedMessages,
+        messages: normalizedMessages,
         model,
         functions: functions as IOpenAiFunction[],
       },
@@ -99,5 +109,22 @@ export class OpenAiAgent implements IAgentProvider {
     });
 
     return JSON.parse(response.choices[0].message.content);
+  }
+
+  async sendMessages(
+    messages: OpenAiMessage[],
+    options?: { response_format: { type: string } }
+  ) {
+    console.log("🔹 sendMessages messages", messages);
+    const response = await this.openAiService.callOpenAIChatCompletion({
+      messages,
+      stream: false,
+      model: this.agent.model,
+      options,
+    });
+
+    return options?.response_format?.type.includes("json")
+      ? JSON.parse(response.choices[0].message.content)
+      : response.choices[0].message.content;
   }
 }

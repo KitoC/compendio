@@ -1,0 +1,11 @@
+import { PublicContext } from "locals/middleware/withPublicContext";
+import type { IFunction } from "../../../../src/types/aiAgents";
+
+export interface IAgentFunctionHandlerResult {
+  result: object | null;
+  functionMessage: string;
+}
+
+export interface IAgentFunctionHandler {
+  handle(payload: unknown, fn: IFunction): Promise<IAgentFunctionHandlerResult>;
+}

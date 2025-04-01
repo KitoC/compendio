@@ -9,8 +9,12 @@ export interface ChatContextType {
   inputRef: React.RefObject<HTMLTextAreaElement>;
   handleSendMessage: (message: string) => void;
   conversationId: string;
-  handleHumanVoiceMessage: (message: string) => void;
-  handleAgentVoiceMessage: (message: string, functionCall?: object) => void;
+  triggerFunctionCall: (
+    payload: object
+  ) => Promise<{ err: Error | null; result: unknown | null }>;
+  replaceMessage: (message: ChatMessage) => void;
+  messagesLoaded: boolean;
+  interruptAiAgent: () => void;
 }
 
 export const ChatContext = createContext<ChatContextType | undefined>(

@@ -19,7 +19,7 @@ import {
   NormalizedEmailResponse,
   NormalizedEmailThreadItem,
 } from "@/types/emailAgentMessage";
-
+import { toast } from "sonner";
 export interface QuickReplyConfig {
   replies: string[];
   isInline: boolean;
@@ -38,6 +38,32 @@ interface EmailContentProps {
   thread?: NormalizedEmailThreadItem[];
 }
 
+const LabelAndValue = ({
+  label,
+  value,
+  labelClassName,
+}: {
+  label: string;
+  value: string;
+  labelClassName?: string;
+}) => {
+  if (!value) return null;
+  return (
+    <div className="flex gap-1">
+      <p
+        className={clsx(
+          "text-sm text-muted-foreground font-bold",
+          labelClassName
+        )}
+      >
+        {label}{" "}
+      </p>
+
+      <RenderMarkdown className="flex-1" message={value} isUser={false} />
+    </div>
+  );
+};
+
 const EmailContent = ({
   from,
   to,
@@ -46,50 +72,62 @@ const EmailContent = ({
   header,
   thread,
 }: EmailContentProps) => {
+  const [threadOpen, setThreadOpen] = useState(false);
+
   return (
     <div className="flex flex-col gap-3">
       <div>
         <h3 className="text-sm font-bold">{header}</h3>
       </div>
-      {from && (
-        <p className="text-sm text-muted-foreground">
-          <strong>From: </strong>
-          {from}
-        </p>
-      )}
-      {to && (
-        <p className="text-sm text-muted-foreground">
-          <strong>To: </strong>
-          {to}
-        </p>
-      )}
-      <div className="pl-6">
-        <div className="flex flex-col gap-1">
-          {subject && (
-            <p>
-              <strong>Subject: </strong>
-              {subject}
-            </p>
-          )}
+      <div className="flex flex-col gap-1">
+        <LabelAndValue label="From" value={from} labelClassName="w-[80px]" />
+        <LabelAndValue label="To" value={to} labelClassName="w-[80px]" />
+        <LabelAndValue
+          label="Subject"
+          value={subject}
+          labelClassName="w-[80px]"
+        />
+      </div>
 
-          {body && (
-            <div className="mt-1">
-              <RenderMarkdown message={body} isUser={false} />
-            </div>
-          )}
+      <div className="">
+        <div className="flex flex-col gap-1">
+          <LabelAndValue label="Body" value={body} labelClassName="w-[80px]" />
+
           {!!thread?.length && (
-            <div className="mt-1">
-              <p>Thread:</p>
-              {thread.map(({ from, timestamp, body }) => (
-                <div className="mt-1">
-                  <div className="border-t border-slate-700 w-full my-2"></div>
-                  <p className="text-xs text-muted-foreground">
-                    {from} - {new Date(timestamp).toLocaleDateString()}
-                  </p>
-                  <RenderMarkdown message={body} isUser={false} />
+            <Collapsible
+              className="w-full"
+              open={threadOpen}
+              onOpenChange={() => setThreadOpen(!threadOpen)}
+            >
+              <div className="mt-1">
+                <div className="flex items-center justify-between ">
+                  <p>Thread:</p>
+                  <CollapsibleTrigger>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setThreadOpen(!threadOpen)}
+                    >
+                      {threadOpen ? <UnfoldVertical /> : <FoldVertical />}
+                    </Button>
+                  </CollapsibleTrigger>
                 </div>
-              ))}
-            </div>
+
+                <CollapsibleContent>
+                  {thread.map(({ from, timestamp, body }) => (
+                    <div className="mt-1">
+                      <div className="border-t border-slate-700 w-full my-2"></div>
+                      <div className="pl-[80px]">
+                        <p className="text-xs text-muted-foreground">
+                          {from} - {new Date(timestamp).toLocaleDateString()}
+                        </p>
+                        <RenderMarkdown message={body} isUser={false} />
+                      </div>
+                    </div>
+                  ))}
+                </CollapsibleContent>
+              </div>
+            </Collapsible>
           )}
         </div>
       </div>
@@ -97,53 +135,140 @@ const EmailContent = ({
   );
 };
 
-const QuickReplyBuilder = ({ message }: QuickReplyBuilderProps) => {
-  const { email_received, email_drafted, reasoning } =
+const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
+  const { summary } = message.metadata;
+  const { email_received, email_drafted, email_sent, reasoning } =
     message.content as unknown as NormalizedEmailResponse;
 
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(!!email_drafted);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
-  const { handleSendMessage } = useChat();
+  const { handleSendMessage, triggerFunctionCall, replaceMessage } = useChat();
 
-  const onClick = (label: string) => {
-    if (label === "Discard") {
-      // handleSendMessage("discard");
-    } else if (label === "Edit") {
-      // handleSendMessage("edit");
-    }
-  };
-
-  const buttons: { label: string; variant: ButtonProps["variant"] }[] = [
+  const buttons: {
+    label: string;
+    variant: ButtonProps["variant"];
+    onClick: () => void;
+    disabled?: boolean;
+    visible?: boolean;
+  }[] = [
     {
       label: "Discard",
       variant: "outline-destructive",
+      visible: !!email_drafted,
+      disabled: isSending,
+      onClick: () => {
+        triggerFunctionCall({
+          type: "email:discard",
+          message_id: message.id,
+        });
+      },
     },
     {
       label: "Edit",
       variant: "outline-primary",
+      disabled: isSending,
+      visible: !!email_drafted,
+      onClick: () => {
+        triggerFunctionCall({
+          type: "email:edit",
+          message_id: message.id,
+        });
+      },
     },
     {
-      label: "Send",
+      label: isSending ? "Sending..." : "Send",
+      disabled: isSending,
       variant: "outline-primary",
+      visible: !!email_drafted,
+      onClick: async () => {
+        try {
+          setIsSending(true);
+          setOpen(false);
+
+          const { result, err } = await triggerFunctionCall({
+            manual: true,
+            name: "send_email",
+            arguments: JSON.stringify({
+              message_id: message.id,
+            }),
+          });
+
+          console.log("result --->", result);
+
+          if (err) {
+            setIsSending(false);
+            toast.error("Error sending email");
+          } else {
+            setIsSending(false);
+            toast.success("Email sent successfully");
+            replaceMessage(result as ChatMessage);
+          }
+        } catch (err) {
+          console.error("Error sending email", err);
+          setIsSending(false);
+          toast.error("Error sending email");
+        }
+      },
     },
   ];
 
+  let statusText = "";
+
+  if (email_sent) {
+    statusText = "Sent";
+  } else if (email_drafted) {
+    statusText = "Drafted";
+  } else if (email_received) {
+    statusText = "Received";
+  }
+
+  if (isSending) {
+    statusText = "Sending...";
+  }
+
   return (
-    <div className={getContainerStyles({ isUser: false }) + " w-full"}>
-      <div
-        className={clsx(
-          messageBubbleStyles,
-          otherMessageStyles,
-          "flex flex-col gap-3 !py-4 rounded-b-none relative min-h-20"
-        )}
-      >
-        <Collapsible
-          className="w-full"
-          open={open}
-          onOpenChange={() => {
-            setOpen(!open);
-          }}
+    <Collapsible
+      className="w-full"
+      open={open}
+      onOpenChange={() => {
+        setOpen(!open);
+      }}
+    >
+      <div className={getContainerStyles({ isUser: false }) + " w-full"}>
+        <div
+          className={clsx(
+            messageBubbleStyles,
+            otherMessageStyles,
+            "flex flex-col gap-3 !py-4  relative min-h-20",
+            { "rounded-b-none": open }
+          )}
         >
+          {!open && (
+            <div className="flex flex-col gap-1">
+              <LabelAndValue
+                labelClassName="w-[80px]"
+                label="Status"
+                value={statusText}
+              />
+              <LabelAndValue
+                labelClassName="w-[80px]"
+                label="To"
+                value={email_sent?.to}
+              />
+              <LabelAndValue
+                labelClassName="w-[80px]"
+                label="Subject"
+                value={email_received?.subject}
+              />
+              <LabelAndValue
+                labelClassName="w-[80px]"
+                label="Summary"
+                value={summary as string}
+              />
+            </div>
+          )}
           <div className="p-4 absolute top-0 right-0">
             <CollapsibleTrigger>
               <Button
@@ -151,56 +276,80 @@ const QuickReplyBuilder = ({ message }: QuickReplyBuilderProps) => {
                 size="icon"
                 onClick={() => setOpen(!open)}
               >
-                {open ? <UnfoldVertical /> : <FoldVertical />}
+                {open ? <FoldVertical /> : <UnfoldVertical />}
               </Button>
             </CollapsibleTrigger>
           </div>
           <CollapsibleContent>
             <EmailContent
-              header="They sent:"
-              from={email_received.from}
-              to={email_received.to}
-              subject={email_received.subject}
-              body={email_received.latest_message.body}
-              thread={email_received.thread}
+              header="They sent"
+              from={email_received?.from}
+              to={email_received?.to}
+              subject={email_received?.subject}
+              body={email_received?.latest_message.body}
+              thread={email_received?.thread}
             />
             {email_drafted && (
               <>
                 <div className="border-t border-slate-700 w-full my-2"></div>
                 <EmailContent
-                  header="I drafted this reply:"
-                  to={email_drafted.to}
-                  body={email_drafted.body}
+                  header="I drafted this reply"
+                  to={email_drafted?.to}
+                  body={email_drafted?.body}
+                />
+              </>
+            )}
+            {email_sent && (
+              <>
+                <div className="border-t border-slate-700 w-full my-2"></div>
+                <EmailContent
+                  header={`I sent this reply`}
+                  to={email_sent?.to}
+                  body={email_sent?.body}
                 />
               </>
             )}
           </CollapsibleContent>
-        </Collapsible>
-      </div>
-      <div
-        className={clsx(
-          messageBubbleStyles,
-          otherMessageStyles,
-          "flex flex-col gap-3 !py-4 rounded-t-none"
-        )}
-      >
-        <p>{reasoning}</p>
-        <p>What would you like me to do?</p>
-      </div>
-      <div className={`flex gap-2 justify-end mt-2`}>
-        {buttons.map(({ label, variant }) => (
-          <Button
-            key={label}
-            size="sm"
-            onClick={() => onClick(label)}
-            variant={variant}
+        </div>
+        <CollapsibleContent>
+          <div
+            className={clsx(
+              messageBubbleStyles,
+              otherMessageStyles,
+              "flex flex-col gap-3 !py-4 rounded-t-none"
+            )}
           >
-            {label}
-          </Button>
-        ))}
+            <div>
+              <LabelAndValue
+                label="Reasoning"
+                value={reasoning}
+                labelClassName="w-[80px]"
+              />
+            </div>
+            {email_drafted && <p>What would you like me to do?</p>}
+          </div>
+
+          {!isSending && (
+            <div className={`flex gap-2 justify-end mt-2`}>
+              {buttons
+                .filter(({ visible }) => visible)
+                .map(({ label, variant, onClick, disabled }) => (
+                  <Button
+                    disabled={disabled}
+                    key={label}
+                    size="sm"
+                    onClick={onClick}
+                    variant={variant}
+                  >
+                    {label}
+                  </Button>
+                ))}
+            </div>
+          )}
+        </CollapsibleContent>
       </div>
-    </div>
+    </Collapsible>
   );
 };
 
-export default QuickReplyBuilder;
+export default EmailAgentMessage;

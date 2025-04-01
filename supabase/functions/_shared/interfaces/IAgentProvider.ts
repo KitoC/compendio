@@ -7,6 +7,11 @@ import {
 import type { NormalizedEmailResponse } from "../../../../src/types/emailAgentMessage";
 import type { IFunction } from "../../../../src/types/aiAgents";
 
+export interface AgentMessage {
+  role: string;
+  content: string;
+}
+
 export interface ItTalkToAgentParams {
   messages: ChatMessage[];
   model: string;
@@ -25,4 +30,10 @@ export interface IAgentProvider {
     email: string,
     jsonSchema: JSON
   ): Promise<NormalizedEmailResponse>;
+  sendMessages(
+    messages: AgentMessage[],
+    options?: object
+  ): Promise<string | object>;
+  normalizeMessage(message: ChatMessage): AgentMessage;
+  normalizeMessages(messages: ChatMessage[]): AgentMessage[];
 }

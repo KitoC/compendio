@@ -25,7 +25,7 @@ export const withPublicContext = (
 ) => {
   return async (req: Request, corsContext: CorsContext): Promise<Response> => {
     const supabase_AS_SUPER_ADMIN = getADMINClient();
-    const supabase = getClient(req);
+    const supabase = getClient(req.headers.get("Authorization") || "");
 
     const supabaseContext = {
       supabase,
@@ -33,7 +33,7 @@ export const withPublicContext = (
       RUN_AS_SUPER_ADMIN: options.RUN_AS_SUPER_ADMIN,
     };
 
-    const authService = new AuthService(req, supabaseContext);
+    const authService = new AuthService(supabaseContext);
 
     // await authService.initialize();
     // await authService.getUser();
@@ -42,7 +42,7 @@ export const withPublicContext = (
       ...corsContext,
       ...supabaseContext,
       authService,
-      ...getSharedServices(req, supabaseContext),
+      ...getSharedServices(supabaseContext),
     };
 
     return handler(req, context);

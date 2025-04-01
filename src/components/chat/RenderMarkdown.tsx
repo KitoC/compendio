@@ -10,6 +10,7 @@ interface RenderMarkdownProps {
   message: string;
   isUser: boolean;
   isStreamedMessage?: boolean;
+  className?: string;
 }
 
 export function balanceMarkdown(md: string): string {
@@ -68,6 +69,7 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
   message,
   isUser,
   isStreamedMessage,
+  className,
 }) => {
   const isMobile = useIsMobile();
   const [chunks, setChunks] = useState<
@@ -105,7 +107,8 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
       className={classNames(
         "prose-sm max-w-none dark:prose-invert safari-text-rendering-fix",
         isStreamedMessage && "streamed-message",
-        isMobile && "text-sm"
+        isMobile && "text-sm",
+        className
       )}
       style={{
         WebkitTextSizeAdjust: "100%",
@@ -131,10 +134,14 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
           },
           p: ({ children }) => {
             if (typeof children === "string") {
-              return <p className="mb-3">{replaceHighlightedText(children)}</p>;
+              return (
+                <p className="last:mb-0 mb-2">
+                  {replaceHighlightedText(children)}
+                </p>
+              );
             }
 
-            return <p className="mb-3">{children}</p>;
+            return <p className="not:last:mb-2">{children}</p>;
           },
           a: ({ href, children }) => (
             <a

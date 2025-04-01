@@ -7,10 +7,32 @@ import {
 import type { ChatMessage } from "../../../../src/types/chat";
 import { getEnvKey } from "locals/utils/env";
 
+export type UpdateChatMessageParams = {
+  message_id: string;
+  content: Record<string, unknown>;
+  role: string;
+  metadata: Record<string, unknown>;
+};
+
 class MessagesService extends BaseSupabaseService {
   constructor(public context: BaseRequiredContext) {
     super(context);
     this.tableName = "messages";
+  }
+
+  async getMessageById(message_id: string) {
+    const decryption_key = getEnvKey("ENCRYPTION_KEY");
+
+    const { data, error } = await this.supabase.rpc("get_message_by_id", {
+      _message_id: message_id,
+      _decryption_key: decryption_key,
+    });
+
+    if (error) {
+      this.throwError("Failed to get message", error, 500);
+    }
+
+    return data[0];
   }
 
   async createMessageForConversations(
@@ -75,6 +97,7 @@ class MessagesService extends BaseSupabaseService {
     );
 
     if (error) {
+      console.error("🔹 error", error);
       this.throwError("Failed to retrieve messages", error, 500);
     }
 
@@ -86,12 +109,7 @@ class MessagesService extends BaseSupabaseService {
     content,
     role,
     metadata,
-  }: {
-    message_id: string;
-    content: Record<string, unknown>;
-    role: string;
-    metadata: Record<string, unknown>;
-  }) {
+  }: UpdateChatMessageParams) {
     const encryption_key = getEnvKey("ENCRYPTION_KEY");
 
     const { error } = await this.supabase.rpc("update_message", {
@@ -105,8 +123,9 @@ class MessagesService extends BaseSupabaseService {
     if (error) {
       this.throwError("Failed to update message", error, 500);
     }
+    const updatedMessage = await this.getMessageById(message_id);
 
-    return true;
+    return updatedMessage;
   }
 }
 

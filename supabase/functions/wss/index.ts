@@ -47,6 +47,10 @@ const handler = async (req: Request) => {
         await handler.start(data.conversation_id, data.agent_id);
         return;
       }
+      if (data.type === "chat:trigger_function_call") {
+        await handler.triggerFunctionCall(data);
+        return;
+      }
 
       if (data.type === "chat:stop") {
         await handler.stop();

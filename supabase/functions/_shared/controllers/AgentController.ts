@@ -3,7 +3,6 @@
 import type {
   IAiAgent,
   IContext,
-  IOpenAiFunction,
   IAiAgentFunction,
   IFunction,
 } from "../../../../src/types/aiAgents.js";
@@ -14,48 +13,30 @@ import { BaseController } from "locals/controllers/_BaseController";
 import { FunctionController } from "locals/controllers/FunctionController";
 import { getAgentProvider } from "locals/providers/agents/AgentProviderRegistry";
 import { IAgentProvider } from "locals/interfaces/IAgentProvider";
-import { IConversation } from "locals/services/ConversationsService";
-import { EMAIL_AGENT_JSON_SCHEMA } from "@/SYSTEM_JSON_SCHEMAS/EMAIL_AGENT_JSON_SCHEMA";
 import Logger from "locals/utils/Logger";
+import { UpdateChatMessageParams } from "locals/services/MessagesService";
 
-const defaultAgent: IAiAgent = {
-  id: "default",
-  name: "Default Agent",
-  human_name: "Default Agent",
-  responsibility: "Default Agent",
-  enabled: true,
-  prompt: "",
-  model: "gpt-4o-mini",
-  avatar_url: "",
-  tenant_id: "",
-  created_at: "",
-  updated_at: "",
-};
-
-const VALID_ROLES = ["user", "assistant", "function", "system", "email_agent"];
-
-interface SendMessageArgs {
-  conversationId: string;
-  agentId: string;
-}
-
-interface AgentControllerFactoryArgs {
+interface AgentControllerFactoryArgs<
+  SessionContext extends Record<string, unknown>
+> {
   context: PublicContext | AuthenticatedContext;
   functionController: FunctionController;
   agentId: string;
-  sessionContext: unknown;
+  sessionContext: SessionContext;
 }
 
-class AgentController extends BaseController {
-  private agent: IAiAgent;
-  private agentAdapter: IAgentProvider;
+class AgentController<
+  SessionContext extends Record<string, unknown>
+> extends BaseController {
+  public agent: IAiAgent;
+  public agentAdapter: IAgentProvider;
 
   constructor(
     public context: PublicContext | AuthenticatedContext,
     public functionController: FunctionController,
     agent: IAiAgent,
     agentAdapter: IAgentProvider,
-    public sessionContext: unknown // TODO: Type this
+    public sessionContext: SessionContext
   ) {
     super();
     this.agent = agent;
@@ -64,12 +45,18 @@ class AgentController extends BaseController {
     this.logger = new Logger({ name: "AgentController" });
   }
 
-  static async create({
-    context,
-    functionController,
-    agentId,
-    sessionContext,
-  }: AgentControllerFactoryArgs) {
+  static async create<
+    T extends typeof AgentController,
+    SessionContext extends Record<string, unknown>
+  >(
+    this: T,
+    {
+      context,
+      functionController,
+      agentId,
+      sessionContext,
+    }: AgentControllerFactoryArgs<SessionContext>
+  ): Promise<InstanceType<T>> {
     const agent = await context.agentsService.getById(agentId);
 
     if (!agent) {
@@ -79,13 +66,13 @@ class AgentController extends BaseController {
     const adapterFactory = getAgentProvider(agent.provider, functionController);
     const agentAdapter = adapterFactory(agent);
 
-    return new AgentController(
+    return new this(
       context,
       functionController,
       agent,
       agentAdapter,
       sessionContext
-    );
+    ) as InstanceType<T>;
   }
 
   async talkToAgent(conversation_id: string) {
@@ -167,10 +154,7 @@ class AgentController extends BaseController {
     }));
   }
 
-  async getRequestArgs(conversationId: string) {
-    const { prompt, model = "gpt-4o-mini" } = await this.agent;
-
-    // Get function IDs associated with this agent
+  async getFunctions() {
     const agentFunctionIds = await this.getAgentFunctions(this.agent.id);
 
     // Get all available functions
@@ -184,6 +168,14 @@ class AgentController extends BaseController {
             agentFunctionIds.includes(fn.name)
           )
         : allFunctions;
+
+    return functions;
+  }
+
+  async getRequestArgs(conversationId: string) {
+    const { prompt, model = "gpt-4o-mini" } = await this.agent;
+
+    const functions = await this.getFunctions();
 
     const agentPrompt = await this.buildAgentPrompt(this.agent.id, {
       functions,
@@ -204,58 +196,43 @@ class AgentController extends BaseController {
     };
   }
 
-  async createEmailMessage(email: string) {
-    this.logger.info("Creating email message", {
-      agentId: this.agent.id,
+  async updateMessageWithSummaryMetadata(
+    message: UpdateChatMessageParams,
+    prompt: string
+  ) {
+    const summary = await this.agentAdapter.sendMessages([
+      { role: "system", content: prompt },
+      this.agentAdapter.normalizeMessage({
+        ...message,
+        role: "user",
+      } as unknown as ChatMessage),
+    ]);
+
+    const updatedMessage = await this.context.messagesService.updateMessage({
+      message_id: message.message_id,
+      content: message.content,
+      role: message.role,
+      metadata: { ...message.metadata, summary },
     });
 
-    const agentConversations =
-      await this.context.conversationsService.getAgentConversations(
-        this.agent.id
-      );
+    this.logger.info("🔹 Message updated with summary metadata");
 
-    this.logger.info("Sending to chatGPT");
+    return updatedMessage;
+  }
 
-    const response = await this.agentAdapter.createEmailMessage(
-      email,
-      EMAIL_AGENT_JSON_SCHEMA as unknown as JSON
-    );
-    this.logger.info("Received response from chatGPT");
+  async triggerFunctionCall(payload: {
+    function_context: unknown;
+    type: string;
+  }) {
+    // TODO
+    // Get function IDs associated with this agent
+    const agentFunctionIds = await this.getAgentFunctions(this.agent.id);
 
-    this.logger.info("Getting messages");
-
-    const messages = await this.context.messagesService.get({
-      filter: {
-        "metadata->>email_id": {
-          eq: response.email_id,
-        },
-      },
-    });
-
-    const message = messages?.[0];
-
-    if (message) {
-      this.logger.info("Message found, updating message");
-      return await this.context.messagesService.update(message.id, message);
-    } else {
-      this.logger.info("No message found, creating new message");
-      const conversation_ids = agentConversations.map(
-        (conversation: IConversation) => conversation.id
-      );
-
-      const newMessage = {
-        content: response,
-        role: "email_agent",
-        tenant_id: this.agent.tenant_id,
-        user_id: this.agent.id,
-        metadata: {},
-      };
-
-      return this.context.messagesService.createMessageForConversations(
-        conversation_ids,
-        newMessage
-      );
-    }
+    // Get all available functions
+    const allFunctions = await this.functionController.getFunctions();
+    console.log("🔹 triggerFunctionCall", payload);
+    console.log("🔹 agentFunctionIds", agentFunctionIds);
+    console.log("🔹 allFunctions", allFunctions);
   }
 }
 

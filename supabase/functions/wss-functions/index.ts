@@ -12,7 +12,8 @@ import { AgentController } from "locals/controllers/AgentController";
 import { FunctionController } from "locals/controllers/FunctionController";
 
 const handler = async (req: Request, context: AuthenticatedContext) => {
-  const { conversation_id, agent_id, function_call } = await req.json();
+  const { conversation_id, agent_id, function_call, payload } =
+    await req.json();
 
   const agentController = await AgentController.create({
     context,
@@ -27,21 +28,13 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
     function_call
   );
 
-  return {
-    body: JSON.stringify(result),
+  return new Response(JSON.stringify(result), {
     headers: {
+      ...context.corsHeaders,
       "Content-Type": "application/json",
     },
     status: 200,
-  };
+  });
 };
 
-serve(
-  withCors()(
-    withErrorBoundary(
-      withAuthenticatedContext(
-        withRequestHandlers<AuthenticatedContext>(handler)
-      )
-    )
-  )
-);
+serve(withCors()(withErrorBoundary(withAuthenticatedContext(handler))));

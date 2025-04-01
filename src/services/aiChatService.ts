@@ -61,12 +61,15 @@ export const listenForFunctionCalls = async ({
   };
 
   console.log("🔹 Function call message", functionCallMessage);
-  onFunctionCall({
-    response: data,
-    message: functionCallMessage,
-  });
 
-  await MessageService.createMessage(functionCallMessage);
+  if (["form"].includes(data.type)) {
+    onFunctionCall({
+      response: data,
+      message: functionCallMessage,
+    });
+
+    await MessageService.createMessage(functionCallMessage);
+  }
 };
 
 const streamAiResponse = async ({

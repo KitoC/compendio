@@ -11,23 +11,23 @@ import {
 import { withCors } from "locals/middleware/withCors";
 
 const handler = async (req: Request, context: PublicContext) => {
+  console.log("🔄 Refreshing webhook subscriptions");
   const oauthController = new OAuthController(context);
   const webhookController = new WebhookController(context, oauthController);
 
   const subscriptionJson =
     await webhookController.refreshWebhookSubscriptions();
 
-  return {
-    body: JSON.stringify({ success: true, subscriptionJson }),
-    headers: { "Content-Type": "application/json" },
+  return new Response(JSON.stringify({ success: true, subscriptionJson }), {
+    headers: { ...context.corsHeaders, "Content-Type": "application/json" },
     status: 200,
-  };
+  });
 };
 
 serve(
   withCors()(
     withErrorBoundary(
-      withPublicContext(withRequestHandlers<PublicContext>(handler), {
+      withPublicContext(handler, {
         RUN_AS_SUPER_ADMIN: true,
       })
     )

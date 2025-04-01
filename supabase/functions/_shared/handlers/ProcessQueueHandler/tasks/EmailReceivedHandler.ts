@@ -10,9 +10,10 @@ import { OAuthController } from "locals/controllers/OAuthController";
 import { ConnectedServiceController } from "@/controllers/ConnectedServiceController";
 import type { IEmailEvent } from "locals/handlers/WebhookEventHandler";
 import { AzureService } from "locals/services/providers/AzureService";
-import { AgentController } from "locals/controllers/AgentController";
+import { EmailAgentController } from "locals/controllers/EmailAgentController";
 import { FunctionController } from "locals/controllers/FunctionController";
 import Logger from "locals/utils/Logger";
+import { PROVIDERS } from "locals/consts";
 
 export interface ITaskPayload {
   connected_service_id: string;
@@ -21,10 +22,6 @@ export interface ITaskPayload {
   provider: (typeof PROVIDERS)[keyof typeof PROVIDERS];
   email_event: IEmailEvent;
 }
-
-export const PROVIDERS = {
-  AZURE: "azure",
-} as const;
 
 type EmailProviderServiceMap = {
   azure: AzureService;
@@ -73,14 +70,17 @@ export class EmailReceivedHandler implements ITaskHandler {
     this.logger.info("Getting email");
     const email = await emailProviderService.getEmail(email_event.email_id);
 
-    const agentController = await AgentController.create({
+    const agentController = await EmailAgentController.create({
       context,
       functionController: new FunctionController(context),
       agentId,
       sessionContext: { connected_service_id, tenant_id },
     });
 
-    await agentController.createEmailMessage(email);
+    await agentController.createEmailMessage(
+      email,
+      emailProviderService.emailNormalizationConfig
+    );
 
     this.logger.info("Email received handler completed");
     return { success: true };

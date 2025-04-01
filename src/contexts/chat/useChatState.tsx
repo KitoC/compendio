@@ -17,7 +17,8 @@ import { useVoiceContext } from "@/contexts/VoiceProvider";
 import { getSentenceChunks } from "./getGroupedSentences";
 import { useTTS } from "../TTSProvider";
 import { useDebouncedCallback } from "use-debounce";
-
+import { FunctionService } from "@/services/functionService";
+import { IFunctionCall } from "@/types/aiAgents";
 interface UseChatOptions {
   conversationId: string;
 }
@@ -42,6 +43,10 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       sendTranscript(); // Reset logic
     }
   }, 1200); // Delay in ms — adjust as needed
+
+  const replaceMessage = useCallback((message: ChatMessage) => {
+    setMessages((prev) => prev.map((m) => (m.id === message.id ? message : m)));
+  }, []);
 
   useEffect(() => {
     if (!hasSpoken || !transcript.trim()) return;
@@ -77,6 +82,33 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       });
     }
   }, []);
+
+  const triggerFunctionCall = useCallback(
+    async (payload: IFunctionCall) => {
+      try {
+        if (payload.manual) {
+          console.log("🔹 manual function call", payload);
+          const response = await FunctionService.triggerManualFunction(
+            currentAgent?.id || "",
+            payload
+          );
+
+          return { result: response };
+        } else {
+          sendMessage({
+            type: "chat:trigger_function_call",
+            conversation_id: conversationId,
+            agent_id: currentAgent?.id,
+            payload,
+          });
+        }
+      } catch (err) {
+        console.error("Error triggering function call", err);
+        return { err };
+      }
+    },
+    [sendMessage, conversationId, currentAgent?.id]
+  );
 
   const handleSendMessage = useCallback(
     async (text: string) => {
@@ -129,16 +161,13 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         case "chat:update": {
           const newText = data.value.text;
 
-          setMessages((prev) =>
-            prev.map((msg) =>
-              msg.id === aiMessageRef.current?.id
-                ? { ...msg, content: { text: newText } }
-                : msg
-            )
-          );
+          replaceMessage({
+            ...aiMessageRef.current,
+            content: { text: newText },
+          });
 
           // ✂️ Split into sentence chunks
-          // TODO: Turn this one via useTTS
+          // TODO: Turn this one via useTTS`
           // const chunks = getSentenceChunks(newText);
           // const completeChunks = chunks.filter((chunk) => chunk.isDone);
           // if (completeChunks.length) {
@@ -187,6 +216,7 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     tenantId,
     conversationId,
     playQueue,
+    replaceMessage,
   ]);
 
   // 🔁 Load initial messages on mount
@@ -203,8 +233,8 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
 
         const loaded = await MessageService.getMessages(conversationId, query);
 
-        if (loaded) {
-          setMessages(loaded.reverse());
+        if (loaded.messages) {
+          setMessages(loaded.messages.reverse());
           setTimeout(() => scrollToBottom(true), 100);
           setMessagesLoaded(true);
         }
@@ -255,5 +285,8 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     handleSendMessage,
     messagesLoaded,
     interruptAiAgent,
+    triggerFunctionCall,
+    conversationId,
+    replaceMessage,
   };
 };
