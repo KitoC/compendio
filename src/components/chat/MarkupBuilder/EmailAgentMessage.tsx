@@ -13,13 +13,27 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { FoldVertical, UnfoldVertical } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import RenderMarkdown from "../RenderMarkdown";
 import {
   NormalizedEmailResponse,
   NormalizedEmailThreadItem,
 } from "@/types/emailAgentMessage";
 import { toast } from "sonner";
+
+import {
+  BoldItalicUnderlineToggles,
+  InsertImage,
+  imagePlugin,
+  MDXEditor,
+  toolbarPlugin,
+  UndoRedo,
+  thematicBreakPlugin,
+} from "@mdxeditor/editor";
+import { headingsPlugin } from "@mdxeditor/editor";
+
+import "@mdxeditor/editor/style.css";
+
 export interface QuickReplyConfig {
   replies: string[];
   isInline: boolean;
@@ -36,30 +50,67 @@ interface EmailContentProps {
   body: string;
   header: string;
   thread?: NormalizedEmailThreadItem[];
+  editable?: boolean;
+  onEditBody?: (newValue: { body: string }) => void;
 }
 
 const LabelAndValue = ({
   label,
   value,
   labelClassName,
+  editable = false,
+  onEdit,
 }: {
   label: string;
   value: string;
   labelClassName?: string;
+  editable?: boolean;
+  onEdit?: (value: string) => void;
 }) => {
+  const [mdValue, setMdValue] = useState(value);
+
   if (!value) return null;
+
   return (
     <div className="flex gap-1">
       <p
         className={clsx(
           "text-sm text-muted-foreground font-bold",
           labelClassName
+          // { "pt-[0.75rem]": editable }
         )}
       >
         {label}{" "}
       </p>
 
-      <RenderMarkdown className="flex-1" message={value} isUser={false} />
+      {editable ? (
+        <MDXEditor
+          className="dark-theme"
+          markdown={mdValue}
+          plugins={[
+            // imagePlugin(),
+            thematicBreakPlugin(),
+            headingsPlugin(),
+            toolbarPlugin({
+              toolbarClassName: "bg-slate-700",
+              toolbarContents: () => (
+                <>
+                  <UndoRedo />
+                  <BoldItalicUnderlineToggles />
+                  {/* <InsertImage /> */}
+                </>
+              ),
+            }),
+          ]}
+          onBlur={() => {
+            onEdit(mdValue.replace(/<br \/>/g, "\n"));
+            setMdValue(mdValue);
+          }}
+          onChange={setMdValue}
+        />
+      ) : (
+        <RenderMarkdown className="flex-1" message={mdValue} isUser={false} />
+      )}
     </div>
   );
 };
@@ -71,6 +122,8 @@ const EmailContent = ({
   body,
   header,
   thread,
+  editable = false,
+  onEditBody,
 }: EmailContentProps) => {
   const [threadOpen, setThreadOpen] = useState(false);
 
@@ -91,7 +144,15 @@ const EmailContent = ({
 
       <div className="">
         <div className="flex flex-col gap-1">
-          <LabelAndValue label="Body" value={body} labelClassName="w-[80px]" />
+          <LabelAndValue
+            editable={editable}
+            label="Body"
+            value={body}
+            labelClassName="w-[80px]"
+            onEdit={(newBody) => {
+              onEditBody({ body: newBody });
+            }}
+          />
 
           {!!thread?.length && (
             <Collapsible
@@ -141,10 +202,36 @@ const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
     message.content as unknown as NormalizedEmailResponse;
 
   const [open, setOpen] = useState(!!email_drafted);
-  const [isEditing, setIsEditing] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
-  const { handleSendMessage, triggerFunctionCall, replaceMessage } = useChat();
+  const { triggerFunctionCall, replaceMessage, handleUpdateMessage } =
+    useChat();
+
+  const onUpdateContentPath = useCallback(
+    (path: string, value: string | object) => {
+      handleUpdateMessage({
+        id: message.id,
+        content: {
+          ...message.content,
+          [path]: value,
+        },
+        role: message.role,
+        metadata: message.metadata,
+        tenant_id: message.tenant_id,
+      });
+    },
+    [message, handleUpdateMessage]
+  );
+
+  const onUpdateDraftEmail = useCallback(
+    (newValue) => {
+      onUpdateContentPath("email_drafted", {
+        to: email_drafted?.to,
+        body: newValue?.body,
+      });
+    },
+    [onUpdateContentPath, email_drafted]
+  );
 
   const buttons: {
     label: string;
@@ -154,27 +241,15 @@ const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
     visible?: boolean;
   }[] = [
     {
-      label: "Discard",
+      label: "Ignore",
       variant: "outline-destructive",
       visible: !!email_drafted,
       disabled: isSending,
       onClick: () => {
-        triggerFunctionCall({
-          type: "email:discard",
-          message_id: message.id,
-        });
-      },
-    },
-    {
-      label: "Edit",
-      variant: "outline-primary",
-      disabled: isSending,
-      visible: !!email_drafted,
-      onClick: () => {
-        triggerFunctionCall({
-          type: "email:edit",
-          message_id: message.id,
-        });
+        // triggerFunctionCall({
+        //   type: "email:discard",
+        //   message_id: message.id,
+        // });
       },
     },
     {
@@ -194,8 +269,6 @@ const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
               message_id: message.id,
             }),
           });
-
-          console.log("result --->", result);
 
           if (err) {
             setIsSending(false);
@@ -293,9 +366,11 @@ const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
               <>
                 <div className="border-t border-slate-700 w-full my-2"></div>
                 <EmailContent
-                  header="I drafted this reply"
+                  editable
+                  header="I drafted this reply for you, you can edit it if you want"
                   to={email_drafted?.to}
                   body={email_drafted?.body}
+                  onEditBody={onUpdateDraftEmail}
                 />
               </>
             )}

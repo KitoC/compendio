@@ -22,6 +22,15 @@ export const MessageService = {
 
     return response.json();
   },
+  async updateMessage(message: ChatMessage) {
+    const response = await SupabaseFunctionService.patch("messages", message);
+
+    if (!response.ok) {
+      throw new Error("Failed to update message");
+    }
+
+    return response.json();
+  },
   async createMessage(message: ChatMessage) {
     const response = await SupabaseFunctionService.post("messages", message);
 

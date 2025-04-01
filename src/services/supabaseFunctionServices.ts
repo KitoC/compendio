@@ -64,4 +64,15 @@ export const SupabaseFunctionService = {
 
     return response;
   },
+
+  async patch(functionName: string, body: object) {
+    const headers = await getHeaders();
+    const response = await fetch(getFunctionUrl(functionName), {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    return response;
+  },
 };

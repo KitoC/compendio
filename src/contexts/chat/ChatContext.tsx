@@ -15,6 +15,7 @@ export interface ChatContextType {
   replaceMessage: (message: ChatMessage) => void;
   messagesLoaded: boolean;
   interruptAiAgent: () => void;
+  handleUpdateMessage: (message: ChatMessage) => void;
 }
 
 export const ChatContext = createContext<ChatContextType | undefined>(

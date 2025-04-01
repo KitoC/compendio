@@ -151,6 +151,19 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     ]
   );
 
+  const handleUpdateMessage = useCallback(async (message: ChatMessage) => {
+    try {
+      await MessageService.updateMessage(message);
+
+      setMessages((prev) =>
+        prev.map((m) => (m.id === message.id ? message : m))
+      );
+    } catch (err) {
+      console.error("Error updating message", err);
+      toast.error("Message failed to update");
+    }
+  }, []);
+
   useEffect(() => {
     const listener = async (
       data: SocketData<{ text: string; function_call: { name: string } }>
@@ -288,5 +301,6 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
     triggerFunctionCall,
     conversationId,
     replaceMessage,
+    handleUpdateMessage,
   };
 };

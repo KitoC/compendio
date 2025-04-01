@@ -64,10 +64,10 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
 
     case "PATCH": {
       const body = await req.json();
-      const { message_id, content, role, metadata } = body;
+      const { id, message_id, content, role, metadata } = body;
 
       await messagesService.updateMessage({
-        message_id,
+        message_id: message_id || id,
         content,
         role,
         metadata,
