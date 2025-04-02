@@ -22,8 +22,12 @@ export const withAuthenticatedContext = (
 ) => {
   return async (req: Request, corsContext: CorsContext): Promise<Response> => {
     const Authorization = req.headers.get("Authorization");
+    const tenantId = req.headers.get("x-tenant-id");
 
-    const authenticatedContext = await getAuthenticatedContext(Authorization);
+    const authenticatedContext = await getAuthenticatedContext(
+      Authorization,
+      tenantId
+    );
 
     const context = {
       ...corsContext,

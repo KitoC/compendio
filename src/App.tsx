@@ -35,7 +35,7 @@ import { UserSettingsProvider } from "./contexts/UserSettingsProvider";
 import { SocketProvider } from "./contexts/SocketProvider";
 import { TTSProvider } from "./contexts/TTSProvider";
 import { VoiceProvider } from "./contexts/VoiceProvider";
-
+import OnboardingPage from "./pages/OnboardingPage";
 function App() {
   return (
     <QueryProvider>
@@ -69,6 +69,10 @@ function App() {
                       <Route
                         path={ROUTES.ACCESS_PENDING}
                         element={<AccessPending />}
+                      />
+                      <Route
+                        path={ROUTES.ONBOARDING}
+                        element={<OnboardingPage />}
                       />
 
                       <Route

@@ -19,6 +19,7 @@ const handler = async (req: Request) => {
       if (data.type === "auth" && !context) {
         const authContext = await getAuthenticatedContext(
           `Bearer ${data.token}`,
+          data.tenant_id,
           true
         );
 

@@ -6,12 +6,20 @@ import { toast } from "sonner";
 import { TenantContext } from "./TenantContext";
 import { ROUTES } from "@/lib/constants";
 import { Database } from "@/integrations/supabase/types";
+import Loader from "@/components/ui/loader";
+import { uniqueNamesGenerator, colors, Config } from "unique-names-generator";
+import { v4 as uuidv4 } from "uuid";
+import { dynamicHeaders } from "@/integrations/supabase/client"; // wherever it's defined
 
 export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
   const { tenantId: urlTenantAlias } = useParams<{ tenantId: string }>();
+  const location = useLocation();
 
-  const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { user, profile } = useAuth();
+  const [isLoading, setIsLoading] = useState<boolean>(
+    location.pathname === ROUTES.ONBOARDING
+  );
+  const [isCreatingTenant, setIsCreatingTenant] = useState<boolean>(false);
 
   const [tenantData, setTenantData] = useState<
     Database["public"]["Tables"]["tenants"]["Row"] | null
@@ -20,11 +28,26 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
   const [hasPendingRequest, setHasPendingRequest] = useState<boolean>(false);
   const [tenantOwnerId, setTenantOwnerId] = useState<string | null>(null);
   const [isTenantOwner, setIsTenantOwner] = useState<boolean>(false);
+  const [isLoaded, setIsLoaded] = useState<boolean>(false);
+  const [hasCheckedForTenants, setHasCheckedForTenants] =
+    useState<boolean>(false);
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const fetchAliasedTenant = useCallback(async () => {
-    if (!urlTenantAlias) {
+  const fetchOwnTenants = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("tenants")
+      .select("*")
+      .eq("tenant_owner_id", user.id);
+
+    if (error) {
+      console.error("Error fetching own tenants:", error);
+    }
+
+    return data;
+  }, [user]);
+
+  const fetchAliasedTenant = useCallback(async (workspace) => {
+    if (!workspace) {
       return null;
     }
 
@@ -32,7 +55,7 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
       const { data, error } = await supabase
         .from("tenants")
         .select("*")
-        .eq("workspace", urlTenantAlias)
+        .eq("workspace", workspace)
         .single();
 
       if (error) {
@@ -44,7 +67,40 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       console.error("Error in tenant lookup:", error);
     }
-  }, [urlTenantAlias]);
+  }, []);
+
+  const createNewTenant = useCallback(async () => {
+    const config: Config = {
+      dictionaries: [["fuzzy"], colors, ["koala"], [uuidv4().split("-")[0]]],
+      separator: "-",
+      seed: Math.random().toString(36).substring(2, 15),
+    };
+
+    const nameFromSeed: string = uniqueNamesGenerator(config);
+
+    try {
+      const { data, error } = await supabase
+        .from("tenants")
+        .insert({
+          name: nameFromSeed,
+          workspace: nameFromSeed,
+          tenant_owner_id: user.id,
+        })
+        .select("*")
+        .single();
+
+      navigate(ROUTES.ONBOARDING.replace(":tenantId", data.workspace));
+      setTenantData(data);
+      setHasTenantAccess(true);
+      setIsTenantOwner(true);
+      setTenantOwnerId(user.id);
+    } catch (error) {
+      toast.error("Unable to create tenant");
+      console.error("Error in tenant lookup:", error);
+    } finally {
+      setIsLoaded(true);
+    }
+  }, [user, navigate]);
 
   const checkTenantAccess = useCallback(
     async (id: string) => {
@@ -102,8 +158,20 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
       tenant = primaryTenant;
 
       if (urlTenantAlias) {
-        tenant = await fetchAliasedTenant();
+        tenant = await fetchAliasedTenant(urlTenantAlias);
       }
+
+      if (!urlTenantAlias) {
+        const ownTenants = await fetchOwnTenants();
+
+        if (ownTenants.length > 0) {
+          setTenantData(ownTenants[0]);
+          setHasTenantAccess(true);
+          setIsTenantOwner(true);
+          setTenantOwnerId(user.id);
+        }
+      }
+
       const isOwner = tenant?.tenant_owner_id === user.id;
 
       if (!isOwner) {
@@ -128,6 +196,8 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
       console.error("Error fetching current tenant:", error);
     } finally {
       setIsLoading(false);
+      setIsLoaded(true);
+      setHasCheckedForTenants(true);
     }
   }, [
     tenantData,
@@ -136,18 +206,54 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
     fetchAliasedTenant,
     user,
     checkTenantAccess,
+    fetchOwnTenants,
   ]);
 
   useEffect(() => {
     if (!user) return;
+    if (isLoaded) return;
+  }, [getCurrentTenant, user, isLoading, isLoaded, location, createNewTenant]);
+
+  useEffect(() => {
+    if (!user) return;
     if (isLoading) return;
+    if (isLoaded) return;
 
     getCurrentTenant();
-  }, [getCurrentTenant, user, isLoading]);
+  }, [getCurrentTenant, user, isLoading, isLoaded, location]);
 
   useEffect(() => {
     if (isLoading) return;
     if (!user) return;
+    if (!hasCheckedForTenants) return;
+
+    if (!profile.is_onboarded) {
+      navigate(ROUTES.ONBOARDING.replace(":tenantId", tenantData?.workspace));
+      return;
+    }
+    if (isCreatingTenant) {
+      return;
+    }
+
+    if (hasTenantAccess) {
+      navigate(ROUTES.DASHBOARD.replace(":tenantId", tenantData?.id));
+      return;
+    }
+
+    if (hasPendingRequest) {
+      navigate(ROUTES.ACCESS_PENDING.replace(":tenantId", tenantData?.id));
+      return;
+    }
+
+    if (
+      (!hasTenantAccess || !hasPendingRequest) &&
+      !isCreatingTenant &&
+      !location.pathname.includes("/app")
+    ) {
+      setIsCreatingTenant(true);
+      createNewTenant();
+      return;
+    }
 
     //  TODO: Handle tenant change
   }, [
@@ -159,7 +265,18 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
     urlTenantAlias,
     user,
     isLoading,
+    fetchAliasedTenant,
+    createNewTenant,
+    isCreatingTenant,
+    hasCheckedForTenants,
+    profile,
   ]);
+
+  useEffect(() => {
+    if (tenantData) {
+      dynamicHeaders["x-tenant-id"] = tenantData.id;
+    }
+  }, [tenantData]);
 
   const contextValue = {
     tenantId: tenantData?.id,
@@ -171,12 +288,13 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
     tenantOwnerId,
     hasTenantInUrl: !!urlTenantAlias,
     isTenantOwner,
+    fetchAliasedTenant,
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        <Loader />
       </div>
     );
   }

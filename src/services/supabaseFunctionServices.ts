@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getSupabaseFunctionsUrl } from "@/utils/supabaseUtils";
+import { dynamicHeaders } from "@/integrations/supabase/client";
 
 const getFunctionUrl = (functionName: string, searchParams?: string) => {
   let functionUrl = `${getSupabaseFunctionsUrl()}/${functionName}`;
@@ -23,6 +24,7 @@ const getHeaders = async () => {
   return {
     "Content-Type": "application/json",
     Authorization: `Bearer ${token}`,
+    "x-tenant-id": dynamicHeaders["x-tenant-id"],
   };
 };
 

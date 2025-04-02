@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, useCallback, ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { SocketContext, SocketMessageListener } from "./SocketContext";
-
+import { dynamicHeaders } from "@/integrations/supabase/client";
 export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const { session } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -17,13 +17,13 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     socketRef.current = socket;
 
     socket.onopen = () => {
-      console.log("🟢 WebSocket open");
       setIsOpen(true);
       if (session?.access_token) {
         socket.send(
           JSON.stringify({
             type: "auth",
             token: session.access_token,
+            tenant_id: dynamicHeaders["x-tenant-id"],
           })
         );
       }
@@ -44,7 +44,6 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     };
 
     socket.onclose = () => {
-      console.log("🔌 WebSocket closed");
       setIsOpen(false);
       setIsAuthenticated(false);
 
@@ -65,7 +64,9 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
   const sendMessage = useCallback((payload: object) => {
     if (socketRef.current?.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify(payload));
+      socketRef.current.send(
+        JSON.stringify({ ...payload, tenant_id: dynamicHeaders["x-tenant-id"] })
+      );
     } else {
       console.warn("WebSocket is not open — message not sent");
     }

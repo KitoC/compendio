@@ -1,4 +1,3 @@
-
 import { UserSettingsContext } from "./UserSettingsContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
@@ -24,15 +23,14 @@ const UserSettingsProvider = ({ children }: { children: React.ReactNode }) => {
           .select("config")
           .eq("name", "appearance")
           .eq("user_id", user.id)
-          .eq("tenant_id", tenantId)
-          .single();
+          .eq("tenant_id", tenantId);
 
         if (error && error.code !== "PGRST116") {
           throw error;
         }
 
-        if (data) {
-          setTheme((data.config as { theme: string }).theme || "system");
+        if (data[0]) {
+          setTheme((data[0].config as { theme: string }).theme || "system");
         }
       } catch (error) {
         console.error("Error fetching user config:", error);

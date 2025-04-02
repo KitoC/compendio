@@ -3,7 +3,7 @@ import Logger from "locals/utils/Logger";
 const defaultCorsHeaders: HeadersInit = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, x-tenant-id",
 };
 
 const defaultAllowedOrigins = ["http://localhost:8080"];

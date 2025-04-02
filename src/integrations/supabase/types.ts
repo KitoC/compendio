@@ -1220,6 +1220,7 @@ export type Database = {
           id: string;
           updated_at: string | null;
           username: string | null;
+          is_onboarded: boolean;
         };
         Insert: {
           avatar_url?: string | null;
@@ -1228,6 +1229,7 @@ export type Database = {
           id: string;
           updated_at?: string | null;
           username?: string | null;
+          is_onboarded?: boolean;
         };
         Update: {
           avatar_url?: string | null;
@@ -1236,6 +1238,7 @@ export type Database = {
           id?: string;
           updated_at?: string | null;
           username?: string | null;
+          is_onboarded?: boolean;
         };
         Relationships: [];
       };

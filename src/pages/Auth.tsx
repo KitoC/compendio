@@ -24,20 +24,6 @@ const Auth = () => {
   const [view, setView] = useState<"sign-in" | "sign-up">("sign-in");
 
   const { handleEmailSignIn, handleOAuthSignIn, handleEmailSignUp } = useAuth();
-  const navigate = useNavigate();
-
-  // Check if user is already authenticated
-  useEffect(() => {
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-
-      if (data.session) {
-        navigate(ROUTES.CONVERSATION_ASSISTANT);
-      }
-    };
-
-    checkSession();
-  }, [navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">

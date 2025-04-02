@@ -9,6 +9,7 @@ const logger = new Logger({ name: "AuthenticatedContext" });
 
 export const getAuthenticatedContext = async (
   Authorization?: string | null,
+  tenantId?: string | null,
   debug?: boolean
 ) => {
   if (!Authorization) {
@@ -29,7 +30,8 @@ export const getAuthenticatedContext = async (
 
   const authService = new AuthService(
     supabaseContext,
-    Authorization || undefined
+    Authorization || undefined,
+    tenantId || undefined
   );
 
   await authService.initialize();
@@ -38,13 +40,13 @@ export const getAuthenticatedContext = async (
   console.log("🟢 AUTHENTICATED");
 
   logger.debug("currentUser", user?.user?.id);
-  logger.debug("authService.tenantId", authService.tenantId);
+  logger.debug("tenantId", tenantId);
 
   return {
     ...supabaseContext,
     authService,
     user,
-    tenant_id: authService.tenantId,
+    tenant_id: tenantId,
     ...getSharedServices(supabaseContext),
   };
 };

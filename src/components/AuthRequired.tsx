@@ -1,8 +1,7 @@
-
-import { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { useTenant } from '@/contexts/TenantContext';
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface AuthRequiredProps {
   children: React.ReactNode;
@@ -10,11 +9,11 @@ interface AuthRequiredProps {
 
 const AuthRequired: React.FC<AuthRequiredProps> = ({ children }) => {
   const { user, isLoading: authLoading } = useAuth();
-  const { 
-    urlTenantAlias, 
-    hasTenantAccess, 
-    hasPendingRequest, 
-    isLoading: tenantLoading 
+  const {
+    urlTenantAlias,
+    hasTenantAccess,
+    hasPendingRequest,
+    isLoading: tenantLoading,
   } = useTenant();
   const navigate = useNavigate();
   const location = useLocation();
@@ -23,21 +22,21 @@ const AuthRequired: React.FC<AuthRequiredProps> = ({ children }) => {
     if (!authLoading && !tenantLoading) {
       if (!user) {
         // Not authenticated, redirect to login
-        navigate('/auth');
+        navigate("/auth");
         return;
       }
 
       if (!urlTenantAlias) {
         // No tenant in URL, redirect to index
-        navigate('/');
+        navigate("/");
         return;
       }
 
-      const isAccessRoute = 
-        location.pathname.includes('/request-access') || 
-        location.pathname.includes('/access-pending');
+      const isAccessRoute =
+        location.pathname.includes("/request-access") ||
+        location.pathname.includes("/access-pending");
 
-      if (hasPendingRequest && !location.pathname.includes('/access-pending')) {
+      if (hasPendingRequest && !location.pathname.includes("/access-pending")) {
         // Redirect to pending access page
         navigate(`/${urlTenantAlias}/access-pending`);
         return;
@@ -50,14 +49,14 @@ const AuthRequired: React.FC<AuthRequiredProps> = ({ children }) => {
       }
     }
   }, [
-    user, 
-    authLoading, 
-    tenantLoading, 
-    hasTenantAccess, 
+    user,
+    authLoading,
+    tenantLoading,
+    hasTenantAccess,
     hasPendingRequest,
-    urlTenantAlias, 
-    navigate, 
-    location.pathname
+    urlTenantAlias,
+    navigate,
+    location.pathname,
   ]);
 
   if (authLoading || tenantLoading) {
@@ -72,14 +71,15 @@ const AuthRequired: React.FC<AuthRequiredProps> = ({ children }) => {
   }
 
   // Only render children if authenticated and has appropriate tenant access for the route
-  const isAccessRoute = 
-    location.pathname.includes('/request-access') || 
-    location.pathname.includes('/access-pending');
+  const isAccessRoute =
+    location.pathname.includes("/request-access") ||
+    location.pathname.includes("/access-pending");
 
-  const shouldRender = 
-    user && ((hasTenantAccess && !isAccessRoute) || 
-            (hasPendingRequest && location.pathname.includes('/access-pending')) || 
-            (!hasTenantAccess && location.pathname.includes('/request-access')));
+  const shouldRender =
+    user &&
+    ((hasTenantAccess && !isAccessRoute) ||
+      (hasPendingRequest && location.pathname.includes("/access-pending")) ||
+      (!hasTenantAccess && location.pathname.includes("/request-access")));
 
   return shouldRender ? <>{children}</> : null;
 };

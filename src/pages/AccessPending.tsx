@@ -1,6 +1,12 @@
-
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
 import { ROUTES } from "@/lib/constants";
@@ -13,7 +19,7 @@ const AccessPending = () => {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/auth');
+    navigate("/auth");
   };
 
   const handleRefresh = () => {
@@ -24,19 +30,23 @@ const AccessPending = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Access Pending</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">
+            Access Pending
+          </CardTitle>
           <CardDescription className="text-center">
-            Your access request for {tenantData?.name || urlTenantAlias} is pending approval
+            Your access request for {tenantData?.name || urlTenantAlias} is
+            pending approval
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent className="space-y-4 text-center">
           <p>
-            An administrator needs to approve your request before you can access this workspace.
-            You will be notified by email when your request is approved.
+            An administrator needs to approve your request before you can access
+            this workspace. You will be notified by email when your request is
+            approved.
           </p>
         </CardContent>
-        
+
         <CardFooter className="flex flex-col gap-2">
           <Button onClick={handleRefresh} className="w-full">
             Refresh Status

@@ -19,6 +19,7 @@ interface Profile {
   id: string;
   username: string | null;
   avatar_url: string | null;
+  is_onboarded: boolean;
 }
 
 interface SignInParams {

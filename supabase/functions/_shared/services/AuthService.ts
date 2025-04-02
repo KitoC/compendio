@@ -22,19 +22,18 @@ class AuthService extends BaseSupabaseService {
 
   public logger: Logger;
   public roles: string[] | null;
-  public tenantId: string | null;
   public user: User | null;
 
   constructor(
     public context: BaseRequiredContext,
-    public tokenFromHeader?: string
+    public tokenFromHeader?: string,
+    public tenantId?: string
   ) {
     super(context);
 
     this.logger = new Logger({ name: "AuthService" });
     this.token = null;
     this.roles = null;
-    this.tenantId = null;
     this.user = null;
     this.authHeader = null;
   }
@@ -83,26 +82,24 @@ class AuthService extends BaseSupabaseService {
       .from("tenant_users")
       .select("tenant_id")
       .eq("user_id", user.user.id)
+      .eq("tenant_id", this.tenantId)
       .single();
-
-    const tenantId = tenantUser.tenant_id;
 
     const { data: roles, error: rolesError } =
       await this.context.supabase_AS_SUPER_ADMIN
         .from("user_roles")
         .select("*")
         .eq("user_id", user.user.id)
-        .or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+        .or(`tenant_id.eq.${this.tenantId},tenant_id.is.null`);
 
     if (rolesError) {
       this.throwError("Error getting roles", rolesError, 500);
     }
 
     this.roles = roles.map((role: { role_type: string }) => role.role_type);
-    this.tenantId = tenantId;
     this.user = user;
 
-    return { user, tenantId, roles };
+    return { user, tenantId: this.tenantId, roles };
   }
 
   private hasRole(role: string) {
