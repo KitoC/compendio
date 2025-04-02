@@ -1,10 +1,10 @@
 import type { IAiAgent } from "@/types/aiAgents";
-import type { ChatMessage } from "../../../../types/chat";
+import type { ChatMessage } from "@/types/chat";
 import {
   ExecuteFunctionCallback,
   FunctionController,
 } from "locals/controllers/FunctionController";
-import type { NormalizedEmailResponse } from "../../../../types/emailAgentMessage";
+import type { NormalizedEmailResponse } from "@/types/emailAgentMessage";
 import type { IFunction } from "@/types/aiAgents";
 
 export interface AgentMessage {

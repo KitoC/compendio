@@ -9,7 +9,7 @@ import type {
   OpenAiRole,
   ChatMessage,
   NormalChatContent,
-} from "../../../../../types/chat";
+} from "@/types/chat";
 import {
   ExecuteFunctionCallback,
   FunctionController,

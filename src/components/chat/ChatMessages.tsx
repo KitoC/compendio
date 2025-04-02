@@ -3,9 +3,9 @@
 import { useChat } from "@/contexts/chat";
 import ChatMessage from "./ChatMessage";
 import { MARKUP_BUILDER_MAP_ROLES } from "./MarkupBuilder";
-
+import Loader from "../ui/loader";
 const ChatMessages = () => {
-  const { messages, messagesContainerRef } = useChat();
+  const { messages, messagesContainerRef, messagesLoaded } = useChat();
 
   const filteredMessages = messages
     .filter((message) =>
@@ -18,6 +18,11 @@ const ChatMessages = () => {
       className="flex-1 px-4 py-6 overflow-y-auto scroll-smooth space-y-4"
       ref={messagesContainerRef}
     >
+      {!messagesLoaded && (
+        <div className="flex justify-center items-center h-full">
+          <Loader size="medium" />
+        </div>
+      )}
       {filteredMessages.map((message, index) => {
         const isLastMessage = index === filteredMessages.length - 1;
         const functionalMessages = messages.filter((fm) => {

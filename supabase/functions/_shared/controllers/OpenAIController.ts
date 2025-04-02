@@ -1,7 +1,7 @@
 // NO_CHANGE
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import type { OpenAiMessage, OpenAiRole } from "../../../../types/chat.js";
+import type { OpenAiMessage, OpenAiRole } from "@/types/chat";
 import type { IFunctionCall, IOpenAiFunction } from "@/types/aiAgents";
 import Logger from "locals/utils/Logger";
 import { getEnvKey } from "locals/utils/env";

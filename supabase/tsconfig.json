@@ -14,7 +14,7 @@
       "locals/*": ["./functions/_shared/*"],
       "@/*": ["./functions/_shared/*"],
       "@/queue/*": ["./functions/_shared/handlers/ProcessQueueHandler/*"],
-      "@/types/*": ["../types/*"]
+      "@/types/*": ["../src/types/*"]
     }
   },
   "exclude": ["node_modules", "**/*.spec.ts"],

@@ -1,5 +1,5 @@
 import type { IFunctionCall, IOpenAiFunction } from "@/types/aiAgents";
-import type { OpenAiMessage, OpenAiRole } from "../../../../../types/chat";
+import type { OpenAiMessage, OpenAiRole } from "@/types/chat";
 import { BaseExternalService } from "locals/services/_BaseExternalService";
 import { getEnvKey } from "locals/utils/env";
 import {
@@ -45,7 +45,7 @@ export class OpenAiService extends BaseExternalService {
     model = "gpt-4o-mini",
     stream = true,
     functions = undefined,
-    options = {},
+    options = { response_format: { type: "text" } },
   }: ICallOpenAIChatCompletionParams) {
     this.logger.info("IS STREAMING?", stream ? "YES" : "NO");
 
@@ -56,6 +56,9 @@ export class OpenAiService extends BaseExternalService {
       functions: functions?.length ? functions : undefined,
       ...options,
     };
+
+    console.log("🔹 messages --> ", messages);
+    console.log("🔹 options --> ", options);
 
     let stringifiedBody;
     try {

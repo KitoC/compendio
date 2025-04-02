@@ -1,6 +1,17 @@
 import { AgentController } from "locals/controllers/AgentController";
 import { FunctionController } from "locals/controllers/FunctionController";
+import { getAgentController } from "@/factories/getAgentController";
 import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
+
+type ChatSocketMessage = {
+  type: string;
+  conversation_id: string;
+  agent_id: string;
+  payload: {
+    function_context: unknown;
+    type: string;
+  };
+};
 
 export class ChatSocketHandler {
   private context: AuthenticatedContext;
@@ -14,6 +25,42 @@ export class ChatSocketHandler {
     this.context = context;
     this.socket = socket;
   }
+
+  routeSocketMessage(data: ChatSocketMessage) {
+    if (data.type === "chat:start") {
+      return this.start(data.conversation_id, data.agent_id);
+    }
+    if (data.type === "chat:trigger_function_call") {
+      return this.triggerFunctionCall(data);
+    }
+
+    if (data.type === "chat:stop") {
+      return this.stop();
+    }
+
+    // if (data.type === "chat:initiateConversation") {
+    //   return this.initiateConversation(data);
+    // }
+
+    return null;
+  }
+
+  // async initiateConversation(
+  //   conversation_id: string,
+  //   agent_id: string,
+  //   initial_message: string
+  // ) {
+  //   const agentController = await getAgentController(
+  //     this.context,
+  //     new FunctionController(this.context),
+  //     agent_id,
+  //     {}
+  //   );
+
+  //   const stream = await agentController.talkToAgent(conversation_id);
+
+  //   this.streamToSocket(stream);
+  // }
 
   private getTextFromChunk(chunk: string) {
     const parsed = JSON.parse(chunk);
@@ -35,15 +82,7 @@ export class ChatSocketHandler {
     }
   }
 
-  async start(conversation_id: string, agent_id: string) {
-    const agentController = await AgentController.create({
-      context: this.context,
-      functionController: new FunctionController(this.context),
-      agentId: agent_id,
-      sessionContext: {},
-    });
-
-    const stream = await agentController.talkToAgent(conversation_id);
+  async streamToSocket(stream: ReadableStream<Uint8Array>) {
     this.reader = stream.getReader();
 
     while (true) {
@@ -54,6 +93,7 @@ export class ChatSocketHandler {
       this.accumulated = chunk;
       this.handleFunctionCall(chunk);
 
+      console.log("🔁 Chat socket chunk", chunk);
       this.socket.send(
         JSON.stringify({
           type: "chat:update",
@@ -70,6 +110,20 @@ export class ChatSocketHandler {
     );
   }
 
+  async start(conversation_id: string, agent_id: string) {
+    const agentController = await getAgentController(
+      this.context,
+      new FunctionController(this.context),
+      agent_id,
+      {}
+    );
+
+    const stream = await agentController.talkToAgent(conversation_id);
+
+    console.log("🔁 Chat socket stream", stream);
+    this.streamToSocket(stream);
+  }
+
   async stop() {
     if (this.reader) {
       await this.reader.cancel("Client requested stop");
@@ -77,13 +131,7 @@ export class ChatSocketHandler {
     }
   }
 
-  async triggerFunctionCall(payload: {
-    agent_id: string;
-    payload: {
-      function_context: unknown;
-      type: string;
-    };
-  }) {
+  async triggerFunctionCall(payload: ChatSocketMessage) {
     const agentController = await AgentController.create({
       context: this.context,
       functionController: new FunctionController(this.context),

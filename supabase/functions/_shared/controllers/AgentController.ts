@@ -135,20 +135,21 @@ class AgentController<
 
   async getLastNMessages(conversation_id: string, n: number) {
     // TODO: Add search, metadata_search, role, include_deleted
-    const data = await this.context.messagesService.getConversationMessages({
-      conversation_id,
-      // search,
-      // metadata_search,
-      // role,
-      limit: n,
-      offset: 0,
-      order: "created_at",
-      sort_direction: "desc",
+    const { messages } =
+      await this.context.messagesService.getConversationMessages({
+        conversation_id,
+        // search,
+        // metadata_search,
+        // role,
+        limit: n,
+        offset: 0,
+        order: "created_at",
+        sort_direction: "desc",
 
-      // include_deleted,
-    });
+        // include_deleted,
+      });
 
-    return data.reverse().map((message: ChatMessage) => ({
+    return messages.reverse().map((message: ChatMessage) => ({
       role: message.role as OpenAiRole,
       content: message.content,
     }));

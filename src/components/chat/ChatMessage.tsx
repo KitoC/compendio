@@ -1,10 +1,11 @@
 import { FC, useRef } from "react";
-import type { ChatMessage as ChatMessageType, MessageRole } from "@/types/chat";
+import { ChatMessage as ChatMessageType, MessageRole } from "@/types/chat";
 import { NormalChatContent } from "@/types/chat";
 import clsx from "clsx";
 import RenderMarkdown from "./RenderMarkdown";
 import MarkupBuilder, { MARKUP_BUILDER_MAP_ROLES } from "./MarkupBuilder";
 import { getContainerStyles, getMessageBubbleStyles } from "./shared.styles";
+import Loader from "../ui/loader";
 
 interface ChatMessageProps {
   message: ChatMessageType;
@@ -18,6 +19,12 @@ const ChatMessage: FC<ChatMessageProps> = ({ message, functionalMessages }) => {
 
   if (MARKUP_BUILDER_MAP_ROLES.includes(message.role)) {
     return <MarkupBuilder message={message} />;
+  }
+
+  console.log("🔁 Assistant message", message);
+
+  if (!message.content?.text) {
+    return <Loader />;
   }
 
   return (

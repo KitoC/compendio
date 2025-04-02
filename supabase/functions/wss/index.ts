@@ -15,7 +15,6 @@ const handler = async (req: Request) => {
   socket.onmessage = async (event) => {
     try {
       const data = JSON.parse(event.data);
-
       if (data.type === "auth" && !context) {
         const authContext = await getAuthenticatedContext(
           `Bearer ${data.token}`,
@@ -41,21 +40,12 @@ const handler = async (req: Request) => {
         return;
       }
 
+      console.log("🔁 WebSocket message", data);
+
       const handler = new ChatSocketHandler(context, socket);
 
-      // Route chat-related messages
-      if (data.type === "chat:start") {
-        await handler.start(data.conversation_id, data.agent_id);
-        return;
-      }
-      if (data.type === "chat:trigger_function_call") {
-        await handler.triggerFunctionCall(data);
-        return;
-      }
-
-      if (data.type === "chat:stop") {
-        await handler.stop();
-        return;
+      if (data.type.startsWith("chat:")) {
+        return handler.routeSocketMessage(data);
       }
 
       // Extend: Add more types here and route to other modules

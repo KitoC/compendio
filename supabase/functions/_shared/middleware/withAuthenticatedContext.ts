@@ -3,13 +3,15 @@ import { SupabaseClient } from "supabase-js";
 import { AuthService } from "locals/services/AuthService";
 import { SharedServices } from "locals/middleware/_getSharedServices";
 import { CorsContext } from "locals/middleware/withCors";
-import Logger from "locals/utils/Logger";
 import { getAuthenticatedContext } from "locals/middleware/_getAuthenticatedContext";
+import type { User } from "@/types/user";
 
 export interface AuthenticatedContext extends SharedServices {
   supabase: SupabaseClient;
   supabase_AS_SUPER_ADMIN: SupabaseClient;
   authService: AuthService;
+  tenant_id?: string | null;
+  user: User;
 }
 
 export type AuthenticatedContextChildHandler = (

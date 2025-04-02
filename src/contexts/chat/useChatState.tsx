@@ -21,22 +21,31 @@ import type { IFunctionCall } from "@/types/aiAgents";
 
 interface UseChatOptions {
   conversationId: string;
+  initiateConversation?: string;
 }
 
-export const useChatState = ({ conversationId }: UseChatOptions) => {
+export const useChatState = ({
+  conversationId,
+  initiateConversation,
+}: UseChatOptions) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [messagesLoaded, setMessagesLoaded] = useState(false);
   const { user } = useAuth();
   const { currentAgent } = useAiAgents();
   const { tenantId } = useTenant();
-  const { sendMessage, addMessageListener, removeMessageListener } =
-    useSocket();
+  const {
+    sendMessage,
+    addMessageListener,
+    removeMessageListener,
+    isOpen: socketIsOpen,
+  } = useSocket();
   const { playQueue, reset } = useTTS();
   const { hasSpoken, transcript, sendTranscript } = useVoiceContext();
 
   const sendFinalTranscript = useDebouncedCallback(() => {
     const cleaned = transcript.trim();
+
     if (hasSpoken && cleaned.length > 0) {
       console.log("🎙️ Sending:", cleaned);
       handleSendMessage(cleaned);
@@ -174,6 +183,9 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
         case "chat:update": {
           const newText = data.value.text;
 
+          console.log("🔁 Chat socket update", newText);
+          console.log("🔁 Chat socket aiMessageRef", aiMessageRef.current);
+
           replaceMessage({
             ...aiMessageRef.current,
             content: { text: newText },
@@ -288,6 +300,46 @@ export const useChatState = ({ conversationId }: UseChatOptions) => {
       void supabase.removeChannel(channel);
     };
   }, [conversationId]);
+
+  useEffect(() => {
+    if (!socketIsOpen) return;
+    if (!messagesLoaded) return;
+
+    if (initiateConversation && !messages.length) {
+      const conversationInitializer = async () => {
+        console.log("🔁 Conversation initializer", initiateConversation);
+
+        const aiMessage = createAiMessage("");
+
+        aiMessageRef.current = aiMessage;
+
+        setMessages((prev) => [...prev, aiMessage]);
+        setIsTyping(true);
+        // await MessageService.createMessage(humanMessage);
+        sendMessage({
+          type: "chat:start",
+          conversation_id: conversationId,
+          agent_id: currentAgent?.id,
+          userMessage: initiateConversation,
+        });
+      };
+
+      setTimeout(() => {
+        conversationInitializer();
+      }, 500);
+    }
+  }, [
+    initiateConversation,
+    conversationId,
+    currentAgent?.id,
+    sendMessage,
+    socketIsOpen,
+    createAiMessage,
+    messages,
+    messagesLoaded,
+  ]);
+
+  console.log("🔁 Chat state messages", messages);
 
   return {
     messages,

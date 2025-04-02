@@ -102,6 +102,8 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
     })
     .join(" ");
 
+  console.log(textWithHighlightedChunks);
+
   return (
     <div
       className={classNames(
@@ -118,20 +120,6 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          span: ({ children }) => {
-            if (typeof children === "string") {
-              return replaceHighlightedText(children);
-            }
-
-            return children;
-          },
-          strong: ({ children }) => {
-            if (typeof children === "string") {
-              return replaceHighlightedText(children);
-            }
-
-            return children;
-          },
           p: ({ children }) => {
             if (typeof children === "string") {
               return (
@@ -215,7 +203,7 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
           ),
         }}
       >
-        {textWithHighlightedChunks}
+        {message}
       </ReactMarkdown>
 
       {isStreamedMessage && (

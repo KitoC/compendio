@@ -10,7 +10,7 @@ import { AgentFunctionsService } from "locals/services/AgentFunctionsService";
 import { ConversationsService } from "locals/services/ConversationsService";
 import { WebhookEventService } from "locals/services/WebhookEventService";
 import { CorsContext } from "locals/middleware/withCors";
-
+import { OnboardingSessionsService } from "locals/services/OnboardingSessionsService";
 interface SupabaseContext {
   supabase: SupabaseClient;
   supabase_AS_SUPER_ADMIN: SupabaseClient;
@@ -26,6 +26,7 @@ export interface WSSContext {
   webhookEventService: WebhookEventService;
   functionQueueService: FunctionQueueService;
   azureService: AzureService;
+  onboardingSessionsService: OnboardingSessionsService;
 }
 
 export interface SharedServices extends CorsContext {
@@ -38,6 +39,7 @@ export interface SharedServices extends CorsContext {
   webhookEventService: WebhookEventService;
   functionQueueService: FunctionQueueService;
   azureService: AzureService;
+  onboardingSessionsService: OnboardingSessionsService;
 }
 
 export const getSharedServices = (supabaseContext: SupabaseContext) => {
@@ -52,6 +54,9 @@ export const getSharedServices = (supabaseContext: SupabaseContext) => {
   const webhookEventService = new WebhookEventService(supabaseContext);
   const functionQueueService = new FunctionQueueService(supabaseContext);
   const azureService = new AzureService();
+  const onboardingSessionsService = new OnboardingSessionsService(
+    supabaseContext
+  );
 
   return {
     credentialsService,
@@ -63,5 +68,6 @@ export const getSharedServices = (supabaseContext: SupabaseContext) => {
     webhookEventService,
     functionQueueService,
     azureService,
+    onboardingSessionsService,
   };
 };

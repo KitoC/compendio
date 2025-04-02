@@ -72,7 +72,7 @@ class AuthService extends BaseSupabaseService {
       this.throwError("Error getting user", error, 500);
     }
 
-    return data;
+    return data.user;
   }
 
   async getUserTenantAndRoles() {
@@ -81,7 +81,7 @@ class AuthService extends BaseSupabaseService {
     const { data: tenantUser } = await this.context.supabase_AS_SUPER_ADMIN
       .from("tenant_users")
       .select("tenant_id")
-      .eq("user_id", user.user.id)
+      .eq("user_id", user.id)
       .eq("tenant_id", this.tenantId)
       .single();
 
@@ -89,7 +89,7 @@ class AuthService extends BaseSupabaseService {
       await this.context.supabase_AS_SUPER_ADMIN
         .from("user_roles")
         .select("*")
-        .eq("user_id", user.user.id)
+        .eq("user_id", user.id)
         .or(`tenant_id.eq.${this.tenantId},tenant_id.is.null`);
 
     if (rolesError) {

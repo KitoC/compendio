@@ -20,14 +20,16 @@ const OnboardingPage = () => {
     return (
       <Card className="flex flex-col items-center justify-center p-8 h-full">
         <Loader />
-        <p className="mt-2">Getting ready to be awesome...</p>
       </Card>
     );
   }
 
   return (
     <div className="flex-1 container px-4 py-0 py-6 max-w-5xl mx-auto h-[calc(100vh-4rem)]">
-      <ChatProvider conversationId={conversation.id}>
+      <ChatProvider
+        conversationId={conversation.id}
+        initiateConversation={"Greet the user with a welcome message"}
+      >
         <div className={`flex flex-col h-full overflow-hidden bg-background`}>
           <div className="flex-1 overflow-hidden flex flex-col">
             <ChatMessages />

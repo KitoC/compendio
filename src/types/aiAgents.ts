@@ -5,6 +5,7 @@ export interface IAiAgent {
   responsibility: string;
   enabled?: boolean;
   prompt?: string;
+  provider: string;
   model?: string;
   type?: string;
   avatar_url?: string;
