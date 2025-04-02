@@ -13,7 +13,8 @@
     "paths": {
       "locals/*": ["./functions/_shared/*"],
       "@/*": ["./functions/_shared/*"],
-      "@/queue/*": ["./functions/_shared/handlers/ProcessQueueHandler/*"]
+      "@/queue/*": ["./functions/_shared/handlers/ProcessQueueHandler/*"],
+      "@/types/*": ["../types/*"]
     }
   },
   "exclude": ["node_modules", "**/*.spec.ts"],

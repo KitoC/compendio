@@ -1,9 +1,6 @@
 // NO_CHANGE
 import { RequestError } from "locals/controllers/RequestController";
-import type {
-  IFunction,
-  IFunctionCall,
-} from "../../../../src/types/aiAgents.js";
+import type { IFunction, IFunctionCall } from "@/types/aiAgents";
 import { BaseController } from "locals/controllers/_BaseController";
 import { PublicContext } from "locals/middleware/withPublicContext";
 import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";

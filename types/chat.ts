@@ -1,4 +1,4 @@
-import { NormalizedEmailResponse } from "./emailAgentMessage";
+import { NormalizedEmailResponse } from "@/types/emailAgentMessage";
 
 export enum MessageRole {
   SYSTEM = "system",

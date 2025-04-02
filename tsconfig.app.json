@@ -23,8 +23,16 @@
 
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@/types/*": ["./types/*"]
     }
   },
-  "include": ["src"]
+  "include": [
+    "src",
+    "types/chat.ts",
+    "types/emailAgentMessage.ts",
+    "types/notifications.ts",
+    "types/user.ts",
+    "types/aiAgents.ts"
+  ]
 }

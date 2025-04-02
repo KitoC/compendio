@@ -1,8 +1,5 @@
-import type {
-  IFunctionCall,
-  IOpenAiFunction,
-} from "../../../../../src/types/aiAgents";
-import type { OpenAiMessage, OpenAiRole } from "../../../../../src/types/chat";
+import type { IFunctionCall, IOpenAiFunction } from "@/types/aiAgents";
+import type { OpenAiMessage, OpenAiRole } from "../../../../../types/chat";
 import { BaseExternalService } from "locals/services/_BaseExternalService";
 import { getEnvKey } from "locals/utils/env";
 import {

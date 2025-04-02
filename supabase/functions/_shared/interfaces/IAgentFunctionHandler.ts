@@ -1,5 +1,5 @@
 import { PublicContext } from "locals/middleware/withPublicContext";
-import type { IFunction } from "../../../../src/types/aiAgents";
+import type { IFunction } from "@/types/aiAgents";
 
 export interface IAgentFunctionHandlerResult {
   result: object | null;

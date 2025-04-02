@@ -1,11 +1,11 @@
-import type { IAiAgent } from "../../../../src/types/aiAgents";
-import type { ChatMessage } from "../../../../src/types/chat";
+import type { IAiAgent } from "@/types/aiAgents";
+import type { ChatMessage } from "../../../../types/chat";
 import {
   ExecuteFunctionCallback,
   FunctionController,
 } from "locals/controllers/FunctionController";
-import type { NormalizedEmailResponse } from "../../../../src/types/emailAgentMessage";
-import type { IFunction } from "../../../../src/types/aiAgents";
+import type { NormalizedEmailResponse } from "../../../../types/emailAgentMessage";
+import type { IFunction } from "@/types/aiAgents";
 
 export interface AgentMessage {
   role: string;

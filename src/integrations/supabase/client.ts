@@ -10,6 +10,7 @@ const SUPABASE_PUBLISHABLE_KEY =
 export const dynamicHeaders = {
   "x-tenant-id": null, // start empty
 };
+
 export const supabase = createClient<Database>(
   SUPABASE_URL,
   SUPABASE_PUBLISHABLE_KEY,

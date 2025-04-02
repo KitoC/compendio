@@ -1,10 +1,10 @@
 import ChatFooter from "@/components/chat/ChatFooter";
 import ChatMessages from "@/components/chat/ChatMessages";
 import { Card } from "@/components/ui/card";
+import Loader from "@/components/ui/loader";
 import { ChatProvider } from "@/contexts/chat/ChatProvider";
 import { useTenant } from "@/contexts/TenantContext";
 import useFindOrCreateConversation from "@/hooks/useFindOrCreateConversation";
-import { Loader2 } from "lucide-react";
 
 const OnboardingPage = () => {
   const { tenantId } = useTenant();
@@ -18,9 +18,9 @@ const OnboardingPage = () => {
 
   if (loading) {
     return (
-      <Card className="flex items-center justify-center p-8 h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-2">Getting ready to be awesome...</p>
+      <Card className="flex flex-col items-center justify-center p-8 h-full">
+        <Loader />
+        <p className="mt-2">Getting ready to be awesome...</p>
       </Card>
     );
   }

@@ -2,7 +2,7 @@
 // And cleanly separate out the message handling logic
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { ChatMessage, MessageRole } from "@/types/chat";
+import { ChatMessage } from "@/types/chat";
 import { useAuth } from "@/hooks/useAuth";
 import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
 import { useTenant } from "@/contexts/TenantContext";
@@ -14,11 +14,11 @@ import { listenForFunctionCalls } from "@/services/aiChatService";
 import { User } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
 import { useVoiceContext } from "@/contexts/VoiceProvider";
-import { getSentenceChunks } from "./getGroupedSentences";
 import { useTTS } from "../TTSProvider";
 import { useDebouncedCallback } from "use-debounce";
 import { FunctionService } from "@/services/functionService";
-import { IFunctionCall } from "@/types/aiAgents";
+import type { IFunctionCall } from "@/types/aiAgents";
+
 interface UseChatOptions {
   conversationId: string;
 }

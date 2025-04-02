@@ -2,7 +2,7 @@
 
 import { IAgentProvider } from "locals/interfaces/IAgentProvider";
 import { OpenAiAgent } from "locals/providers/agents/OpenAiAgent";
-import type { IAiAgent } from "../../../../../src/types/aiAgents";
+import type { IAiAgent } from "@/types/aiAgents";
 import { FunctionController } from "locals/controllers/FunctionController";
 
 type Factory = (agent: IAiAgent) => IAgentProvider;

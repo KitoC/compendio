@@ -1,5 +1,5 @@
 import { FC, useRef } from "react";
-import { ChatMessage as ChatMessageType, MessageRole } from "@/types/chat";
+import type { ChatMessage as ChatMessageType, MessageRole } from "@/types/chat";
 import { NormalChatContent } from "@/types/chat";
 import clsx from "clsx";
 import RenderMarkdown from "./RenderMarkdown";

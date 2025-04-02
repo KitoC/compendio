@@ -4,7 +4,7 @@ import {
   BaseRequiredContext,
   BaseSupabaseService,
 } from "locals/services/_BaseSupabaseService";
-import type { ChatMessage } from "../../../../src/types/chat";
+import type { ChatMessage } from "../../../../types/chat";
 import { getEnvKey } from "locals/utils/env";
 
 export type UpdateChatMessageParams = {

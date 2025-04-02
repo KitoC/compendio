@@ -70,10 +70,6 @@ function App() {
                         path={ROUTES.ACCESS_PENDING}
                         element={<AccessPending />}
                       />
-                      <Route
-                        path={ROUTES.ONBOARDING}
-                        element={<OnboardingPage />}
-                      />
 
                       <Route
                         path={ROUTES.APPLICATION}
@@ -82,6 +78,11 @@ function App() {
                         <Route
                           path={ROUTES.DASHBOARD}
                           element={<Dashboard />}
+                        />
+
+                        <Route
+                          path={ROUTES.ONBOARDING}
+                          element={<OnboardingPage />}
                         />
 
                         <Route

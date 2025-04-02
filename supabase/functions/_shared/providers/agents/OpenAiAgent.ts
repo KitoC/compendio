@@ -3,16 +3,13 @@ import type {
   IAgentProvider,
   ItTalkToAgentParams,
 } from "locals/interfaces/IAgentProvider";
-import type {
-  IAiAgent,
-  IOpenAiFunction,
-} from "../../../../../src/types/aiAgents";
+import type { IAiAgent, IOpenAiFunction } from "@/types/aiAgents";
 import type {
   OpenAiMessage,
   OpenAiRole,
   ChatMessage,
   NormalChatContent,
-} from "../../../../../src/types/chat";
+} from "../../../../../types/chat";
 import {
   ExecuteFunctionCallback,
   FunctionController,

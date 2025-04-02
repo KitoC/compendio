@@ -15,7 +15,7 @@ export const ROUTES = {
   AUTH_CALLBACK: "/auth/callback",
   APPLICATION: "/:tenantId/app",
   INTEGRATION_CALLBACK: "/:tenantId/app/integration-callback",
-  ONBOARDING: "/app/:tenantId/onboarding",
+  ONBOARDING: "/:tenantId/app/onboarding",
   FORGOT_PASSWORD: "/forgot-password",
   RESET_PASSWORD: "/reset-password",
   REQUEST_ACCESS: "/:tenantId/request-access",

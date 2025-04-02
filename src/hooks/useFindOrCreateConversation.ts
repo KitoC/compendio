@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { v4 as uuidv4 } from "uuid";
-import { Conversation } from "@/types/chat";
+import type { Conversation } from "@/types/chat";
 
 interface UseFindOrCreateConversationProps {
   conversationIdOrAlias: string;

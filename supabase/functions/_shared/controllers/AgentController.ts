@@ -5,8 +5,8 @@ import type {
   IContext,
   IAiAgentFunction,
   IFunction,
-} from "../../../../src/types/aiAgents.js";
-import type { ChatMessage, OpenAiRole } from "../../../../src/types/chat.js";
+} from "@/types/aiAgents";
+import type { ChatMessage, OpenAiRole } from "@/types/chat";
 import { PublicContext } from "locals/middleware/withPublicContext";
 import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
 import { BaseController } from "locals/controllers/_BaseController";
@@ -127,7 +127,7 @@ class AgentController<
         replacement: () => session,
       },
     ].forEach(({ variable, replacement }) => {
-      interpolatedPrompt = interpolatedPrompt.replace(variable, replacement());
+      interpolatedPrompt = interpolatedPrompt?.replace(variable, replacement());
     });
 
     return interpolatedPrompt;

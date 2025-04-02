@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, Suspense } from "react";
-import { useLocation, useNavigate, Outlet } from "react-router-dom";
+import { useLocation, useNavigate, Outlet, matchPath } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { TenantProvider, useTenant } from "@/contexts/TenantContext";
 import AppSidebar from "@/components/layout/AppSidebar";
@@ -69,6 +69,10 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
     return null;
   }
 
+  const isOnBoardingRoute = location.pathname.match(
+    /^\/([^/]+)\/app\/onboarding$/
+  );
+
   return (
     <UserSettingsProvider>
       <TooltipProvider>
@@ -76,7 +80,7 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
           <CustomTablesProvider>
             <SidebarProvider>
               <div className="flex flex-col min-h-screen w-full">
-                {isMobile && (
+                {isMobile && !isOnBoardingRoute && (
                   <header className="sticky top-0 z-40 flex items-center h-14 px-4 border-b bg-background">
                     <Button
                       variant="ghost"
@@ -95,7 +99,7 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
                   </header>
                 )}
                 <div className="flex flex-1 min-h-0">
-                  <AppSidebar />
+                  {!isOnBoardingRoute && <AppSidebar />}
                   <main className="flex-1 overflow-auto h-screen">
                     <Suspense
                       fallback={
