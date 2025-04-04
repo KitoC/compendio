@@ -1,9 +1,12 @@
 // providers/AzureWebhookProvider.ts
 import { ProviderError } from "locals/error-types";
 import { IWebhookProvider } from "locals/interfaces/IWebhookProvider";
+import Logger from "locals/utils/Logger";
 import { withRetry } from "locals/utils/withRetry";
 
 const AZURE_GRAPH_API_URL = "https://graph.microsoft.com/v1.0/subscriptions";
+
+const logger = new Logger({ name: "AzureWebhookProvider" });
 
 export class AzureWebhookProvider implements IWebhookProvider {
   async subscribeToWebhook({
@@ -21,6 +24,13 @@ export class AzureWebhookProvider implements IWebhookProvider {
     resource: string;
     expirationDate: string;
   }) {
+    logger.debug("Subscribing to Azure webhook", {
+      changeType,
+      resource,
+      webhookUrl,
+      expirationDate,
+    });
+
     const res = await withRetry(() =>
       fetch(AZURE_GRAPH_API_URL, {
         method: "POST",
