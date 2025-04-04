@@ -1,3 +1,4 @@
+
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -32,6 +33,7 @@ import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
 import { useCustomTables } from "@/contexts/CustomTables/useCustomTables";
 import { settingsItems } from "@/lib/constants";
 import { useTenant } from "@/contexts/TenantContext";
+import TenantSwitcher from "./TenantSwitcher";
 
 interface SidebarItemOrGroup {
   label: string;
@@ -245,19 +247,22 @@ const AppSidebar = () => {
       side="left"
       className="border-r border-border"
     >
-      <SidebarHeader className="flex items-center flex-row">
-        <Avatar className="w-8 h-8 mr-2">
-          <AvatarImage
-            src={profile?.avatar_url || undefined}
-            alt={profile?.username || "User"}
-          />
-          <AvatarFallback>{getInitials()}</AvatarFallback>
-        </Avatar>
-        <div className="flex flex-col text-left">
-          <span className="text-sm font-medium">
-            {profile?.username || user?.email}
-          </span>
-          <span className="text-xs text-muted-foreground">Online</span>
+      <SidebarHeader className="flex flex-col space-y-2 p-2">
+        <TenantSwitcher />
+        <div className="flex items-center flex-row p-2">
+          <Avatar className="w-8 h-8 mr-2">
+            <AvatarImage
+              src={profile?.avatar_url || undefined}
+              alt={profile?.username || "User"}
+            />
+            <AvatarFallback>{getInitials()}</AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col text-left">
+            <span className="text-sm font-medium">
+              {profile?.username || user?.email}
+            </span>
+            <span className="text-xs text-muted-foreground">Online</span>
+          </div>
         </div>
       </SidebarHeader>
 
