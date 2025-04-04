@@ -68,6 +68,13 @@ class WebhookController extends BaseController {
 
       const webhookProvider = getWebhookProvider(provider);
 
+      this.logger.debug("Subscribing to webhook", {
+        provider,
+        tenant_id: params.tenant_id,
+        connected_service_id: params.connected_service_id,
+        webhookUrl: this.getWebhookUrl(params),
+      });
+
       return await webhookProvider.subscribeToWebhook({
         tenant_id: params.tenant_id,
         connected_service_id: params.connected_service_id,

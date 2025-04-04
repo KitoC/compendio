@@ -113,6 +113,9 @@ export const INTEGRATION_TYPES = [
     icon: "mail",
     authType: "oauth",
     oauthProvider: "azure",
+    // TODO: Make this dynamic
+    webhookChangeType: "create, update",
+    webhookResource: "me/mailFolders('inbox')/messages",
     formConfig: {
       id: "outlook-config",
       title: "Outlook OAuth Setup",
