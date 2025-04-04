@@ -3793,7 +3793,7 @@ CREATE POLICY "All authenticated users can view custom roles" ON "public"."custo
 
 
 
-CREATE POLICY "Allow insert for authenticated tenant users" ON "public"."oauth_states" FOR INSERT TO "authenticated" WITH CHECK ((("tenant_id" IS NOT NULL) AND (("auth"."tenant_id"())::"uuid" = "tenant_id")));
+CREATE POLICY "Allow insert for authenticated tenant users" ON "public"."oauth_states" FOR INSERT TO "authenticated" WITH CHECK (("public"."is_tenant_user"("tenant_id") OR "public"."is_tenant_owner"("tenant_id") OR "public"."is_system_admin"()));
 
 
 
@@ -3847,11 +3847,11 @@ CREATE POLICY "Only system and tenant owners can CRUD" ON "public"."ai_agent_wor
 
 
 
-CREATE POLICY "Only tenanted user can CRUD" ON "public"."conversation_participants" USING ((("auth"."tenant_id"())::"uuid" = "tenant_id")) WITH CHECK ((("auth"."tenant_id"())::"uuid" = "tenant_id"));
+CREATE POLICY "Only tenanted user can CRUD" ON "public"."conversation_participants" USING (("public"."is_tenant_user"("tenant_id") OR "public"."is_tenant_owner"("tenant_id") OR "public"."is_system_admin"())) WITH CHECK (("public"."is_tenant_user"("tenant_id") OR "public"."is_tenant_owner"("tenant_id") OR "public"."is_system_admin"()));
 
 
 
-CREATE POLICY "Only tenanted user can CRUD" ON "public"."customers" USING ((("auth"."tenant_id"())::"uuid" = "tenant_id")) WITH CHECK ((("auth"."tenant_id"())::"uuid" = "tenant_id"));
+CREATE POLICY "Only tenanted user can CRUD" ON "public"."customers" USING (("public"."is_tenant_user"("tenant_id") OR "public"."is_tenant_owner"("tenant_id") OR "public"."is_system_admin"())) WITH CHECK (("public"."is_tenant_user"("tenant_id") OR "public"."is_tenant_owner"("tenant_id") OR "public"."is_system_admin"()));
 
 
 
@@ -3863,7 +3863,7 @@ CREATE POLICY "Only tenanted user can CRUD" ON "public"."onboarding_sessions" US
 
 
 
-CREATE POLICY "Only tenanted user can CRUD" ON "public"."price_items" USING ((("auth"."tenant_id"())::"uuid" = "tenant_id")) WITH CHECK ((("auth"."tenant_id"())::"uuid" = "tenant_id"));
+CREATE POLICY "Only tenanted user can CRUD" ON "public"."price_items" USING (("public"."is_tenant_user"("tenant_id") OR "public"."is_tenant_owner"("tenant_id") OR "public"."is_system_admin"())) WITH CHECK (("public"."is_tenant_user"("tenant_id") OR "public"."is_tenant_owner"("tenant_id") OR "public"."is_system_admin"()));
 
 
 
@@ -4007,7 +4007,7 @@ CREATE POLICY "Users can update their own profile" ON "public"."profiles" FOR UP
 
 
 
-CREATE POLICY "Users can view their own custom roles" ON "public"."user_custom_roles" FOR SELECT USING (((("auth"."tenant_id"())::"uuid" = "tenant_id") AND (("user_id" = "auth"."uid"()) OR "public"."has_role"("auth"."uid"(), "tenant_id", 'super-admin'::"public"."user_role_type") OR "public"."has_role"("auth"."uid"(), "tenant_id", 'tenant-owner'::"public"."user_role_type") OR "public"."has_role"("auth"."uid"(), "tenant_id", 'admin'::"public"."user_role_type"))));
+CREATE POLICY "Users can view their own custom roles" ON "public"."user_custom_roles" FOR SELECT USING (("public"."is_tenant_user"("tenant_id") OR "public"."is_tenant_owner"("tenant_id") OR "public"."is_system_admin"()));
 
 
 
