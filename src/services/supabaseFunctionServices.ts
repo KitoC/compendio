@@ -17,7 +17,7 @@ const getHeaders = async () => {
 
   const userToken = session?.data?.session?.access_token;
 
-  const token = userToken || import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const token = userToken || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
   return {
     "Content-Type": "application/json",

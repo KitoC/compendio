@@ -12,6 +12,10 @@ interface WindowWithEnv extends Window {
  * Gets the Supabase URL from environment variables or fallback
  */
 export const getSupabaseUrl = () => {
+  console.log(
+    "import.meta.env.VITE_SUPABASE_URL",
+    import.meta.env.VITE_SUPABASE_URL
+  );
   if (import.meta.env.VITE_SUPABASE_URL) {
     return import.meta.env.VITE_SUPABASE_URL;
   }
