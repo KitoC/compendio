@@ -50,6 +50,9 @@ const ConfirmIntegrationSettings = ({
         tenant_id: tenantId,
         config: configValues,
         credential_id: credential_id,
+        // TODO: Make this dynamic
+        webhook_change_type: selectedType?.webhookChangeType,
+        webhook_resource: selectedType?.webhookResource,
       };
 
       const { data, error } = await supabase
