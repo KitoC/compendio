@@ -28,6 +28,9 @@ export default defineConfig(({ mode, command }) => ({
     "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(
       process.env.VITE_SUPABASE_PUBLISHABLE_KEY
     ),
+    "import.meta.env.VITE_AZURE_CLIENT_ID": JSON.stringify(
+      process.env.VITE_AZURE_CLIENT_ID
+    ),
     "import.meta.env.VITE_BACKEND_URL": JSON.stringify(
       process.env.VITE_BACKEND_URL
     ),

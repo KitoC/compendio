@@ -3,6 +3,8 @@ import { useEffect, useRef, useState, useCallback, ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { SocketContext, SocketMessageListener } from "./SocketContext";
 import { dynamicHeaders } from "@/integrations/supabase/client";
+import { getWebsocketUrl } from "@/utils/supabaseUtils";
+
 export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const { session } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -11,9 +13,11 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const messageListeners = useRef<SocketMessageListener[]>([]);
 
   const connect = useCallback(() => {
+    console.log("🟢 Connecting to socket", getWebsocketUrl());
+    if (!session?.access_token) return;
     if (socketRef.current && socketRef.current.readyState <= 1) return;
 
-    const socket = new WebSocket("ws://localhost:54321/functions/v1/wss");
+    const socket = new WebSocket(getWebsocketUrl());
     socketRef.current = socket;
 
     socket.onopen = () => {

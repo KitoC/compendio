@@ -12,10 +12,6 @@ interface WindowWithEnv extends Window {
  * Gets the Supabase URL from environment variables or fallback
  */
 export const getSupabaseUrl = () => {
-  console.log(
-    "import.meta.env.VITE_SUPABASE_URL",
-    import.meta.env.VITE_SUPABASE_URL
-  );
   if (import.meta.env.VITE_SUPABASE_URL) {
     return import.meta.env.VITE_SUPABASE_URL;
   }
@@ -39,6 +35,28 @@ export const getSupabaseUrl = () => {
     "Could not find Supabase URL in environment variables or window.__ENV__"
   );
   return "https://zgtukvtbfucrvdpicvxx.supabase.co"; // Fallback to hardcoded URL as last resort
+};
+
+export const getWebsocketUrl = () => {
+  let baseUrl = "ws://localhost:54321";
+
+  if (import.meta.env.VITE_SUPABASE_URL) {
+    baseUrl = `${import.meta.env.VITE_SUPABASE_URL}`;
+  }
+
+  if (import.meta.env.VITE_WEBSOCKET_URL) {
+    baseUrl = `${import.meta.env.VITE_WEBSOCKET_URL}`;
+  }
+
+  if (baseUrl.startsWith("http:")) {
+    baseUrl = baseUrl.replace("http:", "ws:");
+  }
+
+  if (baseUrl.startsWith("https:")) {
+    baseUrl = baseUrl.replace("https:", "wss:");
+  }
+
+  return `${baseUrl}/functions/v1/wss`;
 };
 
 /**

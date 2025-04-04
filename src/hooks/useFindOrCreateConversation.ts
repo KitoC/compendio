@@ -1,11 +1,12 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { v4 as uuidv4 } from "uuid";
-import type { Conversation } from "@/types/chat";
+import { Database } from "@/integrations/supabase/types";
 
+type Conversation = Database["public"]["Tables"]["conversations"]["Row"];
 interface UseFindOrCreateConversationProps {
   conversationIdOrAlias: string;
   tenantId: string;
@@ -19,6 +20,38 @@ const useFindOrCreateConversation = ({
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  const createConversationAndParticipant = useCallback(
+    async ({ newConversation }: { newConversation: Conversation }) => {
+      const { data: conversation, error: createError } = await supabase
+        .from("conversations")
+        .insert([newConversation])
+        .select()
+        .single();
+
+      const { data: agent, error: agentError } = await supabase
+        .from("ai_agents")
+        .select("*")
+        .eq("name", conversationIdOrAlias)
+        .single();
+
+      if (agent) {
+        const { data: integration, error: integrationError } = await supabase
+          .from("conversation_participants")
+          .insert({
+            conversation_id: conversation.id,
+            user_id: user.id,
+            tenant_id: tenantId,
+            agent_id: agent.id,
+          })
+          .select()
+          .single();
+      }
+
+      return { createError };
+    },
+    [user, tenantId, conversationIdOrAlias]
+  );
 
   useEffect(() => {
     const fetchOrCreateConversation = async () => {
@@ -71,11 +104,16 @@ const useFindOrCreateConversation = ({
                     tenant_id: tenantId,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
+                    alias: conversationIdOrAlias,
+                    deleted_at: null,
+                    icon: null,
+                    session_id: null,
                   };
 
-                  const { error: createError } = await supabase
-                    .from("conversations")
-                    .insert(newConversation);
+                  const { createError } =
+                    await createConversationAndParticipant({
+                      newConversation,
+                    });
 
                   if (createError) {
                     // If we hit a duplicate key error, fetch the existing conversation instead
@@ -125,11 +163,14 @@ const useFindOrCreateConversation = ({
                   tenant_id: tenantId,
                   created_at: new Date().toISOString(),
                   updated_at: new Date().toISOString(),
+                  deleted_at: null,
+                  icon: null,
+                  session_id: null,
                 };
 
-                const { error: createError } = await supabase
-                  .from("conversations")
-                  .insert(newConversation);
+                const { createError } = await createConversationAndParticipant({
+                  newConversation,
+                });
 
                 if (createError) {
                   // If alias already exists, fetch it instead
@@ -173,7 +214,13 @@ const useFindOrCreateConversation = ({
     };
 
     fetchOrCreateConversation();
-  }, [conversationIdOrAlias, user, tenantId, navigate]);
+  }, [
+    conversationIdOrAlias,
+    user,
+    tenantId,
+    navigate,
+    createConversationAndParticipant,
+  ]);
 
   return { conversation, loading };
 };

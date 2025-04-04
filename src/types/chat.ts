@@ -54,4 +54,6 @@ export interface Conversation {
   updated_at?: string;
   domain?: string;
   session_id?: string;
+  alias?: string;
+  tenant_id: string;
 }
