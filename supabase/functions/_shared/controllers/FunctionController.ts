@@ -6,12 +6,12 @@ import { PublicContext } from "locals/middleware/withPublicContext";
 import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
 import { SendEmailHandler } from "locals/handlers/ai_functions/SendEmailHandler";
 import { IAgentFunctionHandler } from "locals/interfaces/IAgentFunctionHandler";
-import { FUNCTION_TYPES } from "locals/consts";
 import { OnboardingProgressUpdateHandler } from "locals/handlers/ai_functions/OnboardingProgressUpdateHandler";
 import {
   onboarding_progress_update,
   get_email_integration_markup_schema,
 } from "@/SYSTEM_FUNCTIONS/ONBOARDING_FUNCTIONS";
+import { send_email } from "@/SYSTEM_FUNCTIONS/EMAIL_FUNCTIONS";
 
 export type ExecuteFunctionResult = {
   result: object | string | undefined | null;
@@ -31,14 +31,16 @@ class FunctionController extends BaseController {
     super();
     this.markup = {};
     this.functionsMap = {
+      send_email,
       onboarding_progress_update,
       get_email_integration_markup_schema,
     };
 
     this.FUNCTION_HANDLERS = {
-      [FUNCTION_TYPES.SEND_EMAIL]: new SendEmailHandler(this.context),
-      [FUNCTION_TYPES.ONBOARDING_PROGRESS_UPDATE]:
-        new OnboardingProgressUpdateHandler(this.context),
+      [send_email.name]: new SendEmailHandler(this.context),
+      [onboarding_progress_update.name]: new OnboardingProgressUpdateHandler(
+        this.context
+      ),
     };
   }
 
