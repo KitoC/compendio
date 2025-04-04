@@ -6,7 +6,10 @@ const defaultCorsHeaders: HeadersInit = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, x-tenant-id",
 };
 
-const defaultAllowedOrigins = ["http://localhost:8080"];
+const defaultAllowedOrigins = [
+  "http://localhost:8080",
+  "https://compendio.netlify.app",
+];
 
 type Params = {
   allowedOrigins?: string[];
