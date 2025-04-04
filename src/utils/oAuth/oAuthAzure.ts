@@ -1,6 +1,8 @@
 import { getRedirectUri } from "../supabaseUtils";
 import { generateState } from "./shared";
 import { supabase } from "@/integrations/supabase/client";
+import { getIntegrationWizardState } from "@/components/integrations/AddIntegrationWizard/utils";
+
 export const getAzureClientId = () => {
   const clientId = import.meta.env.VITE_AZURE_CLIENT_ID;
 
@@ -20,9 +22,11 @@ export const getAzureOAuthUrl = (tenantId: string) => {
 export async function buildAzureOAuthUrl({
   redirectUri = getRedirectUri(),
   scope,
+  prompt,
 }: {
   redirectUri?: string;
   scope?: string;
+  prompt?: string;
 } = {}) {
   // Generate code verifier and challenge (PKCE)
   const tenantId = DEFAULT_TENANT_ID;
@@ -36,11 +40,14 @@ export async function buildAzureOAuthUrl({
   sessionStorage.setItem("oauth_state", state);
   sessionStorage.setItem("provider", "azure");
 
+  const integrationWizardState = getIntegrationWizardState();
+
   url.searchParams.append("client_id", getAzureClientId());
   url.searchParams.append("redirect_uri", redirectUri);
+  url.searchParams.append("prompt", prompt || "select_account");
   url.searchParams.append(
     "scope",
-    scope || "openid profile email offline_access"
+    scope || "openid profile email offline_access User.Read"
   );
   url.searchParams.append("state", state);
   url.searchParams.append("response_type", "code");
@@ -51,11 +58,11 @@ export async function buildAzureOAuthUrl({
     .insert({
       provider: "azure",
       state,
-      user_id: sessionStorage.getItem("user_id"),
+      user_id: integrationWizardState?.user_id,
       redirect_uri: redirectUri,
-      agent_id: sessionStorage.getItem("agent_id"),
-      service_type: sessionStorage.getItem("service_type"),
-      tenant_id: sessionStorage.getItem("tenant_id"),
+      agent_id: integrationWizardState?.agent_id,
+      service_type: integrationWizardState?.service_type,
+      tenant_id: integrationWizardState?.tenant_id,
       config: {},
       status: "pending",
       tid: tenantId,

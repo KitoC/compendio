@@ -93,7 +93,6 @@ export class ChatSocketHandler {
       this.accumulated = chunk;
       this.handleFunctionCall(chunk);
 
-      console.log("🔁 Chat socket chunk", chunk);
       this.socket.send(
         JSON.stringify({
           type: "chat:update",
@@ -120,7 +119,6 @@ export class ChatSocketHandler {
 
     const stream = await agentController.talkToAgent(conversation_id);
 
-    console.log("🔁 Chat socket stream", stream);
     this.streamToSocket(stream);
   }
 

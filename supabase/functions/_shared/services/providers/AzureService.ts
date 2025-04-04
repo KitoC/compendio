@@ -110,8 +110,6 @@ export class AzureService extends BaseExternalService {
     replyBody: string;
     contentType?: "HTML" | "Text";
   }) {
-    console.log("🔹 replyToEmail replyBody", replyBody);
-
     // Step 1: Create the reply draft
     const createReplyResponse = await fetch(
       `${BASE_URL}/v1.0/me/messages/${originalMessageId}/createReply`,

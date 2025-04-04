@@ -12,7 +12,7 @@ const CredentialCard = ({
   onRefresh,
 }: {
   credentialId: string;
-  onRefresh: (credential: ICredential) => void;
+  onRefresh?: (credential: ICredential) => void;
 }) => {
   const [credential, setCredential] = useState<ICredential | null>(null);
   // TODO: Show valid/refresh state
@@ -48,7 +48,14 @@ const CredentialCard = ({
         <CardContent className="p-4">
           <div className="flex justify-between items-center">
             <div>
-              <p className="font-medium">{credential.name}</p>
+              <p className="font-medium">
+                {credential.name}
+                {credential.associated_email && (
+                  <span className="ml-1 text-xs text-muted-foreground">
+                    ({credential.associated_email})
+                  </span>
+                )}
+              </p>
               <p className="font-medium">{credential.username}</p>
 
               {credential.scopes && credential.scopes.length > 0 && (

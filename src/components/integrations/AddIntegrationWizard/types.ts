@@ -26,9 +26,11 @@ export interface AddIntegrationWizardProps {
 // Interface for storing wizard state
 export interface WizardState {
   step: number;
-  selectedAgentId: string;
-  selectedIntegrationType: string;
-  selectedCredentialId: string;
+  agent_id: string;
+  service_type: string;
+  credential_id: string;
+  user_id: string;
+  tenant_id: string;
   configValues: {
     name: string;
     description: string;
@@ -50,4 +52,5 @@ export interface StepProps {
 
 export type ICredential = Database["public"]["Tables"]["credentials"]["Row"] & {
   scopes: string[];
+  associated_email: string;
 };

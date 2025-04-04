@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { INTEGRATION_TYPES, ROUTES } from "@/lib/constants";
+import { INTEGRATION_TYPES } from "@/lib/constants";
 import FormBuilder from "@/components/form-builder";
 import { INTEGRATION_FORM_CONFIGS } from "@/forms/integrations";
 import {
@@ -30,8 +30,6 @@ import { useTenant } from "@/contexts/TenantContext";
 import { buildGoogleOAuthUrl } from "@/utils/oAuth/oAuthGoogle";
 import { ICredential, StepProps } from "../types";
 import { useAuth } from "@/hooks/useAuth";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import CredentialCard from "./components/CredentialCard";
 import { useLocation } from "react-router-dom";
 import { getUrlParameter } from "@/utils/oAuth/shared";
@@ -49,7 +47,7 @@ const Authentication = ({
   const { user } = useAuth();
   const { tenantId } = useTenant();
   const location = useLocation();
-  const { selectedIntegrationType, selectedCredentialId } = wizardState;
+  const { service_type, credential_id } = wizardState;
 
   const [existingCredentials, setExistingCredentials] = useState<ICredential[]>(
     []
@@ -59,20 +57,19 @@ const Authentication = ({
   const [initialLoad, setInitialLoad] = useState(false);
   const [isCreatingNewCredential, setIsCreatingNewCredential] = useState(false);
 
-  const selectedType = INTEGRATION_TYPES.find(
-    (t) => t.id === selectedIntegrationType
-  );
+  const selectedType = INTEGRATION_TYPES.find((t) => t.id === service_type);
   const authType = selectedType?.authType || "custom";
   const provider = selectedType?.oauthProvider || "google";
-  const formConfig =
-    selectedType && INTEGRATION_FORM_CONFIGS[selectedIntegrationType];
+  const formConfig = selectedType && INTEGRATION_FORM_CONFIGS[service_type];
   const fetchCredentialsByType = useCallback(async () => {
     if (!tenantId) return;
 
     try {
       const { data, error } = await supabase
         .from("credentials")
-        .select("id, name, username, domain, created_at, scopes, type")
+        .select(
+          "id, name, username, domain, created_at, scopes, type, associated_email"
+        )
         .eq("tenant_id", tenantId)
         .eq("type", authType)
         .eq("provider", provider)
@@ -111,6 +108,7 @@ const Authentication = ({
         state,
         options: {
           credential_name: credentialName,
+          credential_id: credentialId,
         },
       });
 
@@ -124,7 +122,7 @@ const Authentication = ({
 
       // Optionally store credential ID for later use
       if (result.credential_id) {
-        onStepDataCapture({ selectedCredentialId: result.credential_id });
+        onStepDataCapture({ credential_id: result.credential_id });
         fetchCredentialsByType();
       }
       sessionStorage.removeItem(OAUTH_INTEGRATION_CALLBACK_DATA_KEY);
@@ -141,7 +139,7 @@ const Authentication = ({
       .filter(([key, value]) => key.includes("scope"))
       .map(([key, value]) => value);
 
-    if (!tenantId || !wizardState.selectedAgentId) return;
+    if (!tenantId || !wizardState.agent_id) return;
 
     try {
       setIsSubmitting(true);
@@ -149,11 +147,11 @@ const Authentication = ({
       const oauthCallbackData = {
         returnUrl: location.pathname,
         credentialName: formValues.name,
-        agentId: wizardState.selectedAgentId,
-        serviceType: selectedIntegrationType,
+        agentId: wizardState.agent_id,
+        serviceType: service_type,
         tenantId,
         userId: user.id,
-        credentialId: wizardState.selectedCredentialId,
+        credentialId: credential_id,
       };
 
       // Store oauth state ID in session storage for the callback to use
@@ -172,9 +170,13 @@ const Authentication = ({
         // Microsoft OAuth for Outlook
         // Import the utility for building the Azure OAuth URL
         const { buildAzureOAuthUrl } = await import("@/utils/oAuth/oAuthAzure");
+        const scope = `openid profile email offline_access User.Read ${scopes.join(
+          " "
+        )}`;
         // This will handle creating the proper PKCE code challenge and storing the code verifier
         const azureAuthUrl = await buildAzureOAuthUrl({
-          scope: `openid profile email offline_access ${scopes.join(" ")}`,
+          scope,
+          prompt: "select_account",
         });
 
         window.location.href = azureAuthUrl;
@@ -188,8 +190,8 @@ const Authentication = ({
     }
   };
 
-  const handleCredentialSelect = (credentialId: string) => {
-    onStepDataCapture({ selectedCredentialId: credentialId });
+  const handleCredentialSelect = (credential_id: string) => {
+    onStepDataCapture({ credential_id });
   };
 
   const handleFormSubmit = (values: Record<string, unknown>) => {
@@ -197,11 +199,11 @@ const Authentication = ({
   };
 
   useEffect(() => {
-    if (selectedIntegrationType && !initialLoad) {
+    if (service_type && !initialLoad) {
       setInitialLoad(true);
       fetchCredentialsByType();
     }
-  }, [selectedIntegrationType, fetchCredentialsByType, initialLoad]);
+  }, [service_type, fetchCredentialsByType, initialLoad]);
 
   useEffect(() => {
     if (sessionStorage.getItem(OAUTH_INTEGRATION_CALLBACK_DATA_KEY)) {
@@ -237,7 +239,7 @@ const Authentication = ({
             </p>
             <div className="space-y-3">
               <Select
-                value={wizardState.selectedCredentialId}
+                value={wizardState.credential_id}
                 onValueChange={handleCredentialSelect}
               >
                 <SelectTrigger className="w-full">
@@ -251,6 +253,12 @@ const Authentication = ({
                           <User className="h-4 w-4" />
                           {cred.username}
                           {cred.name}
+
+                          {cred.associated_email && (
+                            <span className="text-xs text-muted-foreground">
+                              ({cred.associated_email})
+                            </span>
+                          )}
                           <span className="text-xs text-muted-foreground">
                             (created on{" "}
                             {new Date(cred.created_at).toLocaleDateString()})
@@ -262,9 +270,9 @@ const Authentication = ({
                 </SelectContent>
               </Select>
               {/* TODO: Do an auth check/refresh when selecting a credential and have a feedback message if the credential is expired. */}
-              {selectedCredentialId && (
+              {credential_id && (
                 <CredentialCard
-                  credentialId={selectedCredentialId}
+                  credentialId={credential_id}
                   onRefresh={handleOAuthRedirect}
                 />
               )}
@@ -316,10 +324,7 @@ const Authentication = ({
           <Button variant="outline" onClick={prevStep}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
-          <Button
-            onClick={nextStep}
-            disabled={isSubmitting || !wizardState.selectedCredentialId}
-          >
+          <Button onClick={nextStep} disabled={isSubmitting || !credential_id}>
             Next <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </DialogFooter>

@@ -40,8 +40,6 @@ const handler = async (req: Request) => {
         return;
       }
 
-      console.log("🔁 WebSocket message", data);
-
       const handler = new ChatSocketHandler(context, socket);
 
       if (data.type.startsWith("chat:")) {

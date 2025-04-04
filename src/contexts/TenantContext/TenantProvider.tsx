@@ -28,6 +28,7 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
   const [hasPendingRequest, setHasPendingRequest] = useState<boolean>(false);
   const [tenantOwnerId, setTenantOwnerId] = useState<string | null>(null);
   const [isTenantOwner, setIsTenantOwner] = useState<boolean>(false);
+  const [hasRedirected, setHasRedirected] = useState<boolean>(false);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
   const [hasCheckedForTenants, setHasCheckedForTenants] =
     useState<boolean>(false);
@@ -226,22 +227,40 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
     if (isLoading) return;
     if (!user) return;
     if (!hasCheckedForTenants) return;
+    if (hasRedirected) return;
 
-    if (!profile.is_onboarded) {
-      navigate(ROUTES.ONBOARDING.replace(":tenantId", tenantData?.workspace));
-      return;
-    }
+    // TODO: Uncomment this when we have finished the onboarding flow
+    // if (!profile.is_onboarded) {
+    //   navigate(ROUTES.ONBOARDING.replace(":tenantId", tenantData?.workspace));
+    //   return;
+    // }
     if (isCreatingTenant) {
       return;
     }
 
     if (hasTenantAccess) {
-      navigate(ROUTES.DASHBOARD.replace(":tenantId", tenantData?.id));
+      let redirectPath = ROUTES.DASHBOARD.replace(
+        ":tenantId",
+        tenantData?.workspace
+      );
+
+      const isSameTenantPath = new RegExp(`/${tenantData?.workspace}/app(.*)`);
+
+      if (isSameTenantPath.test(location.pathname)) {
+        redirectPath = location.pathname;
+        if (location.search) {
+          redirectPath += location.search;
+        }
+      }
+
+      navigate(redirectPath);
+      setHasRedirected(true);
       return;
     }
 
     if (hasPendingRequest) {
       navigate(ROUTES.ACCESS_PENDING.replace(":tenantId", tenantData?.id));
+      setHasRedirected(true);
       return;
     }
 
@@ -270,6 +289,7 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
     isCreatingTenant,
     hasCheckedForTenants,
     profile,
+    location,
   ]);
 
   useEffect(() => {

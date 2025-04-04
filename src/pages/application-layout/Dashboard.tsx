@@ -63,9 +63,8 @@ const Dashboard = () => {
       // Fetch recent conversations
       const { data: convData } = await supabase
         .from("conversations")
-
         .select("*")
-        .eq("tasks.user_id", user.id)
+        .eq("user_id", user.id)
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false })
         .limit(5);

@@ -37,11 +37,14 @@ export interface IOpenAiFunction {
   name: string;
   description: string;
   parameters: object;
+  metadata?: {
+    is_background_task?: boolean;
+  };
 }
 
 export interface IFunctionCall {
   name: string;
-  arguments: string;
+  arguments: Record<string, unknown>;
   manual?: boolean;
 }
 

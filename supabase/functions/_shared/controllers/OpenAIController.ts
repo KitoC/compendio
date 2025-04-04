@@ -210,11 +210,8 @@ class OpenAIController {
         }
 
         if (functionCallDetected) {
-          console.log("🔹 Function call detected:", functionCallDetected);
           functionResult = await onFunctionCall(functionCallDetected);
         }
-
-        console.log("🔹 Function result --> ", JSON.stringify(functionResult));
 
         // Append function response as a new message
         const updatedMessages: Partial<OpenAiMessage & { name: string }>[] = [
@@ -236,8 +233,6 @@ class OpenAIController {
         if (functionCallDetected) {
           message.function_call = functionCallDetected;
         }
-
-        console.log("🔹 Resuming stream with function response...");
 
         // Call OpenAI again with updated messages
         const resumedResponse = await this.callOpenAIChatCompletion({

@@ -47,7 +47,6 @@ export const useChatState = ({
     const cleaned = transcript.trim();
 
     if (hasSpoken && cleaned.length > 0) {
-      console.log("🎙️ Sending:", cleaned);
       handleSendMessage(cleaned);
       sendTranscript(); // Reset logic
     }
@@ -96,7 +95,6 @@ export const useChatState = ({
     async (payload: IFunctionCall) => {
       try {
         if (payload.manual) {
-          console.log("🔹 manual function call", payload);
           const response = await FunctionService.triggerManualFunction(
             currentAgent?.id || "",
             payload
@@ -182,9 +180,6 @@ export const useChatState = ({
       switch (data.type) {
         case "chat:update": {
           const newText = data.value.text;
-
-          console.log("🔁 Chat socket update", newText);
-          console.log("🔁 Chat socket aiMessageRef", aiMessageRef.current);
 
           replaceMessage({
             ...aiMessageRef.current,
@@ -307,8 +302,6 @@ export const useChatState = ({
 
     if (initiateConversation && !messages.length) {
       const conversationInitializer = async () => {
-        console.log("🔁 Conversation initializer", initiateConversation);
-
         const aiMessage = createAiMessage("");
 
         aiMessageRef.current = aiMessage;
@@ -338,8 +331,6 @@ export const useChatState = ({
     messages,
     messagesLoaded,
   ]);
-
-  console.log("🔁 Chat state messages", messages);
 
   return {
     messages,

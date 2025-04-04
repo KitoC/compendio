@@ -112,7 +112,6 @@ export class OpenAiAgent implements IAgentProvider {
     messages: OpenAiMessage[],
     options?: { response_format: { type: string } }
   ) {
-    console.log("🔹 sendMessages messages", messages);
     const response = await this.openAiService.callOpenAIChatCompletion({
       messages,
       stream: false,

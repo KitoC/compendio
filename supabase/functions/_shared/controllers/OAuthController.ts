@@ -22,6 +22,8 @@ interface IOauthProviderConfig {
   clientSecret: string;
   redirectUri: string;
   defaultTenantId: string;
+  userInfoUrl: string;
+  extractEmailFromUserInfo: (userInfo: Record<string, string>) => string;
 }
 
 interface TokenData {
@@ -62,6 +64,9 @@ class OAuthController extends BaseController {
         clientSecret: getEnvKey("AZURE_CLIENT_SECRET"),
         redirectUri: getEnvKey("AZURE_REDIRECT_URI"),
         defaultTenantId: "consumers",
+        userInfoUrl: "https://graph.microsoft.com/v1.0/me",
+        extractEmailFromUserInfo: (userInfo: Record<string, string>) =>
+          userInfo.mail,
       },
     };
   }
@@ -148,6 +153,28 @@ class OAuthController extends BaseController {
     return credential;
   }
 
+  async getUserInfo(provider: string, accessToken: string) {
+    const userInfoUrl = this.providerConfigs[provider].userInfoUrl;
+
+    if (!userInfoUrl) {
+      return {
+        email: "",
+      };
+    }
+
+    const userInfoResponse = await fetch(userInfoUrl, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    const userInfo = await userInfoResponse.json();
+
+    return {
+      email: this.providerConfigs[provider].extractEmailFromUserInfo(userInfo),
+    };
+  }
+
   async fetchToken(
     provider: string,
     body: Record<string, string>,
@@ -218,6 +245,11 @@ class OAuthController extends BaseController {
     tokenData: TokenData,
     options: ReqArgs["options"] = { credential_name: "" }
   ) {
+    const userInfo = await this.getUserInfo(
+      this.provider as string,
+      tokenData.access_token
+    );
+
     const credential =
       await this.context.credentialsService.createOauthCredential({
         access_token: tokenData.access_token,
@@ -229,6 +261,7 @@ class OAuthController extends BaseController {
         tenant_id: this.oAuthState?.tenant_id as string,
         credential_name: options.credential_name,
         tid: this.oAuthState?.tid as string,
+        associated_email: userInfo.email,
       });
 
     await this.context.credentialsService.deleteOAuthState(

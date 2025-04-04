@@ -63,7 +63,6 @@ class RequestController {
 
   sendError(error?: RequestError) {
     this.logger.error(error?.message || "An unknown error occurred", error);
-    console.log("sendError", error?.message);
 
     return new Response(JSON.stringify({ error: error?.message }), {
       status: error?.status || 500,

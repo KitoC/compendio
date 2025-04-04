@@ -21,8 +21,6 @@ const ChatMessage: FC<ChatMessageProps> = ({ message, functionalMessages }) => {
     return <MarkupBuilder message={message} />;
   }
 
-  console.log("🔁 Assistant message", message);
-
   if (!message.content?.text) {
     return <Loader />;
   }

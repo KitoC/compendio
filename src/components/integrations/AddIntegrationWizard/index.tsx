@@ -1,96 +1,46 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { INTEGRATION_TYPES, ROUTES } from "@/lib/constants";
-import FormBuilder from "@/components/form-builder";
-import {
-  integrationSettingsConfig,
-  INTEGRATION_FORM_CONFIGS,
-} from "@/forms/integrations";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-  Globe,
-  Mail,
-  Workflow,
-  Check,
-  ArrowLeft,
-  ArrowRight,
-  LogIn,
-  Loader2,
-  Plus,
-  CheckCircle2,
-  User,
-} from "lucide-react";
+
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+
 import { useTenant } from "@/contexts/TenantContext";
-import { Json } from "@/integrations/supabase/types";
 
 import AddAiAgent from "./steps/AddAiAgent";
 import { useCallback } from "react";
-import type { WizardState, Credential } from "./types";
+import type { WizardState } from "./types";
 import { AddIntegrationWizardProps } from "./types";
 import SelectIntegrationType from "./steps/SelectIntegrationType";
-import Authentication from "./steps/Authentication";
+import Authentication, {
+  OAUTH_INTEGRATION_CALLBACK_DATA_KEY,
+} from "./steps/Authentication";
 import CustomIntegrationSettings from "./steps/CustomIntegrationSettings";
 import ConfirmIntegrationSettings from "./steps/ConfirmIntegrationSettings";
-
-const initialWizardState: WizardState = {
-  step: 1,
-  selectedAgentId: "",
-  selectedIntegrationType: "",
-  selectedCredentialId: "",
-  configValues: {
-    name: "",
-    description: "",
-    icon: "",
-    url: "",
-    authType: "",
-    scopes: [],
-  },
-};
+import {
+  clearIntegrationWizardState,
+  getIntegrationWizardState,
+  initialWizardState,
+  setIntegrationWizardState,
+} from "./utils";
 
 const AddIntegrationWizard = ({
   isOpen,
   onClose,
 }: AddIntegrationWizardProps) => {
+  const { user } = useAuth();
+  const { tenantId } = useTenant();
+
   const [wizardState, setWizardState] = useState<WizardState>(
-    sessionStorage.getItem("integration_wizard_state")
-      ? JSON.parse(sessionStorage.getItem("integration_wizard_state") || "")
-      : initialWizardState
+    getIntegrationWizardState({
+      ...initialWizardState,
+      user_id: user?.id,
+      tenant_id: tenantId,
+    })
   );
 
   // Save wizard state whenever key fields change
   useEffect(() => {
     if (isOpen) {
-      sessionStorage.setItem(
-        "integration_wizard_state",
-        JSON.stringify(wizardState)
-      );
+      setIntegrationWizardState(wizardState);
     }
   }, [isOpen, wizardState]);
 
@@ -102,9 +52,9 @@ const AddIntegrationWizard = ({
   };
 
   const resetAndClose = () => {
-    setWizardState(initialWizardState);
+    clearIntegrationWizardState();
+    sessionStorage.removeItem(OAUTH_INTEGRATION_CALLBACK_DATA_KEY);
 
-    sessionStorage.removeItem("integration_wizard_state");
     onClose();
   };
 
@@ -112,10 +62,7 @@ const AddIntegrationWizard = ({
     (data: Partial<WizardState>) => {
       const nextWizardState = { ...wizardState, ...data };
 
-      sessionStorage.setItem(
-        "integration_wizard_state",
-        JSON.stringify(nextWizardState)
-      );
+      setIntegrationWizardState(nextWizardState);
 
       setWizardState(nextWizardState);
     },

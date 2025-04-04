@@ -5,12 +5,17 @@ import { AgentController } from "locals/controllers/AgentController";
 import type { IFunction } from "@/types/aiAgents";
 import { ONBOARDING_STEPS } from "@/SYSTEM_CONFIGURATIONS/ONBOARDING_STEPS";
 import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
+import {
+  onboarding_progress_update,
+  get_email_integration_markup_schema,
+} from "@/SYSTEM_FUNCTIONS/ONBOARDING_FUNCTIONS";
+import { ONBOARDING_STEPS_AGENT_PROMPT } from "@/SYSTEM_PROMPTS/ONBOARDING/ONBOARDING_STEPS_AGENT_PROMPT";
 
 class OnboardingAgentController<
   SessionContext extends Record<string, unknown>
 > extends AgentController<SessionContext> {
   async getFunctions(): Promise<IFunction[]> {
-    return [];
+    return [onboarding_progress_update, get_email_integration_markup_schema];
   }
 
   async getOrCreateOnboardingSession() {
@@ -52,7 +57,7 @@ class OnboardingAgentController<
   }
 
   async getRequestArgs(conversationId: string) {
-    const { prompt, model = "gpt-4o-mini" } = await this.agent;
+    const { model = "gpt-4o-mini" } = await this.agent;
 
     const onBoardingSession = await this.getOrCreateOnboardingSession();
 
@@ -60,32 +65,32 @@ class OnboardingAgentController<
       this.throwError("Onboarding session not found", 404);
     }
 
+    const functions = await this.getFunctions();
+
+    const LAST_N = 20; // TODO: make this dynamic
+
+    const prompt = ONBOARDING_STEPS_AGENT_PROMPT;
+
     const currentStep = ONBOARDING_STEPS.find(
       (step) => step.id === onBoardingSession.current_step_id
     );
     const currentStepIndex = ONBOARDING_STEPS.findIndex(
       (step) => step.id === onBoardingSession.current_step_id
     );
-
     const nextStep = ONBOARDING_STEPS[currentStepIndex + 1];
 
-    const functions = await this.getFunctions();
-
-    const LAST_N = 20; // TODO: make this dynamic
-
     const messages = [
-      { role: "system", content: ONBOARDING_AGENT_PROMPT },
+      { role: "system", content: prompt },
       {
         role: "system",
-        content: { step: currentStep, state: onBoardingSession.state },
+        content: { state: onBoardingSession.state, current_step: currentStep },
+      },
+      {
+        role: "system",
+        content: `ALWAYS call the onboarding_progress_update tool with context gathered from the user's response. The next step is ${nextStep.id}.`,
       },
       ...(await this.getLastNMessages(conversationId, LAST_N)),
     ];
-
-    await this.context.onboardingSessionsService.update(onBoardingSession.id, {
-      ...onBoardingSession,
-      current_step_id: nextStep.id,
-    });
 
     return {
       messages,

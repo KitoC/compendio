@@ -141,8 +141,7 @@ export class BaseSupabaseService {
     }
 
     const { data, error } = await query;
-    console.log("🔹 data", data);
-    console.log("🔹 error", error);
+
     if (error) throw error;
     return data;
   }
@@ -164,7 +163,7 @@ export class BaseSupabaseService {
   }
 
   // TODO: Type this
-  async create(payload: any) {
+  async create(payload: unknown) {
     const { data, error } = await this.supabase
       .from(this.tableName)
       .insert(payload)
@@ -178,7 +177,7 @@ export class BaseSupabaseService {
   }
 
   // TODO: Type this
-  async update(id: string, updates: any) {
+  async update(id: string, updates: unknown) {
     const { data, error } = await this.supabase
       .from(this.tableName)
       .update(updates)

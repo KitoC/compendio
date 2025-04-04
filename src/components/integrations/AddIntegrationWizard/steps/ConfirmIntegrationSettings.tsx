@@ -24,12 +24,7 @@ const ConfirmIntegrationSettings = ({
   wizardState,
   onClose,
 }: StepProps) => {
-  const {
-    selectedAgentId,
-    selectedIntegrationType,
-    selectedCredentialId,
-    configValues,
-  } = wizardState;
+  const { agent_id, service_type, credential_id, configValues } = wizardState;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -37,24 +32,24 @@ const ConfirmIntegrationSettings = ({
   const navigate = useNavigate();
 
   const selectedType = useMemo(
-    () => INTEGRATION_TYPES.find((t) => t.id === selectedIntegrationType),
-    [selectedIntegrationType]
+    () => INTEGRATION_TYPES.find((t) => t.id === service_type),
+    [service_type]
   );
 
   const handleCreateIntegration = async () => {
-    if (!tenantId || !selectedAgentId || !selectedIntegrationType) return;
+    if (!tenantId || !agent_id || !service_type) return;
 
     try {
       setIsSubmitting(true);
 
       const integrationConfig = {
-        service_type: selectedIntegrationType,
-        name: (configValues.name as string) || selectedIntegrationType,
+        service_type: service_type,
+        name: (configValues.name as string) || service_type,
         status: "active",
-        agent_id: selectedAgentId,
+        agent_id: agent_id,
         tenant_id: tenantId,
         config: configValues,
-        credential_id: selectedCredentialId,
+        credential_id: credential_id,
       };
 
       const { data, error } = await supabase
@@ -112,15 +107,13 @@ const ConfirmIntegrationSettings = ({
               <h3 className="text-sm font-medium font-bold text-muted-foreground">
                 Authentication
               </h3>
-              {selectedCredentialId && (
-                <CredentialCard credentialId={selectedCredentialId} />
-              )}
+              {credential_id && <CredentialCard credentialId={credential_id} />}
             </div>
             <div className="space-y-2">
               <h3 className="text-sm font-medium font-bold text-muted-foreground">
                 Agent
               </h3>
-              <AiAgentCard id={selectedAgentId} />
+              <AiAgentCard id={agent_id} />
             </div>
           </div>
 

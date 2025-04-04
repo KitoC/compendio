@@ -52,8 +52,7 @@ const SelectIntegrationType = ({
       </DialogHeader>
       <div className="py-4 grid grid-cols-1 md:grid-cols-2 gap-4">
         {INTEGRATION_TYPES.map((integrationType) => {
-          const isSelected =
-            wizardState.selectedIntegrationType === integrationType.id;
+          const isSelected = wizardState.service_type === integrationType.id;
           return (
             <Card
               key={integrationType.id}
@@ -65,7 +64,7 @@ const SelectIntegrationType = ({
               )}
               onClick={() =>
                 onStepDataCapture({
-                  selectedIntegrationType: integrationType.id,
+                  service_type: integrationType.id,
                 })
               }
             >
@@ -91,10 +90,7 @@ const SelectIntegrationType = ({
         <Button variant="outline" onClick={prevStep}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Back
         </Button>
-        <Button
-          onClick={nextStep}
-          disabled={!wizardState.selectedIntegrationType}
-        >
+        <Button onClick={nextStep} disabled={!wizardState.service_type}>
           Next <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </DialogFooter>

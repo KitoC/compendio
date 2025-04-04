@@ -14,7 +14,7 @@ const ENDPOINTS = {
 };
 
 interface ICallOpenAIChatCompletionParams {
-  messages: Partial<OpenAiMessage>[];
+  messages: OpenAiMessage[];
   model?: string;
   stream?: boolean;
   functions?: IOpenAiFunction[];
@@ -25,7 +25,16 @@ interface IStreamMessage {
   type: string;
   text: string;
   function_call?: IFunctionCall;
+  background_tasks: {
+    name: string;
+    arguments: Record<string, unknown>;
+  }[];
 }
+
+type IToolCall = {
+  id: string;
+  functionCall: IFunctionCall;
+};
 
 export class OpenAiService extends BaseExternalService {
   private apiKey: string;
@@ -49,16 +58,23 @@ export class OpenAiService extends BaseExternalService {
   }: ICallOpenAIChatCompletionParams) {
     this.logger.info("IS STREAMING?", stream ? "YES" : "NO");
 
+    const tools = functions?.map((fn) => ({
+      type: "function",
+      function: {
+        name: fn.name,
+        description: fn.description,
+        parameters: fn.parameters,
+      },
+      metadata: fn.metadata,
+    }));
+
     const body = {
       model,
       messages,
       stream,
-      functions: functions?.length ? functions : undefined,
+      tools,
       ...options,
     };
-
-    console.log("🔹 messages --> ", messages);
-    console.log("🔹 options --> ", options);
 
     let stringifiedBody;
     try {
@@ -98,11 +114,11 @@ export class OpenAiService extends BaseExternalService {
    */
   processStreamChunk(chunk: Uint8Array): {
     content: string;
-    functionCall: IFunctionCall | null;
+    toolCalls: IToolCall[];
   } {
     const text = new TextDecoder().decode(chunk);
     let content = "";
-    let functionCall: IFunctionCall | null = null;
+    const toolCalls: IToolCall[] = [];
 
     const lines = text.split("\n").filter((line) => line.trim() !== "");
 
@@ -119,15 +135,31 @@ export class OpenAiService extends BaseExternalService {
             content += choice.delta.content;
           }
 
-          if (choice?.delta?.function_call) {
-            if (!functionCall) {
-              functionCall = {
+          // ✅ Handle new tool_calls array (streamed piece by piece)
+          const toolCallChunk = choice?.delta?.tool_calls?.[0];
+          if (toolCallChunk?.function?.name) {
+            toolCalls.push({
+              id: toolCallChunk.id,
+              functionCall: {
+                name: toolCallChunk.function.name,
+                arguments: toolCallChunk.function.arguments
+                  ? JSON.parse(toolCallChunk.function.arguments)
+                  : {},
+              },
+            });
+          }
+
+          // Optional fallback for legacy support
+          if (choice?.delta?.function_call && toolCalls.length === 0) {
+            toolCalls.push({
+              id: "legacy",
+              functionCall: {
                 name: choice.delta.function_call.name,
                 arguments: choice.delta.function_call.arguments
                   ? JSON.parse(choice.delta.function_call.arguments)
                   : {},
-              };
-            }
+              },
+            });
           }
         } catch (e) {
           console.error("Error parsing JSON chunk:", data, e);
@@ -135,7 +167,8 @@ export class OpenAiService extends BaseExternalService {
         }
       }
     }
-    return { content, functionCall };
+
+    return { content, toolCalls };
   }
 
   /**
@@ -149,93 +182,105 @@ export class OpenAiService extends BaseExternalService {
     onFunctionCall: ExecuteFunctionCallback;
   }): Promise<ReadableStream<Uint8Array>> {
     const response = await this.callOpenAIChatCompletion(requestArgs);
-
     const reader = response.body?.getReader();
 
-    if (!reader) {
-      this.throwError("Failed to get response reader", 500);
-    }
+    const TOOLS_METADATA_REGISTRY = (requestArgs.functions || []).reduce(
+      (acc, fn) => {
+        acc[fn.name] = fn.metadata || { is_background_task: false };
+
+        return acc;
+      },
+      {} as Record<string, { is_background_task?: boolean }>
+    );
+
+    if (!reader) this.throwError("Failed to get response reader", 500);
 
     const message: IStreamMessage = {
       type: "message",
       text: "",
       function_call: undefined,
+      background_tasks: [],
     };
 
     return new ReadableStream({
       start: async (controller) => {
         this.logger.info("🔹 Starting streamAndCallFunction");
-        let functionCallDetected: IFunctionCall | null = null;
-        let functionResult: ExecuteFunctionResult | null = null;
-
         const encoder = new TextEncoder();
+        const allToolCalls: IFunctionCall[] = [];
 
         const enqueueContent = (content: string) => {
           if (content) {
-            const updatedText = message.text + content;
-            message.text = updatedText;
-
-            const jsonResponse =
-              JSON.stringify({
-                ...message,
-                text: updatedText,
-              }) + "\n";
-
+            message.text += content;
+            const jsonResponse = JSON.stringify({ ...message }) + "\n";
             controller.enqueue(encoder.encode(jsonResponse));
           }
         };
 
-        // First streaming pass (read initial response)
+        // Initial streaming pass — detect tool calls
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
-          const { content, functionCall } = this.processStreamChunk(value);
-
+          const { content, toolCalls } = this.processStreamChunk(value);
           enqueueContent(content);
 
-          if (functionCall && !functionCallDetected) {
-            functionCallDetected = functionCall;
+          if (toolCalls.length > 0) {
+            allToolCalls.push(
+              ...toolCalls.map((toolCall) => toolCall.functionCall)
+            );
             break;
           }
         }
 
-        // If no function was detected, close the stream
-        if (!functionCallDetected) {
+        if (!allToolCalls.length) {
           controller.close();
           return;
         }
 
-        if (functionCallDetected) {
-          functionResult = await onFunctionCall(functionCallDetected);
+        // Handle tool calls if any
+        const functionResults: {
+          role: OpenAiRole;
+          name: string;
+          content: string;
+        }[] = [];
+
+        for (const call of allToolCalls) {
+          if (TOOLS_METADATA_REGISTRY[call.name].is_background_task) {
+            message.background_tasks.push({
+              name: call.name,
+              arguments: call.arguments,
+            });
+
+            functionResults.push({
+              role: "function" as OpenAiRole,
+              name: call.name,
+              content: "Background task started",
+            });
+          } else {
+            const result = await onFunctionCall(call);
+
+            functionResults.push({
+              role: "function" as OpenAiRole,
+              name: call.name,
+              content:
+                result.functionMessage || JSON.stringify(result.result) || "",
+            });
+          }
         }
 
-        const updatedMessages: Partial<OpenAiMessage & { name: string }>[] = [
+        // Resume stream with function results
+        const updatedMessages: OpenAiMessage[] = [
           ...requestArgs.messages,
           {
             role: "system" as OpenAiRole,
-            content: "You have called the function. Respond accordingly",
+            content:
+              "You have called one or more tools. Respond accordingly. If you have called a background task, respond in normal chat mode.",
           },
+          ...functionResults,
         ];
 
-        if (functionResult) {
-          updatedMessages.push({
-            role: "function" as OpenAiRole,
-            name: functionCallDetected.name,
-            content:
-              functionResult.functionMessage ||
-              JSON.stringify(functionResult.result),
-          });
-        }
-
-        if (functionCallDetected) {
-          message.function_call = functionCallDetected;
-        }
-
-        console.log("🔹 Resuming stream with function response...");
-
         const resumedResponse = await this.callOpenAIChatCompletion({
-          messages: updatedMessages as OpenAiMessage[],
+          messages: updatedMessages,
           model: requestArgs.model,
           stream: true,
         });
@@ -251,7 +296,6 @@ export class OpenAiService extends BaseExternalService {
           if (done) break;
 
           const { content } = this.processStreamChunk(value);
-
           enqueueContent(content);
         }
 

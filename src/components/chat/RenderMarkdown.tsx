@@ -102,8 +102,6 @@ const RenderMarkdown: FC<RenderMarkdownProps> = ({
     })
     .join(" ");
 
-  console.log(textWithHighlightedChunks);
-
   return (
     <div
       className={classNames(

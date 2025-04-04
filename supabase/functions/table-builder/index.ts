@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 import { ROLES } from "locals/services/AuthService";
 import OpenAIController from "locals/controllers/OpenAIController";
-import type { OpenAiRole } from "../../../types/chat.js";
+import type { OpenAiRole } from "@/types/chat";
 import { TableBuilderController } from "locals/controllers/TableBuilderController";
 import type { JsonSchemaPayload } from "locals/dsl/Migration";
 import { withAuthenticatedContext } from "locals/middleware/withAuthenticatedContext";

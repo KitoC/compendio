@@ -6,10 +6,12 @@ import { toast } from "sonner";
 import { getUrlParameter } from "@/utils/oAuth/shared";
 import { callSupabaseFunction } from "@/services/supabaseFunctionServices";
 import { OAUTH_INTEGRATION_CALLBACK_DATA_KEY } from "@/components/integrations/AddIntegrationWizard/steps/Authentication";
+import { useAuth } from "@/hooks/useAuth";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
 
   const handleAuthCallback = useCallback(async () => {
     const code = getUrlParameter("code");
@@ -82,7 +84,7 @@ const AuthCallback = () => {
     } else {
       handleAuthCallback();
     }
-  }, [handleAuthCallback, location, navigate]);
+  }, [handleAuthCallback, location, navigate, user]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">

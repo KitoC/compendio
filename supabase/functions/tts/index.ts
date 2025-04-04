@@ -29,7 +29,6 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
   try {
     const ttsResponse = await googleCloudController.generateSpeech(message);
 
-    console.log("🔊 TTS response:", ttsResponse);
     if (ttsResponse.ok) {
       const ttsData = await ttsResponse.json();
       audioContent = ttsData.audioContent; // Already in base64 format

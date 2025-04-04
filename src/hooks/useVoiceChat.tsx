@@ -160,8 +160,6 @@ export const useVoiceChat = (
 
         const { text, audioContent, functionCall } = responseJson;
 
-        console.log("useVoiceChat.tsx - responseJson", responseJson);
-
         if (!audioContent && !text)
           throw new Error("No data returned from voice chat");
 

@@ -37,8 +37,7 @@ export const getAuthenticatedContext = async (
   await authService.initialize();
   const user = await authService.getUser();
 
-  console.log("🟢 AUTHENTICATED");
-
+  logger.info("🟢 AUTHENTICATED");
   logger.debug("currentUser", user?.user?.id);
   logger.debug("tenantId", tenantId);
 

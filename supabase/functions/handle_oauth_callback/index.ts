@@ -9,13 +9,14 @@ import {
   PublicContext,
 } from "locals/middleware/withPublicContext";
 import { withCors } from "locals/middleware/withCors";
+
 const handleOauthCallbackHandler = async (
   req: Request,
   context: PublicContext
 ) => {
   const oauthController = new OAuthController(context);
 
-  const { code, state, id_token_only, options } = await req.json();
+  const { code, state, id_token_only, options, user_id } = await req.json();
 
   if (!code || !state) {
     oauthController.throwError("Missing code or state", 400);
@@ -52,7 +53,7 @@ serve(
   withCors({
     corsHeaders: {
       "Access-Control-Allow-Headers":
-        "authorization, x-client-info, apikey, content-type",
+        "authorization, x-client-info, apikey, content-type, x-tenant-id",
     },
   })(
     withErrorBoundary(

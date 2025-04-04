@@ -14,7 +14,7 @@ const SYSTEM_AGENTS: { [key: string]: IAiAgent } = {
     human_name: "Onboarding",
     responsibility: "Onboarding",
     provider: "openai",
-    model: "gpt-4o-mini",
+    model: "gpt-4o",
   },
 };
 

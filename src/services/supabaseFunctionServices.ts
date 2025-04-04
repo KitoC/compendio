@@ -9,8 +9,6 @@ const getFunctionUrl = (functionName: string, searchParams?: string) => {
     functionUrl += `?${searchParams}`;
   }
 
-  console.log("Calling AI chat function at:", functionUrl);
-
   return functionUrl;
 };
 

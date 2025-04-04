@@ -28,7 +28,6 @@ export const supabase = createClient<Database>(
             ? { "x-tenant-id": dynamicHeaders["x-tenant-id"] }
             : {}),
         };
-        console.log("options", options.headers.Authorization);
         return fetch(url, options);
       },
     },

@@ -47,6 +47,7 @@ const SidebarItem = (item: SidebarItemOrGroup) => {
     <SidebarMenuItem key={item.label}>
       <NavLink
         to={item.url?.replace(":tenantId", urlTenantAlias)}
+        end
         className={({ isActive, isPending }) => {
           return clsx(
             "pr-2 pl-3 w-full flex items-center gap-2 min-h-fit py-1 rounded",
@@ -81,7 +82,7 @@ const AppSidebar = () => {
     },
     {
       icon: <Bot className="h-4 w-4" />,
-      label: "Agents",
+      label: "Assistants",
       children: aiAgents.map((agent) => ({
         label: agent.human_name || agent.name,
         url: ROUTES.AGENT_CHAT.replace(":id", agent.name),
@@ -90,6 +91,7 @@ const AppSidebar = () => {
     {
       icon: <Table2 className="h-4 w-4" />,
       label: "Custom Tables",
+      hidden: tables.length === 0,
       children: tables.map((table) => ({
         label: table.name,
         url: ROUTES.CUSTOM_TABLE_DATA.replace(":id", table.id),
@@ -195,36 +197,40 @@ const AppSidebar = () => {
   };
 
   const renderItems = (items) => {
-    return items.map((section, index) => (
-      <div key={section.label}>
-        {index > 0 && <SidebarSeparator />}
+    return items.map((section, index) => {
+      if (section.hidden) return null;
 
-        {section.children?.length ? (
-          <SidebarGroup>
-            {section.children?.length && (
-              <div className="flex items-center px-2 gap-2">
-                {section.icon && section.icon}
-                <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
-              </div>
-            )}
+      return (
+        <div key={section.label}>
+          {index > 0 && <SidebarSeparator />}
 
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {section.children && renderSidebarItems(section.children)}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ) : (
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarItem key={section.label} {...section} />
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
-      </div>
-    ));
+          {section.children?.length ? (
+            <SidebarGroup>
+              {section.children?.length && (
+                <div className="flex items-center px-2 gap-2">
+                  {section.icon && section.icon}
+                  <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
+                </div>
+              )}
+
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {section.children && renderSidebarItems(section.children)}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ) : (
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarItem key={section.label} {...section} />
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
+        </div>
+      );
+    });
   };
 
   // Select which items to show based on sidebar mode

@@ -1,11 +1,13 @@
 {
   "imports": {
     "@/SYSTEM_CONFIGURATIONS/ONBOARDING_STEPS": "./_shared/SYSTEM_CONFIGURATIONS/ONBOARDING_STEPS.ts",
+    "@/SYSTEM_FUNCTIONS/ONBOARDING_FUNCTIONS": "./_shared/SYSTEM_FUNCTIONS/ONBOARDING_FUNCTIONS.ts",
     "@/SYSTEM_JSON_SCHEMAS/EMAIL_AGENT_JSON_SCHEMA": "./_shared/SYSTEM_JSON_SCHEMAS/EMAIL_AGENT_JSON_SCHEMA.ts",
     "@/SYSTEM_PROMPTS/EMAIL/DRAFT_EMAIL_PROMPT": "./_shared/SYSTEM_PROMPTS/EMAIL/DRAFT_EMAIL_PROMPT.ts",
     "@/SYSTEM_PROMPTS/EMAIL/NORMALIZE_EMAIL_PAYLOAD_PROMPT": "./_shared/SYSTEM_PROMPTS/EMAIL/NORMALIZE_EMAIL_PAYLOAD_PROMPT.ts",
     "@/SYSTEM_PROMPTS/EMAIL_AGENT_PROMPT": "./_shared/SYSTEM_PROMPTS/EMAIL_AGENT_PROMPT.ts",
     "@/SYSTEM_PROMPTS/ONBOARDING/ONBOARDING_AGENT_PROMPT": "./_shared/SYSTEM_PROMPTS/ONBOARDING/ONBOARDING_AGENT_PROMPT.ts",
+    "@/SYSTEM_PROMPTS/ONBOARDING/ONBOARDING_STEPS_AGENT_PROMPT": "./_shared/SYSTEM_PROMPTS/ONBOARDING/ONBOARDING_STEPS_AGENT_PROMPT.ts",
     "@/controllers/ConnectedServiceController": "./_shared/controllers/ConnectedServiceController.ts",
     "@/factories/getAgentController": "./_shared/factories/getAgentController.ts",
     "@/queue/tasks/EmailReceivedHandler": "./_shared/handlers/ProcessQueueHandler/tasks/EmailReceivedHandler.ts",
@@ -29,6 +31,7 @@
     "locals/error-types": "./_shared/error-types.ts",
     "locals/handlers/ProcessQueueHandler": "./_shared/handlers/ProcessQueueHandler/index.ts",
     "locals/handlers/WebhookEventHandler": "./_shared/handlers/WebhookEventHandler.ts",
+    "locals/handlers/ai_functions/OnboardingProgressUpdateHandler": "./_shared/handlers/ai_functions/OnboardingProgressUpdateHandler.ts",
     "locals/handlers/ai_functions/SendEmailHandler": "./_shared/handlers/ai_functions/SendEmailHandler.ts",
     "locals/handlers/providers/OutlookWebhookHandler": "./_shared/handlers/providers/OutlookWebhookHandler.ts",
     "locals/handlers/wss/ChatSocketHandler": "./_shared/handlers/wss/ChatSocketHandler.ts",

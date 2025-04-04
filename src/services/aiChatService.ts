@@ -60,8 +60,6 @@ export const listenForFunctionCalls = async ({
     reply_to: messageId,
   };
 
-  console.log("🔹 Function call message", functionCallMessage);
-
   if (["form"].includes(data.type)) {
     onFunctionCall({
       response: data,

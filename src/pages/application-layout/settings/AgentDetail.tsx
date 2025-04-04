@@ -102,7 +102,6 @@ const AgentDetail = () => {
       if (error) throw error;
 
       if (data) {
-        console.log("data", data);
         const functions = data.map((item) => ({
           id: item.ai_functions.id,
           name: item.ai_functions.name,

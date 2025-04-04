@@ -46,7 +46,6 @@ export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({
   const sendTranscript = useCallback(() => {
     const final = transcript.trim();
     if (final.length > 0) {
-      console.log("🎙️ Sending voice message:", final);
       // 👉 Send this to your chat system
       resetTranscript();
       lastTranscriptRef.current = "";
@@ -62,7 +61,6 @@ export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({
 
     for (const hotword of HOTWORDS) {
       if (lower.includes(hotword)) {
-        console.log("🔥 Hotword detected:", hotword);
         stopTTS(); // Interrupt speech
         resetTranscript(); // Clean buffer
         return;
@@ -78,11 +76,9 @@ export const VoiceProvider: React.FC<{ children: React.ReactNode }> = ({
 
     if (cleaned.length > 0 && cleaned !== lastTranscriptRef.current.trim()) {
       if (endsWithFiller(cleaned)) {
-        console.log("⏸️ Delaying due to filler word:", cleaned);
         return;
       }
 
-      console.log("✅ Voice input detected, scheduling send:", cleaned);
       lastTranscriptRef.current = cleaned;
       setHasSpoken(true);
 

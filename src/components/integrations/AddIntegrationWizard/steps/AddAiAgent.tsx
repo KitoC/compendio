@@ -40,8 +40,8 @@ const AddAiAgent = ({
   const [agents, setAgents] = useState<AiAgent[]>([]);
 
   const onAgentSelection = useCallback(
-    (agentId: string) => {
-      onStepDataCapture({ selectedAgentId: agentId });
+    (agent_id: string) => {
+      onStepDataCapture({ agent_id });
     },
     [onStepDataCapture]
   );
@@ -104,7 +104,7 @@ const AddAiAgent = ({
       if (error) throw error;
 
       setAgents(data || []);
-      if (!wizardState?.selectedAgentId) {
+      if (!wizardState?.agent_id) {
         onAgentSelection(data[0].id);
       }
     } catch (error) {
@@ -113,12 +113,7 @@ const AddAiAgent = ({
     } finally {
       setIsLoadingAgents(false);
     }
-  }, [
-    tenantId,
-    isLoadingAgents,
-    wizardState?.selectedAgentId,
-    onAgentSelection,
-  ]);
+  }, [tenantId, isLoadingAgents, wizardState?.agent_id, onAgentSelection]);
 
   // Only fetch agents when the dialog is opened and not in agent creation mode
   useEffect(() => {
@@ -169,9 +164,9 @@ const AddAiAgent = ({
               </div>
             ) : (
               <div className="space-y-4">
-                <AiAgentCard id={wizardState?.selectedAgentId} />
+                <AiAgentCard id={wizardState?.agent_id} />
                 <Select
-                  value={wizardState?.selectedAgentId}
+                  value={wizardState?.agent_id}
                   onValueChange={onAgentSelection}
                 >
                   <SelectTrigger>
@@ -208,7 +203,7 @@ const AddAiAgent = ({
           </Button>
           <Button
             onClick={nextStep}
-            disabled={!wizardState?.selectedAgentId || isLoadingAgents}
+            disabled={!wizardState?.agent_id || isLoadingAgents}
           >
             Next <ArrowRight className="ml-2 h-4 w-4" />
           </Button>

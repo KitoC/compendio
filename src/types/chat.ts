@@ -20,6 +20,7 @@ export type OpenAiRole =
 export type OpenAiMessage = {
   content: string;
   role: OpenAiRole;
+  name?: string;
 };
 
 export interface NormalChatContent {

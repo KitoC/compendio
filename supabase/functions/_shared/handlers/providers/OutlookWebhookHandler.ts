@@ -38,7 +38,6 @@ export class OutlookWebhookHandler {
     const body = await req.json();
 
     const event = body?.value?.[0];
-    console.log("event", event);
 
     const webhookEvent = await context.webhookEventService.createWebhookEvent({
       tenant_id: this.connectedService.tenant_id,

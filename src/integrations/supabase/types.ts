@@ -482,6 +482,7 @@ export type Database = {
           name: string;
           provider: string | null;
           refresh_failed: boolean | null;
+          associated_email: string | null;
         };
         Insert: {
           access_token?: string | null;
@@ -502,6 +503,7 @@ export type Database = {
           name?: string;
           provider?: string | null;
           refresh_failed?: boolean | null;
+          associated_email?: string | null;
         };
         Update: {
           access_token?: string | null;
@@ -522,6 +524,7 @@ export type Database = {
           name?: string;
           provider?: string | null;
           refresh_failed?: boolean | null;
+          associated_email?: string | null;
         };
         Relationships: [
           {

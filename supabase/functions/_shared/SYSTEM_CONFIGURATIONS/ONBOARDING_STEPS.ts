@@ -14,74 +14,7 @@ export const ONBOARDING_STEPS = [
     type: "textarea",
     key: "business_description",
     required: true,
-  },
-  {
-    id: "confirm_entities",
-    prompt:
-      "Based on what user shared, generate a summary of the entities they would need.",
-    type: "generated_preview",
-    key: "initial_summary",
-    dataFrom: "business_description",
-    required: true,
-    showIf: "business_description != null",
-  },
-  {
-    id: "confirm_entities_edit",
-    message:
-      "You can tweak any of these or add more before we generate your workspace.",
-    type: "editable_preview",
-    key: "user_confirmed_entities",
-    showIf: "initial_summary != null",
-  },
-  {
-    id: "table_preview",
-    message:
-      "Here’s a preview of the tables we’ll create based on your business.",
-    type: "table_preview",
-    key: "tables_generated",
-    dataFrom: "user_confirmed_entities",
-    showIf: "tables_generated.length > 0",
-  },
-  {
-    id: "table_edit",
-    message:
-      "Would you like to edit or add any fields or tables before we build them?",
-    type: "table_editor",
-    key: "tables_confirmed",
-    showIf: "tables_generated.length > 0",
-  },
-  {
-    id: "workflow_preview",
-    message:
-      "Based on your needs, here are some workflows that will automate your business tasks.",
-    type: "workflow_preview",
-    key: "workflows_generated",
-    dataFrom: "user_confirmed_entities",
-    showIf: "workflows_generated.length > 0",
-  },
-  {
-    id: "workflow_edit",
-    message:
-      "Would you like to edit or add any automations before we activate them?",
-    type: "workflow_editor",
-    key: "workflows_confirmed",
-    showIf: "workflows_generated.length > 0",
-  },
-  {
-    id: "agent_preview",
-    message:
-      "Now let’s add assistants to help you manage quotes, jobs, and communication. Here's what I suggest.",
-    type: "agent_preview",
-    key: "agents_generated",
-    dataFrom: "user_confirmed_entities",
-    showIf: "agents_generated.length > 0",
-  },
-  {
-    id: "agent_edit",
-    message: "You can edit or add more assistants before we finish up.",
-    type: "agent_editor",
-    key: "agents_confirmed",
-    showIf: "agents_generated.length > 0",
+    functions: ["get_email_integration_options_markup"],
   },
   {
     id: "integration_prompt",
@@ -89,7 +22,7 @@ export const ONBOARDING_STEPS = [
       "Would you like to connect any services like Gmail, Outlook, or a calendar?",
     type: "multi_select",
     key: "integrations_requested",
-    options: ["Gmail", "Outlook", "Google Calendar", "Other (N8N/Webhooks)"],
+    functions: ["get_email_integration_options_markup"],
   },
   {
     id: "final_step",

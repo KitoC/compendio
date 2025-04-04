@@ -15,7 +15,6 @@ import {
   IAgentFunctionHandler,
   IAgentFunctionHandlerResult,
 } from "locals/interfaces/IAgentFunctionHandler";
-import { PROVIDERS } from "locals/consts";
 import type { IFunction, IFunctionCall } from "@/types/aiAgents";
 
 export interface ITaskPayload {

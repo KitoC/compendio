@@ -47,7 +47,6 @@ class ConnectedServicesService extends BaseSupabaseService {
   }
 
   async getConnectedService(connected_service_id: string) {
-    console.log("getConnectedService", connected_service_id);
     const { data, error } = await this.supabase
       .from("connected_services")
       .select("*")

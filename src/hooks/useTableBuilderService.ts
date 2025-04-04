@@ -16,7 +16,7 @@ export interface TableSchema {
       description: string;
       is_required: boolean;
       is_unique: boolean;
-      default_value?: any;
+      default_value?: unknown;
       options?: string[];
     }>;
   }>;
@@ -48,11 +48,10 @@ export const useTableBuilderService = () => {
 
   const callEdgeFunction = async (
     action: string,
-    params: Record<string, any>
+    params: Record<string, unknown>
   ) => {
     try {
       const { data } = await supabase.auth.getSession();
-      console.log("SESSION", data?.session?.access_token);
       const token = data?.session?.access_token;
 
       if (!token) {

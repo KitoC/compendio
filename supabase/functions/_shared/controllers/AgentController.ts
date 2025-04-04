@@ -231,9 +231,6 @@ class AgentController<
 
     // Get all available functions
     const allFunctions = await this.functionController.getFunctions();
-    console.log("🔹 triggerFunctionCall", payload);
-    console.log("🔹 agentFunctionIds", agentFunctionIds);
-    console.log("🔹 allFunctions", allFunctions);
   }
 }
 

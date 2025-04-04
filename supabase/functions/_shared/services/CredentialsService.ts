@@ -16,6 +16,7 @@ interface CreateCredentialArgs {
   tenant_id: string;
   credential_name: string;
   tid: string;
+  associated_email: string;
 }
 
 interface UpdateCredentialArgs {
@@ -37,6 +38,7 @@ export interface ICredential {
   user_id: string;
   tenant_id: string;
   tid: string;
+  associated_email: string;
 }
 
 class CredentialsService extends BaseSupabaseService {
@@ -133,6 +135,7 @@ class CredentialsService extends BaseSupabaseService {
         _password: null,
         _username: null,
         _tid: args.tid,
+        _associated_email: args.associated_email,
       }
     );
 
