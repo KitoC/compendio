@@ -35,7 +35,7 @@ export function splitIntoSentences(text: string): string[] {
   return result;
 }
 
-export function getSentenceChunks(fullText: string): SentenceChunk[] {
+export function getSentenceChunks(fullText: string = ""): SentenceChunk[] {
   const paragraphs = fullText.split(/\n\s*\n/);
   const chunks: SentenceChunk[] = [];
 
