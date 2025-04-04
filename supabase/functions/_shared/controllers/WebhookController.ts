@@ -193,6 +193,9 @@ class WebhookController extends BaseController {
       resubscribeResults.failed.length
     );
 
+    this.logger.debug("🔁 Refresh results", refreshResults.failed);
+    this.logger.debug("⚠️ Resubscribe results", resubscribeResults.failed);
+
     return {
       refreshed: refreshResults.success.map((s) => s.item.id),
       failed: refreshResults.failed.map((s) => s.item.id),
