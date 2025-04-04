@@ -4,16 +4,28 @@ project_id = "zgtukvtbfucrvdpicvxx"
 [functions.ai-chat]
 verify_jwt = false
 
-[functions.tts]
-verify_jwt = false
-
-[functions.ai-chat-v2]
-verify_jwt = false
-
-[functions.wss-functions]
+[functions.ai-agent-chat]
 verify_jwt = false
 
 [functions.custom-table-data]
+verify_jwt = false
+
+[functions.handle_oauth_callback]
+verify_jwt = false
+
+[functions.messages]
+verify_jwt = false
+
+[functions.process-queue]
+verify_jwt = false
+
+[functions.refresh_oauth_token]
+verify_jwt = false
+
+[functions.refresh_webhook_subscriptions]
+verify_jwt = false
+
+[functions.register_webhook]
 verify_jwt = false
 
 [functions.table-builder]
@@ -22,29 +34,16 @@ verify_jwt = false
 [functions.test]
 verify_jwt = false
 
-[functions.handle_oauth_callback]
-verify_jwt = false
-
-[functions.refresh_oauth_token]
-verify_jwt = false
-
-[functions.register_webhook]
+[functions.tts]
 verify_jwt = false
 
 [functions.webhook]
 verify_jwt = false
 
-[functions.refresh_webhook_subscriptions]
-verify_jwt = false
-
-
-[functions.messages]
-verify_jwt = false
-
-[functions.process-queue]
-verify_jwt = false
-
 [functions.wss]
+verify_jwt = false
+
+[functions.wss-functions]
 verify_jwt = false
 
 [edge_runtime]
