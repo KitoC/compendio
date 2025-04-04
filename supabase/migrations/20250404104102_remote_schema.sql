@@ -3789,7 +3789,7 @@ CREATE POLICY "Admin users can see and approve tenant requests" ON "public"."ten
 
 
 
-CREATE POLICY "All authenticated users can view custom roles" ON "public"."custom_roles" FOR SELECT USING ((("auth"."tenant_id"())::"uuid" = "tenant_id"));
+CREATE POLICY "All authenticated users can view custom roles" ON "public"."custom_roles" FOR SELECT USING ("public"."is_tenant_user"("tenant_id"));
 
 
 
