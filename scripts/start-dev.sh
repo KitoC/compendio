@@ -53,7 +53,7 @@ echo "📝 Updated $ENV_FILE with $ENV_KEY=$TUNNEL_URL"
 
 # Now start Supabase
 echo "🚀 Starting Supabase functions..."
-pnpm dlx supabase functions serve --no-verify-jwt &
+pnpm supabase functions serve --no-verify-jwt &
 
 SUPABASE_PID=$!
 

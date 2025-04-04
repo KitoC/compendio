@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Provider } from "@supabase/supabase-js";
 import { ROUTES } from "@/lib/constants";
 import { useAuth } from "@/hooks/useAuth";
+import { SiGoogle, SiMicrosoft } from "react-icons/si";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -111,7 +112,7 @@ const Auth = () => {
                     disabled={loading}
                     onClick={() => handleOAuthSignIn("google" as Provider)}
                   >
-                    Google
+                    <SiGoogle /> Google
                   </Button>
                   <Button
                     type="button"
@@ -119,7 +120,7 @@ const Auth = () => {
                     disabled={loading}
                     onClick={() => handleOAuthSignIn("azure" as Provider)}
                   >
-                    Azure (outlook)
+                    <SiMicrosoft /> Azure (outlook)
                   </Button>
                 </div>
               </CardFooter>
