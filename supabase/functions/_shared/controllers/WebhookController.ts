@@ -46,14 +46,15 @@ class WebhookController extends BaseController {
   getWebhookUrl(params: ISubscribeToWebhookParams) {
     const { tenant_id, connected_service_id } = params;
 
-    const baseFunctionsUrl = getEnvKey("SUPABASE_FUNCTIONS_URL");
+    const baseFunctionsUrl =
+      getEnvKey("FUNCTIONS_URL") || getEnvKey("SUPABASE_URL");
 
     const paramsString = new URLSearchParams({
       tenant_id,
       connected_service_id,
     }).toString();
 
-    return `${baseFunctionsUrl}/webhook?${paramsString}`;
+    return `${baseFunctionsUrl}/functions/v1/webhook?${paramsString}`;
   }
 
   async subscribeToProvider(params: ISubscribeToWebhookParams) {
