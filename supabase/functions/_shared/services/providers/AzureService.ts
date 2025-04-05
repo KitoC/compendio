@@ -62,7 +62,6 @@ export class AzureService extends BaseExternalService {
     to,
     subject,
     body,
-    contentType = "HTML",
   }: {
     to: string;
     subject: string;
@@ -73,7 +72,7 @@ export class AzureService extends BaseExternalService {
       message: {
         subject,
         body: {
-          contentType,
+          contentType: "HTML",
           content: body,
         },
         toRecipients: [
@@ -104,7 +103,6 @@ export class AzureService extends BaseExternalService {
   async replyToEmail({
     originalMessageId,
     replyBody,
-    contentType = "HTML",
   }: {
     originalMessageId: string;
     replyBody: string;
@@ -134,7 +132,7 @@ export class AzureService extends BaseExternalService {
         headers: this.headers,
         body: JSON.stringify({
           body: {
-            contentType,
+            contentType: "HTML",
             content: replyBody,
           },
         }),

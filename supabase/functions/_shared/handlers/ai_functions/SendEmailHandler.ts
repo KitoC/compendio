@@ -102,7 +102,6 @@ export class SendEmailHandler implements IAgentFunctionHandler {
       await emailProviderService.replyToEmail({
         originalMessageId: email_id,
         replyBody: email_drafted.body,
-        contentType: email_drafted.content_type || "Text",
       });
 
       this.logger.info("🔹 Email reply sent successfully");
