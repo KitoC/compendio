@@ -95,7 +95,7 @@ const AppSidebar = () => {
       children: aiAgents.map((agent) => ({
         label: agent.human_name || agent.name,
         url: ROUTES.AGENT_CHAT.replace(":id", agent.name),
-        notificationCount: agent.name === "email-agent" ? emailCount : 0,
+        notificationCount: agent.name === "emaemail-assistant" ? emailCount : 0,
       })),
     },
     {

@@ -17,6 +17,7 @@ import { useTenant } from "@/contexts/TenantContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNotifications } from "@/contexts/NotificationProvider";
 import { NormalizedEmailResponse } from "@/types/emailAgentMessage";
+
 const EmailAgentCard = ({ agent }: { agent: IAiAgent }) => {
   const { urlTenantAlias } = useTenant();
   const [isLoading, setIsLoading] = useState(true);
@@ -26,7 +27,7 @@ const EmailAgentCard = ({ agent }: { agent: IAiAgent }) => {
   }>({ messages: [] });
 
   const emailConversation = agent.conversations.find(
-    (conversation) => conversation.alias === "email-agent"
+    (conversation) => conversation.alias === "email-assistant"
   );
 
   useEffect(() => {
