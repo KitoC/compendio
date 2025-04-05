@@ -339,6 +339,11 @@ const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
       value={
         <>
           {statusText}
+          {!email_drafted && !email_sent && (
+            <span className="text-muted-foreground ml-1">
+              (No response required)
+            </span>
+          )}
 
           {statusText === "Sent" && <MailCheck className="text-primary ml-2" />}
           {statusText === "Drafted" && (
@@ -375,28 +380,44 @@ const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
             { "rounded-b-none": open }
           )}
         >
-          {status}
+          <div className="flex flex-col gap-1">
+            {status}
+            {!open && (
+              <>
+                {!email_sent && (
+                  <LabelAndValue
+                    labelClassName="w-[80px]"
+                    label="From"
+                    value={email_received?.from}
+                  />
+                )}
+                <LabelAndValue
+                  labelClassName="w-[80px]"
+                  label="To"
+                  value={email_sent?.to}
+                />
+                <LabelAndValue
+                  labelClassName="w-[80px]"
+                  label="Subject"
+                  value={email_received?.subject}
+                />
+                <LabelAndValue
+                  labelClassName="w-[80px]"
+                  label="Summary"
+                  value={summary as string}
+                  isMarkdown
+                />
 
-          {!open && (
-            <div className="flex flex-col gap-1">
-              <LabelAndValue
-                labelClassName="w-[80px]"
-                label="To"
-                value={email_sent?.to}
-              />
-              <LabelAndValue
-                labelClassName="w-[80px]"
-                label="Subject"
-                value={email_received?.subject}
-              />
-              <LabelAndValue
-                labelClassName="w-[80px]"
-                label="Summary"
-                value={summary as string}
-                isMarkdown
-              />
-            </div>
-          )}
+                {!email_sent && (
+                  <LabelAndValue
+                    labelClassName="w-[80px]"
+                    label="Reasoning"
+                    value={reasoning}
+                  />
+                )}
+              </>
+            )}
+          </div>
           <div className="p-4 absolute top-0 right-0">
             <CollapsibleTrigger>
               <Button
