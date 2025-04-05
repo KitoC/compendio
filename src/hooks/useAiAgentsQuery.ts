@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { IAiAgent } from "@/types/aiAgents";
 import { useTenant } from "@/contexts/TenantContext";
 import { toast } from "sonner";
+import { useAuth } from "./useAuth";
 
 // Query keys for better cache management
 export const QUERY_KEYS = {
@@ -10,6 +11,7 @@ export const QUERY_KEYS = {
 };
 
 export const useAiAgentsQuery = () => {
+  const { user } = useAuth();
   const { tenantId } = useTenant();
   const queryClient = useQueryClient();
 
@@ -22,9 +24,8 @@ export const useAiAgentsQuery = () => {
     queryKey: [QUERY_KEYS.aiAgents, tenantId],
     queryFn: async () => {
       if (!tenantId) return [];
-
       const { data, error } = await supabase
-        .from("ai_agents")
+        .from("user_agents_with_conversations")
         .select("*")
         .eq("tenant_id", tenantId);
 

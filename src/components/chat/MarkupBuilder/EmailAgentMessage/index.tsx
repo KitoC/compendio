@@ -1,11 +1,11 @@
 import { ChatMessage } from "@/types/chat";
-import { Button, ButtonProps } from "../../ui/button";
+import { Button, ButtonProps } from "../../../ui/button";
 import { useChat } from "@/contexts/chat";
 import {
   getContainerStyles,
   messageBubbleStyles,
   otherMessageStyles,
-} from "../shared.styles";
+} from "../../shared.styles";
 import clsx from "clsx";
 import {
   Collapsible,
@@ -21,225 +21,45 @@ import {
   MailX,
   UnfoldVertical,
 } from "lucide-react";
-import { useCallback, useState } from "react";
-import RenderMarkdown from "../RenderMarkdown";
+import { useCallback, useEffect, useState } from "react";
+import RenderMarkdown from "../../RenderMarkdown";
 import {
   NormalizedEmailResponse,
   NormalizedEmailThreadItem,
 } from "@/types/emailAgentMessage";
 import { toast } from "sonner";
 
-import {
-  BoldItalicUnderlineToggles,
-  MDXEditor,
-  toolbarPlugin,
-  UndoRedo,
-  thematicBreakPlugin,
-} from "@mdxeditor/editor";
-import { headingsPlugin } from "@mdxeditor/editor";
+import { useLocation, useNavigate } from "react-router-dom";
+import { LabelAndValue } from "./LabelAndValue";
+import { EmailContent } from "./EmailContent";
+import { Divider } from "@/components/ui/divider";
 
-import "@mdxeditor/editor/style.css";
-
-export interface QuickReplyConfig {
-  replies: string[];
-  isInline: boolean;
-}
-
-interface QuickReplyBuilderProps {
+interface EmailAgentMessageProps {
   message: ChatMessage;
 }
 
-interface EmailContentProps {
-  from?: string;
-  to: string;
-  subject?: string;
-  body: string;
-  header: string;
-  thread?: NormalizedEmailThreadItem[];
-  editable?: boolean;
-  onEditBody?: (newValue: { body: string }) => void;
-}
-
-const Markdown = ({
-  editable,
-  mdValue,
-  onEdit,
-  setMdValue,
-}: {
-  editable: boolean;
-  mdValue: string;
-  onEdit: (newValue: string) => void;
-  setMdValue: (newValue: string) => void;
-}) => {
-  return editable ? (
-    <MDXEditor
-      className="dark-theme"
-      markdown={mdValue}
-      plugins={[
-        // imagePlugin(),
-        thematicBreakPlugin(),
-        headingsPlugin(),
-        toolbarPlugin({
-          toolbarClassName: "bg-slate-700",
-          toolbarContents: () => (
-            <>
-              <UndoRedo />
-              <BoldItalicUnderlineToggles />
-              {/* <InsertImage /> */}
-            </>
-          ),
-        }),
-      ]}
-      onBlur={() => {
-        onEdit(mdValue.replace(/<br \/>/g, "\n"));
-        setMdValue(mdValue);
-      }}
-      onChange={setMdValue}
-    />
-  ) : (
-    <RenderMarkdown className="flex-1" message={mdValue} isUser={false} />
-  );
-};
-
-const LabelAndValue = ({
-  label,
-  value,
-  labelClassName,
-  editable = false,
-  onEdit,
-  isMarkdown,
-}: {
-  label: string | JSX.Element;
-  value: string | JSX.Element;
-  labelClassName?: string;
-  editable?: boolean;
-  onEdit?: (value: string) => void;
-  isMarkdown?: boolean;
-}) => {
-  const [mdValue, setMdValue] = useState(value);
-
-  if (!value) return null;
-
-  return (
-    <div className="flex gap-1">
-      <p
-        className={clsx(
-          "text-sm text-muted-foreground font-bold",
-          labelClassName
-          // { "pt-[0.75rem]": editable }
-        )}
-      >
-        {label}{" "}
-      </p>
-      {isMarkdown ? (
-        <Markdown
-          editable={editable}
-          mdValue={mdValue as string}
-          onEdit={onEdit}
-          setMdValue={setMdValue}
-        />
-      ) : (
-        <div className="flex flex-1 items-center">{value}</div>
-      )}
-    </div>
-  );
-};
-
-const EmailContent = ({
-  from,
-  to,
-  subject,
-  body,
-  header,
-  thread,
-  editable = false,
-  onEditBody,
-}: EmailContentProps) => {
-  const [threadOpen, setThreadOpen] = useState(false);
-
-  return (
-    <div className="flex flex-col gap-3">
-      <div>
-        <h3 className="text-sm font-bold">{header}</h3>
-      </div>
-      <div className="flex flex-col gap-1">
-        <LabelAndValue label="From" value={from} labelClassName="w-[80px]" />
-        <LabelAndValue label="To" value={to} labelClassName="w-[80px]" />
-        <LabelAndValue
-          label="Subject"
-          value={subject}
-          labelClassName="w-[80px]"
-        />
-      </div>
-
-      <div className="">
-        <div className="flex flex-col gap-1">
-          <LabelAndValue
-            editable={editable}
-            label="Body"
-            isMarkdown
-            value={body}
-            labelClassName="w-[80px]"
-            onEdit={(newBody) => {
-              onEditBody({ body: newBody });
-            }}
-          />
-
-          {!!thread?.length && (
-            <Collapsible
-              className="w-full"
-              open={threadOpen}
-              onOpenChange={() => setThreadOpen(!threadOpen)}
-            >
-              <div className="mt-1">
-                <div className="flex items-center justify-between ">
-                  <p>Thread:</p>
-                  <CollapsibleTrigger>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setThreadOpen(!threadOpen)}
-                    >
-                      {threadOpen ? <UnfoldVertical /> : <FoldVertical />}
-                    </Button>
-                  </CollapsibleTrigger>
-                </div>
-
-                <CollapsibleContent>
-                  {thread.map(({ from, timestamp, body }) => (
-                    <div className="mt-1">
-                      <div className="border-t border-slate-700 w-full my-2"></div>
-                      <div className="pl-[80px]">
-                        <p className="text-xs text-muted-foreground">
-                          {from} - {new Date(timestamp).toLocaleDateString()}
-                        </p>
-                        <RenderMarkdown message={body} isUser={false} />
-                      </div>
-                    </div>
-                  ))}
-                </CollapsibleContent>
-              </div>
-            </Collapsible>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
+const EmailAgentMessage = ({ message }: EmailAgentMessageProps) => {
   const { summary } = message.metadata;
   const { email_received, email_drafted, email_sent, reasoning } =
     message.content as unknown as NormalizedEmailResponse;
 
+  const location = useLocation();
+  const messageId = location.search.split("message_id=")[1];
+  const navigate = useNavigate();
   const [open, setOpen] = useState(!!email_drafted);
   const [isSending, setIsSending] = useState(false);
-
+  const [isHighlighted, setIsHighlighted] = useState(false);
   const { triggerFunctionCall, replaceMessage, handleUpdateMessage } =
     useChat();
 
   const onUpdateContentPath = useCallback(
     (path: string, value: string | object) => {
+      let status = email_drafted ? "draft" : "received";
+      if (email_sent) {
+        status = "sent";
+      }
+
+      console.log("onUpdateContentPath", path, value);
       handleUpdateMessage({
         id: message.id,
         content: {
@@ -247,11 +67,11 @@ const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
           [path]: value,
         },
         role: message.role,
-        metadata: message.metadata,
+        metadata: { ...message.metadata, status },
         tenant_id: message.tenant_id,
       });
     },
-    [message, handleUpdateMessage]
+    [message, handleUpdateMessage, email_drafted, email_sent]
   );
 
   const onUpdateDraftEmail = useCallback(
@@ -363,6 +183,18 @@ const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
     />
   );
 
+  useEffect(() => {
+    if (messageId === message.id) {
+      setTimeout(() => {
+        setIsHighlighted(true);
+      }, 200);
+    }
+
+    setTimeout(() => {
+      setIsHighlighted(false);
+    }, 1500);
+  }, []);
+
   return (
     <Collapsible
       className="w-full"
@@ -371,13 +203,22 @@ const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
         setOpen(!open);
       }}
     >
-      <div className={getContainerStyles({ isUser: false }) + " w-full"}>
+      <div
+        className={clsx(
+          getContainerStyles({ isUser: false }) + " w-full transition-all",
+          {
+            "scale-[1.04]": isHighlighted,
+          }
+        )}
+      >
         <div
           className={clsx(
             messageBubbleStyles,
             otherMessageStyles,
             "flex flex-col gap-3 !py-4  relative min-h-20",
-            { "rounded-b-none": open }
+            {
+              "rounded-b-none": open,
+            }
           )}
         >
           <div className="flex flex-col gap-1">
@@ -440,7 +281,7 @@ const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
             />
             {email_drafted && (
               <>
-                <div className="border-t border-slate-700 w-full my-2"></div>
+                <Divider />
                 <EmailContent
                   editable
                   header="I drafted this reply for you, you can edit it if you want"
@@ -452,7 +293,7 @@ const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
             )}
             {email_sent && (
               <>
-                <div className="border-t border-slate-700 w-full my-2"></div>
+                <Divider />
                 <EmailContent
                   header={`I sent this reply`}
                   to={email_sent?.to}

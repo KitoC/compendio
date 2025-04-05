@@ -1,4 +1,3 @@
-
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -34,12 +33,14 @@ import { useCustomTables } from "@/contexts/CustomTables/useCustomTables";
 import { settingsItems } from "@/lib/constants";
 import { useTenant } from "@/contexts/TenantContext";
 import TenantSwitcher from "./TenantSwitcher";
-
+import { useNotifications } from "@/contexts/NotificationProvider";
+import { Badge } from "@/components/ui/badge";
 interface SidebarItemOrGroup {
   label: string;
   url?: string;
   icon?: React.ReactNode;
   children?: SidebarItemOrGroup[];
+  notificationCount?: number;
 }
 
 const SidebarItem = (item: SidebarItemOrGroup) => {
@@ -52,13 +53,18 @@ const SidebarItem = (item: SidebarItemOrGroup) => {
         end
         className={({ isActive, isPending }) => {
           return clsx(
-            "pr-2 pl-3 w-full flex items-center gap-2 min-h-fit py-1 rounded",
+            "pr-2 pl-3 w-full flex items-center gap-2 min-h-fit py-1 rounded hover:grey-200 dark:hover:bg-gray-700",
             isActive && "bg-muted"
           );
         }}
       >
         {item.icon && item.icon}
         <span>{item.label}</span>
+        {!!item.notificationCount && (
+          <Badge variant="warning" className="ml-auto">
+            {item.notificationCount}
+          </Badge>
+        )}
       </NavLink>
     </SidebarMenuItem>
   );
@@ -71,6 +77,7 @@ const AppSidebar = () => {
   const { toggleSidebar } = useSidebar();
   const [showSettingsSidebar, setShowSettingsSidebar] = useState(false);
   const location = useLocation();
+  const { emailCount } = useNotifications();
 
   // Check if we're in settings route
   const isInSettingsRoute = location.pathname.includes(ROUTES.SETTINGS);
@@ -88,6 +95,7 @@ const AppSidebar = () => {
       children: aiAgents.map((agent) => ({
         label: agent.human_name || agent.name,
         url: ROUTES.AGENT_CHAT.replace(":id", agent.name),
+        notificationCount: agent.name === "email-agent" ? emailCount : 0,
       })),
     },
     {
@@ -245,7 +253,7 @@ const AppSidebar = () => {
     <Sidebar
       collapsible="offcanvas"
       side="left"
-      className="border-r border-border"
+      className="border-r border-border bg-background"
     >
       <SidebarHeader className="flex flex-col space-y-2 p-2">
         <TenantSwitcher />

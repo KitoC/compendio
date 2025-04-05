@@ -15,6 +15,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
 
   switch (method) {
     case "GET": {
+      console.log(searchParams);
       const conversation_id = searchParams.get("conversation_id")!;
       const search = searchParams.get("search") || undefined;
       const metadata_search = searchParams.get("metadata_search") || undefined;
@@ -22,6 +23,12 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
       const limit = parseInt(searchParams.get("limit") || "50");
       const offset = parseInt(searchParams.get("offset") || "0");
       const order = searchParams.get("order") || "created_at";
+      const priority_sort_direction =
+        (searchParams.get("priority_sort_direction") as "asc" | "desc") ||
+        undefined;
+      const filter_raw = searchParams.get("filter") || undefined;
+      const filter = filter_raw ? JSON.parse(filter_raw) : undefined;
+
       const sort_direction =
         (searchParams.get("sort_direction") as "asc" | "desc") || "asc";
       const include_deleted = searchParams.get("include_deleted") === "true";
@@ -38,6 +45,8 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
         };
       }
 
+      console.log(" filter ----> ", filter);
+
       const result = await messagesService.getConversationMessages({
         conversation_id,
         search,
@@ -48,6 +57,8 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
         order,
         sort_direction,
         include_deleted,
+        filter,
+        priority_sort_direction,
       });
 
       return {

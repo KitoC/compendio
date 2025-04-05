@@ -86,7 +86,6 @@ class FunctionController extends BaseController {
         if (!this.FUNCTION_HANDLERS[fnCall.name]) {
           throw new Error(`Function handler ${fnCall.name} not found`);
         }
-        // console.log("SENDING FUNCTION");
         return this.FUNCTION_HANDLERS[fnCall.name].handle(fnCall, fn);
 
       default:

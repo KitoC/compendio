@@ -18,6 +18,7 @@ export type FunctionCall = {
 };
 
 export type NormalizedEmailResponse = {
+  status: "draft" | "received" | "sent";
   email_id: string;
   email_received: {
     from: string;
@@ -32,6 +33,7 @@ export type NormalizedEmailResponse = {
   function_calls?: FunctionCall[];
   reasoning: string;
   summary: string;
+  priority: number;
 };
 
 export type DraftEmailResponse = {
@@ -127,7 +129,11 @@ class EmailAgentController<
         message_id: message.id,
         content: emailContent,
         role: "email_agent",
-        metadata: message.metadata,
+        metadata: {
+          ...message.metadata,
+          status: draftEmail.email_drafted ? "draft" : "received",
+          priority: emailContent.priority,
+        },
       });
     } else {
       this.logger.info("No message found, creating new message");
@@ -140,11 +146,13 @@ class EmailAgentController<
       const newMessage = {
         content: emailContent,
         role: "email_agent",
-        tenant_id: this.agent.tenant_id,
+        tenant_id: this.agent.tenant_id as string,
         user_id: this.agent.id,
         connected_service_id: this.sessionContext.connected_service_id,
         metadata: {
           uuid,
+          status: draftEmail.email_drafted ? "draft" : "received",
+          priority: emailContent.priority,
         },
       };
 

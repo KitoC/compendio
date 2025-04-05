@@ -67,6 +67,8 @@ class MessagesService extends BaseSupabaseService {
     order = "created_at",
     sort_direction = "asc",
     include_deleted = false,
+    filter,
+    priority_sort_direction,
   }: {
     conversation_id: string;
     search?: string;
@@ -77,11 +79,14 @@ class MessagesService extends BaseSupabaseService {
     order?: string;
     sort_direction?: "asc" | "desc";
     include_deleted?: boolean;
+    filter?: string;
+    priority_sort_direction?: "asc" | "desc";
   }) {
     const decryption_key = getEnvKey("ENCRYPTION_KEY");
 
+    console.log("content_filter ====>", filter);
     const { data, error } = await this.supabase.rpc(
-      "get_conversation_messages",
+      "get_conversation_messages_v4",
       {
         _conversation_id: conversation_id,
         _decryption_key: decryption_key,
@@ -93,6 +98,8 @@ class MessagesService extends BaseSupabaseService {
         _order: order,
         _sort_direction: sort_direction,
         _include_deleted: include_deleted,
+        filter,
+        _priority_sort_direction: priority_sort_direction,
       }
     );
 

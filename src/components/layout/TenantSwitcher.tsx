@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Check, ChevronDown, Building } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -14,7 +13,7 @@ import { useTenant } from "@/contexts/TenantContext";
 import { supabase } from "@/integrations/supabase/client";
 import { ROUTES } from "@/lib/constants";
 import { toast } from "sonner";
-
+import { useAuth } from "@/hooks/useAuth";
 interface TenantOption {
   id: string;
   name: string;
@@ -27,18 +26,20 @@ const TenantSwitcher: React.FC = () => {
   const [tenants, setTenants] = useState<TenantOption[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchTenants = async () => {
       setIsLoading(true);
       try {
-        const { data, error } = await supabase.rpc("get_user_tenants");
-        
+        const { data, error } = await supabase.rpc("get_user_tenants", {
+          user_id: user.id,
+        });
         if (error) {
           console.error("Error fetching tenants:", error);
           return;
         }
-        
+
         setTenants(data || []);
       } catch (error) {
         console.error("Error fetching tenants:", error);
@@ -52,7 +53,7 @@ const TenantSwitcher: React.FC = () => {
 
   const handleTenantSwitch = (workspace: string) => {
     if (workspace === urlTenantAlias) return;
-    
+
     try {
       const redirectRoute = ROUTES.DASHBOARD.replace(":tenantId", workspace);
       navigate(redirectRoute);
@@ -75,7 +76,9 @@ const TenantSwitcher: React.FC = () => {
         >
           <div className="flex items-center gap-2 text-left">
             <Building className="h-4 w-4" />
-            <span className="truncate">{tenantData.name || tenantData.workspace}</span>
+            <span className="truncate">
+              {tenantData.name || tenantData.workspace}
+            </span>
           </div>
           {tenants.length > 1 && <ChevronDown className="h-4 w-4 opacity-50" />}
         </Button>
@@ -98,10 +101,10 @@ const TenantSwitcher: React.FC = () => {
             </div>
           </DropdownMenuItem>
         ))}
-        
+
         <DropdownMenuSeparator />
-        
-        <DropdownMenuItem 
+
+        <DropdownMenuItem
           className="cursor-pointer"
           onClick={() => {
             navigate(ROUTES.INDEX);

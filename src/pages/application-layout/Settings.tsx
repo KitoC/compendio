@@ -32,15 +32,15 @@ const Settings = () => {
       if (!user || !tenantId) return;
 
       try {
-        const { data, error } = await supabase
+        const { data: roles, error: rolesError } = await supabase
           .from("user_roles")
-          .select("role_type")
+          .select("*")
           .eq("user_id", user.id)
-          .eq("tenant_id", tenantId)
-          .single();
+          .or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
 
-        if (error) throw error;
-        setUserRole(data?.role_type || null);
+        if (rolesError) throw rolesError;
+
+        setUserRole(roles[0]?.role_type || null);
       } catch (error) {
         console.error("Error fetching user role:", error);
       } finally {

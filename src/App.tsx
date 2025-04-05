@@ -36,148 +36,139 @@ import { SocketProvider } from "./contexts/SocketProvider";
 import { TTSProvider } from "./contexts/TTSProvider";
 import { VoiceProvider } from "./contexts/VoiceProvider";
 import OnboardingPage from "./pages/OnboardingPage";
+import { NotificationProvider } from "./contexts/NotificationProvider";
+
 function App() {
   return (
     <QueryProvider>
       <AuthProvider>
         <TenantProvider>
-          <UserSettingsProvider>
-            <SocketProvider>
+          <SocketProvider>
+            <NotificationProvider>
               <TTSProvider>
                 <VoiceProvider>
-                  <ThemeProvider defaultTheme="system" storageKey="ui-theme">
-                    <Routes>
-                      <Route path={ROUTES.AUTH} element={<Auth />} />
-                      <Route path={ROUTES.INDEX} element={<LandingPage />} />
+                  <Routes>
+                    <Route path={ROUTES.AUTH} element={<Auth />} />
+                    <Route path={ROUTES.INDEX} element={<LandingPage />} />
+                    <Route
+                      path={ROUTES.AUTH_CALLBACK}
+                      element={<AuthCallback />}
+                    />
+
+                    <Route
+                      path={ROUTES.FORGOT_PASSWORD}
+                      element={<ForgotPassword />}
+                    />
+                    <Route
+                      path={ROUTES.RESET_PASSWORD}
+                      element={<ResetPassword />}
+                    />
+                    <Route
+                      path={ROUTES.REQUEST_ACCESS}
+                      element={<RequestAccess />}
+                    />
+                    <Route
+                      path={ROUTES.ACCESS_PENDING}
+                      element={<AccessPending />}
+                    />
+
+                    <Route
+                      path={ROUTES.APPLICATION}
+                      element={<ApplicationLayout />}
+                    >
+                      <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
+
                       <Route
-                        path={ROUTES.AUTH_CALLBACK}
-                        element={<AuthCallback />}
+                        path={ROUTES.ONBOARDING}
+                        element={<OnboardingPage />}
                       />
 
                       <Route
-                        path={ROUTES.FORGOT_PASSWORD}
-                        element={<ForgotPassword />}
+                        path={ROUTES.CUSTOM_TABLE_DATA}
+                        element={<CustomTableData />}
                       />
-                      <Route
-                        path={ROUTES.RESET_PASSWORD}
-                        element={<ResetPassword />}
-                      />
-                      <Route
-                        path={ROUTES.REQUEST_ACCESS}
-                        element={<RequestAccess />}
-                      />
-                      <Route
-                        path={ROUTES.ACCESS_PENDING}
-                        element={<AccessPending />}
-                      />
+                      <Route path={ROUTES.AGENT_CHAT} element={<AgentChat />} />
 
-                      <Route
-                        path={ROUTES.APPLICATION}
-                        element={<ApplicationLayout />}
-                      >
+                      {/* Settings Routes */}
+                      <Route path={ROUTES.SETTINGS} element={<Settings />}>
                         <Route
-                          path={ROUTES.DASHBOARD}
-                          element={<Dashboard />}
-                        />
-
-                        <Route
-                          path={ROUTES.ONBOARDING}
-                          element={<OnboardingPage />}
-                        />
-
-                        <Route
-                          path={ROUTES.CUSTOM_TABLE_DATA}
-                          element={<CustomTableData />}
+                          path={ROUTES.SETTINGS_APPEARANCE}
+                          element={<AppearanceSettings />}
                         />
                         <Route
-                          path={ROUTES.AGENT_CHAT}
-                          element={<AgentChat />}
+                          path={ROUTES.SETTINGS_AGENTS}
+                          element={<AgentsSettings />}
                         />
-
-                        {/* Settings Routes */}
-                        <Route path={ROUTES.SETTINGS} element={<Settings />}>
-                          <Route
-                            path={ROUTES.SETTINGS_APPEARANCE}
-                            element={<AppearanceSettings />}
-                          />
-                          <Route
-                            path={ROUTES.SETTINGS_AGENTS}
-                            element={<AgentsSettings />}
-                          />
-                          <Route
-                            path={ROUTES.SETTINGS_AGENTS_DETAIL}
-                            element={<AgentDetail />}
-                          />
-                          <Route
-                            path={ROUTES.SETTINGS_AGENT_WORKFLOWS}
-                            element={<AgentWorkflowsSettings />}
-                          />
-                          <Route
-                            path={ROUTES.SETTINGS_WORKFLOWS}
-                            element={<WorkflowsSettings />}
-                          />
-                          <Route
-                            path={ROUTES.SETTINGS_WORKFLOW_DETAIL}
-                            element={<WorkflowDetail />}
-                          />
-                          <Route
-                            path={ROUTES.SETTINGS_INTEGRATIONS}
-                            element={<IntegrationsSettings />}
-                          />
-                          <Route
-                            path={ROUTES.SETTINGS_INTEGRATION_DETAIL}
-                            element={<IntegrationDetailPage />}
-                          />
-                          <Route
-                            path={ROUTES.SETTINGS_WORKFLOW_INSTANCES}
-                            element={<WorkflowInstancesSettings />}
-                          />
-                          <Route
-                            path={ROUTES.SETTINGS_CUSTOM_TABLES}
-                            element={<CustomTablesPage />}
-                          />
-                          <Route
-                            path={ROUTES.SETTINGS_CUSTOM_TABLES_DETAIL}
-                            element={<CustomTableForm tableId="" />}
-                          />
-                          <Route
-                            path={ROUTES.SETTINGS_CUSTOM_TABLES_NEW}
-                            element={<CustomTableForm tableId="" />}
-                          />
-                          <Route
-                            path={ROUTES.SETTINGS_CUSTOM_ROLES_DETAIL}
-                            element={<CustomRoleForm />}
-                          />
-                          <Route
-                            path={ROUTES.SETTINGS_CUSTOM_ROLES_NEW}
-                            element={<CustomRoleForm />}
-                          />
-                          <Route
-                            path={ROUTES.SETTINGS_TABLE_BUILDER}
-                            element={<TableBuilderPage />}
-                          />
-                          {/* Default Settings Route */}
-                          <Route
-                            index
-                            element={
-                              <Navigate
-                                to={ROUTES.SETTINGS_APPEARANCE}
-                                replace
-                              />
-                            }
-                          />
-                        </Route>
-
-                        <Route index element={<Dashboard />} />
-                        <Route path="*" element={<Dashboard />} />
+                        <Route
+                          path={ROUTES.SETTINGS_AGENTS_DETAIL}
+                          element={<AgentDetail />}
+                        />
+                        <Route
+                          path={ROUTES.SETTINGS_AGENT_WORKFLOWS}
+                          element={<AgentWorkflowsSettings />}
+                        />
+                        <Route
+                          path={ROUTES.SETTINGS_WORKFLOWS}
+                          element={<WorkflowsSettings />}
+                        />
+                        <Route
+                          path={ROUTES.SETTINGS_WORKFLOW_DETAIL}
+                          element={<WorkflowDetail />}
+                        />
+                        <Route
+                          path={ROUTES.SETTINGS_INTEGRATIONS}
+                          element={<IntegrationsSettings />}
+                        />
+                        <Route
+                          path={ROUTES.SETTINGS_INTEGRATION_DETAIL}
+                          element={<IntegrationDetailPage />}
+                        />
+                        <Route
+                          path={ROUTES.SETTINGS_WORKFLOW_INSTANCES}
+                          element={<WorkflowInstancesSettings />}
+                        />
+                        <Route
+                          path={ROUTES.SETTINGS_CUSTOM_TABLES}
+                          element={<CustomTablesPage />}
+                        />
+                        <Route
+                          path={ROUTES.SETTINGS_CUSTOM_TABLES_DETAIL}
+                          element={<CustomTableForm tableId="" />}
+                        />
+                        <Route
+                          path={ROUTES.SETTINGS_CUSTOM_TABLES_NEW}
+                          element={<CustomTableForm tableId="" />}
+                        />
+                        <Route
+                          path={ROUTES.SETTINGS_CUSTOM_ROLES_DETAIL}
+                          element={<CustomRoleForm />}
+                        />
+                        <Route
+                          path={ROUTES.SETTINGS_CUSTOM_ROLES_NEW}
+                          element={<CustomRoleForm />}
+                        />
+                        <Route
+                          path={ROUTES.SETTINGS_TABLE_BUILDER}
+                          element={<TableBuilderPage />}
+                        />
+                        {/* Default Settings Route */}
+                        <Route
+                          index
+                          element={
+                            <Navigate to={ROUTES.SETTINGS_APPEARANCE} replace />
+                          }
+                        />
                       </Route>
-                    </Routes>
-                    <Toaster />
-                  </ThemeProvider>
+
+                      <Route index element={<Dashboard />} />
+                      <Route path="*" element={<Dashboard />} />
+                    </Route>
+                  </Routes>
+                  <Toaster />
                 </VoiceProvider>
               </TTSProvider>
-            </SocketProvider>
-          </UserSettingsProvider>
+            </NotificationProvider>
+          </SocketProvider>
         </TenantProvider>
       </AuthProvider>
     </QueryProvider>

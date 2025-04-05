@@ -12,6 +12,13 @@ export interface IAiAgent {
   tenant_id?: string;
   created_at?: string;
   updated_at?: string;
+  conversations?: IAiAgentConversation[];
+}
+
+export interface IAiAgentConversation {
+  id: string;
+  name: string;
+  alias: string;
 }
 
 export interface IFunction {

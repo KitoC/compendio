@@ -1,7 +1,6 @@
 import { ReactNode, useEffect, Suspense } from "react";
 import { useLocation, useNavigate, Outlet, matchPath } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { TenantProvider, useTenant } from "@/contexts/TenantContext";
 import AppSidebar from "@/components/layout/AppSidebar";
 import { ROUTES } from "@/lib/constants";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -12,6 +11,7 @@ import { AiAgentsProvider } from "@/contexts/AiAgents/AiAgentsProvider";
 import { CustomTablesProvider } from "@/contexts/CustomTables/CustomTablesProvider";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { UserSettingsProvider } from "@/contexts/UserSettingsProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 interface ApplicationLayoutProps {
   children?: ReactNode;
@@ -75,48 +75,51 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
 
   return (
     <UserSettingsProvider>
-      <TooltipProvider>
-        <AiAgentsProvider>
-          <CustomTablesProvider>
-            <SidebarProvider>
-              <div className="flex flex-col min-h-screen w-full">
-                {isMobile && !isOnBoardingRoute && (
-                  <header className="sticky top-0 z-40 flex items-center h-14 px-4 border-b bg-background">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="mr-2"
-                      onClick={() =>
-                        document.dispatchEvent(
-                          new CustomEvent("toggle-sidebar")
-                        )
-                      }
-                    >
-                      <Menu className="h-5 w-5" />
-                      <span className="sr-only">Toggle menu</span>
-                    </Button>
-                    <div id="page-header-anchor" className="flex-1"></div>
-                  </header>
-                )}
-                <div className="flex flex-1 min-h-0">
-                  {!isOnBoardingRoute && <AppSidebar />}
-                  <main className="flex-1 overflow-auto h-screen">
-                    <Suspense
-                      fallback={
-                        <div className="flex justify-center items-center h-full p-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                        </div>
-                      }
-                    >
-                      {children || <Outlet />}
-                    </Suspense>
-                  </main>
+      <ThemeProvider defaultTheme="system">
+        {" "}
+        <TooltipProvider>
+          <AiAgentsProvider>
+            <CustomTablesProvider>
+              <SidebarProvider>
+                <div className="flex flex-col min-h-screen w-full bg-background">
+                  {isMobile && !isOnBoardingRoute && (
+                    <header className="sticky top-0 z-40 flex items-center h-14 px-4 border-b ">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="mr-2"
+                        onClick={() =>
+                          document.dispatchEvent(
+                            new CustomEvent("toggle-sidebar")
+                          )
+                        }
+                      >
+                        <Menu className="h-5 w-5" />
+                        <span className="sr-only">Toggle menu</span>
+                      </Button>
+                      <div id="page-header-anchor" className="flex-1"></div>
+                    </header>
+                  )}
+                  <div className="flex flex-1 min-h-0">
+                    {!isOnBoardingRoute && <AppSidebar />}
+                    <main className="flex-1 overflow-auto h-screen">
+                      <Suspense
+                        fallback={
+                          <div className="flex justify-center items-center h-full p-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                          </div>
+                        }
+                      >
+                        {children || <Outlet />}
+                      </Suspense>
+                    </main>
+                  </div>
                 </div>
-              </div>
-            </SidebarProvider>
-          </CustomTablesProvider>
-        </AiAgentsProvider>
-      </TooltipProvider>
+              </SidebarProvider>
+            </CustomTablesProvider>
+          </AiAgentsProvider>
+        </TooltipProvider>
+      </ThemeProvider>
     </UserSettingsProvider>
   );
 };

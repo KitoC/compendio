@@ -57,6 +57,8 @@ export class SendEmailHandler implements IAgentFunctionHandler {
     fnCall: IFunctionCall,
     fn: IFunction
   ): Promise<IAgentFunctionHandlerResult> {
+    this.logger.info("🔹 Sending email");
+    this.logger.debug("🔹 fnCall", fnCall);
     const { message_id } = JSON.parse(fnCall.arguments);
 
     const message = await this.context.messagesService.getMessageById(
@@ -100,7 +102,6 @@ export class SendEmailHandler implements IAgentFunctionHandler {
       await emailProviderService.replyToEmail({
         originalMessageId: email_id,
         replyBody: email_drafted.body,
-        contentType: email_drafted.content_type || "Text",
       });
 
       this.logger.info("🔹 Email reply sent successfully");
@@ -124,7 +125,10 @@ export class SendEmailHandler implements IAgentFunctionHandler {
             },
           },
           role: message.role,
-          metadata: message.metadata,
+          metadata: {
+            ...message.metadata,
+            status: "sent",
+          },
         },
         EMAIL_SUMMARY_PROMPT
       );
