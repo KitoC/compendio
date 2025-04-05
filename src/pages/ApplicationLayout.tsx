@@ -83,7 +83,7 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
               <SidebarProvider>
                 <div className="flex flex-col min-h-screen w-full bg-background">
                   {isMobile && !isOnBoardingRoute && (
-                    <header className="sticky top-0 z-40 flex items-center h-14 px-4 border-b ">
+                    <header className="sticky top-0 pt-4 z-40 flex items-center h-[60px] px-4 border-b bg-sidebar shadow-sm">
                       <Button
                         variant="ghost"
                         size="icon"
