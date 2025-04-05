@@ -11,7 +11,7 @@ export const messageBubbleStyles =
   "px-3 py-[3px] flex-grow w-full rounded-lg border";
 export const userMessageStyles = "bg-primary text-primary-foreground";
 export const otherMessageStyles =
-  "bg-muted dark:transparent dark:text-white dark:border-slate-700 transition-all duration-300";
+  "bg-sidebar dark:transparent dark:text-white dark:border-slate-700 transition-all duration-300";
 
 export const getMessageBubbleStyles = ({ isUser, functionalMessages = [] }) => {
   return clsx(messageBubbleStyles, {

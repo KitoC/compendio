@@ -125,7 +125,10 @@ export class SendEmailHandler implements IAgentFunctionHandler {
             },
           },
           role: message.role,
-          metadata: message.metadata,
+          metadata: {
+            ...message.metadata,
+            status: "sent",
+          },
         },
         EMAIL_SUMMARY_PROMPT
       );

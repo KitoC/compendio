@@ -85,7 +85,7 @@ const EmailAgentCard = ({ agent }: { agent: IAiAgent }) => {
               return (
                 <NavLink
                   to={EMAIL_CHAT_ROUTE + "?message_id=" + email.id}
-                  className="flex flex-col bg-gray-200 dark:bg-gray-700 p-2 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+                  className="flex flex-col bg-sidebar p-2 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                   key={email.id}
                 >
                   <p className="text-sm font-bold truncate">

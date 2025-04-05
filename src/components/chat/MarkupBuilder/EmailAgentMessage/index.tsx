@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router-dom";
 import { LabelAndValue } from "./LabelAndValue";
 import { EmailContent } from "./EmailContent";
+import { Divider } from "@/components/ui/divider";
 
 interface EmailAgentMessageProps {
   message: ChatMessage;
@@ -268,7 +269,7 @@ const EmailAgentMessage = ({ message }: EmailAgentMessageProps) => {
             />
             {email_drafted && (
               <>
-                <div className="border-t border-slate-700 w-full my-2"></div>
+                <Divider />
                 <EmailContent
                   editable
                   header="I drafted this reply for you, you can edit it if you want"
@@ -280,7 +281,7 @@ const EmailAgentMessage = ({ message }: EmailAgentMessageProps) => {
             )}
             {email_sent && (
               <>
-                <div className="border-t border-slate-700 w-full my-2"></div>
+                <Divider />
                 <EmailContent
                   header={`I sent this reply`}
                   to={email_sent?.to}
