@@ -5,7 +5,7 @@ const Dashboard = () => {
   const { user, profile } = useAuth();
   const { aiAgents } = useAiAgents();
 
-  const emailAgent = aiAgents.find((agent) => agent.name === "email-agent");
+  const emailAgent = aiAgents.find((agent) => agent.name === "email-assistant");
 
   return (
     <div className="min-h-screen">

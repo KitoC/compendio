@@ -95,7 +95,7 @@ const AppSidebar = () => {
       children: aiAgents.map((agent) => ({
         label: agent.human_name || agent.name,
         url: ROUTES.AGENT_CHAT.replace(":id", agent.name),
-        notificationCount: agent.name === "email-agent" ? emailCount : 0,
+        notificationCount: agent.name === "emaemail-assistant" ? emailCount : 0,
       })),
     },
     {
@@ -253,7 +253,7 @@ const AppSidebar = () => {
     <Sidebar
       collapsible="offcanvas"
       side="left"
-      className="border-r border-border bg-background"
+      className="border-r border-border bg-sidebar"
     >
       <SidebarHeader className="flex flex-col space-y-2 p-2">
         <TenantSwitcher />
