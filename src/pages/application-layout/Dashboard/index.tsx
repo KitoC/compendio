@@ -8,7 +8,7 @@ const Dashboard = () => {
   const emailAgent = aiAgents.find((agent) => agent.name === "email-agent");
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <div className="container mx-auto py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold">

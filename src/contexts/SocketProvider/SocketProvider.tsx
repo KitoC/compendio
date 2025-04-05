@@ -13,7 +13,6 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const messageListeners = useRef<SocketMessageListener[]>([]);
 
   const connect = useCallback(() => {
-    console.log("🟢 Connecting to socket", getWebsocketUrl());
     if (!session?.access_token) return;
     if (socketRef.current && socketRef.current.readyState <= 1) return;
 

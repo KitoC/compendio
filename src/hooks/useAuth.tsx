@@ -20,6 +20,7 @@ interface Profile {
   username: string | null;
   avatar_url: string | null;
   is_onboarded: boolean;
+  display_name: string | null;
 }
 
 interface SignInParams {

@@ -1,74 +1,73 @@
-
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ConvoSync CDN Demo</title>
-  <style>
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    .demo-section {
-      margin-bottom: 30px;
-      padding: 20px;
-      border: 1px solid #e1e1e1;
-      border-radius: 8px;
-    }
-    h1 {
-      color: #4f46e5;
-    }
-    pre {
-      background: #f5f5f5;
-      padding: 15px;
-      border-radius: 4px;
-      overflow: auto;
-    }
-  </style>
-</head>
-<body>
-  <h1>ConvoSync Library Demo</h1>
-  
-  <div class="demo-section">
-    <h2>How to Include the Library</h2>
-    <pre><code>&lt;script src="/cdn/convosync-lib.js"&gt;&lt;/script&gt;</code></pre>
-  </div>
-  
-  <div class="demo-section">
-    <h2>Date Formatting Demo</h2>
-    <p id="formatted-date">Loading...</p>
-    
-    <pre><code>// Format the current date
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ConvoSync CDN Demo</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .demo-section {
+        margin-bottom: 30px;
+        padding: 20px;
+        border: 1px solid #e1e1e1;
+        border-radius: 8px;
+      }
+      h1 {
+        color: #4f46e5;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 15px;
+        border-radius: 4px;
+        overflow: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Compendio Library Demo</h1>
+
+    <div class="demo-section">
+      <h2>How to Include the Library</h2>
+      <pre><code>&lt;script src="/cdn/convosync-lib.js"&gt;&lt;/script&gt;</code></pre>
+    </div>
+
+    <div class="demo-section">
+      <h2>Date Formatting Demo</h2>
+      <p id="formatted-date">Loading...</p>
+
+      <pre><code>// Format the current date
 const formattedDate = ConvoSyncLib.formatDate(new Date());
 document.getElementById('formatted-date').textContent = formattedDate;</code></pre>
-  </div>
-  
-  <div class="demo-section">
-    <h2>Chat Widget Demo</h2>
-    <div id="chat-widget-container"></div>
-    
-    <pre><code>// Initialize a chat widget
+    </div>
+
+    <div class="demo-section">
+      <h2>Chat Widget Demo</h2>
+      <div id="chat-widget-container"></div>
+
+      <pre><code>// Initialize a chat widget
 ConvoSyncLib.initChatWidget('#chat-widget-container', {
   theme: 'light'
 });</code></pre>
-  </div>
-  
-  <!-- Include the library -->
-  <script src="/cdn/convosync-lib.js"></script>
-  
-  <!-- Demo usage -->
-  <script>
-    // Format the current date
-    const formattedDate = ConvoSyncLib.formatDate(new Date());
-    document.getElementById('formatted-date').textContent = formattedDate;
-    
-    // Initialize a chat widget
-    ConvoSyncLib.initChatWidget('#chat-widget-container', {
-      theme: 'light'
-    });
-  </script>
-</body>
+    </div>
+
+    <!-- Include the library -->
+    <script src="/cdn/convosync-lib.js"></script>
+
+    <!-- Demo usage -->
+    <script>
+      // Format the current date
+      const formattedDate = ConvoSyncLib.formatDate(new Date());
+      document.getElementById("formatted-date").textContent = formattedDate;
+
+      // Initialize a chat widget
+      ConvoSyncLib.initChatWidget("#chat-widget-container", {
+        theme: "light",
+      });
+    </script>
+  </body>
 </html>

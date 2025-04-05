@@ -16,7 +16,7 @@ import { ROUTES } from "@/lib/constants";
 import { useTenant } from "@/contexts/TenantContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNotifications } from "@/contexts/NotificationProvider";
-
+import { NormalizedEmailResponse } from "@/types/emailAgentMessage";
 const EmailAgentCard = ({ agent }: { agent: IAiAgent }) => {
   const { urlTenantAlias } = useTenant();
   const [isLoading, setIsLoading] = useState(true);
@@ -70,28 +70,33 @@ const EmailAgentCard = ({ agent }: { agent: IAiAgent }) => {
         </div>
         <CardDescription className="w-full flex items-center">
           Emails needing attention{" "}
-          <Badge className="ml-auto" variant="warning">
-            {emailsNeedingAttention.messages.length}
-          </Badge>
+          {!!emailsNeedingAttention.messages.length && (
+            <Badge className="ml-auto" variant="warning">
+              {emailsNeedingAttention.messages.length}
+            </Badge>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-1">
           {emailsNeedingAttention?.messages?.length > 0 ? (
-            emailsNeedingAttention.messages.map((email) => (
-              <NavLink
-                to={EMAIL_CHAT_ROUTE + "?message_id=" + email.id}
-                className="flex flex-col bg-gray-200 dark:bg-gray-700 p-2 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                key={email.id}
-              >
-                <p className="text-sm font-bold truncate">
-                  {email.content.email_received.subject}
-                </p>
-                <p className="text-xs text-gray-400">
-                  {email.content.email_received.from}
-                </p>
-              </NavLink>
-            ))
+            emailsNeedingAttention.messages.map((email) => {
+              const emailContent = email.content as NormalizedEmailResponse;
+              return (
+                <NavLink
+                  to={EMAIL_CHAT_ROUTE + "?message_id=" + email.id}
+                  className="flex flex-col bg-gray-200 dark:bg-gray-700 p-2 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+                  key={email.id}
+                >
+                  <p className="text-sm font-bold truncate">
+                    {emailContent.email_received.subject}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {emailContent.email_received.from}
+                  </p>
+                </NavLink>
+              );
+            })
           ) : isLoading ? (
             <>
               <Skeleton className="h-12 w-full" />

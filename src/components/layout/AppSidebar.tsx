@@ -46,7 +46,6 @@ interface SidebarItemOrGroup {
 const SidebarItem = (item: SidebarItemOrGroup) => {
   const { urlTenantAlias } = useTenant();
 
-  console.log(item);
   return (
     <SidebarMenuItem key={item.label}>
       <NavLink
@@ -80,7 +79,6 @@ const AppSidebar = () => {
   const location = useLocation();
   const { emailCount } = useNotifications();
 
-  console.log("emailCount", emailCount);
   // Check if we're in settings route
   const isInSettingsRoute = location.pathname.includes(ROUTES.SETTINGS);
 
@@ -255,7 +253,7 @@ const AppSidebar = () => {
     <Sidebar
       collapsible="offcanvas"
       side="left"
-      className="border-r border-border"
+      className="border-r border-border bg-background"
     >
       <SidebarHeader className="flex flex-col space-y-2 p-2">
         <TenantSwitcher />
