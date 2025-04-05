@@ -19,7 +19,7 @@ const OnboardingPage = () => {
   if (loading) {
     return (
       <Card className="flex flex-col items-center justify-center p-8 h-full">
-        <Loader />
+        <Loader size="large" />
       </Card>
     );
   }

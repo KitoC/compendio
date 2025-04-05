@@ -10,6 +10,17 @@ interface MessageQuery {
 }
 
 export const MessageService = {
+  async getMessageById(messageId: string) {
+    const response = await SupabaseFunctionService.get("messages", {
+      id: messageId,
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch messages");
+    }
+
+    return response.json();
+  },
   async getMessages(conversationId: string, query: MessageQuery) {
     const response = await SupabaseFunctionService.get("messages", {
       conversation_id: conversationId,

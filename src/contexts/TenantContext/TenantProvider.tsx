@@ -314,7 +314,7 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <Loader />
+        <Loader size="large" />
       </div>
     );
   }

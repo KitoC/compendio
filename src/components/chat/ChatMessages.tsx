@@ -20,7 +20,7 @@ const ChatMessages = () => {
     >
       {!messagesLoaded && (
         <div className="flex justify-center items-center h-full">
-          <Loader size="medium" />
+          <Loader size="large" />
         </div>
       )}
       {filteredMessages.map((message, index) => {
