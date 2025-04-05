@@ -253,7 +253,7 @@ const AppSidebar = () => {
     <Sidebar
       collapsible="offcanvas"
       side="left"
-      className="border-r border-border bg-background"
+      className="border-r border-border bg-sidebar"
     >
       <SidebarHeader className="flex flex-col space-y-2 p-2">
         <TenantSwitcher />
