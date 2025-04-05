@@ -269,6 +269,7 @@ export const useChatState = ({
 
   // 🔁 Subscribe to new messages in this conversation (optional if you're also streaming via WS)
   useEffect(() => {
+    // TODO: MAke this work
     const channel = supabase
       .channel("messages-channel")
       .on(
@@ -287,6 +288,24 @@ export const useChatState = ({
             }
             return prev;
           });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        async (payload) => {
+          const updatedMessage = await MessageService.getMessageById(
+            payload.new.id
+          );
+
+          setMessages((prev) =>
+            prev.map((m) => (m.id === updatedMessage.id ? updatedMessage : m))
+          );
         }
       )
       .subscribe();

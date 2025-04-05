@@ -26,6 +26,18 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
         (searchParams.get("sort_direction") as "asc" | "desc") || "asc";
       const include_deleted = searchParams.get("include_deleted") === "true";
 
+      if (searchParams.get("id")) {
+        const result = await messagesService.getMessageById(
+          searchParams.get("id")!
+        );
+
+        return {
+          body: JSON.stringify(result),
+          headers: { "Content-Type": "application/json" },
+          status: 200,
+        };
+      }
+
       const result = await messagesService.getConversationMessages({
         conversation_id,
         search,

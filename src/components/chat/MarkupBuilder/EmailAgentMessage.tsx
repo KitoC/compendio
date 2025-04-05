@@ -12,7 +12,15 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { FoldVertical, UnfoldVertical } from "lucide-react";
+import {
+  FoldVertical,
+  Mail,
+  MailCheck,
+  MailPlus,
+  MailQuestion,
+  MailX,
+  UnfoldVertical,
+} from "lucide-react";
 import { useCallback, useState } from "react";
 import RenderMarkdown from "../RenderMarkdown";
 import {
@@ -23,8 +31,6 @@ import { toast } from "sonner";
 
 import {
   BoldItalicUnderlineToggles,
-  InsertImage,
-  imagePlugin,
   MDXEditor,
   toolbarPlugin,
   UndoRedo,
@@ -54,18 +60,61 @@ interface EmailContentProps {
   onEditBody?: (newValue: { body: string }) => void;
 }
 
+const Markdown = ({
+  editable,
+  mdValue,
+  onEdit,
+  setMdValue,
+}: {
+  editable: boolean;
+  mdValue: string;
+  onEdit: (newValue: string) => void;
+  setMdValue: (newValue: string) => void;
+}) => {
+  return editable ? (
+    <MDXEditor
+      className="dark-theme"
+      markdown={mdValue}
+      plugins={[
+        // imagePlugin(),
+        thematicBreakPlugin(),
+        headingsPlugin(),
+        toolbarPlugin({
+          toolbarClassName: "bg-slate-700",
+          toolbarContents: () => (
+            <>
+              <UndoRedo />
+              <BoldItalicUnderlineToggles />
+              {/* <InsertImage /> */}
+            </>
+          ),
+        }),
+      ]}
+      onBlur={() => {
+        onEdit(mdValue.replace(/<br \/>/g, "\n"));
+        setMdValue(mdValue);
+      }}
+      onChange={setMdValue}
+    />
+  ) : (
+    <RenderMarkdown className="flex-1" message={mdValue} isUser={false} />
+  );
+};
+
 const LabelAndValue = ({
   label,
   value,
   labelClassName,
   editable = false,
   onEdit,
+  isMarkdown,
 }: {
-  label: string;
-  value: string;
+  label: string | JSX.Element;
+  value: string | JSX.Element;
   labelClassName?: string;
   editable?: boolean;
   onEdit?: (value: string) => void;
+  isMarkdown?: boolean;
 }) => {
   const [mdValue, setMdValue] = useState(value);
 
@@ -82,34 +131,15 @@ const LabelAndValue = ({
       >
         {label}{" "}
       </p>
-
-      {editable ? (
-        <MDXEditor
-          className="dark-theme"
-          markdown={mdValue}
-          plugins={[
-            // imagePlugin(),
-            thematicBreakPlugin(),
-            headingsPlugin(),
-            toolbarPlugin({
-              toolbarClassName: "bg-slate-700",
-              toolbarContents: () => (
-                <>
-                  <UndoRedo />
-                  <BoldItalicUnderlineToggles />
-                  {/* <InsertImage /> */}
-                </>
-              ),
-            }),
-          ]}
-          onBlur={() => {
-            onEdit(mdValue.replace(/<br \/>/g, "\n"));
-            setMdValue(mdValue);
-          }}
-          onChange={setMdValue}
+      {isMarkdown ? (
+        <Markdown
+          editable={editable}
+          mdValue={mdValue as string}
+          onEdit={onEdit}
+          setMdValue={setMdValue}
         />
       ) : (
-        <RenderMarkdown className="flex-1" message={mdValue} isUser={false} />
+        <div className="flex flex-1 items-center">{value}</div>
       )}
     </div>
   );
@@ -147,6 +177,7 @@ const EmailContent = ({
           <LabelAndValue
             editable={editable}
             label="Body"
+            isMarkdown
             value={body}
             labelClassName="w-[80px]"
             onEdit={(newBody) => {
@@ -240,18 +271,18 @@ const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
     disabled?: boolean;
     visible?: boolean;
   }[] = [
-    {
-      label: "Ignore",
-      variant: "outline-destructive",
-      visible: !!email_drafted,
-      disabled: isSending,
-      onClick: () => {
-        // triggerFunctionCall({
-        //   type: "email:discard",
-        //   message_id: message.id,
-        // });
-      },
-    },
+    // {
+    //   label: "Ignore",
+    //   variant: "outline-destructive",
+    //   visible: !!email_drafted,
+    //   disabled: isSending,
+    //   onClick: () => {
+    //     // triggerFunctionCall({
+    //     //   type: "email:discard",
+    //     //   message_id: message.id,
+    //     // });
+    //   },
+    // },
     {
       label: isSending ? "Sending..." : "Send",
       disabled: isSending,
@@ -301,6 +332,32 @@ const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
     statusText = "Sending...";
   }
 
+  const status = (
+    <LabelAndValue
+      labelClassName="w-[80px]"
+      label="Status"
+      value={
+        <>
+          {statusText}
+
+          {statusText === "Sent" && <MailCheck className="text-primary ml-2" />}
+          {statusText === "Drafted" && (
+            <MailQuestion className="text-primary ml-2" />
+          )}
+          {statusText === "Received" && (
+            <MailPlus className="text-primary ml-2" />
+          )}
+          {statusText === "Failed" && <MailX className="text-primary ml-2" />}
+          {statusText === "Sending..." && (
+            <div className="fit-content">
+              <Mail className="text-primary ml-2 email-sending" />
+            </div>
+          )}
+        </>
+      }
+    />
+  );
+
   return (
     <Collapsible
       className="w-full"
@@ -318,13 +375,10 @@ const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
             { "rounded-b-none": open }
           )}
         >
+          {status}
+
           {!open && (
             <div className="flex flex-col gap-1">
-              <LabelAndValue
-                labelClassName="w-[80px]"
-                label="Status"
-                value={statusText}
-              />
               <LabelAndValue
                 labelClassName="w-[80px]"
                 label="To"
@@ -339,6 +393,7 @@ const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
                 labelClassName="w-[80px]"
                 label="Summary"
                 value={summary as string}
+                isMarkdown
               />
             </div>
           )}
@@ -396,6 +451,7 @@ const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
           >
             <div>
               <LabelAndValue
+                isMarkdown
                 label="Reasoning"
                 value={reasoning}
                 labelClassName="w-[80px]"

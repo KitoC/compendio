@@ -114,7 +114,7 @@ export const INTEGRATION_TYPES = [
     authType: "oauth",
     oauthProvider: "azure",
     // TODO: Make this dynamic
-    webhookChangeType: "create, update",
+    webhookChangeType: "created",
     webhookResource: "me/mailFolders('inbox')/messages",
     formConfig: {
       id: "outlook-config",

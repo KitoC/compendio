@@ -22,7 +22,7 @@ const ChatMessage: FC<ChatMessageProps> = ({ message, functionalMessages }) => {
   }
 
   if (!message.content?.text) {
-    return <Loader />;
+    return <Loader size="large" />;
   }
 
   return (
