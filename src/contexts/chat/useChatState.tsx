@@ -261,7 +261,7 @@ export const useChatState = ({
               const messageElement = document.getElementById(messageId);
 
               if (messageElement) {
-                messageElement.scrollIntoView({ behavior: "smooth" });
+                messageElement.scrollIntoView({ behavior: "instant" });
               }
             } else {
               scrollToBottom(true);

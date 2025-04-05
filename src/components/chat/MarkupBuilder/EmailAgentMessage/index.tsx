@@ -48,6 +48,7 @@ const EmailAgentMessage = ({ message }: EmailAgentMessageProps) => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(!!email_drafted);
   const [isSending, setIsSending] = useState(false);
+  const [isHighlighted, setIsHighlighted] = useState(false);
   const { triggerFunctionCall, replaceMessage, handleUpdateMessage } =
     useChat();
 
@@ -183,9 +184,15 @@ const EmailAgentMessage = ({ message }: EmailAgentMessageProps) => {
   );
 
   useEffect(() => {
+    if (messageId === message.id) {
+      setTimeout(() => {
+        setIsHighlighted(true);
+      }, 200);
+    }
+
     setTimeout(() => {
-      navigate(location.pathname);
-    }, 1000);
+      setIsHighlighted(false);
+    }, 1500);
   }, []);
 
   return (
@@ -196,7 +203,14 @@ const EmailAgentMessage = ({ message }: EmailAgentMessageProps) => {
         setOpen(!open);
       }}
     >
-      <div className={getContainerStyles({ isUser: false }) + " w-full"}>
+      <div
+        className={clsx(
+          getContainerStyles({ isUser: false }) + " w-full transition-all",
+          {
+            "scale-[1.04]": isHighlighted,
+          }
+        )}
+      >
         <div
           className={clsx(
             messageBubbleStyles,
@@ -204,8 +218,6 @@ const EmailAgentMessage = ({ message }: EmailAgentMessageProps) => {
             "flex flex-col gap-3 !py-4  relative min-h-20",
             {
               "rounded-b-none": open,
-              "border-b-2 border-primary dark:border-primary":
-                message.id === messageId,
             }
           )}
         >
@@ -296,11 +308,7 @@ const EmailAgentMessage = ({ message }: EmailAgentMessageProps) => {
             className={clsx(
               messageBubbleStyles,
               otherMessageStyles,
-              "flex flex-col gap-3 !py-4 rounded-t-none",
-              {
-                "border-b-2 border-primary dark:border-primary":
-                  message.id === messageId,
-              }
+              "flex flex-col gap-3 !py-4 rounded-t-none"
             )}
           >
             <div>
