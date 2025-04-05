@@ -1,10 +1,4 @@
-alter table "public"."conversations" drop constraint "conversations_tenant_alias_unique";
-
-drop index if exists "public"."conversations_tenant_alias_unique";
-
 alter table "public"."tenants" add column "created_at" timestamp with time zone default now();
-
-CREATE UNIQUE INDEX conversations_alias_unique ON public.conversations USING btree (alias) WHERE (alias IS NOT NULL);
 
 CREATE INDEX messages_metadata_priority_idx ON public.messages USING btree ((((metadata ->> 'priority'::text))::integer));
 
