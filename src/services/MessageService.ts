@@ -7,6 +7,7 @@ interface MessageQuery {
   offset: string;
   role?: string;
   search?: string;
+  filter?: string;
 }
 
 export const MessageService = {

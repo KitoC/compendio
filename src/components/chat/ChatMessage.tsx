@@ -27,7 +27,11 @@ const ChatMessage: FC<ChatMessageProps> = ({ message, functionalMessages }) => {
 
   return (
     <>
-      <div className={getContainerStyles({ isUser })} ref={messageRef}>
+      <div
+        id={message.id}
+        className={getContainerStyles({ isUser })}
+        ref={messageRef}
+      >
         <div className={getMessageBubbleStyles({ isUser, functionalMessages })}>
           <RenderMarkdown
             message={(message.content as NormalChatContent).text || ""}

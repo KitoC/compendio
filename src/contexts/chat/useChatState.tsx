@@ -255,7 +255,18 @@ export const useChatState = ({
 
         if (loaded.messages) {
           setMessages(loaded.messages.reverse());
-          setTimeout(() => scrollToBottom(true), 100);
+          setTimeout(() => {
+            if (location.search.includes("message_id")) {
+              const messageId = location.search.split("message_id=")[1];
+              const messageElement = document.getElementById(messageId);
+
+              if (messageElement) {
+                messageElement.scrollIntoView({ behavior: "smooth" });
+              }
+            } else {
+              scrollToBottom(true);
+            }
+          }, 100);
           setMessagesLoaded(true);
         }
       } catch (err) {

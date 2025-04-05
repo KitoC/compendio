@@ -17,6 +17,7 @@ Your response must be formatted like this:
 
 \`\`\`json
 {
+  "priority": 0..5, // 5 is highest priority, 0 is lowest priority
   "email_drafted": {
     "body": "string",
     "to": "string"

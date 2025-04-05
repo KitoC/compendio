@@ -84,6 +84,14 @@
     @apply border-border;
   }
 
+  .border-highlight {
+    border-color: hsl(var(--primary));
+  }
+
+  a {
+    @apply cursor-pointer;
+    cursor: pointer;
+  }
   body {
     @apply bg-background text-foreground font-sans antialiased;
     -webkit-font-smoothing: antialiased;

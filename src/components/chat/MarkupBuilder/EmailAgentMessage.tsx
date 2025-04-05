@@ -21,7 +21,7 @@ import {
   MailX,
   UnfoldVertical,
 } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import RenderMarkdown from "../RenderMarkdown";
 import {
   NormalizedEmailResponse,
@@ -39,6 +39,9 @@ import {
 import { headingsPlugin } from "@mdxeditor/editor";
 
 import "@mdxeditor/editor/style.css";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useTenant } from "@/contexts/TenantContext";
+import { useNotifications } from "@/contexts/NotificationProvider";
 
 export interface QuickReplyConfig {
   replies: string[];
@@ -232,14 +235,20 @@ const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
   const { email_received, email_drafted, email_sent, reasoning } =
     message.content as unknown as NormalizedEmailResponse;
 
+  const location = useLocation();
+  const messageId = location.search.split("message_id=")[1];
+  const navigate = useNavigate();
   const [open, setOpen] = useState(!!email_drafted);
   const [isSending, setIsSending] = useState(false);
-
   const { triggerFunctionCall, replaceMessage, handleUpdateMessage } =
     useChat();
 
   const onUpdateContentPath = useCallback(
     (path: string, value: string | object) => {
+      let status = email_drafted ? "draft" : "received";
+      if (email_sent) {
+        status = "sent";
+      }
       handleUpdateMessage({
         id: message.id,
         content: {
@@ -247,11 +256,11 @@ const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
           [path]: value,
         },
         role: message.role,
-        metadata: message.metadata,
+        metadata: { ...message.metadata, status },
         tenant_id: message.tenant_id,
       });
     },
-    [message, handleUpdateMessage]
+    [message, handleUpdateMessage, email_drafted, email_sent]
   );
 
   const onUpdateDraftEmail = useCallback(
@@ -363,6 +372,12 @@ const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
     />
   );
 
+  useEffect(() => {
+    setTimeout(() => {
+      navigate(location.pathname);
+    }, 1000);
+  }, []);
+
   return (
     <Collapsible
       className="w-full"
@@ -377,7 +392,11 @@ const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
             messageBubbleStyles,
             otherMessageStyles,
             "flex flex-col gap-3 !py-4  relative min-h-20",
-            { "rounded-b-none": open }
+            {
+              "rounded-b-none": open,
+              "border-b-2 border-primary dark:border-primary":
+                message.id === messageId,
+            }
           )}
         >
           <div className="flex flex-col gap-1">
@@ -467,7 +486,11 @@ const EmailAgentMessage = ({ message }: QuickReplyBuilderProps) => {
             className={clsx(
               messageBubbleStyles,
               otherMessageStyles,
-              "flex flex-col gap-3 !py-4 rounded-t-none"
+              "flex flex-col gap-3 !py-4 rounded-t-none",
+              {
+                "border-b-2 border-primary dark:border-primary":
+                  message.id === messageId,
+              }
             )}
           >
             <div>

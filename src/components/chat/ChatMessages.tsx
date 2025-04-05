@@ -4,14 +4,30 @@ import { useChat } from "@/contexts/chat";
 import ChatMessage from "./ChatMessage";
 import { MARKUP_BUILDER_MAP_ROLES } from "./MarkupBuilder";
 import Loader from "../ui/loader";
+import { useLocation } from "react-router-dom";
+import clsx from "clsx";
+import { useEffect } from "react";
+import { useNotifications } from "@/contexts/NotificationProvider";
+
 const ChatMessages = () => {
   const { messages, messagesContainerRef, messagesLoaded } = useChat();
+  const { setEmailCount, emailCount } = useNotifications();
 
   const filteredMessages = messages
     .filter((message) =>
       ["user", "assistant", ...MARKUP_BUILDER_MAP_ROLES].includes(message.role)
     )
     .filter((fm) => !fm.reply_to);
+
+  useEffect(() => {
+    const draftEmailsPresent = messages.filter(
+      (message) => message.metadata?.status === "draft"
+    );
+
+    if (draftEmailsPresent.length !== emailCount) {
+      setEmailCount(draftEmailsPresent.length);
+    }
+  }, [messages, setEmailCount, emailCount]);
 
   return (
     <div
@@ -36,8 +52,9 @@ const ChatMessages = () => {
         return (
           <div
             key={message.id}
+            id={message.id}
             data-user-message={message.role === "user" ? "true" : "false"}
-            className="animate-fadeIn"
+            className={clsx("animate-fadeIn")}
           >
             <ChatMessage
               message={message}
