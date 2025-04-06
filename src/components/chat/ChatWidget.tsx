@@ -43,43 +43,43 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     }
     
     if (isFullScreen) {
-      return `${baseStyles} top-4 left-4 right-4 bottom-4 max-w-6xl mx-auto`;
+      return `${baseStyles} top-4 left-4 right-4 bottom-4 max-w-6xl mx-auto pt-safe-top pb-safe-bottom`;
     }
     
     switch (position) {
       case "bottom-right":
-        return `${baseStyles} bottom-4 right-4`;
+        return `${baseStyles} bottom-4 right-4 mb-safe-bottom mr-safe-right`;
       case "bottom-left":
-        return `${baseStyles} bottom-4 left-4`;
+        return `${baseStyles} bottom-4 left-4 mb-safe-bottom ml-safe-left`;
       case "top-right":
-        return `${baseStyles} top-4 right-4`;
+        return `${baseStyles} top-4 right-4 mt-safe-top mr-safe-right`;
       case "top-left":
-        return `${baseStyles} top-4 left-4`;
+        return `${baseStyles} top-4 left-4 mt-safe-top ml-safe-left`;
       case "left":
-        return `${baseStyles} left-4 top-1/2 -translate-y-1/2`;
+        return `${baseStyles} left-4 top-1/2 -translate-y-1/2 ml-safe-left`;
       case "right":
-        return `${baseStyles} right-4 top-1/2 -translate-y-1/2`;
+        return `${baseStyles} right-4 top-1/2 -translate-y-1/2 mr-safe-right`;
       default:
-        return `${baseStyles} bottom-4 right-4`;
+        return `${baseStyles} bottom-4 right-4 mb-safe-bottom mr-safe-right`;
     }
   };
   
   const getButtonPosition = () => {
     switch (position) {
       case "bottom-right":
-        return "bottom-4 right-4";
+        return "bottom-4 right-4 mb-safe-bottom mr-safe-right";
       case "bottom-left":
-        return "bottom-4 left-4";
+        return "bottom-4 left-4 mb-safe-bottom ml-safe-left";
       case "top-right":
-        return "top-4 right-4";
+        return "top-4 right-4 mt-safe-top mr-safe-right";
       case "top-left":
-        return "top-4 left-4";
+        return "top-4 left-4 mt-safe-top ml-safe-left";
       case "left":
-        return "left-4 top-1/2 -translate-y-1/2";
+        return "left-4 top-1/2 -translate-y-1/2 ml-safe-left";
       case "right":
-        return "right-4 top-1/2 -translate-y-1/2";
+        return "right-4 top-1/2 -translate-y-1/2 mr-safe-right";
       default:
-        return "bottom-4 right-4";
+        return "bottom-4 right-4 mb-safe-bottom mr-safe-right";
     }
   };
   
@@ -96,35 +96,35 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
           getPositionStyles(),
           isOpen 
             ? "bg-white dark:bg-gray-800 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col"
-            : "bg-transparent border-none w-14 h-14"
+            : "bg-transparent border-none w-16 h-16"
         )}
         style={{
-          width: isOpen ? (isFullScreen ? "100%" : "400px") : "56px",
-          height: isOpen ? (isFullScreen ? "100%" : "600px") : "56px",
-          maxHeight: isOpen ? (isFullScreen ? "100%" : "600px") : "56px",
-          maxWidth: isOpen ? (isFullScreen ? "72rem" : "400px") : "56px",
+          width: isOpen ? (isFullScreen ? "100%" : "400px") : "64px",
+          height: isOpen ? (isFullScreen ? "100%" : "600px") : "64px",
+          maxHeight: isOpen ? (isFullScreen ? "100%" : "600px") : "64px",
+          maxWidth: isOpen ? (isFullScreen ? "72rem" : "400px") : "64px",
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {isOpen ? (
           <ChatProvider conversationId={conversationId}>
-            <div className="flex justify-between items-center p-2 border-b dark:border-gray-700">
+            <div className="flex justify-between items-center p-3 border-b dark:border-gray-700">
               <div className="flex items-center gap-2">
                 <MessageCircle className="w-5 h-5" />
                 <span className="font-medium">Chat Assistant</span>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 <IconButton
                   variant="ghost"
                   size="sm"
                   onClick={toggleFullScreen}
-                  icon={isFullScreen ? <Minimize className="w-4 h-4" /> : <Expand className="w-4 h-4" />}
+                  icon={isFullScreen ? <Minimize className="w-5 h-5" /> : <Expand className="w-5 h-5" />}
                 />
                 <IconButton
                   variant="ghost"
                   size="sm"
                   onClick={toggleChatOpen}
-                  icon={<X className="w-4 h-4" />}
+                  icon={<X className="w-5 h-5" />}
                 />
               </div>
             </div>
@@ -135,9 +135,9 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
           <IconButton
             variant="primary"
             size="lg"
-            className="w-full h-full"
+            className="w-full h-full rounded-full"
             onClick={toggleChatOpen}
-            icon={<MessageCircle className="w-6 h-6" />}
+            icon={<MessageCircle className="w-7 h-7" />}
           />
         )}
       </div>

@@ -18,6 +18,7 @@ import clsx from "clsx";
 import { useChatState } from "@/contexts/chat/useChatState";
 import { useTTS } from "@/contexts/TTSProvider";
 import { useVoiceContext } from "@/contexts/VoiceProvider";
+import { useIsMobile } from "@/hooks/use-mobile";
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   disabled?: boolean;
@@ -64,6 +65,8 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
     const [isVoiceMode, setIsVoiceMode] = useState(false);
     const [commandFilter, setCommandFilter] = useState("");
     const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
+    const isMobile = useIsMobile();
+
     const filteredCommands = CHAT_COMMANDS.filter((cmd) =>
       cmd.command.toLowerCase().includes(commandFilter.toLowerCase())
     );
@@ -139,10 +142,15 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
     };
 
     const showStopButton = isTyping || isPlaying;
+
     return (
       <form
         onSubmit={handleSubmit}
-        className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-slate-600 rounded-lg shadow-sm p-3 "
+        className={clsx(
+          "bg-white dark:bg-gray-700 border border-gray-200 dark:border-slate-600 rounded-lg shadow-sm p-3 ",
+          isMobile &&
+            "rounded-b-none border-none pb-8 shadow-[0px_8px_16px_rgba(0,0,0,0.2)]"
+        )}
       >
         {showCommands && (
           <CommandSuggestions

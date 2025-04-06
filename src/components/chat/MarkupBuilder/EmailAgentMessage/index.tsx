@@ -158,29 +158,31 @@ const EmailAgentMessage = ({ message }: EmailAgentMessageProps) => {
       label="Status"
       value={
         <>
-          {statusText}
+          <span>{statusText}</span>
           {!email_drafted && !email_sent && (
-            <span className="text-muted-foreground ml-1">
+            <span className="text-muted-foreground ml-1 text-xs">
               (No response required)
             </span>
-          )}
-
-          {statusText === "Sent" && <MailCheck className="text-primary ml-2" />}
-          {statusText === "Drafted" && (
-            <MailQuestion className="text-primary ml-2" />
-          )}
-          {statusText === "Received" && (
-            <MailPlus className="text-primary ml-2" />
-          )}
-          {statusText === "Failed" && <MailX className="text-primary ml-2" />}
-          {statusText === "Sending..." && (
-            <div className="fit-content">
-              <Mail className="text-primary ml-2 email-sending" />
-            </div>
           )}
         </>
       }
     />
+  );
+
+  const icon = (
+    <>
+      {statusText === "Sent" && <MailCheck className="text-primary ml-2" />}
+      {statusText === "Drafted" && (
+        <MailQuestion className="text-primary ml-2" />
+      )}
+      {statusText === "Received" && <MailPlus className="text-primary ml-2" />}
+      {statusText === "Failed" && <MailX className="text-primary ml-2" />}
+      {statusText === "Sending..." && (
+        <div className="fit-content">
+          <Mail className="text-primary ml-2 email-sending" />
+        </div>
+      )}
+    </>
   );
 
   useEffect(() => {
@@ -205,7 +207,8 @@ const EmailAgentMessage = ({ message }: EmailAgentMessageProps) => {
     >
       <div
         className={clsx(
-          getContainerStyles({ isUser: false }) + " w-full transition-all",
+          getContainerStyles({ isUser: false }) +
+            " w-full transition-all !max-w-[100%]",
           {
             "scale-[1.04]": isHighlighted,
           }
@@ -221,6 +224,18 @@ const EmailAgentMessage = ({ message }: EmailAgentMessageProps) => {
             }
           )}
         >
+          <div className="flex justify-between">
+            {icon}
+            <CollapsibleTrigger>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setOpen(!open)}
+              >
+                {open ? <FoldVertical /> : <UnfoldVertical />}
+              </Button>
+            </CollapsibleTrigger>
+          </div>
           <div className="flex flex-col gap-1">
             {status}
             {!open && (
@@ -259,17 +274,7 @@ const EmailAgentMessage = ({ message }: EmailAgentMessageProps) => {
               </>
             )}
           </div>
-          <div className="p-4 absolute top-0 right-0">
-            <CollapsibleTrigger>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setOpen(!open)}
-              >
-                {open ? <FoldVertical /> : <UnfoldVertical />}
-              </Button>
-            </CollapsibleTrigger>
-          </div>
+
           <CollapsibleContent>
             <EmailContent
               header="They sent"

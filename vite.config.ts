@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import dotenv from "dotenv";
+import { VitePWA } from "vite-plugin-pwa";
 
 dotenv.config();
 
@@ -10,11 +11,38 @@ dotenv.config();
 export default defineConfig(({ mode, command }) => ({
   server: {
     host: "::",
-    port: 8080,
+    port: 8081,
   },
-  plugins: [react(), mode === "development" && componentTagger()].filter(
-    Boolean
-  ),
+  plugins: [
+    react(),
+    mode === "development" && componentTagger(),
+    VitePWA({
+      registerType: "autoUpdate",
+      includeAssets: ["favicon.svg", "robots.txt"],
+      manifest: {
+        name: "Compendio",
+        short_name: "",
+        start_url: "/",
+        theme_color: "#1e293b",
+        background_color: "#1e293b",
+        display: "standalone",
+        icons: [
+          {
+            src: "/web-app-manifest-192x192.png",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "maskable",
+          },
+          {
+            src: "/web-app-manifest-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
+          },
+        ],
+      },
+    }),
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

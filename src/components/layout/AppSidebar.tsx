@@ -35,16 +35,20 @@ import { useTenant } from "@/contexts/TenantContext";
 import TenantSwitcher from "./TenantSwitcher";
 import { useNotifications } from "@/contexts/NotificationProvider";
 import { Badge } from "@/components/ui/badge";
+import { useIsMobile } from "@/hooks/use-mobile";
+
 interface SidebarItemOrGroup {
   label: string;
   url?: string;
   icon?: React.ReactNode;
   children?: SidebarItemOrGroup[];
   notificationCount?: number;
+  onClick?: () => void;
 }
 
 const SidebarItem = (item: SidebarItemOrGroup) => {
   const { urlTenantAlias } = useTenant();
+  const isMobile = useIsMobile();
 
   return (
     <SidebarMenuItem key={item.label}>
@@ -53,13 +57,17 @@ const SidebarItem = (item: SidebarItemOrGroup) => {
         end
         className={({ isActive, isPending }) => {
           return clsx(
-            "pr-2 pl-3 w-full flex items-center gap-2 min-h-fit py-1 rounded hover:grey-200 dark:hover:bg-gray-700",
-            isActive && "bg-muted"
+            "pr-2 pl-3 w-full flex items-center gap-2 min-h-fit rounded hover:grey-200 dark:hover:bg-gray-700",
+            isActive && "bg-muted",
+            isMobile ? "py-3" : "py-1"
           );
         }}
+        onClick={item.onClick}
       >
-        {item.icon && item.icon}
-        <span>{item.label}</span>
+        {item.icon && (
+          <span className={clsx(isMobile ? "text-lg" : "")}>{item.icon}</span>
+        )}
+        <span className={clsx(isMobile ? "text-base" : "")}>{item.label}</span>
         {!!item.notificationCount && (
           <Badge variant="warning" className="ml-auto">
             {item.notificationCount}
@@ -88,6 +96,7 @@ const AppSidebar = () => {
       icon: <LayoutDashboard className="h-4 w-4" />,
       label: "Dashboard",
       url: ROUTES.DASHBOARD,
+      onClick: () => document.dispatchEvent(new CustomEvent("toggle-sidebar")),
     },
     {
       icon: <Bot className="h-4 w-4" />,
@@ -96,6 +105,8 @@ const AppSidebar = () => {
         label: agent.human_name || agent.name,
         url: ROUTES.AGENT_CHAT.replace(":id", agent.name),
         notificationCount: agent.name === "emaemail-assistant" ? emailCount : 0,
+        onClick: () =>
+          document.dispatchEvent(new CustomEvent("toggle-sidebar")),
       })),
     },
     {
@@ -105,6 +116,8 @@ const AppSidebar = () => {
       children: tables.map((table) => ({
         label: table.name,
         url: ROUTES.CUSTOM_TABLE_DATA.replace(":id", table.id),
+        onClick: () =>
+          document.dispatchEvent(new CustomEvent("toggle-sidebar")),
       })),
     },
   ];
@@ -244,18 +257,29 @@ const AppSidebar = () => {
   };
 
   // Select which items to show based on sidebar mode
-  const itemsToShow = showSettingsSidebar ? settingsItems : sidebarItems;
+  const itemsToShow = showSettingsSidebar
+    ? settingsItems.map((item) => ({
+        ...item,
+        children: item.children.map((child) => ({
+          ...child,
+          onClick: () =>
+            document.dispatchEvent(new CustomEvent("toggle-sidebar")),
+        })),
+      }))
+    : sidebarItems;
   const footerItemsToShow = showSettingsSidebar
     ? settingsFooterItems
     : footerItems;
 
+  console.log("itemsToShow", itemsToShow);
   return (
     <Sidebar
       collapsible="offcanvas"
       side="left"
       className="border-r border-border bg-sidebar"
     >
-      <SidebarHeader className="flex flex-col space-y-2 p-2">
+      <SidebarHeader className="flex flex-col space-y-2 p-2 pt-safe-top">
+        <div className="mt-1" />
         <TenantSwitcher />
         <div className="flex items-center flex-row p-2">
           <Avatar className="w-8 h-8 mr-2">
