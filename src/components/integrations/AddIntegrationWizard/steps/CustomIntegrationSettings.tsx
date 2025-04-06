@@ -28,7 +28,7 @@ const CustomIntegrationSettings = ({
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Step 4: Optional Settings</DialogTitle>
+        <DialogTitle>Optional Settings</DialogTitle>
         <DialogDescription>
           Customize your integration (optional)
         </DialogDescription>

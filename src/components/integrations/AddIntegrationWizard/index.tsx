@@ -21,6 +21,7 @@ import {
   initialWizardState,
   setIntegrationWizardState,
 } from "./utils";
+import { INTEGRATION_TYPES } from "@/lib/constants";
 
 const AddIntegrationWizard = ({
   isOpen,
@@ -37,6 +38,10 @@ const AddIntegrationWizard = ({
     })
   );
 
+  const integrationType = INTEGRATION_TYPES.find(
+    (type) => type.id === wizardState.service_type
+  );
+
   // Save wizard state whenever key fields change
   useEffect(() => {
     if (isOpen) {
@@ -44,17 +49,24 @@ const AddIntegrationWizard = ({
     }
   }, [isOpen, wizardState]);
 
-  const nextStep = () => {
+  const nextStep = useCallback(() => {
     setWizardState({ ...wizardState, step: wizardState.step + 1 });
-  };
-  const prevStep = () => {
+  }, [wizardState]);
+  const prevStep = useCallback(() => {
     setWizardState({ ...wizardState, step: wizardState.step - 1 });
-  };
+  }, [wizardState]);
 
   const resetAndClose = () => {
     clearIntegrationWizardState();
     sessionStorage.removeItem(OAUTH_INTEGRATION_CALLBACK_DATA_KEY);
 
+    setWizardState(
+      getIntegrationWizardState({
+        ...initialWizardState,
+        user_id: user?.id,
+        tenant_id: tenantId,
+      })
+    );
     onClose();
   };
 
@@ -69,21 +81,33 @@ const AddIntegrationWizard = ({
     [wizardState]
   );
 
-  const renderStepContent = () => {
-    switch (wizardState.step) {
-      case 1:
-        return (
-          <AddAiAgent
-            nextStep={nextStep}
-            prevStep={prevStep}
-            resetAndClose={resetAndClose}
-            onStepDataCapture={onStepDataCapture}
-            wizardState={wizardState}
-          />
-        );
+  const onPrevStep = useCallback(() => {
+    if (wizardState.step === 1) {
+      setWizardState({
+        ...initialWizardState,
+        user_id: user?.id,
+        tenant_id: tenantId,
+      });
+    } else {
+      prevStep();
+    }
+  }, [wizardState.step, user?.id, tenantId, prevStep]);
 
-      case 2:
-        return (
+  const defaultSteps = [
+    AddAiAgent,
+    Authentication,
+    CustomIntegrationSettings,
+    ConfirmIntegrationSettings,
+  ];
+
+  const steps = integrationType?.steps || defaultSteps;
+
+  const StepComponent = steps[wizardState.step - 1];
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && resetAndClose()}>
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+        {!wizardState.service_type ? (
           <SelectIntegrationType
             nextStep={nextStep}
             prevStep={prevStep}
@@ -91,67 +115,37 @@ const AddIntegrationWizard = ({
             onStepDataCapture={onStepDataCapture}
             wizardState={wizardState}
           />
-        );
-
-      case 3: {
-        return (
-          <Authentication
-            nextStep={nextStep}
-            prevStep={prevStep}
-            resetAndClose={resetAndClose}
-            onStepDataCapture={onStepDataCapture}
-            wizardState={wizardState}
-          />
-        );
-      }
-
-      case 4:
-        return (
-          <CustomIntegrationSettings
-            nextStep={nextStep}
-            prevStep={prevStep}
-            resetAndClose={resetAndClose}
-            onStepDataCapture={onStepDataCapture}
-            wizardState={wizardState}
-          />
-        );
-
-      case 5:
-        return (
-          <ConfirmIntegrationSettings
-            nextStep={nextStep}
-            prevStep={prevStep}
-            resetAndClose={resetAndClose}
-            onStepDataCapture={onStepDataCapture}
-            wizardState={wizardState}
-            onClose={onClose}
-          />
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && resetAndClose()}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">Add Integration</h2>
-            <div className="text-sm text-muted-foreground">
-              Step {wizardState.step} of 5
+        ) : (
+          <>
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">
+                  Add {integrationType?.name} Integration
+                </h2>
+                <div className="text-sm text-muted-foreground">
+                  Step {wizardState.step} of {steps.length}
+                </div>
+              </div>
+              <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
+                <div
+                  className="bg-primary h-full transition-all rounded-full"
+                  style={{
+                    width: `${(wizardState.step / steps.length) * 100}%`,
+                  }}
+                ></div>
+              </div>
             </div>
-          </div>
-          <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
-            <div
-              className="bg-primary h-full transition-all rounded-full"
-              style={{ width: `${(wizardState.step / 5) * 100}%` }}
-            ></div>
-          </div>
-        </div>
 
-        {renderStepContent()}
+            <StepComponent
+              nextStep={nextStep}
+              prevStep={onPrevStep}
+              resetAndClose={resetAndClose}
+              onStepDataCapture={onStepDataCapture}
+              wizardState={wizardState}
+              onClose={onClose}
+            />
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -179,10 +179,45 @@ export const integrationSettingsConfig: FormConfig = {
   submitIconButtonAfter: <ArrowRight className="ml-2 h-4 w-4" />,
 };
 
+const airtableFormConfig: FormConfig = {
+  id: "airtable-config",
+  title: "Airtable Configuration",
+  description: "Enter your Airtable instance details",
+  sections: [
+    {
+      id: "settings",
+      fields: [
+        {
+          id: "name",
+          name: "name",
+          label: "Credential Name",
+          type: "text",
+          placeholder: "",
+          validation: { required: true },
+        },
+        {
+          id: "access_token",
+          name: "access_token",
+          label: "Access Token",
+          type: "password",
+          placeholder: "Enter your Airtable access token",
+          validation: { required: true },
+        },
+      ],
+    },
+  ],
+  submitButtonText: "Connect with Airtable",
+  initialValues: {
+    name: "Airtable personal access token",
+    access_token: "",
+  },
+};
+
 // Map of integrations to their form configs
 export const INTEGRATION_FORM_CONFIGS: Record<string, FormConfig> = {
   gmail: gmailFormConfig,
   outlook: outlookFormConfig,
   n8n: n8nFormConfig,
   webhook: webhookFormConfig,
+  airtable: airtableFormConfig,
 };

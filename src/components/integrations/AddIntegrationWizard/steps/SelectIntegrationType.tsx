@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { StepProps } from "../types";
 import clsx from "clsx";
+import { SiAirtable, SiGmail, SiMicrosoft } from "react-icons/si";
+import { PiMicrosoftOutlookLogoFill } from "react-icons/pi";
 
 const getIntegrationIcon = (type: string) => {
   switch (type) {
@@ -32,6 +34,12 @@ const getIntegrationIcon = (type: string) => {
       return <Mail className="h-6 w-6" />;
     case "workflow":
       return <Workflow className="h-6 w-6" />;
+    case "gmail":
+      return <SiGmail className="h-6 w-6" />;
+    case "outlook":
+      return <PiMicrosoftOutlookLogoFill className="h-6 w-6" />;
+    case "airtable":
+      return <SiAirtable className="h-6 w-6" />;
     default:
       return <Globe className="h-6 w-6" />;
   }
@@ -41,11 +49,12 @@ const SelectIntegrationType = ({
   prevStep,
   wizardState,
   onStepDataCapture,
+  resetAndClose,
 }: StepProps) => {
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Step 2: Select Integration Type</DialogTitle>
+        <DialogTitle>Select Integration Type</DialogTitle>
         <DialogDescription>
           Choose the type of service to connect
         </DialogDescription>
@@ -57,7 +66,7 @@ const SelectIntegrationType = ({
             <Card
               key={integrationType.id}
               className={clsx(
-                "cursor-pointer hover:border-info transition-colors",
+                "cursor-pointer hover:border-info transition-colors p-0",
                 {
                   "border-info bg-info/5": isSelected,
                 }
@@ -68,18 +77,20 @@ const SelectIntegrationType = ({
                 })
               }
             >
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-center">
+              <CardHeader className="pb-2 p-4">
+                <div className="flex gap-2 items-center">
                   <div className="p-2 rounded-full bg-info/10">
                     {getIntegrationIcon(integrationType.icon)}
                   </div>
-                  {isSelected && <Check className="h-5 w-5 text-info" />}
+                  <CardTitle className="text-lg">
+                    {integrationType.name}
+                  </CardTitle>
+                  {isSelected && (
+                    <Check className="ml-auto h-5 w-5 text-info" />
+                  )}
                 </div>
               </CardHeader>
-              <CardContent>
-                <CardTitle className="text-lg">
-                  {integrationType.name}
-                </CardTitle>
+              <CardContent className="p-4">
                 <CardDescription>{integrationType.description}</CardDescription>
               </CardContent>
             </Card>
@@ -87,11 +98,8 @@ const SelectIntegrationType = ({
         })}
       </div>
       <DialogFooter>
-        <Button variant="outline" onClick={prevStep}>
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back
-        </Button>
-        <Button onClick={nextStep} disabled={!wizardState.service_type}>
-          Next <ArrowRight className="ml-2 h-4 w-4" />
+        <Button variant="outline" onClick={resetAndClose}>
+          Cancel
         </Button>
       </DialogFooter>
     </>

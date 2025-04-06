@@ -41,8 +41,8 @@ export const callSupabaseFunction = async (
 };
 
 export const SupabaseFunctionService = {
-  async get(functionName: string, searchParams: Record<string, string>) {
-    const query = new URLSearchParams(searchParams).toString();
+  async get(functionName: string, searchParams?: Record<string, string>) {
+    const query = new URLSearchParams(searchParams || {}).toString();
 
     const headers = await getHeaders();
 
@@ -71,6 +71,16 @@ export const SupabaseFunctionService = {
       method: "PATCH",
       headers,
       body: JSON.stringify(body),
+    });
+
+    return response;
+  },
+
+  async delete(functionName: string) {
+    const headers = await getHeaders();
+    const response = await fetch(getFunctionUrl(functionName), {
+      method: "DELETE",
+      headers,
     });
 
     return response;

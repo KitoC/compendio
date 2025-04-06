@@ -1,3 +1,5 @@
+import Authentication from "@/components/integrations/AddIntegrationWizard/steps/Authentication";
+import { IntegrationType } from "@/components/integrations/AddIntegrationWizard/types";
 import {
   Palette,
   Users2,
@@ -90,12 +92,36 @@ export const settingsItems = [
 ];
 
 // Define the supported integration types with their configurations
-export const INTEGRATION_TYPES = [
+export const INTEGRATION_TYPES: IntegrationType[] = [
+  // {
+  //   id: "airtable",
+  //   name: "Airtable",
+  //   description: "Connect to Airtable to access your data",
+  //   icon: "airtable",
+  //   authType: "access_token",
+  //   oauthProvider: "airtable",
+  //   formConfig: {
+  //     id: "airtable-config",
+  //     title: "Airtable OAuth Setup",
+  //     description: "Click below to authenticate with your Airtable account.",
+  //     sections: [],
+  //     submitButtonText: "Connect with Airtable",
+  //   },
+  //   steps: [
+  //     Authentication,
+  //     // SelectBase,
+  //     // SelectTable,
+  //     // SelectFields,
+  //     // SelectView,
+  //     // SelectFields,
+  //     // SelectView,
+  //   ],
+  // },
   {
     id: "gmail",
     name: "Gmail",
     description: "Connect to Gmail to access emails and contacts",
-    icon: "mail",
+    icon: "gmail",
     authType: "oauth",
     oauthProvider: "google",
     formConfig: {
@@ -110,7 +136,7 @@ export const INTEGRATION_TYPES = [
     id: "outlook",
     name: "Outlook",
     description: "Connect to Microsoft Outlook for emails and calendar",
-    icon: "mail",
+    icon: "outlook",
     authType: "oauth",
     oauthProvider: "azure",
     // TODO: Make this dynamic

@@ -86,9 +86,16 @@ const AppSidebar = () => {
   const [showSettingsSidebar, setShowSettingsSidebar] = useState(false);
   const location = useLocation();
   const { emailCount } = useNotifications();
+  const isMobile = useIsMobile();
 
   // Check if we're in settings route
   const isInSettingsRoute = location.pathname.includes(ROUTES.SETTINGS);
+
+  const onNavItemClick = () => {
+    if (isMobile) {
+      document.dispatchEvent(new CustomEvent("toggle-sidebar"));
+    }
+  };
 
   // Define sidebar items for main navigation
   const sidebarItems = [
@@ -96,7 +103,7 @@ const AppSidebar = () => {
       icon: <LayoutDashboard className="h-4 w-4" />,
       label: "Dashboard",
       url: ROUTES.DASHBOARD,
-      onClick: () => document.dispatchEvent(new CustomEvent("toggle-sidebar")),
+      onClick: onNavItemClick,
     },
     {
       icon: <Bot className="h-4 w-4" />,
@@ -105,19 +112,17 @@ const AppSidebar = () => {
         label: agent.human_name || agent.name,
         url: ROUTES.AGENT_CHAT.replace(":id", agent.name),
         notificationCount: agent.name === "emaemail-assistant" ? emailCount : 0,
-        onClick: () =>
-          document.dispatchEvent(new CustomEvent("toggle-sidebar")),
+        onClick: onNavItemClick,
       })),
     },
     {
       icon: <Table2 className="h-4 w-4" />,
-      label: "Custom Tables",
+      label: "Resources",
       hidden: tables.length === 0,
       children: tables.map((table) => ({
         label: table.name,
         url: ROUTES.CUSTOM_TABLE_DATA.replace(":id", table.id),
-        onClick: () =>
-          document.dispatchEvent(new CustomEvent("toggle-sidebar")),
+        onClick: onNavItemClick,
       })),
     },
   ];
@@ -262,8 +267,7 @@ const AppSidebar = () => {
         ...item,
         children: item.children.map((child) => ({
           ...child,
-          onClick: () =>
-            document.dispatchEvent(new CustomEvent("toggle-sidebar")),
+          onClick: onNavItemClick,
         })),
       }))
     : sidebarItems;
@@ -271,7 +275,6 @@ const AppSidebar = () => {
     ? settingsFooterItems
     : footerItems;
 
-  console.log("itemsToShow", itemsToShow);
   return (
     <Sidebar
       collapsible="offcanvas"
