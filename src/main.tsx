@@ -1,3 +1,4 @@
+
 import "regenerator-runtime/runtime"; // Import regenerator runtime for Safari compatibility
 import "core-js/stable";
 import { createRoot } from "react-dom/client";
@@ -58,7 +59,7 @@ const setMobileViewport = () => {
     viewportMeta.setAttribute("name", "viewport");
     document.head.appendChild(viewportMeta);
   }
-  // Add Safari-specific viewport settings
+  // Add Safari-specific viewport settings with safe-area-inset support
   viewportMeta.setAttribute(
     "content",
     "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no"

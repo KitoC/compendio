@@ -46,6 +46,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "agent_functions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "user_agents_with_conversations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "agent_functions_function_id_fkey"
             columns: ["function_id"]
             isOneToOne: false
@@ -95,6 +102,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_agent_workflows_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "user_agents_with_conversations"
             referencedColumns: ["id"]
           },
           {
@@ -339,6 +353,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "connected_services_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "user_agents_with_conversations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "connected_services_credential_id_fkey"
             columns: ["credential_id"]
             isOneToOne: false
@@ -444,6 +465,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_participants_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "user_agents_with_conversations"
             referencedColumns: ["id"]
           },
           {
@@ -1553,18 +1581,21 @@ export type Database = {
       }
       tenants: {
         Row: {
+          created_at: string | null
           id: string
           name: string | null
           tenant_owner_id: string
           workspace: string | null
         }
         Insert: {
+          created_at?: string | null
           id?: string
           name?: string | null
           tenant_owner_id: string
           workspace?: string | null
         }
         Update: {
+          created_at?: string | null
           id?: string
           name?: string | null
           tenant_owner_id?: string
@@ -1766,6 +1797,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_instances_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "user_agents_with_conversations"
             referencedColumns: ["id"]
           },
           {
@@ -1972,6 +2010,34 @@ export type Database = {
           },
         ]
       }
+      user_agents_with_conversations: {
+        Row: {
+          avatar_url: string | null
+          conversations: Json | null
+          created_at: string | null
+          deleted_at: string | null
+          domain: string | null
+          enabled: boolean | null
+          human_name: string | null
+          id: string | null
+          model: string | null
+          name: string | null
+          prompt: string | null
+          provider: string | null
+          responsibility: string | null
+          tenant_id: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_ai_agents_tenant"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       add_default_columns: {
@@ -2125,7 +2191,40 @@ export type Database = {
         }
         Returns: string
       }
-      get_conversation_messages: {
+      get_conversation_messages:
+        | {
+            Args: {
+              _conversation_id: string
+              _decryption_key?: string
+              _search?: string
+              _metadata_search?: string
+              _role?: string
+              _limit?: number
+              _offset?: number
+              _order?: string
+              _sort_direction?: string
+              _include_deleted?: boolean
+            }
+            Returns: Database["public"]["CompositeTypes"]["paginated_messages"]
+          }
+        | {
+            Args: {
+              _conversation_id: string
+              _decryption_key?: string
+              _search?: string
+              _metadata_search?: string
+              _role?: string
+              _limit?: number
+              _offset?: number
+              _order?: string
+              _sort_direction?: string
+              _include_deleted?: boolean
+              _content_filter?: Json
+              _priority_sort_direction?: string
+            }
+            Returns: Database["public"]["CompositeTypes"]["paginated_messages"]
+          }
+      get_conversation_messages_v2: {
         Args: {
           _conversation_id: string
           _decryption_key?: string
@@ -2137,6 +2236,41 @@ export type Database = {
           _order?: string
           _sort_direction?: string
           _include_deleted?: boolean
+          _content_filter?: Json
+        }
+        Returns: Database["public"]["CompositeTypes"]["paginated_messages"]
+      }
+      get_conversation_messages_v3: {
+        Args: {
+          _conversation_id: string
+          _decryption_key?: string
+          _search?: string
+          _metadata_search?: string
+          _role?: string
+          _limit?: number
+          _offset?: number
+          _order?: string
+          _sort_direction?: string
+          _include_deleted?: boolean
+          _content_filter?: Json
+          _priority_sort_direction?: string
+        }
+        Returns: Database["public"]["CompositeTypes"]["paginated_messages"]
+      }
+      get_conversation_messages_v4: {
+        Args: {
+          _conversation_id: string
+          _decryption_key?: string
+          _search?: string
+          _metadata_search?: string
+          _role?: string
+          _limit?: number
+          _offset?: number
+          _order?: string
+          _sort_direction?: string
+          _include_deleted?: boolean
+          filter?: Json
+          _priority_sort_direction?: string
         }
         Returns: Database["public"]["CompositeTypes"]["paginated_messages"]
       }
@@ -2245,22 +2379,14 @@ export type Database = {
         }
         Returns: boolean
       }
-      has_row_permission:
-        | {
-            Args: {
-              perms: Json
-              action: string
-            }
-            Returns: boolean
-          }
-        | {
-            Args: {
-              target_tenant_id: string
-              perms: Json
-              action: string
-            }
-            Returns: boolean
-          }
+      has_row_permission: {
+        Args: {
+          target_tenant_id: string
+          perms: Json
+          action: string
+        }
+        Returns: boolean
+      }
       hnsw_bit_support: {
         Args: {
           "": unknown

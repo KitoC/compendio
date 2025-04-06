@@ -5,13 +5,14 @@ import AppSidebar from "@/components/layout/AppSidebar";
 import { ROUTES } from "@/lib/constants";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Menu } from "lucide-react";
+import { Menu, SquareChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AiAgentsProvider } from "@/contexts/AiAgents/AiAgentsProvider";
 import { CustomTablesProvider } from "@/contexts/CustomTables/CustomTablesProvider";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { UserSettingsProvider } from "@/contexts/UserSettingsProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
 
 interface ApplicationLayoutProps {
   children?: ReactNode;
@@ -60,6 +61,7 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
         }
       >
         {children || <Outlet />}
+        <PwaInstallPrompt />
       </Suspense>
     );
   }
@@ -76,25 +78,24 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
   return (
     <UserSettingsProvider>
       <ThemeProvider defaultTheme="system">
-        {" "}
         <TooltipProvider>
           <AiAgentsProvider>
             <CustomTablesProvider>
               <SidebarProvider>
                 <div className="flex flex-col min-h-screen w-full bg-background">
                   {isMobile && !isOnBoardingRoute && (
-                    <header className="sticky top-0 pt-4 z-40 flex items-center h-[60px] px-4 border-b bg-sidebar shadow-sm">
+                    <header className="sticky top-0 z-40 flex items-center h-[70px] px-4 border-b bg-background shadow pt-safe-top">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="mr-2"
+                        className="mr-2 h-14 w-14 p-2"
                         onClick={() =>
                           document.dispatchEvent(
                             new CustomEvent("toggle-sidebar")
                           )
                         }
                       >
-                        <Menu className="h-5 w-5" />
+                        <Menu />
                         <span className="sr-only">Toggle menu</span>
                       </Button>
                       <div id="page-header-anchor" className="flex-1"></div>
@@ -102,7 +103,7 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
                   )}
                   <div className="flex flex-1 min-h-0">
                     {!isOnBoardingRoute && <AppSidebar />}
-                    <main className="flex-1 overflow-auto h-screen">
+                    <main className="flex-1 overflow-auto h-screen pt-safe-top">
                       <Suspense
                         fallback={
                           <div className="flex justify-center items-center h-full p-8">
@@ -115,6 +116,7 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
                     </main>
                   </div>
                 </div>
+                <PwaInstallPrompt />
               </SidebarProvider>
             </CustomTablesProvider>
           </AiAgentsProvider>

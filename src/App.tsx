@@ -1,3 +1,4 @@
+
 import { Routes, Route, BrowserRouter, Navigate } from "react-router-dom";
 import { QueryProvider } from "./contexts/QueryProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -37,6 +38,7 @@ import { TTSProvider } from "./contexts/TTSProvider";
 import { VoiceProvider } from "./contexts/VoiceProvider";
 import OnboardingPage from "./pages/OnboardingPage";
 import { NotificationProvider } from "./contexts/NotificationProvider";
+import { PwaInstallPrompt } from "./components/PwaInstallPrompt";
 
 function App() {
   return (
@@ -54,7 +56,6 @@ function App() {
                       path={ROUTES.AUTH_CALLBACK}
                       element={<AuthCallback />}
                     />
-
                     <Route
                       path={ROUTES.FORGOT_PASSWORD}
                       element={<ForgotPassword />}
@@ -77,12 +78,10 @@ function App() {
                       element={<ApplicationLayout />}
                     >
                       <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
-
                       <Route
                         path={ROUTES.ONBOARDING}
                         element={<OnboardingPage />}
                       />
-
                       <Route
                         path={ROUTES.CUSTOM_TABLE_DATA}
                         element={<CustomTableData />}
@@ -164,6 +163,7 @@ function App() {
                       <Route path="*" element={<Dashboard />} />
                     </Route>
                   </Routes>
+                  <PwaInstallPrompt />
                   <Toaster />
                 </VoiceProvider>
               </TTSProvider>
