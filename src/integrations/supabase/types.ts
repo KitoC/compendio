@@ -627,56 +627,6 @@ export type Database = {
           },
         ]
       }
-      custom_migrations: {
-        Row: {
-          applied_at: string | null
-          created_at: string | null
-          deleted_at: string | null
-          error: string | null
-          id: string
-          migration: Json
-          name: string
-          rollback: Json | null
-          success: boolean | null
-          tenant_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          applied_at?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          error?: string | null
-          id?: string
-          migration: Json
-          name: string
-          rollback?: Json | null
-          success?: boolean | null
-          tenant_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          applied_at?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          error?: string | null
-          id?: string
-          migration?: Json
-          name?: string
-          rollback?: Json | null
-          success?: boolean | null
-          tenant_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_custom_migrations_tenant"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       custom_roles: {
         Row: {
           created_at: string | null
@@ -722,289 +672,6 @@ export type Database = {
           },
         ]
       }
-      custom_table_data: {
-        Row: {
-          created_at: string | null
-          data: Json
-          deleted_at: string | null
-          id: string
-          metadata: Json
-          table_id: string
-          table_name: string
-          tenant_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          data: Json
-          deleted_at?: string | null
-          id?: string
-          metadata: Json
-          table_id: string
-          table_name: string
-          tenant_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          data?: Json
-          deleted_at?: string | null
-          id?: string
-          metadata?: Json
-          table_id?: string
-          table_name?: string
-          tenant_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_custom_table_data_tenant"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      custom_table_data_progress: {
-        Row: {
-          current_step: number | null
-          last_table: string | null
-          last_table_id: string | null
-          status: string | null
-          tenant_id: string
-          total_steps: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          current_step?: number | null
-          last_table?: string | null
-          last_table_id?: string | null
-          status?: string | null
-          tenant_id: string
-          total_steps?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          current_step?: number | null
-          last_table?: string | null
-          last_table_id?: string | null
-          status?: string | null
-          tenant_id?: string
-          total_steps?: number | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      custom_table_definitions: {
-        Row: {
-          created_at: string | null
-          deleted_at: string | null
-          description: string | null
-          display_name: string | null
-          icon: string | null
-          id: string
-          name: string
-          permissions: Json
-          tenant_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          deleted_at?: string | null
-          description?: string | null
-          display_name?: string | null
-          icon?: string | null
-          id?: string
-          name: string
-          permissions: Json
-          tenant_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          deleted_at?: string | null
-          description?: string | null
-          display_name?: string | null
-          icon?: string | null
-          id?: string
-          name?: string
-          permissions?: Json
-          tenant_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_custom_table_definitions_tenant"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      custom_table_fields: {
-        Row: {
-          created_at: string | null
-          default_value: string | null
-          deleted_at: string | null
-          description: string | null
-          display_name: string | null
-          field_type: Database["public"]["Enums"]["field_type_enum"]
-          id: string
-          is_required: boolean | null
-          is_unique: boolean | null
-          name: string
-          options: Json | null
-          permissions: Json
-          relation: Json | null
-          table_id: string | null
-          tenant_id: string
-          updated_at: string | null
-          validation: Json | null
-        }
-        Insert: {
-          created_at?: string | null
-          default_value?: string | null
-          deleted_at?: string | null
-          description?: string | null
-          display_name?: string | null
-          field_type: Database["public"]["Enums"]["field_type_enum"]
-          id?: string
-          is_required?: boolean | null
-          is_unique?: boolean | null
-          name: string
-          options?: Json | null
-          permissions: Json
-          relation?: Json | null
-          table_id?: string | null
-          tenant_id: string
-          updated_at?: string | null
-          validation?: Json | null
-        }
-        Update: {
-          created_at?: string | null
-          default_value?: string | null
-          deleted_at?: string | null
-          description?: string | null
-          display_name?: string | null
-          field_type?: Database["public"]["Enums"]["field_type_enum"]
-          id?: string
-          is_required?: boolean | null
-          is_unique?: boolean | null
-          name?: string
-          options?: Json | null
-          permissions?: Json
-          relation?: Json | null
-          table_id?: string | null
-          tenant_id?: string
-          updated_at?: string | null
-          validation?: Json | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "custom_table_fields_table_id_fkey"
-            columns: ["table_id"]
-            isOneToOne: false
-            referencedRelation: "custom_table_definitions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_custom_table_fields_tenant"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      custom_table_progress: {
-        Row: {
-          current_step: number | null
-          last_table: string | null
-          last_table_id: string | null
-          status: string | null
-          tenant_id: string
-          total_steps: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          current_step?: number | null
-          last_table?: string | null
-          last_table_id?: string | null
-          status?: string | null
-          tenant_id: string
-          total_steps?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          current_step?: number | null
-          last_table?: string | null
-          last_table_id?: string | null
-          status?: string | null
-          tenant_id?: string
-          total_steps?: number | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      custom_table_relationships: {
-        Row: {
-          created_at: string | null
-          deleted_at: string | null
-          from_field: string
-          from_table: string
-          id: string
-          relationship_type: string
-          table_id: string | null
-          tenant_id: string
-          to_field: string
-          to_table: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          deleted_at?: string | null
-          from_field: string
-          from_table: string
-          id?: string
-          relationship_type: string
-          table_id?: string | null
-          tenant_id: string
-          to_field: string
-          to_table: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          deleted_at?: string | null
-          from_field?: string
-          from_table?: string
-          id?: string
-          relationship_type?: string
-          table_id?: string | null
-          tenant_id?: string
-          to_field?: string
-          to_table?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "custom_table_relationships_table_id_fkey"
-            columns: ["table_id"]
-            isOneToOne: false
-            referencedRelation: "custom_table_definitions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_custom_table_relationships_tenant"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       customers: {
         Row: {
           contact_details: Json
@@ -1036,6 +703,125 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fk_customers_tenant"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      data_fields: {
+        Row: {
+          created_at: string | null
+          deleted_at: string | null
+          external_id: string | null
+          id: string
+          permissions: Json
+          schema: Json | null
+          schema_id: string | null
+          schema_name: string | null
+          source: string | null
+          table_id: string | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          deleted_at?: string | null
+          external_id?: string | null
+          id?: string
+          permissions: Json
+          schema?: Json | null
+          schema_id?: string | null
+          schema_name?: string | null
+          source?: string | null
+          table_id?: string | null
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          deleted_at?: string | null
+          external_id?: string | null
+          id?: string
+          permissions?: Json
+          schema?: Json | null
+          schema_id?: string | null
+          schema_name?: string | null
+          source?: string | null
+          table_id?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_table_fields_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "data_tables"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_custom_table_fields_tenant"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      data_tables: {
+        Row: {
+          created_at: string | null
+          deleted_at: string | null
+          description: string | null
+          display_name: string | null
+          external_id: string | null
+          icon: string | null
+          id: string
+          name: string
+          permissions: Json
+          schema_id: string | null
+          schema_name: string | null
+          source: string | null
+          tenant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          display_name?: string | null
+          external_id?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          permissions: Json
+          schema_id?: string | null
+          schema_name?: string | null
+          source?: string | null
+          tenant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          display_name?: string | null
+          external_id?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          permissions?: Json
+          schema_id?: string | null
+          schema_name?: string | null
+          source?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_custom_table_definitions_tenant"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1581,6 +1367,7 @@ export type Database = {
       }
       tenants: {
         Row: {
+          base_id: string | null
           created_at: string | null
           id: string
           name: string | null
@@ -1588,6 +1375,7 @@ export type Database = {
           workspace: string | null
         }
         Insert: {
+          base_id?: string | null
           created_at?: string | null
           id?: string
           name?: string | null
@@ -1595,6 +1383,7 @@ export type Database = {
           workspace?: string | null
         }
         Update: {
+          base_id?: string | null
           created_at?: string | null
           id?: string
           name?: string | null
@@ -2048,16 +1837,8 @@ export type Database = {
         }
         Returns: undefined
       }
-      apply_custom_migration: {
-        Args: {
-          migration_name: string
-        }
-        Returns: undefined
-      }
       apply_system_admin_rls_policy: {
-        Args: {
-          _table_name: string
-        }
+        Args: { _table_name: string }
         Returns: undefined
       }
       batch_decrypt_jsonb_fields: {
@@ -2070,19 +1851,10 @@ export type Database = {
         }
         Returns: Json[]
       }
-      binary_quantize:
-        | {
-            Args: {
-              "": string
-            }
-            Returns: unknown
-          }
-        | {
-            Args: {
-              "": unknown
-            }
-            Returns: unknown
-          }
+      binary_quantize: {
+        Args: { "": unknown } | { "": string }
+        Returns: unknown
+      }
       build_default_permissions: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -2122,64 +1894,35 @@ export type Database = {
         Returns: undefined
       }
       create_tenant_request: {
-        Args: {
-          workspace_name: string
-          user_email: string
-        }
+        Args: { workspace_name: string; user_email: string }
         Returns: string
       }
       decrypt_function_task: {
-        Args: {
-          _id: string
-          _encryption_key: string
-        }
+        Args: { _id: string; _encryption_key: string }
         Returns: Json
       }
       decrypt_jsonb_payload: {
-        Args: {
-          _encrypted: string
-          _encryption_key: string
-        }
+        Args: { _encrypted: string; _encryption_key: string }
         Returns: Json
       }
       decrypt_message: {
-        Args: {
-          _message_id: string
-          _decryption_key: string
-        }
+        Args: { _message_id: string; _decryption_key: string }
         Returns: string
       }
       decrypt_refresh_token: {
-        Args: {
-          _credential_id: string
-          _encryption_key: string
-        }
+        Args: { _credential_id: string; _encryption_key: string }
         Returns: string
-      }
-      delete_custom_table_record: {
-        Args: {
-          p_table_name: string
-          p_record_id: string
-          p_tenant_id: string
-        }
-        Returns: undefined
       }
       delete_expired_oauth_states: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
       encrypt_json_payload: {
-        Args: {
-          json_data: Json
-          key: string
-        }
+        Args: { json_data: Json; key: string }
         Returns: string
       }
       encrypt_jsonb_payload: {
-        Args: {
-          _payload: Json
-          _encryption_key: string
-        }
+        Args: { _payload: Json; _encryption_key: string }
         Returns: string
       }
       enqueue_function_task: {
@@ -2191,24 +1934,9 @@ export type Database = {
         }
         Returns: string
       }
-      get_conversation_messages:
-        | {
-            Args: {
-              _conversation_id: string
-              _decryption_key?: string
-              _search?: string
-              _metadata_search?: string
-              _role?: string
-              _limit?: number
-              _offset?: number
-              _order?: string
-              _sort_direction?: string
-              _include_deleted?: boolean
-            }
-            Returns: Database["public"]["CompositeTypes"]["paginated_messages"]
-          }
-        | {
-            Args: {
+      get_conversation_messages: {
+        Args:
+          | {
               _conversation_id: string
               _decryption_key?: string
               _search?: string
@@ -2222,8 +1950,20 @@ export type Database = {
               _content_filter?: Json
               _priority_sort_direction?: string
             }
-            Returns: Database["public"]["CompositeTypes"]["paginated_messages"]
-          }
+          | {
+              _conversation_id: string
+              _decryption_key?: string
+              _search?: string
+              _metadata_search?: string
+              _role?: string
+              _limit?: number
+              _offset?: number
+              _order?: string
+              _sort_direction?: string
+              _include_deleted?: boolean
+            }
+        Returns: Database["public"]["CompositeTypes"]["paginated_messages"]
+      }
       get_conversation_messages_v2: {
         Args: {
           _conversation_id: string
@@ -2274,22 +2014,12 @@ export type Database = {
         }
         Returns: Database["public"]["CompositeTypes"]["paginated_messages"]
       }
-      get_custom_table_data: {
-        Args: {
-          p_table_name: string
-          p_tenant_id: string
-        }
-        Returns: Json
-      }
       get_field_types: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["field_type_enum"][]
       }
       get_message: {
-        Args: {
-          _message_id: string
-          _decryption_key?: string
-        }
+        Args: { _message_id: string; _decryption_key?: string }
         Returns: {
           conversation_id: string
           id: string
@@ -2308,10 +2038,7 @@ export type Database = {
         }[]
       }
       get_message_by_id: {
-        Args: {
-          _message_id: string
-          _decryption_key?: string
-        }
+        Args: { _message_id: string; _decryption_key?: string }
         Returns: Database["public"]["CompositeTypes"]["message_with_profile"][]
       }
       get_next_decrypted_function_tasks: {
@@ -2324,9 +2051,7 @@ export type Database = {
         Returns: Json
       }
       get_table_schema: {
-        Args: {
-          t_name: string
-        }
+        Args: { t_name: string }
         Returns: {
           column_name: string
           data_type: string
@@ -2336,9 +2061,7 @@ export type Database = {
         }[]
       }
       get_user_tenants: {
-        Args: {
-          user_id: string
-        }
+        Args: { user_id: string }
         Returns: {
           id: string
           name: string
@@ -2348,27 +2071,19 @@ export type Database = {
         }[]
       }
       halfvec_avg: {
-        Args: {
-          "": number[]
-        }
+        Args: { "": number[] }
         Returns: unknown
       }
       halfvec_out: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: unknown
       }
       halfvec_send: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: string
       }
       halfvec_typmod_in: {
-        Args: {
-          "": unknown[]
-        }
+        Args: { "": unknown[] }
         Returns: number
       }
       has_role: {
@@ -2380,43 +2095,24 @@ export type Database = {
         Returns: boolean
       }
       has_row_permission: {
-        Args: {
-          target_tenant_id: string
-          perms: Json
-          action: string
-        }
+        Args: { target_tenant_id: string; perms: Json; action: string }
         Returns: boolean
       }
       hnsw_bit_support: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: unknown
       }
       hnsw_halfvec_support: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: unknown
       }
       hnsw_sparsevec_support: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: unknown
       }
       hnswhandler: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: unknown
-      }
-      import_custom_table_data: {
-        Args: {
-          import_data: Json
-          input_tenant_id: string
-        }
-        Returns: undefined
       }
       insert_and_trigger_function_task: {
         Args: {
@@ -2449,21 +2145,6 @@ export type Database = {
         }
         Returns: string
       }
-      insert_custom_table_record: {
-        Args: {
-          p_table_name: string
-          p_tenant_id: string
-          p_data: Json
-        }
-        Returns: Json
-      }
-      insert_custom_tables: {
-        Args: {
-          schema_data: Json
-          input_tenant_id: string
-        }
-        Returns: Json
-      }
       insert_user_role: {
         Args: {
           p_email: string
@@ -2473,9 +2154,7 @@ export type Database = {
         Returns: undefined
       }
       is_super_admin: {
-        Args: {
-          _user_id: string
-        }
+        Args: { _user_id: string }
         Returns: boolean
       }
       is_system_admin: {
@@ -2483,67 +2162,33 @@ export type Database = {
         Returns: boolean
       }
       is_tenant_owner: {
-        Args: {
-          _tenant_id: string
-        }
+        Args: { _tenant_id: string }
         Returns: boolean
       }
       is_tenant_user: {
-        Args: {
-          _tenant_id: string
-        }
+        Args: { _tenant_id: string }
         Returns: boolean
       }
       ivfflat_bit_support: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: unknown
       }
       ivfflat_halfvec_support: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: unknown
       }
       ivfflathandler: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: unknown
       }
-      l2_norm:
-        | {
-            Args: {
-              "": unknown
-            }
-            Returns: number
-          }
-        | {
-            Args: {
-              "": unknown
-            }
-            Returns: number
-          }
-      l2_normalize:
-        | {
-            Args: {
-              "": string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
-              "": unknown
-            }
-            Returns: unknown
-          }
-        | {
-            Args: {
-              "": unknown
-            }
-            Returns: unknown
-          }
+      l2_norm: {
+        Args: { "": unknown } | { "": unknown }
+        Returns: number
+      }
+      l2_normalize: {
+        Args: { "": unknown } | { "": unknown } | { "": string }
+        Returns: unknown
+      }
       log_webhook_event: {
         Args: {
           _tenant_id: string
@@ -2557,33 +2202,19 @@ export type Database = {
         Returns: string
       }
       make_column_unique_to_tenant: {
-        Args: {
-          table_name: string
-          col1: string
-          constraint_name?: string
-        }
+        Args: { table_name: string; col1: string; constraint_name?: string }
         Returns: undefined
       }
       mark_function_task_failed: {
-        Args: {
-          _id: string
-          _error: string
-          _max_retries?: number
-        }
+        Args: { _id: string; _error: string; _max_retries?: number }
         Returns: undefined
       }
       mark_function_task_passed: {
-        Args: {
-          _id: string
-        }
+        Args: { _id: string }
         Returns: undefined
       }
       match_documents: {
-        Args: {
-          query_embedding: string
-          match_count?: number
-          filter?: Json
-        }
+        Args: { query_embedding: string; match_count?: number; filter?: Json }
         Returns: {
           id: number
           content: string
@@ -2592,55 +2223,32 @@ export type Database = {
         }[]
       }
       set_current_setting: {
-        Args: {
-          name: string
-          value: string
-        }
+        Args: { name: string; value: string }
         Returns: string
       }
       shared_message_columns: {
-        Args: {
-          _decryption_key: string
-        }
+        Args: { _decryption_key: string }
         Returns: string
       }
       sparsevec_out: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: unknown
       }
       sparsevec_send: {
-        Args: {
-          "": unknown
-        }
+        Args: { "": unknown }
         Returns: string
       }
       sparsevec_typmod_in: {
-        Args: {
-          "": unknown[]
-        }
+        Args: { "": unknown[] }
         Returns: number
       }
       test_encryption_setting: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
-      update_credential:
-        | {
-            Args: {
-              _credential_id: string
-              _access_token: string
-              _refresh_token: string
-              _expires_at: string
-              _scopes: string[]
-              _encryption_key: string
-              _encryption_key_id: string
-            }
-            Returns: string
-          }
-        | {
-            Args: {
+      update_credential: {
+        Args:
+          | {
               _credential_id: string
               _access_token: string
               _refresh_token: string
@@ -2650,16 +2258,16 @@ export type Database = {
               _encryption_key_id: string
               _refresh_failed?: boolean
             }
-            Returns: string
-          }
-      update_custom_table_record: {
-        Args: {
-          p_table_name: string
-          p_record_id: string
-          p_tenant_id: string
-          p_data: Json
-        }
-        Returns: undefined
+          | {
+              _credential_id: string
+              _access_token: string
+              _refresh_token: string
+              _expires_at: string
+              _scopes: string[]
+              _encryption_key: string
+              _encryption_key_id: string
+            }
+        Returns: string
       }
       update_message: {
         Args: {
@@ -2682,11 +2290,7 @@ export type Database = {
         Returns: undefined
       }
       user_has_custom_role: {
-        Args: {
-          _user_id: string
-          _tenant_id: string
-          _custom_role_id: string
-        }
+        Args: { _user_id: string; _tenant_id: string; _custom_role_id: string }
         Returns: boolean
       }
       user_has_field_permission: {
@@ -2708,46 +2312,27 @@ export type Database = {
         Returns: boolean
       }
       vector_avg: {
-        Args: {
-          "": number[]
-        }
+        Args: { "": number[] }
         Returns: string
       }
-      vector_dims:
-        | {
-            Args: {
-              "": string
-            }
-            Returns: number
-          }
-        | {
-            Args: {
-              "": unknown
-            }
-            Returns: number
-          }
+      vector_dims: {
+        Args: { "": unknown } | { "": string }
+        Returns: number
+      }
       vector_norm: {
-        Args: {
-          "": string
-        }
+        Args: { "": string }
         Returns: number
       }
       vector_out: {
-        Args: {
-          "": string
-        }
+        Args: { "": string }
         Returns: unknown
       }
       vector_send: {
-        Args: {
-          "": string
-        }
+        Args: { "": string }
         Returns: string
       }
       vector_typmod_in: {
-        Args: {
-          "": unknown[]
-        }
+        Args: { "": unknown[] }
         Returns: number
       }
     }
@@ -2804,27 +2389,29 @@ export type Database = {
   }
 }
 
-type PublicSchema = Database[Extract<keyof Database, "public">]
+type DefaultSchema = Database[Extract<keyof Database, "public">]
 
 export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-      Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
-        PublicSchema["Views"])
-    ? (PublicSchema["Tables"] &
-        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R
       }
       ? R
@@ -2832,20 +2419,22 @@ export type Tables<
     : never
 
 export type TablesInsert<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I
       }
       ? I
@@ -2853,20 +2442,22 @@ export type TablesInsert<
     : never
 
 export type TablesUpdate<
-  PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
     | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
-  : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U
       }
       ? U
@@ -2874,21 +2465,23 @@ export type TablesUpdate<
     : never
 
 export type Enums<
-  PublicEnumNameOrOptions extends
-    | keyof PublicSchema["Enums"]
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
     | { schema: keyof Database },
-  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
-    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
+  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof PublicSchema["CompositeTypes"]
+    | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof Database },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof Database
@@ -2897,6 +2490,37 @@ export type CompositeTypes<
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
   ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
-    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      field_type_enum: [
+        "text",
+        "integer",
+        "boolean",
+        "reference",
+        "timestamp",
+        "uuid",
+        "number",
+        "date",
+        "select",
+        "email",
+        "url",
+        "relation",
+        "textarea",
+      ],
+      function_task_status: ["pending", "failed", "finished"],
+      user_role_type: [
+        "admin",
+        "member",
+        "guest",
+        "super-admin",
+        "tenant-owner",
+        "system-admin",
+      ],
+    },
+  },
+} as const
