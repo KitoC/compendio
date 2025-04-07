@@ -5,6 +5,22 @@
   text-align: center;
 }
 
+:root {
+  --vh: 1vh;
+}
+
+html,
+body {
+  height: calc(var(--vh, 1vh) * 100) !important;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.page-container {
+  height: calc(var(--vh, 1vh) * 100) !important;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;

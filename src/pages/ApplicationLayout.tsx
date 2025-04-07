@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, Suspense } from "react";
+import { ReactNode, useEffect, Suspense, useRef } from "react";
 import { useLocation, useNavigate, Outlet, matchPath } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import AppSidebar from "@/components/layout/AppSidebar";
@@ -13,6 +13,8 @@ import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { UserSettingsProvider } from "@/contexts/UserSettingsProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
+import clsx from "clsx";
+import { useElementSize } from "@/hooks/useElementSize";
 
 interface ApplicationLayoutProps {
   children?: ReactNode;
@@ -21,6 +23,7 @@ interface ApplicationLayoutProps {
 const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
   const { user, isLoading: authLoading } = useAuth();
 
+  const headerRef = useRef<HTMLHeadElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
@@ -33,6 +36,8 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
       }
     }
   }, [user, authLoading, navigate, location.pathname]);
+
+  const headerSize = useElementSize(headerRef);
 
   if (authLoading) {
     return (
@@ -75,47 +80,64 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
     /^\/([^/]+)\/app\/onboarding$/
   );
 
+  console.log("headerSize", headerSize);
+
   return (
     <UserSettingsProvider>
       <ThemeProvider defaultTheme="system">
         <TooltipProvider>
           <AiAgentsProvider>
             <CustomTablesProvider>
-              <SidebarProvider>
-                <div className="flex flex-col min-h-screen w-full bg-background">
-                  {isMobile && !isOnBoardingRoute && (
-                    <header className="sticky top-0 z-40 flex items-center h-[70px] px-4 border-b bg-background shadow pt-safe-top">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="mr-2 h-14 w-14 p-2"
-                        onClick={() =>
-                          document.dispatchEvent(
-                            new CustomEvent("toggle-sidebar")
-                          )
-                        }
-                      >
-                        <Menu />
-                        <span className="sr-only">Toggle menu</span>
-                      </Button>
-                      <div id="page-header-anchor" className="flex-1"></div>
-                    </header>
-                  )}
-                  <div className="flex flex-1 min-h-0">
-                    {!isOnBoardingRoute && <AppSidebar />}
-                    <main className="flex-1 overflow-auto h-screen pt-safe-top">
-                      <Suspense
-                        fallback={
-                          <div className="flex justify-center items-center h-full p-8">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                          </div>
-                        }
-                      >
-                        {children || <Outlet />}
-                      </Suspense>
-                    </main>
-                  </div>
-                </div>
+              <SidebarProvider
+                className={clsx(
+                  "flex min-h-screen w-full bg-background page-container",
+                  isMobile && !isOnBoardingRoute && "flex-col"
+                )}
+                style={
+                  {
+                    "--header-height": `${headerSize.height}px`,
+                  } as React.CSSProperties
+                }
+              >
+                {isMobile && !isOnBoardingRoute && (
+                  <header
+                    ref={headerRef}
+                    className="w-full z-40 flex items-center h-fit px-4 border-b bg-background shadow pt-safe-top"
+                  >
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="mr-2 h-14 w-14 p-2"
+                      onClick={() =>
+                        document.dispatchEvent(
+                          new CustomEvent("toggle-sidebar")
+                        )
+                      }
+                    >
+                      <Menu />
+                      <span className="sr-only">Toggle menu</span>
+                    </Button>
+                    <div id="page-header-anchor" className="flex-1"></div>
+                  </header>
+                )}
+                {!isOnBoardingRoute && <AppSidebar />}
+                <main
+                  className={clsx("flex-grow overflow-y-scroll relative", {
+                    "h-screen": !isMobile && !isOnBoardingRoute,
+                    "h-[calc(100vh-var(--header-height))] pb-[var(--page-bottom-padding)]":
+                      isMobile && !isOnBoardingRoute,
+                  })}
+                >
+                  <Suspense
+                    fallback={
+                      <div className="flex justify-center items-center h-full p-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                      </div>
+                    }
+                  >
+                    {children || <Outlet />}
+                  </Suspense>
+                </main>
                 <PwaInstallPrompt />
               </SidebarProvider>
             </CustomTablesProvider>

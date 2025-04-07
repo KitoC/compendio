@@ -54,7 +54,7 @@ const ChatMessages = () => {
             key={message.id}
             id={message.id}
             data-user-message={message.role === "user" ? "true" : "false"}
-            className={clsx("animate-fadeIn")}
+            className={clsx("animate-fadeIn w-full")}
           >
             <ChatMessage
               message={message}

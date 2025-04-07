@@ -9,7 +9,8 @@ import { Loader2 } from "lucide-react";
 import { ROUTES } from "@/lib/constants";
 import { useTenant } from "@/contexts/TenantContext";
 import useFindOrCreateConversation from "@/hooks/useFindOrCreateConversation";
-
+import clsx from "clsx";
+import { useIsMobile } from "@/hooks/use-mobile";
 interface ChatContainerProps {
   conversationId?: string;
   className?: string;
@@ -23,7 +24,7 @@ export const ChatContainer = ({
   const { user } = useAuth();
   const { tenantId } = useTenant();
   const navigate = useNavigate();
-
+  const isMobile = useIsMobile();
   // Use the ID from props or URL params
   const conversationIdOrAlias = propConversationId || paramId;
 
@@ -52,12 +53,21 @@ export const ChatContainer = ({
     );
   }
 
+  if (isMobile) {
+    return (
+      <ChatProvider conversationId={conversation?.id || ""}>
+        <div className={clsx("flex flex-col h-full w-full max-w-full")}>
+          <ChatMessages />
+          <ChatFooter />
+        </div>
+      </ChatProvider>
+    );
+  }
+
   return (
     <ChatProvider conversationId={conversation?.id || ""}>
-      <div
-        className={`flex flex-col h-full overflow-hidden bg-background ${className}`}
-      >
-        <div className="flex-1 overflow-hidden flex flex-col">
+      <div className={clsx("flex flex-col h-full w-full items-center py-4")}>
+        <div className="flex flex-col h-full w-full max-w-5xl">
           <ChatMessages />
           <ChatFooter />
         </div>
