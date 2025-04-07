@@ -15,15 +15,18 @@ const PercentRenderer = ({ field, value }: FieldRendererProps) => {
   }
 
   // Format as percentage with 2 decimal places by default
+  const precision = field.options?.precision !== undefined ? 
+    parseInt(field.options.precision as string, 10) : 2;
+    
   const formattedValue = typeof numValue === 'number' 
     ? new Intl.NumberFormat(undefined, {
         style: 'percent',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+        minimumFractionDigits: precision,
+        maximumFractionDigits: precision
       }).format(numValue / 100) // Divide by 100 as percentage values are typically stored as regular numbers
     : '-';
 
-  return <span>{formattedValue}</span>;
+  return <span className="block w-full">{formattedValue}</span>;
 };
 
 export default PercentRenderer;

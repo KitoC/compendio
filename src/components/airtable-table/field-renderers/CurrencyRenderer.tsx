@@ -31,7 +31,7 @@ const CurrencyRenderer = ({ field, value }: FieldRendererProps) => {
   // Replace the default $ with the field's symbol if different
   const displayValue = formattedValue.replace(/^\$/, symbol);
 
-  return <span>{displayValue}</span>;
+  return <span className="block w-full">{displayValue}</span>;
 };
 
 export default CurrencyRenderer;
