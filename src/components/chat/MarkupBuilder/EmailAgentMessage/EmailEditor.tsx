@@ -9,7 +9,6 @@ function convertLineBreaksToHtml(text: string): string {
 }
 
 export default function EmailEditor({ value, ...props }) {
-  console.log("value", value);
   return (
     <EditorProvider
       extensions={extensions}

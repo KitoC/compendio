@@ -57,7 +57,7 @@ export const EmailContent = ({
             label="Body"
             isMarkdown
             value={body}
-            labelClassName="w-[80px]"
+            labelClassName="w-[80px] min-w-[80px]"
             onEdit={(newBody) => {
               onEditBody({ body: newBody });
             }}

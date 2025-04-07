@@ -33,6 +33,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { LabelAndValue } from "./LabelAndValue";
 import { EmailContent } from "./EmailContent";
 import { Divider } from "@/components/ui/divider";
+import dayjs from "dayjs";
 
 interface EmailAgentMessageProps {
   message: ChatMessage;
@@ -205,6 +206,9 @@ const EmailAgentMessage = ({ message }: EmailAgentMessageProps) => {
         setOpen(!open);
       }}
     >
+      <div className="py-2 pl-3 text-xs text-muted-foreground">
+        {dayjs(message.updated_at).format("DD MMMM, hh:mm a")}
+      </div>
       <div
         className={clsx(
           getContainerStyles({ isUser: false }) +
