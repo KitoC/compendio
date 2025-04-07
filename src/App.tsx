@@ -1,4 +1,3 @@
-
 import { Routes, Route, BrowserRouter, Navigate } from "react-router-dom";
 import { QueryProvider } from "./contexts/QueryProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -39,6 +38,7 @@ import { VoiceProvider } from "./contexts/VoiceProvider";
 import OnboardingPage from "./pages/OnboardingPage";
 import { NotificationProvider } from "./contexts/NotificationProvider";
 import { PwaInstallPrompt } from "./components/PwaInstallPrompt";
+import AirtableTablePage from "./pages/application-layout/AirtableTablePage";
 
 function App() {
   return (
@@ -84,7 +84,7 @@ function App() {
                       />
                       <Route
                         path={ROUTES.CUSTOM_TABLE_DATA}
-                        element={<CustomTableData />}
+                        element={<AirtableTablePage />}
                       />
                       <Route path={ROUTES.AGENT_CHAT} element={<AgentChat />} />
 

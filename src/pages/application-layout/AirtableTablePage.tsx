@@ -1,35 +1,48 @@
-
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Page from "@/components/Page";
 import AirtableTable from "@/components/airtable-table";
-import { useAirtableBaseQuery, useAirtableRecordsQuery } from "@/hooks/useAirtableQuery";
+import {
+  useAirtableBaseQuery,
+  useAirtableRecordsQuery,
+  useAirtableTableSchemaQuery,
+} from "@/hooks/useAirtableQuery";
 import { AirtableService } from "@/services/AirtableService";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Plus, RefreshCw } from "lucide-react";
 import { FormConfig } from "@/components/form-builder";
 import { AirtableRecord } from "@/components/airtable-table/types";
+import { useTenant } from "@/contexts/TenantContext";
+import { useCustomTables } from "@/contexts/CustomTables";
 
 const AirtableTablePage = () => {
-  const { baseId, tableName } = useParams<{ baseId: string; tableName: string }>();
-  
+  const { tenantData } = useTenant();
+  const { id: tableName, ...params } = useParams<{
+    id: string;
+  }>();
   // Fetch base schema and records
-  const { data: baseSchema, isLoading: isLoadingSchema } = useAirtableBaseQuery(baseId);
-  const { 
-    records, 
-    isLoading: isLoadingRecords, 
-    refetch, 
-    createRecord, 
-    updateRecord, 
-    deleteRecord 
-  } = useAirtableRecordsQuery({ baseId, tableName });
+  const { data: tableSchema, isLoading: isLoadingSchema } =
+    useAirtableTableSchemaQuery(tableName);
+  const {
+    records,
+    isLoading: isLoadingRecords,
+    refetch,
+    createRecord,
+    updateRecord,
+    deleteRecord,
+  } = useAirtableRecordsQuery({ tableName });
 
-  // Find the selected table in the base schema
-  const table = baseSchema?.tables.find(t => t.name === tableName);
-  
+  console.log("tableSchema", tableSchema);
+
   // Form config customization
   const getFormConfig = (config: FormConfig, record: AirtableRecord | null) => {
     // Add custom form config options here if needed
@@ -80,7 +93,7 @@ const AirtableTablePage = () => {
     );
   }
 
-  if (!table) {
+  if (!tableSchema) {
     return (
       <Page>
         <Card>
@@ -103,7 +116,7 @@ const AirtableTablePage = () => {
   return (
     <Page>
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">{table.name}</h1>
+        <h1 className="text-2xl font-bold">{tableSchema.name}</h1>
         <Button size="sm" onClick={() => refetch()} variant="ghost">
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
@@ -111,7 +124,7 @@ const AirtableTablePage = () => {
       </div>
 
       <AirtableTable
-        table={table}
+        table={tableSchema}
         records={records || []}
         isLoading={isLoadingRecords}
         permissions={{

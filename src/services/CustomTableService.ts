@@ -23,6 +23,16 @@ export const CustomTableService = {
     return response.data;
   },
 
+  async getTableSchema(table: string) {
+    const response = await supabase
+      .from("data_tables")
+      .select("*, fields:data_fields(*)")
+      .eq("name", table)
+      .single();
+
+    return response.data;
+  },
+
   async listRecords(table: string, queryString = "") {
     const response = await SupabaseFunctionService.get(
       `table-records?table=${table}${queryString}`

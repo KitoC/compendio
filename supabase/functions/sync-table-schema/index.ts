@@ -24,7 +24,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
     airtableService.logger.debug("Schema", schema);
 
     for (const table of tables) {
-      const { id: external_id, name, fields } = table;
+      const { id: external_id, name, fields, primaryFieldId } = table;
 
       const { data: tableRecord, error: tableError } =
         await supabase_AS_SUPER_ADMIN
@@ -40,6 +40,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
                 tenant_id: authService.tenantId,
                 permissions: {},
                 schema_name: schema.name,
+                primary_field_id: primaryFieldId,
               },
             ],
             { onConflict: "external_id, schema_id, source" }
