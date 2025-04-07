@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -82,7 +82,8 @@ const AirtableTable = ({
   getFormConfig,
 }: AirtableTableProps) => {
   const isMobile = useIsMobile();
-  
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+
   // State
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -93,7 +94,7 @@ const AirtableTable = ({
   const [deleteRecordId, setDeleteRecordId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [filterOpen, setFilterOpen] = useState<string | null>(null);
-
+  
   // Merge provided permissions with defaults
   const permissions: UserPermissions = {
     ...defaultPermissions,
@@ -105,13 +106,38 @@ const AirtableTable = ({
     setCurrentPage(1);
   }, [records.length]);
 
-  // Get visible fields
-  const visibleFields = useMemo(() => {
-    // Filter out computed or system fields if desired
-    return table.fields.filter(field => 
+  // Find primary field
+  const primaryField = useMemo(() => {
+    if (table && table.primaryFieldId) {
+      return table.fields.find(field => field.id === table.primaryFieldId);
+    }
+    return null;
+  }, [table]);
+
+  // Get visible fields and organize them
+  const organizedFields = useMemo(() => {
+    if (!table || !table.fields) return [];
+
+    // Filter out system fields
+    const filteredFields = table.fields.filter(field => 
       !["createdBy", "lastModifiedBy"].includes(field.type)
     );
-  }, [table]);
+
+    // If we have a primary field, ensure it comes first
+    const sortedFields = [...filteredFields];
+    
+    if (primaryField) {
+      // Remove primary field from its current position
+      const primaryFieldIndex = sortedFields.findIndex(f => f.id === primaryField.id);
+      if (primaryFieldIndex > -1) {
+        const [removed] = sortedFields.splice(primaryFieldIndex, 1);
+        // Add it to the beginning
+        sortedFields.unshift(removed);
+      }
+    }
+
+    return sortedFields;
+  }, [table, primaryField]);
 
   // Handle filtering, searching, and sorting
   const processedRecords = useMemo(() => {
@@ -121,7 +147,7 @@ const AirtableTable = ({
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(record => {
-        return visibleFields.some(field => {
+        return organizedFields.some(field => {
           const value = record.fields[field.name];
           if (value === null || value === undefined) return false;
           return String(value).toLowerCase().includes(term);
@@ -183,7 +209,7 @@ const AirtableTable = ({
     }
     
     return filtered;
-  }, [records, visibleFields, searchTerm, filters, sortField, sortDirection]);
+  }, [records, organizedFields, searchTerm, filters, sortField, sortDirection, table]);
 
   // Handle pagination
   const paginatedRecords = useMemo(() => {
@@ -263,7 +289,7 @@ const AirtableTable = ({
 
     try {
       // Get field names
-      const fieldNames = visibleFields.map(field => field.name);
+      const fieldNames = organizedFields.map(field => field.name);
       const csvRows = [fieldNames.join(",")];
 
       for (const record of processedRecords) {
@@ -302,10 +328,16 @@ const AirtableTable = ({
 
   // Filter visible fields based on screen size
   const displayFields = useMemo(() => {
-    if (!isMobile) return visibleFields;
-    // On mobile, show fewer fields
-    return visibleFields.slice(0, 2);
-  }, [visibleFields, isMobile]);
+    // Always show primary field first if available
+    let fields = [...organizedFields];
+    
+    if (isMobile) {
+      // On mobile, show fewer fields (primary + one more)
+      return fields.slice(0, 2);
+    }
+    
+    return fields;
+  }, [organizedFields, isMobile]);
 
   // Calculate pagination
   const totalPages = Math.ceil(processedRecords.length / pageSize);
@@ -501,66 +533,143 @@ const AirtableTable = ({
           </div>
         )}
 
-        <div className="rounded-md border overflow-hidden">
-          <div className="relative w-full overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {displayFields.map((field) => (
-                    <TableHead
-                      key={field.id}
-                      className="cursor-pointer select-none"
-                      onClick={() => handleSort(field.name)}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>{field.name}</span>
-                        <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </TableHead>
-                  ))}
-                  {(permissions.update || permissions.delete) && (
-                    <TableHead className="w-[80px]"></TableHead>
-                  )}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedRecords.length > 0 ? (
-                  paginatedRecords.map((record, index) => (
-                    <TableRow
-                      key={record.id}
-                      className={`animate-fade-in transition-colors ${
-                        onRowClick ? "cursor-pointer hover:bg-muted/50" : ""
-                      }`}
-                      onClick={() => onRowClick && onRowClick(record)}
-                      style={{ animationDelay: `${index * 30}ms` }}
-                    >
-                      {displayFields.map((field) => (
-                        <TableCell key={field.id}>
-                          {formatFieldValue(record.fields[field.name], field)}
-                        </TableCell>
-                      ))}
-                      {(permissions.update || permissions.delete) && (
-                        <TableCell>
-                          {renderActionsCell(record)}
-                        </TableCell>
+        <div className="rounded-md border">
+          <div className="relative w-full overflow-hidden" ref={tableContainerRef}>
+            <div className="flex w-full">
+              {/* Fixed left column (primary field) container */}
+              <div className="sticky left-0 z-10 bg-background shadow-sm">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {/* Primary field header */}
+                      {displayFields.length > 0 && (
+                        <TableHead
+                          className="cursor-pointer select-none whitespace-nowrap"
+                          onClick={() => handleSort(displayFields[0].name)}
+                        >
+                          <div className="flex items-center space-x-1">
+                            <span>{displayFields[0].name}</span>
+                            <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        </TableHead>
                       )}
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={
-                        displayFields.length +
-                        (permissions.update || permissions.delete ? 1 : 0)
-                      }
-                      className="h-24 text-center"
-                    >
-                      {emptyMessage}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedRecords.length > 0 ? (
+                      paginatedRecords.map((record, index) => (
+                        <TableRow
+                          key={record.id}
+                          className={`animate-fade-in transition-colors ${
+                            onRowClick ? "cursor-pointer hover:bg-muted/50" : ""
+                          }`}
+                          onClick={() => onRowClick && onRowClick(record)}
+                          style={{ animationDelay: `${index * 30}ms` }}
+                        >
+                          {/* Primary field cell */}
+                          {displayFields.length > 0 && (
+                            <TableCell className="whitespace-nowrap">
+                              {formatFieldValue(record.fields[displayFields[0].name], displayFields[0])}
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell className="h-24 text-center">
+                          {emptyMessage}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Scrollable middle columns container */}
+              <div className="overflow-x-auto flex-grow">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {/* Middle column headers (skip primary field) */}
+                      {displayFields.slice(1).map((field) => (
+                        <TableHead
+                          key={field.id}
+                          className="cursor-pointer select-none whitespace-nowrap"
+                          onClick={() => handleSort(field.name)}
+                        >
+                          <div className="flex items-center space-x-1">
+                            <span>{field.name}</span>
+                            <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedRecords.length > 0 ? (
+                      paginatedRecords.map((record, index) => (
+                        <TableRow
+                          key={record.id}
+                          className={`animate-fade-in transition-colors ${
+                            onRowClick ? "cursor-pointer hover:bg-muted/50" : ""
+                          }`}
+                          onClick={() => onRowClick && onRowClick(record)}
+                          style={{ animationDelay: `${index * 30}ms` }}
+                        >
+                          {/* Middle column cells (skip primary field) */}
+                          {displayFields.slice(1).map((field) => (
+                            <TableCell key={field.id} className="whitespace-nowrap">
+                              {formatFieldValue(record.fields[field.name], field)}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell
+                          colSpan={displayFields.length - 1}
+                          className="h-24 text-center"
+                        >
+                          {emptyMessage}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Fixed right column (actions) container */}
+              {(permissions.update || permissions.delete) && (
+                <div className="sticky right-0 z-10 bg-background shadow-sm">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[80px]"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedRecords.length > 0 ? (
+                        paginatedRecords.map((record, index) => (
+                          <TableRow
+                            key={record.id}
+                            className="animate-fade-in transition-colors"
+                            style={{ animationDelay: `${index * 30}ms` }}
+                          >
+                            <TableCell>
+                              {renderActionsCell(record)}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell className="h-24"></TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

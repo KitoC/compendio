@@ -781,6 +781,7 @@ export type Database = {
           id: string
           name: string
           permissions: Json
+          primary_field_id: string | null
           schema_id: string | null
           schema_name: string | null
           source: string | null
@@ -797,6 +798,7 @@ export type Database = {
           id?: string
           name: string
           permissions: Json
+          primary_field_id?: string | null
           schema_id?: string | null
           schema_name?: string | null
           source?: string | null
@@ -813,6 +815,7 @@ export type Database = {
           id?: string
           name?: string
           permissions?: Json
+          primary_field_id?: string | null
           schema_id?: string | null
           schema_name?: string | null
           source?: string | null

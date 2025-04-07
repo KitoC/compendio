@@ -75,3 +75,9 @@ export interface AirtableBaseSchemaResponse {
 export interface AirtableBaseListResponse {
   bases: AirtableBase[];
 } // Returned from GET /meta/bases
+
+export interface AirtableRecord {
+  id: string;
+  fields: Record<string, any>;
+  createdTime?: string;
+}
