@@ -72,6 +72,8 @@ const AirtableTablePage = () => {
     }
   };
 
+  console.log("records", records);
+
   if (isLoadingSchema) {
     return (
       <Page>
