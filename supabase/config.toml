@@ -7,6 +7,9 @@ verify_jwt = false
 [functions.ai-agent-chat]
 verify_jwt = false
 
+[functions.create-credential]
+verify_jwt = false
+
 [functions.custom-table-data]
 verify_jwt = false
 
@@ -28,7 +31,13 @@ verify_jwt = false
 [functions.register_webhook]
 verify_jwt = false
 
+[functions.sync-table-schema]
+verify_jwt = false
+
 [functions.table-builder]
+verify_jwt = false
+
+[functions.table-records]
 verify_jwt = false
 
 [functions.test]
@@ -46,5 +55,3 @@ verify_jwt = false
 [functions.wss-functions]
 verify_jwt = false
 
-[edge_runtime]
-policy = "per_worker"

@@ -1,0 +1,1 @@
+ALTER TABLE data_tables DROP CONSTRAINT custom_table_definitions_tenant_id_name_key;

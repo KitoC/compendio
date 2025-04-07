@@ -19,6 +19,14 @@ interface CreateCredentialArgs {
   associated_email: string;
 }
 
+interface CreateAccessTokenCredentialArgs {
+  access_token: string;
+  provider: string;
+  user_id: string;
+  tenant_id: string;
+  credential_name: string;
+}
+
 interface UpdateCredentialArgs {
   id: string;
   access_token: string;
@@ -89,6 +97,7 @@ class CredentialsService extends BaseSupabaseService {
     const { data, error } = await this.context.supabase_AS_SUPER_ADMIN
       .from("credentials")
       .select("*")
+      .eq("type", "oauth")
       .lte("expires_at", new Date().toISOString());
 
     if (error) {
@@ -107,6 +116,39 @@ class CredentialsService extends BaseSupabaseService {
 
     if (error) {
       this.throwError("Error getting latest encryption version", error, 500);
+    }
+
+    return data;
+  }
+
+  async createAccessTokenCredential(args: CreateAccessTokenCredentialArgs) {
+    const latestEncryptionVersion = await this.getLatestEncryptionVersion();
+
+    const { data, error } = await this.context.supabase_AS_SUPER_ADMIN.rpc(
+      "insert_credential",
+      {
+        _encryption_key_id: latestEncryptionVersion.id,
+        _encryption_key: getEnvKey("ENCRYPTION_KEY"),
+        _access_token: args.access_token,
+        _refresh_token: null,
+        _scopes: ["none"],
+        _type: "access_token",
+        _user_id: args?.user_id,
+        _tenant_id: args?.tenant_id,
+        _expires_at: null,
+        _provider: args.provider,
+        _name: args.credential_name,
+        _domain: null,
+        _password: null,
+        _username: null,
+        _tid: null,
+        _associated_email: null,
+      }
+    );
+
+    if (error) {
+      console.log("error", JSON.stringify(error, null, 2));
+      this.throwError("Error setting current_setting", error, 500);
     }
 
     return data;

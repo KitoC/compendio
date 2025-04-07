@@ -4,7 +4,7 @@ import { ServiceError } from "locals/error-types";
 import { AuthService } from "locals/services/AuthService";
 import Logger from "locals/utils/Logger";
 import { getSharedServices } from "locals/middleware/_getSharedServices";
-
+import { AirtableService } from "locals/services/providers/AirtableService";
 const logger = new Logger({ name: "AuthenticatedContext" });
 
 export const getAuthenticatedContext = async (
@@ -41,11 +41,21 @@ export const getAuthenticatedContext = async (
   logger.debug("currentUser", user?.user?.id);
   logger.debug("tenantId", tenantId);
 
+  const tenantWorkspace = await supabase_AS_SUPER_ADMIN
+    .from("tenants")
+    .select("*")
+    .eq("id", tenantId)
+    .single();
+
+  logger.debug("tenantWorkspace", tenantWorkspace.data);
+  const airtableService = new AirtableService(tenantWorkspace.data.base_id);
+
   return {
     ...supabaseContext,
     authService,
     user,
     tenant_id: tenantId,
     ...getSharedServices(supabaseContext),
+    airtableService,
   };
 };

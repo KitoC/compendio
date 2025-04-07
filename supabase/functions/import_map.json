@@ -66,6 +66,7 @@
     "locals/services/_BaseExternalService": "./_shared/services/_BaseExternalService.ts",
     "locals/services/_BaseSupabaseService": "./_shared/services/_BaseSupabaseService.ts",
     "locals/services/getSharedServices": "./_shared/middleware/_getSharedServices.ts",
+    "locals/services/providers/AirtableService": "./_shared/services/providers/AirtableService.ts",
     "locals/services/providers/AzureService": "./_shared/services/providers/AzureService.ts",
     "locals/services/providers/OpenAiService": "./_shared/services/providers/OpenAiService.ts",
     "locals/types": "./_shared/types/index.ts",
