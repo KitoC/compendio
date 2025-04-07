@@ -56,10 +56,10 @@ export const ChatContainer = ({
   if (isMobile) {
     return (
       <ChatProvider conversationId={conversation?.id || ""}>
-        <div className={clsx("flex flex-col h-full w-full max-w-full")}>
+        <div className="overflow-y-auto h-full">
           <ChatMessages />
-          <ChatFooter />
         </div>
+        <ChatFooter />
       </ChatProvider>
     );
   }
