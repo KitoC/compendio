@@ -14,7 +14,6 @@ import { UserSettingsProvider } from "@/contexts/UserSettingsProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
 import clsx from "clsx";
-import { useElementSize } from "@/hooks/useElementSize";
 
 interface ApplicationLayoutProps {
   children?: ReactNode;
@@ -36,8 +35,6 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
       }
     }
   }, [user, authLoading, navigate, location.pathname]);
-
-  const headerSize = useElementSize(headerRef);
 
   if (authLoading) {
     return (
@@ -80,7 +77,17 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
     /^\/([^/]+)\/app\/onboarding$/
   );
 
-  console.log("headerSize", headerSize);
+  const suspensedContent = (
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center h-full p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      }
+    >
+      {children || <Outlet />}
+    </Suspense>
+  );
 
   return (
     <UserSettingsProvider>
@@ -90,19 +97,22 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
             <CustomTablesProvider>
               <SidebarProvider
                 className={clsx(
-                  "flex min-h-screen w-full bg-background page-container",
-                  isMobile && !isOnBoardingRoute && "flex-col"
+                  "page-container flex min-h-screen w-full bg-background",
+                  {
+                    "flex flex-col overflow-hidden h-dvh pb-[calc(var(--page-bottom-padding))] pt-[var(--header-height)]":
+                      isMobile && !isOnBoardingRoute,
+                  }
                 )}
                 style={
                   {
-                    "--header-height": `${headerSize.height}px`,
+                    "--header-height": "50px",
                   } as React.CSSProperties
                 }
               >
                 {isMobile && !isOnBoardingRoute && (
                   <header
                     ref={headerRef}
-                    className="w-full z-40 flex items-center h-fit px-4 border-b bg-background shadow pt-safe-top"
+                    className="fixed top-0 left-0 right-0 z-40 h-[var(--header-height)]  w-full flex items-center h-fit px-4 border-b bg-background shadow pt-safe-top"
                   >
                     <Button
                       variant="ghost"
@@ -121,23 +131,20 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
                   </header>
                 )}
                 {!isOnBoardingRoute && <AppSidebar />}
-                <main
-                  className={clsx("flex-grow overflow-y-scroll relative", {
-                    "h-screen": !isMobile && !isOnBoardingRoute,
-                    "h-[calc(100vh-var(--header-height))] pb-[var(--page-bottom-padding)]":
-                      isMobile && !isOnBoardingRoute,
-                  })}
-                >
-                  <Suspense
-                    fallback={
-                      <div className="flex justify-center items-center h-full p-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                      </div>
-                    }
+
+                {isMobile ? (
+                  suspensedContent
+                ) : (
+                  <main
+                    className={clsx(" flex-grow overflow-y-scroll relative", {
+                      "h-screen": !isMobile && !isOnBoardingRoute,
+                      "h-[calc(100vh-var(--header-height))] pb-[var(--page-bottom-padding)]":
+                        isMobile && !isOnBoardingRoute,
+                    })}
                   >
-                    {children || <Outlet />}
-                  </Suspense>
-                </main>
+                    {suspensedContent}
+                  </main>
+                )}
                 <PwaInstallPrompt />
               </SidebarProvider>
             </CustomTablesProvider>

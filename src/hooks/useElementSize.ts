@@ -22,6 +22,10 @@ export function useElementSize<T extends HTMLElement>(
     const observer = new ResizeObserver(() => updateSize());
     observer.observe(externalRef.current);
 
+    setTimeout(() => {
+      updateSize();
+    }, 350);
+
     return () => observer.disconnect();
   }, [externalRef, updateSize]);
 
