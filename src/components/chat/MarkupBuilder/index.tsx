@@ -1,3 +1,4 @@
+
 import { ChatMessage } from "@/types/chat";
 import { FormBuilder, FormBuilderConfig } from "./FormBuilder";
 import QuickReplyBuilder, { QuickReplyConfig } from "./QuickReplyBuilder";
@@ -41,7 +42,14 @@ const MarkupBuilder = ({ message }: MarkupbuilderProps) => {
     return <EmailAgentMessage message={message} />;
   }
 
-  return <div>{message.content.text}</div>;
+  // Check if content is a string or has a text property
+  const messageText = typeof content === 'string' 
+    ? content 
+    : content && typeof content === 'object' && 'text' in content 
+      ? content.text as string
+      : '';
+
+  return <div>{messageText}</div>;
 };
 
 export default MarkupBuilder;

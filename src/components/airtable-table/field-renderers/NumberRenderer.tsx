@@ -1,30 +1,24 @@
 
-import React from 'react';
-import { FieldRendererProps } from './index';
+import React from "react";
+import { FieldRendererProps } from "./index";
 
 const NumberRenderer = ({ field, value }: FieldRendererProps) => {
-  try {
-    const numValue = Number(value);
-    const precision = field.options?.precision || 0;
-    
-    // For duration, we may want special formatting
-    if (field.type === 'duration') {
-      // Simple duration formatting in minutes:seconds
-      if (typeof numValue === 'number') {
-        const minutes = Math.floor(numValue / 60);
-        const seconds = Math.floor(numValue % 60);
-        return <span className="text-sm font-mono">{minutes}:{seconds.toString().padStart(2, '0')}</span>;
-      }
-    }
-    
-    if (isNaN(numValue)) {
-      return <span className="text-sm text-muted-foreground">-</span>;
-    }
-    
-    return <span className="text-sm font-mono tabular-nums">{numValue.toFixed(precision)}</span>;
-  } catch (error) {
-    return <span className="text-sm text-muted-foreground">-</span>;
+  if (value === null || value === undefined) {
+    return <span className="text-muted-foreground">-</span>;
   }
+
+  // Ensure we're working with a number
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  
+  if (isNaN(numValue)) {
+    return <span className="text-muted-foreground">-</span>;
+  }
+
+  // Handle decimal points based on options
+  const precision = field.options?.precision ? parseInt(field.options.precision as string, 10) : 0;
+  const formattedNumber = typeof numValue === 'number' ? numValue.toFixed(precision) : '-';
+
+  return <span>{formattedNumber}</span>;
 };
 
 export default NumberRenderer;

@@ -1,39 +1,37 @@
 
-import React from 'react';
-import { FieldRendererProps } from './index';
+import React from "react";
+import { FieldRendererProps } from "./index";
 
 const CurrencyRenderer = ({ field, value }: FieldRendererProps) => {
   if (value === null || value === undefined) {
-    return <span className="text-sm text-muted-foreground">-</span>;
+    return <span className="text-muted-foreground">-</span>;
   }
+
+  // Ensure we're working with a number
+  const numValue = typeof value === 'string' ? parseFloat(value) : value;
   
-  try {
-    const amount = Number(value);
-    
-    if (isNaN(amount)) {
-      return <span className="text-sm text-muted-foreground">-</span>;
-    }
-    
-    // Format options
-    const precision = field.options?.precision || 2;
-    const currencySymbol = '$'; // Could be configurable based on field options
-    
-    // Format the currency
-    const formatter = new Intl.NumberFormat('en-US', { 
-      minimumFractionDigits: precision,
-      maximumFractionDigits: precision
-    });
-    
-    const formattedAmount = formatter.format(amount);
-    
-    return (
-      <span className="text-sm font-mono tabular-nums">
-        {currencySymbol}{formattedAmount}
-      </span>
-    );
-  } catch (error) {
-    return <span className="text-sm text-muted-foreground">-</span>;
+  if (isNaN(numValue)) {
+    return <span className="text-muted-foreground">-</span>;
   }
+
+  // Default symbol is $
+  const symbol = field.options?.symbol || "$";
+  
+  // Format as currency with 2 decimal places
+  const formattedValue = typeof numValue === 'number' 
+    ? new Intl.NumberFormat(undefined, {
+        style: 'currency',
+        currency: 'USD', // Default to USD
+        currencyDisplay: 'symbol',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(numValue)
+    : '-';
+    
+  // Replace the default $ with the field's symbol if different
+  const displayValue = formattedValue.replace(/^\$/, symbol);
+
+  return <span>{displayValue}</span>;
 };
 
 export default CurrencyRenderer;

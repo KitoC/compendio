@@ -1,3 +1,4 @@
+
 import { FormConfig, FormField, FormFieldType, FormFieldOption } from "@/components/form-builder/types";
 import { AirtableField, AirtableTable } from "@/types/airtable";
 import { AirtableRecord } from "./types";
@@ -11,17 +12,23 @@ export const mapAirtableTypeToFormFieldType = (field: AirtableField): FormFieldT
     case "singleLineText":
     case "autoNumber":
     case "barcode":
+    case "formula":
+    case "lookup":
+    case "rollup":
+    case "count":
       return "text";
     case "longText":
       return "textarea";
     case "number":
     case "duration":
     case "rating":
-    case "count":
       return "number";
     case "checkbox":
       return "checkbox";
     case "date":
+    case "dateTime":
+    case "createdTime":
+    case "lastModifiedTime":
       return "date";
     case "email":
       return "email";
@@ -33,6 +40,9 @@ export const mapAirtableTypeToFormFieldType = (field: AirtableField): FormFieldT
       return "text"; // Use text with URL validation
     case "phoneNumber":
       return "text"; // Use text with phone validation
+    case "currency":
+    case "percent":
+      return "number"; // Use number with formatting
     default:
       return "text";
   }
@@ -64,6 +74,31 @@ export const airtableFieldToFormField = (field: AirtableField): FormField => {
       label: choice.name,
       value: choice.id,
     }));
+  }
+
+  // Add custom props for specific field types
+  if (field.type === "currency" && fieldType === "number") {
+    formField.props = {
+      ...(formField.props || {}),
+      isCurrency: true,
+      currencySymbol: field.options?.symbol || "$"
+    };
+  } else if (field.type === "percent" && fieldType === "number") {
+    formField.props = {
+      ...(formField.props || {}),
+      isPercent: true
+    };
+  } else if (field.type === "rating" && fieldType === "number") {
+    formField.props = {
+      ...(formField.props || {}),
+      isRating: true,
+      maxRating: field.options?.max || 5
+    };
+  } else if ((field.type === "multipleAttachments" || field.type === "attachment") && fieldType === "text") {
+    formField.props = {
+      ...(formField.props || {}),
+      isAttachment: true
+    };
   }
 
   return formField;

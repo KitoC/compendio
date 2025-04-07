@@ -1,4 +1,3 @@
-// NO_CHANGE
 
 import { FormFieldProps } from "./types";
 import { Input } from "@/components/ui/input";
@@ -14,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { Star } from "lucide-react";
 
 const FormField = ({
   field,
@@ -47,9 +47,85 @@ const FormField = ({
     }
 
     onChange(name, newValue);
+
+    // Mark field as touched
+    if (!touched) {
+      // This is handled in FormBuilder
+    }
+
+    // Clear error if it exists
+    if (error) {
+      // This is handled in FormBuilder
+    }
+  };
+
+  // Format currency value for display
+  const formatCurrency = (value: number | string): string => {
+    if (value === undefined || value === null || value === "") return "";
+    const numValue = typeof value === "string" ? parseFloat(value) : value;
+    const symbol = props?.currencySymbol || "$";
+    return isNaN(numValue) ? "" : `${symbol}${numValue.toFixed(2)}`;
+  };
+
+  // Format percent value for display
+  const formatPercent = (value: number | string): string => {
+    if (value === undefined || value === null || value === "") return "";
+    const numValue = typeof value === "string" ? parseFloat(value) : value;
+    return isNaN(numValue) ? "" : `${numValue.toFixed(2)}%`;
+  };
+
+  // Render a rating component
+  const renderRating = () => {
+    const maxRating = props?.maxRating || 5;
+    const currentRating = Number(value) || 0;
+    
+    return (
+      <div className="flex items-center gap-1">
+        {[...Array(maxRating)].map((_, i) => (
+          <Star
+            key={i}
+            className={cn(
+              "h-5 w-5 cursor-pointer",
+              i < currentRating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+            )}
+            onClick={() => onChange(name, i + 1)}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  // Render attachment input
+  const renderAttachmentInput = () => {
+    return (
+      <Input
+        id={id}
+        name={name}
+        type="file"
+        onChange={(e) => {
+          // Handle file uploads - simplified for now
+          const files = e.target.files;
+          if (files && files.length > 0) {
+            onChange(name, files);
+          }
+        }}
+        disabled={disabled}
+        className={cn(error && touched ? "border-destructive" : "", className)}
+        multiple={true}
+      />
+    );
   };
 
   const renderField = () => {
+    // Handle special Airtable field types with custom rendering
+    if (props?.isRating) {
+      return renderRating();
+    }
+    
+    if (props?.isAttachment) {
+      return renderAttachmentInput();
+    }
+
     switch (type) {
       case "text":
       case "email":
@@ -87,6 +163,58 @@ const FormField = ({
         );
 
       case "number":
+        // Handle currency and percent special cases
+        if (props?.isCurrency) {
+          return (
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                {props.currencySymbol || "$"}
+              </span>
+              <Input
+                id={id}
+                name={name}
+                type="number"
+                step="0.01"
+                value={(value as number) || ""}
+                onChange={handleChange}
+                placeholder={placeholder}
+                disabled={disabled}
+                className={cn(
+                  "pl-7",
+                  error && touched ? "border-destructive" : "",
+                  className
+                )}
+              />
+            </div>
+          );
+        }
+        
+        if (props?.isPercent) {
+          return (
+            <div className="relative">
+              <Input
+                id={id}
+                name={name}
+                type="number"
+                step="0.01"
+                value={(value as number) || ""}
+                onChange={handleChange}
+                placeholder={placeholder}
+                disabled={disabled}
+                className={cn(
+                  "pr-7",
+                  error && touched ? "border-destructive" : "",
+                  className
+                )}
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                %
+              </span>
+            </div>
+          );
+        }
+        
+        // Default number input
         return (
           <Input
             id={id}
@@ -100,6 +228,7 @@ const FormField = ({
               error && touched ? "border-destructive" : "",
               className
             )}
+            {...props}
           />
         );
 
