@@ -1,6 +1,6 @@
 // NO_CHANGE
 
-import { forwardRef, useState, KeyboardEvent, useEffect } from "react";
+import { forwardRef, useState, KeyboardEvent, useEffect, useRef } from "react";
 import {
   AudioLines,
   Mic,
@@ -19,6 +19,8 @@ import { useChatState } from "@/contexts/chat/useChatState";
 import { useTTS } from "@/contexts/TTSProvider";
 import { useVoiceContext } from "@/contexts/VoiceProvider";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useViewportHeight } from "@/hooks/useViewportHeight";
+import { useElementSize } from "@/hooks/useElementSize";
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   disabled?: boolean;
@@ -57,6 +59,7 @@ const buttonWrapperClass =
 
 const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
   ({ onSendMessage, disabled, agentId, conversationId }, ref) => {
+    const formRef = useRef<HTMLFormElement>(null);
     const { interruptAiAgent, isTyping } = useChatState({
       conversationId,
     });
@@ -67,10 +70,27 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
     const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
     const isMobile = useIsMobile();
 
+    useViewportHeight();
+    useElementSize(formRef as React.RefObject<HTMLFormElement>, (size) => {
+      document.documentElement.style.setProperty(
+        "--page-bottom-padding",
+        `${size.height}px`
+      );
+    });
+
+    const handleFocus = () => {
+      // Helps on iOS Safari and Android Chrome
+      setTimeout(() => {
+        (ref as React.RefObject<HTMLTextAreaElement>)?.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 300);
+    };
+
     const filteredCommands = CHAT_COMMANDS.filter((cmd) =>
       cmd.command.toLowerCase().includes(commandFilter.toLowerCase())
     );
-    const { currentAgent } = useAiAgents();
     const { isPlaying } = useTTS();
     const {
       startListening,
@@ -145,11 +165,13 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
 
     return (
       <form
+        ref={formRef}
         onSubmit={handleSubmit}
         className={clsx(
-          "bg-white dark:bg-gray-700 border border-gray-200 dark:border-slate-600 rounded-lg shadow-sm p-3 ",
-          isMobile &&
-            "rounded-b-none border-none pb-8 shadow-[0px_8px_16px_rgba(0,0,0,0.2)]"
+          "bg-white dark:bg-gray-700 border border-gray-200 dark:border-slate-600 rounded-lg shadow-sm p-3",
+          {
+            "rounded-b-none border-none pb-8": isMobile,
+          }
         )}
       >
         {showCommands && (
@@ -172,7 +194,7 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Type a message..."
+              placeholder="Ask me anything..."
               disabled={disabled}
               className="flex-1 resize-none min-h-[40px] max-h-[120px] py-2 px-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-transparent border-none"
               rows={1}
@@ -187,6 +209,7 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
                 target.style.height = "auto";
                 target.style.height = `${Math.min(target.scrollHeight, 120)}px`;
               }}
+              onFocus={handleFocus}
             />
           )}
 

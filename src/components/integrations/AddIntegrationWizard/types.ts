@@ -1,4 +1,5 @@
 import { Database } from "@/integrations/supabase/types";
+import { FormConfig } from "@/components/form-builder/types";
 
 export interface AiAgent {
   id: string;
@@ -53,4 +54,17 @@ export interface StepProps {
 export type ICredential = Database["public"]["Tables"]["credentials"]["Row"] & {
   scopes: string[];
   associated_email: string;
+};
+
+export type IntegrationType = {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  authType: string;
+  oauthProvider: string;
+  webhookChangeType?: string;
+  webhookResource?: string;
+  steps?: React.ComponentType<StepProps>[];
+  formConfig: FormConfig;
 };

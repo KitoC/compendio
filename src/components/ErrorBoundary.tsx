@@ -33,42 +33,44 @@ const ErrorFallback = ({
   // const isMobile = useIsMobile();
 
   return (
-    <Card className={`w-full mx-auto mt-8 safari-card-fix`}>
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <AlertCircle className="h-5 w-5 text-destructive" />
-          <CardTitle>Something went wrong</CardTitle>
-        </div>
-        <CardDescription>
-          An error occurred while rendering this view
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="bg-muted p-4 rounded-md overflow-auto max-h-48 safari-overflow-fix">
-          <p className="text-destructive font-mono text-sm break-words">
-            {error?.toString()}
-          </p>
-        </div>
-      </CardContent>
-      <CardFooter className="flex flex-col gap-2">
-        <Button
-          onClick={resetErrorBoundary}
-          className="w-full"
-          variant="default"
-        >
-          Try again
-        </Button>
-        <Button
-          onClick={() => {
-            window.location.href = "/";
-          }}
-          className="w-full"
-          variant="outline"
-        >
-          Go to Home Page
-        </Button>
-      </CardFooter>
-    </Card>
+    <div className="flex flex-col gap-4 max-w-md mx-auto">
+      <Card className={`w-full mx-auto mt-8 safari-card-fix`}>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-destructive" />
+            <CardTitle>Something went wrong</CardTitle>
+          </div>
+          <CardDescription>
+            An error occurred while rendering this view
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-muted p-4 rounded-md overflow-auto max-h-48 safari-overflow-fix">
+            <p className="text-destructive font-mono text-sm break-words">
+              {error?.toString()}
+            </p>
+          </div>
+        </CardContent>
+        <CardFooter className="flex flex-col gap-2">
+          <Button
+            onClick={resetErrorBoundary}
+            className="w-full"
+            variant="default"
+          >
+            Try again
+          </Button>
+          <Button
+            onClick={() => {
+              window.location.href = "/";
+            }}
+            className="w-full"
+            variant="outline"
+          >
+            Go to Home Page
+          </Button>
+        </CardFooter>
+      </Card>
+    </div>
   );
 };
 

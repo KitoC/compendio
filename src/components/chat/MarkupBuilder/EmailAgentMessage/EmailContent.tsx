@@ -30,12 +30,23 @@ export const EmailContent = ({
         <h3 className="text-sm font-bold">{header}</h3>
       </div>
       <div className="flex flex-col gap-1">
-        <LabelAndValue label="From" value={from} labelClassName="w-[80px]" />
-        <LabelAndValue label="To" value={to} labelClassName="w-[80px]" />
+        <LabelAndValue
+          label="From"
+          value={from}
+          labelClassName="w-[80px]"
+          valueClassName="text-xs truncate"
+        />
+        <LabelAndValue
+          label="To"
+          value={to}
+          labelClassName="w-[80px]"
+          valueClassName="text-xs truncate"
+        />
         <LabelAndValue
           label="Subject"
           value={subject}
           labelClassName="w-[80px]"
+          valueClassName="text-xs"
         />
       </div>
 

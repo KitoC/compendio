@@ -244,11 +244,13 @@ const EmailAgentMessage = ({ message }: EmailAgentMessageProps) => {
                   <LabelAndValue
                     labelClassName="w-[80px]"
                     label="From"
+                    valueClassName="text-xs"
                     value={email_received?.from}
                   />
                 )}
                 <LabelAndValue
                   labelClassName="w-[80px]"
+                  valueClassName="text-xs"
                   label="To"
                   value={email_sent?.to}
                 />

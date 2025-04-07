@@ -30,6 +30,7 @@ export const LabelAndValue = ({
   label,
   value,
   labelClassName,
+  valueClassName,
   editable = false,
   onEdit,
   isMarkdown,
@@ -37,6 +38,7 @@ export const LabelAndValue = ({
   label: string | JSX.Element;
   value: string | JSX.Element;
   labelClassName?: string;
+  valueClassName?: string;
   editable?: boolean;
   onEdit?: (value: string) => void;
   isMarkdown?: boolean;
@@ -64,7 +66,9 @@ export const LabelAndValue = ({
           setMdValue={setMdValue}
         />
       ) : (
-        <div className="flex flex-1 items-center">{value}</div>
+        <p className={clsx("flex flex-1 items-center", valueClassName)}>
+          {value}
+        </p>
       )}
     </div>
   );

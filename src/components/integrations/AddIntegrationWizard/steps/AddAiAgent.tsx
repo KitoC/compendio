@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowRight, Loader2, Plus } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Plus } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
 import type { AiAgent } from "../types";
 import { Database } from "@/integrations/supabase/types";
@@ -32,6 +32,7 @@ const AddAiAgent = ({
   nextStep,
   wizardState,
   onStepDataCapture,
+  prevStep,
 }: StepProps) => {
   const { tenantId } = useTenant();
   const [isCreatingAgent, setIsCreatingAgent] = useState(false);
@@ -125,7 +126,7 @@ const AddAiAgent = ({
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Step 1: Select Agent</DialogTitle>
+        <DialogTitle>Select Agent</DialogTitle>
         <DialogDescription>
           Choose which AI agent will use this integration
         </DialogDescription>
@@ -198,8 +199,8 @@ const AddAiAgent = ({
       </div>
       {!isCreatingAgent && (
         <DialogFooter>
-          <Button variant="outline" onClick={resetAndClose}>
-            Cancel
+          <Button variant="outline" onClick={prevStep}>
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
           <Button
             onClick={nextStep}

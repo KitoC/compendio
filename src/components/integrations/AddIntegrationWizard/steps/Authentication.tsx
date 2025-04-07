@@ -1,6 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useState } from "react";
 import { INTEGRATION_TYPES } from "@/lib/constants";
 import FormBuilder from "@/components/form-builder";
 import { INTEGRATION_FORM_CONFIGS } from "@/forms/integrations";
@@ -11,28 +9,15 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Check,
-  ArrowLeft,
-  ArrowRight,
-  LogIn,
-  Loader2,
-  User,
-} from "lucide-react";
-import { useTenant } from "@/contexts/TenantContext";
-import { buildGoogleOAuthUrl } from "@/utils/oAuth/oAuthGoogle";
-import { ICredential, StepProps } from "../types";
+
+import { ArrowLeft, ArrowRight, LogIn } from "lucide-react";
+
+import { StepProps } from "../types";
+
+import CreateOauthCredential from "./components/CreateOauthCredential";
+import ExistingCredentialSelector from "./components/ExistingCredentialSelector";
 import { useAuth } from "@/hooks/useAuth";
-import CredentialCard from "./components/CredentialCard";
-import { useLocation } from "react-router-dom";
-import { getUrlParameter } from "@/utils/oAuth/shared";
+import { useTenant } from "@/contexts/TenantContext";
 import { callSupabaseFunction } from "@/services/supabaseFunctionServices";
 
 export const OAUTH_INTEGRATION_CALLBACK_DATA_KEY =
@@ -46,183 +31,42 @@ const Authentication = ({
 }: StepProps) => {
   const { user } = useAuth();
   const { tenantId } = useTenant();
-  const location = useLocation();
   const { service_type, credential_id } = wizardState;
 
-  const [existingCredentials, setExistingCredentials] = useState<ICredential[]>(
-    []
-  );
   const [isLoadingCredentials, setIsLoadingCredentials] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [initialLoad, setInitialLoad] = useState(false);
   const [isCreatingNewCredential, setIsCreatingNewCredential] = useState(false);
 
   const selectedType = INTEGRATION_TYPES.find((t) => t.id === service_type);
   const authType = selectedType?.authType || "custom";
-  const provider = selectedType?.oauthProvider || "google";
   const formConfig = selectedType && INTEGRATION_FORM_CONFIGS[service_type];
-  const fetchCredentialsByType = useCallback(async () => {
-    if (!tenantId) return;
-
-    try {
-      const { data, error } = await supabase
-        .from("credentials")
-        .select(
-          "id, name, username, domain, created_at, scopes, type, associated_email"
-        )
-        .eq("tenant_id", tenantId)
-        .eq("type", authType)
-        .eq("provider", provider)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      setExistingCredentials(data as ICredential[]);
-
-      setIsLoadingCredentials(false);
-    } catch (error) {
-      console.error("Error fetching reusable credentials:", error);
-    }
-  }, [tenantId, authType, provider]);
-
-  const handleIntegrationCallback = useCallback(async () => {
-    if (!user || !tenantId) {
-      return;
-    }
-
-    const code = getUrlParameter("code");
-    const state = getUrlParameter("state");
-
-    const { credentialName, credentialId } = JSON.parse(
-      sessionStorage.getItem(OAUTH_INTEGRATION_CALLBACK_DATA_KEY) || "{}"
-    );
-
-    try {
-      if (!code || !state) {
-        toast.error("Invalid OAuth callback");
-        return;
-      }
-
-      const response = await callSupabaseFunction("handle_oauth_callback", {
-        code,
-        state,
-        options: {
-          credential_name: credentialName,
-          credential_id: credentialId,
-        },
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        toast.error(result.error || "OAuth callback failed");
-        console.error("OAuth error:", result);
-        return;
-      }
-
-      // Optionally store credential ID for later use
-      if (result.credential_id) {
-        onStepDataCapture({ credential_id: result.credential_id });
-        fetchCredentialsByType();
-      }
-      sessionStorage.removeItem(OAUTH_INTEGRATION_CALLBACK_DATA_KEY);
-
-      toast.success("Integration connected successfully");
-    } catch (error) {
-      console.error("OAuth callback exception:", error);
-      toast.error("Failed to connect integration");
-    }
-  }, [user, tenantId, onStepDataCapture, fetchCredentialsByType]);
-
-  const handleOAuthRedirect = async (formValues: Record<string, unknown>) => {
-    const scopes = Object.entries(formValues)
-      .filter(([key, value]) => key.includes("scope"))
-      .map(([key, value]) => value);
-
-    if (!tenantId || !wizardState.agent_id) return;
-
-    try {
-      setIsSubmitting(true);
-
-      const oauthCallbackData = {
-        returnUrl: location.pathname,
-        credentialName: formValues.name,
-        agentId: wizardState.agent_id,
-        serviceType: service_type,
-        tenantId,
-        userId: user.id,
-        credentialId: credential_id,
-      };
-
-      // Store oauth state ID in session storage for the callback to use
-      sessionStorage.setItem(
-        OAUTH_INTEGRATION_CALLBACK_DATA_KEY,
-        JSON.stringify(oauthCallbackData)
-      );
-
-      // Now redirect to the appropriate OAuth URL
-      if (provider === "google") {
-        // Google OAuth for Gmail
-        const googleAuthUrl = await buildGoogleOAuthUrl();
-
-        window.location.href = googleAuthUrl;
-      } else if (provider === "azure") {
-        // Microsoft OAuth for Outlook
-        // Import the utility for building the Azure OAuth URL
-        const { buildAzureOAuthUrl } = await import("@/utils/oAuth/oAuthAzure");
-        const scope = `openid profile email offline_access User.Read ${scopes.join(
-          " "
-        )}`;
-        // This will handle creating the proper PKCE code challenge and storing the code verifier
-        const azureAuthUrl = await buildAzureOAuthUrl({
-          scope,
-          prompt: "select_account",
-        });
-
-        window.location.href = azureAuthUrl;
-      } else {
-        toast.error(`Unsupported OAuth provider: ${provider}`);
-      }
-    } catch (error) {
-      console.error("Error starting OAuth flow:", error);
-      toast.error("Failed to start authentication flow");
-      setIsSubmitting(false);
-    }
-  };
 
   const handleCredentialSelect = (credential_id: string) => {
     onStepDataCapture({ credential_id });
   };
 
-  const handleFormSubmit = (values: Record<string, unknown>) => {
+  const handleFormSubmit = async (values: Record<string, unknown>) => {
+    setIsSubmitting(true);
     // TODO: Handle other types of auth.
+    const result = await callSupabaseFunction("create-credential", {
+      access_token: values.access_token,
+      provider: service_type,
+      user_id: user.id,
+      tenant_id: tenantId,
+      credential_name: values.name,
+    });
+
+    const { credential: credential_id } = await result.json();
+
+    onStepDataCapture({ credential_id });
+
+    setIsSubmitting(false);
   };
-
-  useEffect(() => {
-    if (service_type && !initialLoad) {
-      setInitialLoad(true);
-      fetchCredentialsByType();
-    }
-  }, [service_type, fetchCredentialsByType, initialLoad]);
-
-  useEffect(() => {
-    if (sessionStorage.getItem(OAUTH_INTEGRATION_CALLBACK_DATA_KEY)) {
-      handleIntegrationCallback();
-    }
-  }, [handleIntegrationCallback]);
-
-  if (isLoadingCredentials) {
-    return (
-      <div className="flex justify-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Step 3: Configure Authentication</DialogTitle>
+        <DialogTitle>Configure Authentication</DialogTitle>
         <DialogDescription>
           {authType === "oauth"
             ? "Authenticate with your account"
@@ -230,68 +74,30 @@ const Authentication = ({
         </DialogDescription>
       </DialogHeader>
 
-      <div className={`${isCreatingNewCredential ? "py-0" : "py-4"}`}>
-        {existingCredentials.length > 0 && !isCreatingNewCredential && (
-          <div className="mb-6">
-            <h3 className="text-sm font-medium mb-2">Available Credentials</h3>
-            <p className="text-sm text-muted-foreground mb-3">
-              You have existing credentials you can reuse for this integration:
-            </p>
-            <div className="space-y-3">
-              <Select
-                value={wizardState.credential_id}
-                onValueChange={handleCredentialSelect}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select existing credentials" />
-                </SelectTrigger>
-                <SelectContent>
-                  {existingCredentials.map((cred) => {
-                    return (
-                      <SelectItem key={cred.id} value={cred.id}>
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4" />
-                          {cred.username}
-                          {cred.name}
+      <ExistingCredentialSelector
+        wizardState={wizardState}
+        handleCredentialSelect={handleCredentialSelect}
+        setIsLoadingCredentials={setIsLoadingCredentials}
+        isCreatingNewCredential={isCreatingNewCredential}
+      />
 
-                          {cred.associated_email && (
-                            <span className="text-xs text-muted-foreground">
-                              ({cred.associated_email})
-                            </span>
-                          )}
-                          <span className="text-xs text-muted-foreground">
-                            (created on{" "}
-                            {new Date(cred.created_at).toLocaleDateString()})
-                          </span>
-                        </div>
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-              {/* TODO: Do an auth check/refresh when selecting a credential and have a feedback message if the credential is expired. */}
-              {credential_id && (
-                <CredentialCard
-                  credentialId={credential_id}
-                  onRefresh={handleOAuthRedirect}
-                />
-              )}
-            </div>
-            <div className="border-t my-4"></div>
-            <h3 className="text-sm font-medium mb-2">
-              Or Create New Credentials
-            </h3>
-          </div>
-        )}
-
+      <div>
         {authType === "oauth" ? (
+          <CreateOauthCredential
+            authType={selectedType}
+            wizardState={wizardState}
+            onStepDataCapture={onStepDataCapture}
+            isCreatingNewCredential={isCreatingNewCredential}
+            setIsCreatingNewCredential={setIsCreatingNewCredential}
+          />
+        ) : (
           <>
             {isCreatingNewCredential ? (
               <FormBuilder
-                footerClassname="border-none p-0"
+                footerClassname="border-none p-2"
                 className="border-none p-0"
                 config={formConfig}
-                onSubmit={handleOAuthRedirect}
+                onSubmit={handleFormSubmit}
                 onCancel={() => setIsCreatingNewCredential(false)}
                 initialValues={formConfig.initialValues}
               />
@@ -311,15 +117,10 @@ const Authentication = ({
               </div>
             )}
           </>
-        ) : (
-          // TODO: Support other types of auth.
-          formConfig && (
-            <FormBuilder config={formConfig} onSubmit={handleFormSubmit} />
-          )
         )}
       </div>
 
-      {authType !== "oauth" || isCreatingNewCredential ? null : (
+      {isCreatingNewCredential ? null : (
         <DialogFooter>
           <Button variant="outline" onClick={prevStep}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
