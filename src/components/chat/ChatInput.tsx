@@ -196,9 +196,10 @@ const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
           ref={formRef}
           onSubmit={handleSubmit}
           className={clsx(
-            "bg-white dark:bg-gray-700 border border-gray-200 dark:border-slate-600 rounded-lg shadow-sm p-3 transition-all duration-300",
+            "bg-white dark:bg-gray-700 border border-gray-200 dark:border-slate-600 rounded-lg p-3 transition-all duration-300 ",
             {
-              "rounded-b-none border-none pb-6": isMobile,
+              "rounded-b-none border-none pb-6 shadow-[0_0_10px_0_rgba(0,0,0,0.2)]":
+                isMobile,
             }
           )}
         >
