@@ -1,6 +1,7 @@
-
 import { FormConfig, FormField, FormFieldType, FormFieldOption } from "@/components/form-builder/types";
-import { AirtableField, AirtableRecord, AirtableTable } from "@/types/airtable";
+import { AirtableField, AirtableTable } from "@/types/airtable";
+import { AirtableRecord } from "./types";
+import { getFieldRenderer } from "./field-renderers";
 
 /**
  * Maps Airtable field types to FormBuilder field types
@@ -124,39 +125,6 @@ export const createInitialValues = (
 /**
  * Format a value for display based on field type
  */
-export const formatFieldValue = (value: any, field: AirtableField): string | React.ReactNode => {
-  if (value === null || value === undefined) return "-";
-  
-  switch (field.type) {
-    case "date":
-    case "dateTime":
-      return new Date(value).toLocaleString();
-    case "checkbox":
-      return value ? "Yes" : "No";
-    case "singleSelect":
-      if (field.options?.choices) {
-        const choice = field.options.choices.find(c => c.id === value);
-        return choice ? choice.name : value;
-      }
-      return value;
-    case "multipleSelects":
-      if (Array.isArray(value) && field.options?.choices) {
-        return value
-          .map(id => {
-            const choice = field.options!.choices!.find(c => c.id === id);
-            return choice ? choice.name : id;
-          })
-          .join(", ");
-      }
-      return Array.isArray(value) ? value.join(", ") : value;
-    case "currency":
-      return typeof value === "number" ? `$${value.toFixed(2)}` : value;
-    case "percent":
-      return typeof value === "number" ? `${value}%` : value;
-    default:
-      if (typeof value === "object") {
-        return JSON.stringify(value);
-      }
-      return String(value);
-  }
+export const formatFieldValue = (value: any, field: AirtableField): React.ReactNode => {
+  return getFieldRenderer(field, value);
 };

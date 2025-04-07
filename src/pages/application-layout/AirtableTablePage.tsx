@@ -3,9 +3,8 @@ import { useParams } from "react-router-dom";
 import Page from "@/components/Page";
 import AirtableTable from "@/components/airtable-table";
 import {
-  useAirtableBaseQuery,
-  useAirtableRecordsQuery,
   useAirtableTableSchemaQuery,
+  useAirtableRecordsQuery,
 } from "@/hooks/useAirtableQuery";
 import { AirtableService } from "@/services/AirtableService";
 import { toast } from "sonner";
@@ -29,7 +28,6 @@ const AirtableTablePage = () => {
   const { id: tableName, ...params } = useParams<{
     id: string;
   }>();
-  // Fetch base schema and records
   const { data: tableSchema, isLoading: isLoadingSchema } =
     useAirtableTableSchemaQuery(tableName);
   const {
@@ -43,13 +41,10 @@ const AirtableTablePage = () => {
 
   console.log("tableSchema", tableSchema);
 
-  // Form config customization
   const getFormConfig = (config: FormConfig, record: AirtableRecord | null) => {
-    // Add custom form config options here if needed
     return config;
   };
 
-  // CRUD operation handlers
   const handleCreate = async (record: Partial<AirtableRecord>) => {
     try {
       await createRecord(record.fields || {});
