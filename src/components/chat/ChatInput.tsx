@@ -15,12 +15,12 @@ import { CHAT_COMMANDS } from "@/lib/chat-commands";
 import { CommandSuggestions } from "./CommandSuggestions";
 import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
 import clsx from "clsx";
-import { useChatState } from "@/contexts/chat/useChatState";
 import { useTTS } from "@/contexts/TTSProvider";
 import { useVoiceContext } from "@/contexts/VoiceProvider";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useViewportHeight } from "@/hooks/useViewportHeight";
 import { useElementSize } from "@/hooks/useElementSize";
+import { useChat } from "@/contexts/chat";
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   disabled?: boolean;
@@ -60,9 +60,7 @@ const buttonWrapperClass =
 const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
   ({ onSendMessage, disabled, agentId, conversationId }, ref) => {
     const formRef = useRef<HTMLFormElement>(null);
-    const { interruptAiAgent, isTyping } = useChatState({
-      conversationId,
-    });
+    const { interruptAiAgent, isTyping } = useChat();
     const [message, setMessage] = useState("");
     const [showCommands, setShowCommands] = useState(false);
     const [isVoiceMode, setIsVoiceMode] = useState(false);

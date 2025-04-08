@@ -80,6 +80,7 @@
     "react-router-dom": "^7.3.0",
     "react-speech-recognition": "^3.10.0",
     "react-use": "^17.6.0",
+    "react-virtuoso": "^4.12.6",
     "recharts": "^2.12.7",
     "regenerator-runtime": "^0.14.1",
     "remark-gfm": "^4.0.1",

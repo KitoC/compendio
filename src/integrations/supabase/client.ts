@@ -6,7 +6,6 @@ import { getSupabaseUrl, getSupabaseKey } from "@/utils/supabaseUtils";
 const SUPABASE_URL = getSupabaseUrl();
 const SUPABASE_PUBLISHABLE_KEY = getSupabaseKey();
 
-console.log("SUPABASE_PUBLISHABLE_KEY", SUPABASE_PUBLISHABLE_KEY);
 export const dynamicHeaders = {
   "x-tenant-id": null, // start empty
 };

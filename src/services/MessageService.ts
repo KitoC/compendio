@@ -5,6 +5,8 @@ interface MessageQuery {
   conversation_id: string;
   limit: string;
   offset: string;
+  order?: string;
+  sort_direction?: string;
   role?: string;
   search?: string;
   filter?: string;

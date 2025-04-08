@@ -1,11 +1,11 @@
 import { ReactNode, useEffect, Suspense, useRef } from "react";
-import { useLocation, useNavigate, Outlet, matchPath } from "react-router-dom";
+import { useLocation, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import AppSidebar from "@/components/layout/AppSidebar";
 import { ROUTES } from "@/lib/constants";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Menu, SquareChevronLeft } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AiAgentsProvider } from "@/contexts/AiAgents/AiAgentsProvider";
 import { CustomTablesProvider } from "@/contexts/CustomTables/CustomTablesProvider";
@@ -47,10 +47,14 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
     );
   }
 
+  const isOnBoardingRoute = location.pathname.match(
+    /^\/([^/]+)\/app\/onboarding$/
+  );
   // Check if the current route is an access route
   const isAccessRoute =
     location.pathname.includes("/request-access") ||
-    location.pathname.includes("/access-pending");
+    location.pathname.includes("/access-pending") ||
+    isOnBoardingRoute;
 
   // For access routes, we don't need the app sidebar
   if (isAccessRoute) {
@@ -72,10 +76,6 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
   if (!user) {
     return null;
   }
-
-  const isOnBoardingRoute = location.pathname.match(
-    /^\/([^/]+)\/app\/onboarding$/
-  );
 
   const suspensedContent = (
     <Suspense
@@ -100,7 +100,7 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
                   "page-container flex min-h-screen w-full bg-background",
                   {
                     "flex flex-col overflow-hidden h-dvh pb-[calc(var(--page-bottom-padding))] pt-[var(--header-height)]":
-                      isMobile && !isOnBoardingRoute,
+                      isMobile,
                   }
                 )}
                 style={
@@ -109,7 +109,7 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
                   } as React.CSSProperties
                 }
               >
-                {isMobile && !isOnBoardingRoute && (
+                {isMobile && (
                   <header
                     ref={headerRef}
                     className="fixed top-0 left-0 right-0 z-40 h-[var(--header-height)]  w-full flex items-center h-fit px-4 border-b bg-background shadow pt-safe-top"
@@ -130,16 +130,16 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
                     <div id="page-header-anchor" className="flex-1"></div>
                   </header>
                 )}
-                {!isOnBoardingRoute && <AppSidebar />}
+                {<AppSidebar />}
 
                 {isMobile ? (
                   suspensedContent
                 ) : (
                   <main
                     className={clsx(" flex-grow overflow-y-scroll relative", {
-                      "h-screen": !isMobile && !isOnBoardingRoute,
+                      "h-screen": !isMobile,
                       "h-[calc(100vh-var(--header-height))] pb-[var(--page-bottom-padding)]":
-                        isMobile && !isOnBoardingRoute,
+                        isMobile,
                     })}
                   >
                     {suspensedContent}

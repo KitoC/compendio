@@ -21,8 +21,6 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
     const schema = await airtableService.getBase();
     const { tables } = schema;
 
-    airtableService.logger.debug("Schema", schema);
-
     for (const table of tables) {
       const { id: external_id, name, fields, primaryFieldId } = table;
 
