@@ -110,6 +110,7 @@ export class SendEmailHandler implements IAgentFunctionHandler {
 
       this.logger.info("🔹 Email sent successfully");
     }
+    const sent_at = new Date().toISOString();
 
     const updatedMessage =
       await agentController.updateMessageWithSummaryMetadata(
@@ -121,13 +122,14 @@ export class SendEmailHandler implements IAgentFunctionHandler {
             email_sent: {
               body: email_drafted.body,
               to: email_drafted.to,
-              sent_at: new Date().toISOString(),
+              sent_at,
             },
           },
           role: message.role,
           metadata: {
             ...message.metadata,
             status: "sent",
+            sent_at,
           },
         },
         EMAIL_SUMMARY_PROMPT

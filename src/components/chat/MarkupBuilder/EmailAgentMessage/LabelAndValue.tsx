@@ -5,7 +5,7 @@ import RenderMarkdown from "../../RenderMarkdown";
 import EmailEditor from "./EmailEditor";
 import { useDebouncedCallback } from "use-debounce";
 
-const Markdown = ({
+export const Markdown = ({
   editable,
   mdValue,
   onEdit,
@@ -13,7 +13,6 @@ const Markdown = ({
   editable: boolean;
   mdValue: string;
   onEdit: (newValue: string) => void;
-  setMdValue: (newValue: string) => void;
 }) => {
   const debouncedOnUpdate = useDebouncedCallback(({ editor }) => {
     onEdit(editor.getHTML());
@@ -31,39 +30,31 @@ export const LabelAndValue = ({
   value,
   labelClassName,
   valueClassName,
-  editable = false,
-  onEdit,
   isMarkdown,
 }: {
   label: string | JSX.Element;
   value: string | JSX.Element;
   labelClassName?: string;
   valueClassName?: string;
-  editable?: boolean;
-  onEdit?: (value: string) => void;
   isMarkdown?: boolean;
 }) => {
-  const [mdValue, setMdValue] = useState(value);
-
   if (!value) return null;
 
   return (
-    <div className="flex gap-1">
+    <div className={clsx("flex gap-1 flex-col")}>
       <p
         className={clsx(
-          "text-sm text-muted-foreground font-bold",
+          "text-sm text-muted-foreground font-bold align-start",
           labelClassName
-          // { "pt-[0.75rem]": editable }
         )}
       >
         {label}{" "}
       </p>
       {isMarkdown ? (
-        <Markdown
-          editable={editable}
-          mdValue={mdValue as string}
-          onEdit={onEdit}
-          setMdValue={setMdValue}
+        <RenderMarkdown
+          className="flex-1"
+          message={value as string}
+          isUser={false}
         />
       ) : (
         <p className={clsx("flex flex-1 items-center", valueClassName)}>

@@ -1,5 +1,6 @@
 import { EditorProvider, FloatingMenu, BubbleMenu } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { useEffect } from "react";
 
 // define your extension array
 const extensions = [StarterKit];
@@ -11,6 +12,7 @@ function convertLineBreaksToHtml(text: string): string {
 export default function EmailEditor({ value, ...props }) {
   return (
     <EditorProvider
+      autofocus={false}
       extensions={extensions}
       content={convertLineBreaksToHtml(value)}
       {...props}

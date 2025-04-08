@@ -8,97 +8,104 @@ import {
 import { FoldVertical, UnfoldVertical } from "lucide-react";
 import { useState } from "react";
 import RenderMarkdown from "../../RenderMarkdown";
+import { Divider } from "@/components/ui/divider";
 
-import { LabelAndValue } from "./LabelAndValue";
+import { LabelAndValue, Markdown } from "./LabelAndValue";
 import { EmailContentProps } from "./types";
+import FromAndToLabel from "./FromAndToLabel";
+import { useDebouncedCallback } from "use-debounce";
+import EmailEditor from "./EmailEditor";
+import { cn } from "@/lib/utils";
+
+export const TYPES = {
+  DRAFT: "draft",
+  SENT: "sent",
+  RECEIVED: "received",
+};
 
 export const EmailContent = ({
   from,
   to,
-  subject,
   body,
   header,
   thread,
   editable = false,
   onEditBody,
+  type,
 }: EmailContentProps) => {
   const [threadOpen, setThreadOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const debouncedOnUpdate = useDebouncedCallback(({ editor }) => {
+    onEditBody({ body: editor.getHTML() });
+  }, 750);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 " onClick={() => setIsEditing(true)}>
       <div>
         <h3 className="text-sm font-bold">{header}</h3>
       </div>
-      <div className="flex flex-col gap-1">
-        <LabelAndValue
-          label="From"
-          value={from}
-          labelClassName="w-[80px]"
-          valueClassName="text-xs truncate"
-        />
-        <LabelAndValue
-          label="To"
-          value={to}
-          labelClassName="w-[80px]"
-          valueClassName="text-xs truncate"
-        />
-        <LabelAndValue
-          label="Subject"
-          value={subject}
-          labelClassName="w-[80px]"
-          valueClassName="text-xs"
-        />
-      </div>
+      <div
+        className={cn("bg-sidebar p-4 rounded-md", {
+          "bg-sidebar ml-4": type === TYPES.RECEIVED,
+          "bg-primary text-white mr-4 border": type === TYPES.SENT,
+          "border border-2 border-dashed border-primary bg-primary/5 mr-4":
+            type === TYPES.DRAFT,
+        })}
+      >
+        <div className="">
+          <div className="flex flex-col gap-1">
+            <EmailEditor
+              value={body}
+              onUpdate={debouncedOnUpdate}
+              editable={editable}
+              autofocus={false}
+              // onFocus={({ event }) => {
+              //   console.log("isEditing", isEditing);
+              //   console.log("focus", event);
+              //   if (!isEditing) {
+              //     event.target.blur();
+              //   }
+              // }}
+            />
 
-      <div className="">
-        <div className="flex flex-col gap-1">
-          <LabelAndValue
-            editable={editable}
-            label="Body"
-            isMarkdown
-            value={body}
-            labelClassName="w-[80px] min-w-[80px]"
-            onEdit={(newBody) => {
-              onEditBody({ body: newBody });
-            }}
-          />
+            {!!thread?.length && (
+              <Collapsible
+                className="w-full"
+                open={threadOpen}
+                onOpenChange={() => setThreadOpen(!threadOpen)}
+              >
+                <div className="mt-1">
+                  <div className="flex items-center justify-between ">
+                    <p>Thread:</p>
+                    <CollapsibleTrigger>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setThreadOpen(!threadOpen)}
+                      >
+                        {threadOpen ? <UnfoldVertical /> : <FoldVertical />}
+                      </Button>
+                    </CollapsibleTrigger>
+                  </div>
 
-          {!!thread?.length && (
-            <Collapsible
-              className="w-full"
-              open={threadOpen}
-              onOpenChange={() => setThreadOpen(!threadOpen)}
-            >
-              <div className="mt-1">
-                <div className="flex items-center justify-between ">
-                  <p>Thread:</p>
-                  <CollapsibleTrigger>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setThreadOpen(!threadOpen)}
-                    >
-                      {threadOpen ? <UnfoldVertical /> : <FoldVertical />}
-                    </Button>
-                  </CollapsibleTrigger>
-                </div>
-
-                <CollapsibleContent>
-                  {thread.map(({ from, timestamp, body }) => (
-                    <div className="mt-1">
-                      <div className="border-t border-slate-700 w-full my-2"></div>
-                      <div className="pl-[80px]">
-                        <p className="text-xs text-muted-foreground">
-                          {from} - {new Date(timestamp).toLocaleDateString()}
-                        </p>
-                        <RenderMarkdown message={body} isUser={false} />
+                  <CollapsibleContent>
+                    {thread.map(({ from, timestamp, body }) => (
+                      <div className="mt-1">
+                        <div className="border-t border-slate-700 w-full my-2"></div>
+                        <div className="pl-[80px]">
+                          <p className="text-xs text-muted-foreground">
+                            {from} - {new Date(timestamp).toLocaleDateString()}
+                          </p>
+                          <RenderMarkdown message={body} isUser={false} />
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </CollapsibleContent>
-              </div>
-            </Collapsible>
-          )}
+                    ))}
+                  </CollapsibleContent>
+                </div>
+              </Collapsible>
+            )}
+          </div>
         </div>
       </div>
     </div>

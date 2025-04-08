@@ -133,6 +133,7 @@ class EmailAgentController<
           ...message.metadata,
           status: draftEmail.email_drafted ? "draft" : "received",
           priority: emailContent.priority,
+          received_at: emailContent.email_received.latest_message.timestamp,
         },
       });
     } else {
@@ -153,6 +154,7 @@ class EmailAgentController<
           uuid,
           status: draftEmail.email_drafted ? "draft" : "received",
           priority: emailContent.priority,
+          received_at: emailContent.email_received.latest_message.timestamp,
         },
       };
 
