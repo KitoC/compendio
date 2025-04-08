@@ -1,3 +1,4 @@
+
 import React from "react";
 import { AirtableField } from "@/types/airtable";
 import CheckboxRenderer from "./CheckboxRenderer";
@@ -13,6 +14,7 @@ import RatingRenderer from "./RatingRenderer";
 import CurrencyRenderer from "./CurrencyRenderer";
 import PercentRenderer from "./PercentRenderer";
 import PhoneRenderer from "./PhoneRenderer";
+import MultipleLookupRenderer from "./MultipleLookupRenderer";
 import DefaultRenderer from "./DefaultRenderer";
 
 export interface FieldRendererProps {
@@ -47,10 +49,11 @@ export const getFieldRenderer = (
     case "longText":
     case "autoNumber":
     case "count":
-    case "rollup":
     case "formula":
     case "lookup":
       return <TextRenderer field={field} value={value} />;
+    case "multipleLookupValues":
+      return <MultipleLookupRenderer field={field} value={value} />;
     case "number":
     case "duration":
       return <NumberRenderer field={field} value={value} />;

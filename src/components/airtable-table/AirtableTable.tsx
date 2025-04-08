@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Card,
@@ -55,7 +54,6 @@ import EditModal from "./EditModal";
 import FieldFilter from "./FieldFilter";
 import { AirtableField } from "@/types/airtable";
 
-// Default permissions
 const defaultPermissions: UserPermissions = {
   create: true,
   read: true,
@@ -84,7 +82,6 @@ const AirtableTable = ({
   const isMobile = useIsMobile();
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
-  // State
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState<string | null>(null);
@@ -94,19 +91,16 @@ const AirtableTable = ({
   const [deleteRecordId, setDeleteRecordId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [filterOpen, setFilterOpen] = useState<string | null>(null);
-  
-  // Merge provided permissions with defaults
+
   const permissions: UserPermissions = {
     ...defaultPermissions,
     ...providedPermissions,
   };
 
-  // Reset pagination when records change
   useEffect(() => {
     setCurrentPage(1);
   }, [records.length]);
 
-  // Find primary field
   const primaryField = useMemo(() => {
     if (table && table.primaryFieldId) {
       return table.fields.find(field => field.id === table.primaryFieldId);
@@ -114,24 +108,19 @@ const AirtableTable = ({
     return null;
   }, [table]);
 
-  // Get visible fields and organize them
   const organizedFields = useMemo(() => {
     if (!table || !table.fields) return [];
 
-    // Filter out system fields
     const filteredFields = table.fields.filter(field => 
       !["createdBy", "lastModifiedBy"].includes(field.type)
     );
 
-    // If we have a primary field, ensure it comes first
     const sortedFields = [...filteredFields];
     
     if (primaryField) {
-      // Remove primary field from its current position
       const primaryFieldIndex = sortedFields.findIndex(f => f.id === primaryField.id);
       if (primaryFieldIndex > -1) {
         const [removed] = sortedFields.splice(primaryFieldIndex, 1);
-        // Add it to the beginning
         sortedFields.unshift(removed);
       }
     }
@@ -139,11 +128,9 @@ const AirtableTable = ({
     return sortedFields;
   }, [table, primaryField]);
 
-  // Handle filtering, searching, and sorting
   const processedRecords = useMemo(() => {
     let filtered = [...records];
     
-    // Apply search
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(record => {
@@ -155,7 +142,6 @@ const AirtableTable = ({
       });
     }
     
-    // Apply filters
     Object.entries(filters).forEach(([fieldName, value]) => {
       if (value === null || value === '' || value === undefined) return;
       
@@ -163,7 +149,6 @@ const AirtableTable = ({
         const fieldValue = record.fields[fieldName];
         if (fieldValue === null || fieldValue === undefined) return false;
         
-        // Handle different field types
         const field = table.fields.find(f => f.name === fieldName);
         if (!field) return false;
         
@@ -172,20 +157,17 @@ const AirtableTable = ({
             return fieldValue === value;
           case "date":
           case "dateTime":
-            // Simple date comparison (could be enhanced for ranges)
             const recordDate = new Date(fieldValue).setHours(0, 0, 0, 0);
             const filterDate = new Date(value).setHours(0, 0, 0, 0);
             return recordDate === filterDate;
           case "singleSelect":
             return fieldValue === value;
           default:
-            // Text-based search
             return String(fieldValue).toLowerCase().includes(String(value).toLowerCase());
         }
       });
     });
     
-    // Apply sorting
     if (sortField) {
       filtered.sort((a, b) => {
         const aValue = a.fields[sortField];
@@ -211,7 +193,6 @@ const AirtableTable = ({
     return filtered;
   }, [records, organizedFields, searchTerm, filters, sortField, sortDirection, table]);
 
-  // Handle pagination
   const paginatedRecords = useMemo(() => {
     if (!pagination) return processedRecords;
 
@@ -219,7 +200,6 @@ const AirtableTable = ({
     return processedRecords.slice(startIndex, startIndex + pageSize);
   }, [processedRecords, currentPage, pageSize, pagination]);
 
-  // Handle sorting toggle
   const handleSort = (fieldName: string) => {
     if (sortField === fieldName) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -229,19 +209,16 @@ const AirtableTable = ({
     }
   };
 
-  // Handle edit
   const handleEdit = (record: AirtableRecord) => {
     setEditingRecord(record);
     setIsCreating(false);
   };
 
-  // Handle create
   const handleCreate = () => {
     setEditingRecord(null);
     setIsCreating(true);
   };
 
-  // Handle save (create or update)
   const handleSave = async (record: AirtableRecord) => {
     try {
       if (isCreating) {
@@ -259,7 +236,6 @@ const AirtableTable = ({
     }
   };
 
-  // Handle delete confirmation
   const handleDeleteConfirm = async () => {
     if (deleteRecordId !== null && onDelete) {
       try {
@@ -274,7 +250,6 @@ const AirtableTable = ({
     }
   };
 
-  // Handle filter change
   const handleFilterChange = (fieldName: string, value: any) => {
     setFilters(prev => ({
       ...prev,
@@ -283,12 +258,10 @@ const AirtableTable = ({
     setFilterOpen(null);
   };
 
-  // Handle export
   const handleExport = () => {
     if (!permissions.export) return;
 
     try {
-      // Get field names
       const fieldNames = organizedFields.map(field => field.name);
       const csvRows = [fieldNames.join(",")];
 
@@ -300,7 +273,6 @@ const AirtableTable = ({
           const value = record.fields[fieldName];
           const formatted = formatFieldValue(value, field);
           
-          // Ensure CSV compatibility
           return value !== null && value !== undefined
             ? `"${String(formatted).replace(/"/g, '""')}"`
             : "";
@@ -326,23 +298,18 @@ const AirtableTable = ({
     }
   };
 
-  // Filter visible fields based on screen size
   const displayFields = useMemo(() => {
-    // Always show primary field first if available
     let fields = [...organizedFields];
     
     if (isMobile) {
-      // On mobile, show fewer fields (primary + one more)
       return fields.slice(0, 2);
     }
     
     return fields;
   }, [organizedFields, isMobile]);
 
-  // Calculate pagination
   const totalPages = Math.ceil(processedRecords.length / pageSize);
-  
-  // Render loading skeletons
+
   if (isLoading) {
     return (
       <Card className={className}>
@@ -394,7 +361,6 @@ const AirtableTable = ({
     );
   }
 
-  // Render Table Actions Cell
   const renderActionsCell = (record: AirtableRecord) => {
     return (
       <div className="flex justify-end">
@@ -536,12 +502,10 @@ const AirtableTable = ({
         <div className="rounded-md border">
           <div className="relative w-full overflow-hidden" ref={tableContainerRef}>
             <div className="flex w-full">
-              {/* Fixed left column (primary field) container */}
               <div className="sticky left-0 z-10 bg-background shadow-sm">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      {/* Primary field header */}
                       {displayFields.length > 0 && (
                         <TableHead
                           className="cursor-pointer select-none whitespace-nowrap"
@@ -566,10 +530,11 @@ const AirtableTable = ({
                           onClick={() => onRowClick && onRowClick(record)}
                           style={{ animationDelay: `${index * 30}ms` }}
                         >
-                          {/* Primary field cell */}
                           {displayFields.length > 0 && (
-                            <TableCell className="whitespace-nowrap">
-                              {formatFieldValue(record.fields[displayFields[0].name], displayFields[0])}
+                            <TableCell className="whitespace-nowrap align-middle">
+                              <div className="h-full flex items-center">
+                                {formatFieldValue(record.fields[displayFields[0].name], displayFields[0])}
+                              </div>
                             </TableCell>
                           )}
                         </TableRow>
@@ -585,12 +550,10 @@ const AirtableTable = ({
                 </Table>
               </div>
 
-              {/* Scrollable middle columns container */}
               <div className="overflow-x-auto flex-grow">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      {/* Middle column headers (skip primary field) */}
                       {displayFields.slice(1).map((field) => (
                         <TableHead
                           key={field.id}
@@ -616,10 +579,11 @@ const AirtableTable = ({
                           onClick={() => onRowClick && onRowClick(record)}
                           style={{ animationDelay: `${index * 30}ms` }}
                         >
-                          {/* Middle column cells (skip primary field) */}
                           {displayFields.slice(1).map((field) => (
-                            <TableCell key={field.id} className="whitespace-nowrap">
-                              {formatFieldValue(record.fields[field.name], field)}
+                            <TableCell key={field.id} className="whitespace-nowrap align-middle">
+                              <div className="h-full flex items-center">
+                                {formatFieldValue(record.fields[field.name], field)}
+                              </div>
                             </TableCell>
                           ))}
                         </TableRow>
@@ -638,7 +602,6 @@ const AirtableTable = ({
                 </Table>
               </div>
 
-              {/* Fixed right column (actions) container */}
               {(permissions.update || permissions.delete) && (
                 <div className="sticky right-0 z-10 bg-background shadow-sm">
                   <Table>
@@ -655,8 +618,10 @@ const AirtableTable = ({
                             className="animate-fade-in transition-colors"
                             style={{ animationDelay: `${index * 30}ms` }}
                           >
-                            <TableCell>
-                              {renderActionsCell(record)}
+                            <TableCell className="align-middle">
+                              <div className="h-full flex items-center justify-end">
+                                {renderActionsCell(record)}
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))
@@ -673,7 +638,6 @@ const AirtableTable = ({
           </div>
         </div>
 
-        {/* Pagination */}
         {pagination && totalPages > 1 && (
           <div className="flex items-center justify-between space-x-2 py-4">
             <div className="text-sm text-muted-foreground">
@@ -703,7 +667,6 @@ const AirtableTable = ({
           </div>
         )}
 
-        {/* Edit/Create Modal */}
         <EditModal
           isOpen={isCreating || editingRecord !== null}
           onClose={() => {
@@ -718,7 +681,6 @@ const AirtableTable = ({
           getFormConfig={getFormConfig}
         />
 
-        {/* Delete Confirmation Dialog */}
         <AlertDialog
           open={deleteRecordId !== null}
           onOpenChange={(open) => !open && setDeleteRecordId(null)}

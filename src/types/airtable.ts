@@ -1,3 +1,4 @@
+
 export interface AirtableChoice {
   id: string;
   name: string;
@@ -38,6 +39,7 @@ export interface AirtableField {
     | "formula"
     | "rollup"
     | "lookup"
+    | "multipleLookupValues"
     | "createdTime"
     | "lastModifiedTime"
     | "createdBy"

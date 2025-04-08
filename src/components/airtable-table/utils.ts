@@ -1,4 +1,3 @@
-
 import { FormConfig, FormField, FormFieldType, FormFieldOption } from "@/components/form-builder/types";
 import { AirtableField, AirtableTable } from "@/types/airtable";
 import { AirtableRecord } from "./types";
@@ -35,7 +34,8 @@ export const mapAirtableTypeToFormFieldType = (field: AirtableField): FormFieldT
     case "singleSelect":
       return "select";
     case "multipleSelects":
-      return "checkbox"; // This is approximate, will need custom handling
+    case "multipleLookupValues":
+      return "multiselect"; // Using multiselect for both types
     case "url":
       return "text"; // Use text with URL validation
     case "phoneNumber":
