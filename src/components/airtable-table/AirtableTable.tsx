@@ -34,6 +34,7 @@ import {
   ArrowUpDown,
   SlidersHorizontal,
   Filter,
+  RefreshCw,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -52,7 +53,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { formatFieldValue } from "./utils";
 import EditModal from "./EditModal";
 import FieldFilter from "./FieldFilter";
-import { AirtableField } from "@/types/airtable";
 
 const defaultPermissions: UserPermissions = {
   create: true,
@@ -78,6 +78,7 @@ const AirtableTable = ({
   pagination = true,
   pageSize = 10,
   getFormConfig,
+  onRefresh,
 }: AirtableTableProps) => {
   const isMobile = useIsMobile();
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -86,7 +87,9 @@ const AirtableTable = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-  const [editingRecord, setEditingRecord] = useState<AirtableRecord | null>(null);
+  const [editingRecord, setEditingRecord] = useState<AirtableRecord | null>(
+    null
+  );
   const [isCreating, setIsCreating] = useState(false);
   const [deleteRecordId, setDeleteRecordId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Record<string, any>>({});
@@ -103,7 +106,7 @@ const AirtableTable = ({
 
   const primaryField = useMemo(() => {
     if (table && table.primaryFieldId) {
-      return table.fields.find(field => field.id === table.primaryFieldId);
+      return table.fields.find((field) => field.id === table.primaryFieldId);
     }
     return null;
   }, [table]);
@@ -111,14 +114,16 @@ const AirtableTable = ({
   const organizedFields = useMemo(() => {
     if (!table || !table.fields) return [];
 
-    const filteredFields = table.fields.filter(field => 
-      !["createdBy", "lastModifiedBy"].includes(field.type)
+    const filteredFields = table.fields.filter(
+      (field) => !["createdBy", "lastModifiedBy"].includes(field.type)
     );
 
     const sortedFields = [...filteredFields];
-    
+
     if (primaryField) {
-      const primaryFieldIndex = sortedFields.findIndex(f => f.id === primaryField.id);
+      const primaryFieldIndex = sortedFields.findIndex(
+        (f) => f.id === primaryField.id
+      );
       if (primaryFieldIndex > -1) {
         const [removed] = sortedFields.splice(primaryFieldIndex, 1);
         sortedFields.unshift(removed);
@@ -130,44 +135,46 @@ const AirtableTable = ({
 
   const processedRecords = useMemo(() => {
     let filtered = [...records];
-    
+
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(record => {
-        return organizedFields.some(field => {
+      filtered = filtered.filter((record) => {
+        return organizedFields.some((field) => {
           const value = record.fields[field.name];
           if (value === null || value === undefined) return false;
           return String(value).toLowerCase().includes(term);
         });
       });
     }
-    
+
     Object.entries(filters).forEach(([fieldName, value]) => {
-      if (value === null || value === '' || value === undefined) return;
-      
-      filtered = filtered.filter(record => {
+      if (value === null || value === "" || value === undefined) return;
+
+      filtered = filtered.filter((record) => {
         const fieldValue = record.fields[fieldName];
         if (fieldValue === null || fieldValue === undefined) return false;
-        
-        const field = table.fields.find(f => f.name === fieldName);
+
+        const field = table.fields.find((f) => f.name === fieldName);
         if (!field) return false;
-        
+        const recordDate = new Date(fieldValue).setHours(0, 0, 0, 0);
+        const filterDate = new Date(value).setHours(0, 0, 0, 0);
+
         switch (field.type) {
           case "checkbox":
             return fieldValue === value;
           case "date":
           case "dateTime":
-            const recordDate = new Date(fieldValue).setHours(0, 0, 0, 0);
-            const filterDate = new Date(value).setHours(0, 0, 0, 0);
             return recordDate === filterDate;
           case "singleSelect":
             return fieldValue === value;
           default:
-            return String(fieldValue).toLowerCase().includes(String(value).toLowerCase());
+            return String(fieldValue)
+              .toLowerCase()
+              .includes(String(value).toLowerCase());
         }
       });
     });
-    
+
     if (sortField) {
       filtered.sort((a, b) => {
         const aValue = a.fields[sortField];
@@ -185,13 +192,25 @@ const AirtableTable = ({
         }
 
         return sortDirection === "asc"
-          ? aValue > bValue ? 1 : -1
-          : aValue > bValue ? -1 : 1;
+          ? aValue > bValue
+            ? 1
+            : -1
+          : aValue > bValue
+          ? -1
+          : 1;
       });
     }
-    
+
     return filtered;
-  }, [records, organizedFields, searchTerm, filters, sortField, sortDirection, table]);
+  }, [
+    records,
+    organizedFields,
+    searchTerm,
+    filters,
+    sortField,
+    sortDirection,
+    table,
+  ]);
 
   const paginatedRecords = useMemo(() => {
     if (!pagination) return processedRecords;
@@ -251,9 +270,9 @@ const AirtableTable = ({
   };
 
   const handleFilterChange = (fieldName: string, value: any) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      [fieldName]: value
+      [fieldName]: value,
     }));
     setFilterOpen(null);
   };
@@ -262,17 +281,17 @@ const AirtableTable = ({
     if (!permissions.export) return;
 
     try {
-      const fieldNames = organizedFields.map(field => field.name);
+      const fieldNames = organizedFields.map((field) => field.name);
       const csvRows = [fieldNames.join(",")];
 
       for (const record of processedRecords) {
-        const values = fieldNames.map(fieldName => {
-          const field = table.fields.find(f => f.name === fieldName);
+        const values = fieldNames.map((fieldName) => {
+          const field = table.fields.find((f) => f.name === fieldName);
           if (!field) return "";
-          
+
           const value = record.fields[fieldName];
           const formatted = formatFieldValue(value, field);
-          
+
           return value !== null && value !== undefined
             ? `"${String(formatted).replace(/"/g, '""')}"`
             : "";
@@ -300,11 +319,11 @@ const AirtableTable = ({
 
   const displayFields = useMemo(() => {
     let fields = [...organizedFields];
-    
+
     if (isMobile) {
       return fields.slice(0, 2);
     }
-    
+
     return fields;
   }, [organizedFields, isMobile]);
 
@@ -315,7 +334,9 @@ const AirtableTable = ({
       <Card className={className}>
         <CardHeader>
           <CardTitle>{table.name}</CardTitle>
-          {table.description && <CardDescription>{table.description}</CardDescription>}
+          {table.description && (
+            <CardDescription>{table.description}</CardDescription>
+          )}
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -410,19 +431,28 @@ const AirtableTable = ({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <CardTitle>{table.name}</CardTitle>
-            {table.description && <CardDescription>{table.description}</CardDescription>}
+            {table.description && (
+              <CardDescription>{table.description}</CardDescription>
+            )}
           </div>
           <div className="flex space-x-2">
-            {permissions.create && (
-              <Button size="sm" onClick={handleCreate}>
-                <Plus className="h-4 w-4 mr-2" />
-                New
+            {onRefresh && (
+              <Button size="sm" variant="outline" onClick={onRefresh}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
               </Button>
             )}
             {permissions.export && processedRecords.length > 0 && (
               <Button size="sm" variant="outline" onClick={handleExport}>
                 <Download className="h-4 w-4 mr-2" />
                 Export
+              </Button>
+            )}
+
+            {permissions.create && (
+              <Button size="sm" onClick={handleCreate}>
+                <Plus className="h-4 w-4 mr-2" />
+                New
               </Button>
             )}
           </div>
@@ -440,9 +470,14 @@ const AirtableTable = ({
                 className="pl-8"
               />
             </div>
-            <Popover>
+            <Popover open={filterOpen !== null}>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="icon" className="shrink-0">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={() => setFilterOpen(filterOpen ? null : "filters")}
+                >
                   <SlidersHorizontal className="h-4 w-4" />
                   <span className="sr-only">Filters</span>
                 </Button>
@@ -455,8 +490,8 @@ const AirtableTable = ({
                       <span className="text-sm text-muted-foreground">
                         {Object.keys(filters).length} filter(s) applied
                       </span>
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="sm"
                         onClick={() => setFilters({})}
                       >
@@ -465,17 +500,24 @@ const AirtableTable = ({
                     </div>
                   )}
                   <div className="space-y-2">
-                    {table.fields.map(field => (
-                      <div key={field.id} className="flex items-center justify-between">
+                    {table.fields.map((field) => (
+                      <div
+                        key={field.id}
+                        className="flex items-center justify-between"
+                      >
                         <span className="text-sm">{field.name}</span>
-                        <Popover 
-                          open={filterOpen === field.name} 
-                          onOpenChange={(open) => setFilterOpen(open ? field.name : null)}
+                        <Popover
+                          open={filterOpen === field.name}
+                          onOpenChange={(open) =>
+                            setFilterOpen(open ? field.name : null)
+                          }
                         >
                           <PopoverTrigger asChild>
-                            <Button 
-                              size="sm" 
-                              variant={filters[field.name] ? "default" : "outline"}
+                            <Button
+                              size="sm"
+                              variant={
+                                filters[field.name] ? "default" : "outline"
+                              }
                               className="h-8"
                             >
                               <Filter className="h-3 w-3 mr-1" />
@@ -485,8 +527,10 @@ const AirtableTable = ({
                           <PopoverContent className="w-72 p-3">
                             <FieldFilter
                               field={field}
-                              value={filters[field.name] || ''}
-                              onChange={(value) => handleFilterChange(field.name, value)}
+                              value={filters[field.name] || ""}
+                              onChange={(value) =>
+                                handleFilterChange(field.name, value)
+                              }
                             />
                           </PopoverContent>
                         </Popover>
@@ -499,8 +543,11 @@ const AirtableTable = ({
           </div>
         )}
 
-        <div className="rounded-md border">
-          <div className="relative w-full overflow-hidden" ref={tableContainerRef}>
+        <div className="rounded-md border overflow-hidden">
+          <div
+            className="relative w-full overflow-hidden"
+            ref={tableContainerRef}
+          >
             <div className="flex w-full">
               <div className="sticky left-0 z-10 bg-background shadow-sm">
                 <Table>
@@ -533,7 +580,10 @@ const AirtableTable = ({
                           {displayFields.length > 0 && (
                             <TableCell className="whitespace-nowrap align-middle">
                               <div className="h-full flex items-center">
-                                {formatFieldValue(record.fields[displayFields[0].name], displayFields[0])}
+                                {formatFieldValue(
+                                  record.fields[displayFields[0].name],
+                                  displayFields[0]
+                                )}
                               </div>
                             </TableCell>
                           )}
@@ -580,9 +630,15 @@ const AirtableTable = ({
                           style={{ animationDelay: `${index * 30}ms` }}
                         >
                           {displayFields.slice(1).map((field) => (
-                            <TableCell key={field.id} className="whitespace-nowrap align-middle">
+                            <TableCell
+                              key={field.id}
+                              className="whitespace-nowrap align-middle"
+                            >
                               <div className="h-full flex items-center">
-                                {formatFieldValue(record.fields[field.name], field)}
+                                {formatFieldValue(
+                                  record.fields[field.name],
+                                  field
+                                )}
                               </div>
                             </TableCell>
                           ))}
@@ -638,11 +694,12 @@ const AirtableTable = ({
           </div>
         </div>
 
-        {pagination && totalPages > 1 && (
+        {pagination && (
           <div className="flex items-center justify-between space-x-2 py-4">
             <div className="text-sm text-muted-foreground">
-              Showing {((currentPage - 1) * pageSize) + 1}-
-              {Math.min(currentPage * pageSize, processedRecords.length)} of {processedRecords.length}
+              Showing {(currentPage - 1) * pageSize + 1}-
+              {Math.min(currentPage * pageSize, processedRecords.length)} of{" "}
+              {processedRecords.length}
             </div>
             <div className="flex items-center space-x-2">
               <Button
@@ -656,7 +713,7 @@ const AirtableTable = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => 
+                onClick={() =>
                   setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                 }
                 disabled={currentPage === totalPages}

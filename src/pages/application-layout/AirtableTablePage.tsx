@@ -111,35 +111,27 @@ const AirtableTablePage = () => {
   }
 
   return (
-    <Page>
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">{tableSchema.name}</h1>
-        <Button size="sm" onClick={() => refetch()} variant="ghost">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
-      </div>
-
-      <AirtableTable
-        table={tableSchema}
-        records={records || []}
-        isLoading={isLoadingRecords}
-        permissions={{
-          create: true,
-          read: true,
-          update: true,
-          delete: true,
-          export: true,
-        }}
-        onCreate={handleCreate}
-        onUpdate={handleUpdate}
-        onDelete={handleDelete}
-        getFormConfig={getFormConfig}
-        searchable={true}
-        pagination={true}
-        pageSize={10}
-      />
-    </Page>
+    <AirtableTable
+      className="rounded-none border-none h-full"
+      table={tableSchema}
+      records={records || []}
+      isLoading={isLoadingRecords}
+      permissions={{
+        create: true,
+        read: true,
+        update: true,
+        delete: true,
+        export: true,
+      }}
+      onCreate={handleCreate}
+      onUpdate={handleUpdate}
+      onDelete={handleDelete}
+      getFormConfig={getFormConfig}
+      searchable={true}
+      pagination={true}
+      pageSize={10}
+      onRefresh={refetch}
+    />
   );
 };
 

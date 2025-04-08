@@ -1,4 +1,3 @@
-
 import { FormConfig } from "@/components/form-builder/types";
 import { AirtableField, AirtableTable } from "@/types/airtable";
 
@@ -23,7 +22,11 @@ export interface AirtableTableProps {
   searchable?: boolean;
   pagination?: boolean;
   pageSize?: number;
-  getFormConfig?: (config: FormConfig, record: AirtableRecord | null) => FormConfig;
+  getFormConfig?: (
+    config: FormConfig,
+    record: AirtableRecord | null
+  ) => FormConfig;
+  onRefresh?: () => void;
 }
 
 export interface UserPermissions {
@@ -72,7 +75,10 @@ export interface EditModalProps {
   onSave: (record: AirtableRecord) => Promise<void>;
   idField: string;
   isCreating?: boolean;
-  getFormConfig?: (config: FormConfig, record: AirtableRecord | null) => FormConfig;
+  getFormConfig?: (
+    config: FormConfig,
+    record: AirtableRecord | null
+  ) => FormConfig;
 }
 
 export interface FieldFilterProps {
