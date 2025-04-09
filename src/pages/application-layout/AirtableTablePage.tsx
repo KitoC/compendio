@@ -28,6 +28,7 @@ const AirtableTablePage = () => {
   const { id: tableName, ...params } = useParams<{
     id: string;
   }>();
+
   const { data: tableSchema, isLoading: isLoadingSchema } =
     useAirtableTableSchemaQuery(tableName);
   const {
@@ -38,8 +39,6 @@ const AirtableTablePage = () => {
     updateRecord,
     deleteRecord,
   } = useAirtableRecordsQuery({ tableName });
-
-  console.log("tableSchema", tableSchema);
 
   const getFormConfig = (config: FormConfig, record: AirtableRecord | null) => {
     return config;
