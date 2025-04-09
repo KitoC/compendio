@@ -9,7 +9,8 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "functions:dev": "supabase functions serve"
+    "functions:dev": "supabase functions serve",
+    "seed:dev": "source .env && node supabase/.seeds/index.js"
   },
   "browserslist": [
     "defaults",

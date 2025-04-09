@@ -1,7 +1,12 @@
-import { createContext } from "react";
+import { createContext, Dispatch, SetStateAction } from "react";
 import { ChatMessage } from "@/types/chat";
 import { VirtuosoHandle } from "react-virtuoso";
 import { IFunctionCall } from "@/types/aiAgents";
+
+export interface MessageFilter {
+  "metadata.priority": number[];
+}
+
 export interface ChatContextType {
   messages: ChatMessage[];
   isTyping: boolean;
@@ -25,6 +30,8 @@ export interface ChatContextType {
     firstItemIndex: number;
     virtuosoRef: React.RefObject<VirtuosoHandle>;
   };
+  filter: MessageFilter;
+  setFilter: Dispatch<SetStateAction<MessageFilter>>;
 }
 
 export const ChatContext = createContext<ChatContextType | undefined>(

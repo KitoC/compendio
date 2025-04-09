@@ -45,8 +45,6 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
         };
       }
 
-      console.log(" filter ----> ", filter);
-
       const result = await messagesService.getConversationMessages({
         conversation_id,
         search,

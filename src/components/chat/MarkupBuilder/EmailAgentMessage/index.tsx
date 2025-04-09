@@ -24,20 +24,21 @@ import { toast } from "sonner";
 import EmailMessageBubble from "./EmailMessageBubble";
 import { SlidePanel } from "@/components/ui/slide-panel";
 import FromAndToLabel from "./FromAndToLabel";
-
+import { PRIORITIES, EMAIL_STATUSES } from "./consts";
 interface EmailAgentMessageProps {
   message: ChatMessage;
+  compact?: boolean;
 }
 
 const getIcon = (
-  statusText: string
+  status: (typeof EMAIL_STATUSES)[keyof typeof EMAIL_STATUSES]
 ): React.ForwardRefExoticComponent<
   Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>
 > => {
-  if (statusText === "Sent") return MailCheck;
-  if (statusText === "Drafted") return MailQuestion;
-  if (statusText === "Received") return MailPlus;
-  if (statusText === "Failed") return MailX;
+  if (status.value === "sent") return MailCheck;
+  if (status.value === "draft") return MailQuestion;
+  if (status.value === "received") return MailPlus;
+  if (status.value === "failed") return MailX;
 };
 
 const EmailAgentMessage = ({ message, compact }: EmailAgentMessageProps) => {
@@ -46,18 +47,13 @@ const EmailAgentMessage = ({ message, compact }: EmailAgentMessageProps) => {
   const [isSending, setIsSending] = useState(false);
   const { triggerFunctionCall, replaceMessage, handleUpdateMessage } =
     useChat();
-  const { email_sent, email_drafted, email_received } =
+  const { metadata } = message;
+  const { email_drafted, email_received } =
     message.content as unknown as NormalizedEmailResponse;
 
-  let statusText = "";
-
-  if (email_sent) {
-    statusText = "Sent";
-  } else if (email_drafted) {
-    statusText = "Drafted";
-  } else if (email_received) {
-    statusText = "Received";
-  }
+  const status =
+    EMAIL_STATUSES[metadata?.status as keyof typeof EMAIL_STATUSES];
+  const statusText = status.label;
 
   const buttons: {
     label: string;
@@ -113,16 +109,21 @@ const EmailAgentMessage = ({ message, compact }: EmailAgentMessageProps) => {
     },
   ];
 
-  const Icon = getIcon(statusText);
+  const Icon = status.Icon;
+  const priority =
+    PRIORITIES[message.metadata?.priority as keyof typeof PRIORITIES];
 
   const Badges = (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-1">
       <Badge variant="outline-muted" className="font-bold text-[10px] px-1.5">
-        Email {statusText}
+        {statusText} <status.Icon className="ml-1 w-4 h-4" />
       </Badge>
       {message.metadata?.priority && (
-        <Badge variant="default" className="font-bold text-[10px] px-1.5">
-          priority: {message.metadata?.priority as string}
+        <Badge
+          variant="default"
+          className={`font-bold text-[10px] px-1.5 ${priority.color}`}
+        >
+          {priority.label}
         </Badge>
       )}
     </div>
@@ -144,11 +145,7 @@ const EmailAgentMessage = ({ message, compact }: EmailAgentMessageProps) => {
 
   const headerContent = (
     <div className="flex flex-col items-start gap-2 w-full">
-      <div>
-        <Badge variant="outline-muted" className="font-bold">
-          Email {statusText}
-        </Badge>
-      </div>
+      <div>{Badges}</div>
       <div className="flex flex-col items-start gap-1 w-full">
         <FromAndToLabel
           fromEmail={email_received?.from}

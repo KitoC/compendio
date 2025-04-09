@@ -70,7 +70,7 @@ export const useVirtuoso = ({
             <Loader size="large" />
           </div>
         ) : null,
-      Footer: () => <div className="h-10" />,
+      Footer: () => <div className="h-[120px]"></div>,
     },
   };
 };

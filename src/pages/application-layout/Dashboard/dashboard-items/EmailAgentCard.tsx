@@ -37,8 +37,11 @@ const EmailAgentCard = ({ agent }: { agent: IAiAgent }) => {
       if (emailConversation.id) {
         const response = await MessageService.getMessages(agent.id, {
           conversation_id: emailConversation.id,
-          filter: JSON.stringify({ "metadata.status": "draft" }),
           // priority_sort_direction: "desc",
+          filter: JSON.stringify({
+            "metadata.status": "draft",
+            "metadata.priority": [3, 4],
+          }),
           order: "updated_at",
           sort_direction: "desc",
           limit: "5",

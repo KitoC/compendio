@@ -15,7 +15,10 @@ import {
   FunctionController,
 } from "locals/controllers/FunctionController";
 import { OpenAiService } from "locals/services/providers/OpenAiService";
-import { EMAIL_AGENT_PROMPT } from "@/SYSTEM_PROMPTS/EMAIL_AGENT_PROMPT";
+import {
+  EMAIL_AGENT_PROMPT,
+  EMAIL_PRIORITY_PROMPT,
+} from "@/SYSTEM_PROMPTS/EMAIL_AGENT_PROMPT";
 import Logger from "locals/utils/Logger";
 // TODO: Move this to a file or DB and inject schema for Email.
 const VALID_OPENAI_ROLES = ["user", "assistant", "function", "system"];
@@ -85,6 +88,11 @@ export class OpenAiAgent implements IAgentProvider {
         role: "system" as OpenAiRole,
         // TODO: Pull in from a file or DB
         content: EMAIL_AGENT_PROMPT,
+      },
+      {
+        role: "system" as OpenAiRole,
+        // TODO: Pull in from a file or DB
+        content: EMAIL_PRIORITY_PROMPT,
       },
       {
         role: "user" as OpenAiRole,
