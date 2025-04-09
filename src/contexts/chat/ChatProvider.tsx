@@ -3,12 +3,17 @@ import { ChatContext } from "./ChatContext";
 import { useChatState } from "./useChatState";
 import { useInfiniteMessages } from "./useInfiniteMessages";
 import { useVirtuoso } from "./useVirtuoso";
+import { useAiAgents } from "../AiAgents/useAiAgents";
+import { IAiAgent } from "@/types/aiAgents";
 
 export const ChatProvider: React.FC<{
   children: React.ReactNode;
   conversationId: string;
   initiateConversation?: string;
-}> = ({ children, conversationId, initiateConversation }) => {
+  agentOverride?: IAiAgent;
+}> = ({ children, conversationId, initiateConversation, agentOverride }) => {
+  const { currentAgent } = useAiAgents();
+
   const infiniteMessages = useInfiniteMessages(conversationId);
   const virtuosoProps = useVirtuoso(infiniteMessages);
   const chatState = useChatState({
@@ -16,6 +21,7 @@ export const ChatProvider: React.FC<{
     initiateConversation,
     ...infiniteMessages,
     ...virtuosoProps,
+    currentAgent: agentOverride || currentAgent,
   });
 
   const value = useMemo(

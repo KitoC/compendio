@@ -45,8 +45,7 @@ const EmailAgentMessage = ({ message, compact }: EmailAgentMessageProps) => {
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const { triggerFunctionCall, replaceMessage, handleUpdateMessage } =
-    useChat();
+  const { triggerFunctionCall, replaceMessage } = useChat();
   const { metadata } = message;
   const { email_drafted, email_received } =
     message.content as unknown as NormalizedEmailResponse;

@@ -2,6 +2,7 @@ import { SupabaseFunctionService } from "./supabaseFunctionServices";
 import { ChatMessage } from "@/types/chat";
 
 interface MessageQuery {
+  priority_sort_direction?: string;
   conversation_id: string;
   limit: string;
   offset: string;

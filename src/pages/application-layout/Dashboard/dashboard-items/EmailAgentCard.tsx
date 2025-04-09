@@ -11,19 +11,14 @@ import {
 import { Bot } from "lucide-react";
 import type { ChatMessage } from "@/types/chat";
 import { Badge } from "@/components/ui/badge";
-import { NavLink } from "react-router-dom";
-import { ROUTES } from "@/lib/constants";
-import { useTenant } from "@/contexts/TenantContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNotifications } from "@/contexts/NotificationProvider";
-import { NormalizedEmailResponse } from "@/types/emailAgentMessage";
 import EmailAgentMessage from "@/components/chat/MarkupBuilder/EmailAgentMessage";
 import { ChatProvider } from "@/contexts/chat/ChatProvider";
 
 const EmailAgentCard = ({ agent }: { agent: IAiAgent }) => {
-  const { urlTenantAlias } = useTenant();
   const [isLoading, setIsLoading] = useState(true);
-  const { setEmailCount } = useNotifications();
+  const { setEmailCount, emailCount } = useNotifications();
   const [emailsNeedingAttention, setEmailsNeedingAttention] = useState<{
     messages: ChatMessage[];
   }>({ messages: [] });
@@ -37,9 +32,9 @@ const EmailAgentCard = ({ agent }: { agent: IAiAgent }) => {
       if (emailConversation.id) {
         const response = await MessageService.getMessages(agent.id, {
           conversation_id: emailConversation.id,
-          // priority_sort_direction: "desc",
+          priority_sort_direction: "desc",
           filter: JSON.stringify({
-            "metadata.status": "draft",
+            "metadata.status": ["draft", "received"],
             "metadata.priority": [3, 4],
           }),
           order: "updated_at",
@@ -62,13 +57,8 @@ const EmailAgentCard = ({ agent }: { agent: IAiAgent }) => {
 
   if (!emailConversation) return null;
 
-  const EMAIL_CHAT_ROUTE = ROUTES.AGENT_CHAT.replace(
-    ":tenantId",
-    urlTenantAlias
-  ).replace(":id", emailConversation.alias);
-
   return (
-    <ChatProvider conversationId={emailConversation.id}>
+    <ChatProvider conversationId={emailConversation.id} agentOverride={agent}>
       <Card className="px-1">
         <CardHeader className="pb-3 px-2">
           <div className="flex justify-between items-center">
@@ -79,9 +69,9 @@ const EmailAgentCard = ({ agent }: { agent: IAiAgent }) => {
           </div>
           <CardDescription className="w-full flex items-center">
             Emails needing attention{" "}
-            {!!emailsNeedingAttention.messages.length && (
+            {!!emailCount && (
               <Badge className="ml-auto" variant="warning">
-                {emailsNeedingAttention.messages.length}
+                {emailCount}
               </Badge>
             )}
           </CardDescription>
@@ -90,7 +80,6 @@ const EmailAgentCard = ({ agent }: { agent: IAiAgent }) => {
           <div className="flex flex-col gap-2">
             {emailsNeedingAttention?.messages?.length > 0 ? (
               emailsNeedingAttention.messages.map((email) => {
-                const emailContent = email.content as NormalizedEmailResponse;
                 return (
                   <EmailAgentMessage
                     message={email}

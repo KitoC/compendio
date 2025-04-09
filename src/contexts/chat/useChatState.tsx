@@ -18,7 +18,7 @@ import { useDebouncedCallback } from "use-debounce";
 import { FunctionService } from "@/services/functionService";
 import type { IFunctionCall } from "@/types/aiAgents";
 import { VirtuosoHandle } from "react-virtuoso";
-
+import { IAiAgent } from "@/types/aiAgents";
 interface UseChatOptions {
   conversationId: string;
   initiateConversation?: string;
@@ -27,6 +27,7 @@ interface UseChatOptions {
   updateMessage: (message: ChatMessage) => void;
   isLoading: boolean;
   virtuosoRef: React.RefObject<VirtuosoHandle>;
+  currentAgent: IAiAgent;
 }
 
 export const useChatState = ({
@@ -37,13 +38,13 @@ export const useChatState = ({
   updateMessage,
   isLoading,
   virtuosoRef,
+  currentAgent,
 }: UseChatOptions) => {
   const aiMessageRef = useRef<ChatMessage | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [isTyping, setIsTyping] = useState(false);
 
   const { user } = useAuth();
-  const { currentAgent } = useAiAgents();
   const { tenantId } = useTenant();
   const {
     sendMessage,
