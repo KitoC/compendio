@@ -20,24 +20,21 @@ export const useInfiniteMessages = (conversationId) => {
     [EMAIL_STATUS_FILTER_KEY]: [EMAIL_STATUSES.draft.value],
   });
 
-  const [queryOptions, setQueryOptions] = useState({
-    conversation_id: conversationId,
-    order: "created_at",
-    sort_direction: "desc",
-  });
-
   const limit = 20;
   const queryClient = useQueryClient();
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteQuery({
-      queryKey: ["messages", conversationId, filter],
+      queryKey: ["messages", conversationId, limit, filter],
       enabled: !!conversationId,
       initialPageParam: 0,
       queryFn: async ({ pageParam }) => {
         console.log("filter", filter);
         const query = {
-          ...queryOptions,
+          conversation_id: conversationId,
+          order: "created_at",
+          sort_direction: "desc",
+
           limit: String(limit),
           offset: String(pageParam),
           filter: JSON.stringify(filter),

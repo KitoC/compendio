@@ -70,6 +70,7 @@ const FilterMenu = ({
                 key={`${item.value}` as string}
                 checked={filter[filterKey]?.includes(item.value)}
                 onCheckedChange={() => handleFilterChange(item.value)}
+                onSelect={(e) => e.preventDefault()}
               >
                 <MenubarItemIndicator className="MenubarItemIndicator"></MenubarItemIndicator>
                 <span className="mr-1">
