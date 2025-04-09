@@ -13,15 +13,15 @@ const ChatMessages = () => {
   const { messages, isLoading, virtuosoProps } = useChat();
   const { setEmailCount, emailCount } = useNotifications();
 
-  useEffect(() => {
-    const draftEmailsPresent = messages.filter(
-      (message) => message.metadata?.status === "draft"
-    );
+  // useEffect(() => {
+  //   const draftEmailsPresent = messages.filter(
+  //     (message) => message.metadata?.status === "draft"
+  //   );
 
-    if (draftEmailsPresent.length !== emailCount) {
-      setEmailCount(draftEmailsPresent.length);
-    }
-  }, [messages, setEmailCount, emailCount]);
+  //   if (draftEmailsPresent.length !== emailCount) {
+  //     setEmailCount(draftEmailsPresent.length);
+  //   }
+  // }, [messages, setEmailCount, emailCount]);
 
   return (
     <div className={clsx("h-full px-4 py-6 pb-0 scroll-smooth space-y-4")}>

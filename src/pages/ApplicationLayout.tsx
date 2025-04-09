@@ -14,6 +14,7 @@ import { UserSettingsProvider } from "@/contexts/UserSettingsProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
 import clsx from "clsx";
+import useEmailAgentNotifications from "@/contexts/NotificationProvider/useEmailNotifications";
 
 interface ApplicationLayoutProps {
   children?: ReactNode;

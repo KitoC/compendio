@@ -4,6 +4,7 @@ import { useAiAgentsQuery } from "@/hooks/useAiAgentsQuery";
 import { Params, useLocation, useParams, Location } from "react-router-dom";
 import { IAiAgent } from "@/types/aiAgents";
 import { isOnBoardingRoute } from "@/utils/pathCheckers";
+import useEmailAgentNotifications from "../NotificationProvider/useEmailNotifications";
 
 const SYSTEM_AGENTS: { [key: string]: IAiAgent } = {
   ONBOARDING: {
@@ -54,6 +55,8 @@ export const AiAgentsProvider = ({ children }: AiAgentsProviderProps) => {
 
   // Find the current agent based on the URL parameter
   const currentAgent = getCurrentAgent(aiAgents, params, location);
+
+  useEmailAgentNotifications({ aiAgents });
 
   return (
     <AiAgentsContext.Provider

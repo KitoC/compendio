@@ -1,6 +1,4 @@
 import type { IAiAgent } from "@/types/aiAgents";
-import { useEffect, useState } from "react";
-import { MessageService } from "@/services/MessageService";
 import {
   Card,
   CardHeader,
@@ -9,51 +7,15 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Bot } from "lucide-react";
-import type { ChatMessage } from "@/types/chat";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useNotifications } from "@/contexts/NotificationProvider";
 import EmailAgentMessage from "@/components/chat/MarkupBuilder/EmailAgentMessage";
 import { ChatProvider } from "@/contexts/chat/ChatProvider";
+import useEmailAgentNotifications from "@/contexts/NotificationProvider/useEmailNotifications";
 
 const EmailAgentCard = ({ agent }: { agent: IAiAgent }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const { setEmailCount, emailCount } = useNotifications();
-  const [emailsNeedingAttention, setEmailsNeedingAttention] = useState<{
-    messages: ChatMessage[];
-  }>({ messages: [] });
-
-  const emailConversation = agent.conversations.find(
-    (conversation) => conversation.alias === "email-assistant"
-  );
-
-  useEffect(() => {
-    const getEmailsNeedingAttention = async () => {
-      if (emailConversation.id) {
-        const response = await MessageService.getMessages(agent.id, {
-          conversation_id: emailConversation.id,
-          priority_sort_direction: "desc",
-          filter: JSON.stringify({
-            "metadata.status": ["draft", "received"],
-            "metadata.priority": [3, 4],
-          }),
-          order: "updated_at",
-          sort_direction: "desc",
-          limit: "5",
-          offset: "0",
-        });
-
-        setEmailsNeedingAttention(response);
-        setIsLoading(false);
-
-        if (response.total_count) {
-          setEmailCount(response.total_count);
-        }
-      }
-    };
-
-    getEmailsNeedingAttention();
-  }, []);
+  const { emailCount, emailsNeedingAttention, isLoading, emailConversation } =
+    useEmailAgentNotifications({ aiAgents: [agent] });
 
   if (!emailConversation) return null;
 
