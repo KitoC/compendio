@@ -42,14 +42,14 @@ export const EmailContent = ({
 
   return (
     <div className="flex flex-col gap-3 " onClick={() => setIsEditing(true)}>
-      <div>
+      <div className="flex justify-end">
         <h3 className="text-sm font-bold">{header}</h3>
       </div>
       <div
         className={cn("bg-sidebar p-4 rounded-md", {
-          "bg-sidebar ml-4": type === TYPES.RECEIVED,
-          "bg-primary text-white mr-4 border": type === TYPES.SENT,
-          "border border-2 border-dashed border-primary bg-primary/5 mr-4":
+          "bg-sidebar mr-4": type === TYPES.RECEIVED,
+          "bg-primary text-white ml-4 border": type === TYPES.SENT,
+          "border border-2 border-dashed border-primary bg-primary/5 ml-4":
             type === TYPES.DRAFT,
         })}
       >

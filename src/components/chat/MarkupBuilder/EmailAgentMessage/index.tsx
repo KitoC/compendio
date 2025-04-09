@@ -25,6 +25,7 @@ import EmailMessageBubble from "./EmailMessageBubble";
 import { SlidePanel } from "@/components/ui/slide-panel";
 import FromAndToLabel from "./FromAndToLabel";
 import { PRIORITIES, EMAIL_STATUSES } from "./consts";
+import { Divider } from "@/components/ui/divider";
 interface EmailAgentMessageProps {
   message: ChatMessage;
   compact?: boolean;
@@ -145,13 +146,13 @@ const EmailAgentMessage = ({ message, compact }: EmailAgentMessageProps) => {
   const headerContent = (
     <div className="flex flex-col items-start gap-2 w-full">
       <div>{Badges}</div>
-      <div className="flex flex-col items-start gap-1 w-full">
+      <div className="flex flex-col items-start gap-1 w-full border w-full rounded-md p-2">
         <FromAndToLabel
           fromEmail={email_received?.from}
           fromName={email_received?.from_name}
         />
-        <p className="text-xs text-muted-foreground truncate w-full text-left">
-          Subject:
+        <Divider className="w-full !my-1 !h-[1px]" />
+        <p className="text-sm text-muted-foreground truncate w-full text-left">
           <span className="font-bold"> {email_received?.subject}</span>
         </p>
       </div>

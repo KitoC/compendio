@@ -45,7 +45,7 @@ const EmailMessageBubble = ({
       <div className="flex flex-col gap-1">
         <LabelAndValue
           labelClassName=""
-          label={compact ? "" : "AI Summary"}
+          label={compact ? "" : "Summary"}
           value={(short_summary || summary) as string}
           isMarkdown
         />
