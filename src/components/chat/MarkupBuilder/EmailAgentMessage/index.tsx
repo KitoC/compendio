@@ -119,8 +119,8 @@ const EmailAgentMessage = ({ message, compact }: EmailAgentMessageProps) => {
       </Badge>
       {message.metadata?.priority && (
         <Badge
-          variant="default"
-          className={`font-bold text-[10px] px-1.5 ${priority.color}`}
+          variant={priority.variant}
+          className="font-bold text-[10px] px-1.5"
         >
           {priority.label}
         </Badge>

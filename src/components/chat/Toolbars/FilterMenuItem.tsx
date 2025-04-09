@@ -9,11 +9,13 @@ import {
 } from "@/components/ui/menubar";
 import { ListFilter, LucideProps } from "lucide-react";
 import { useChat } from "@/contexts/chat";
+import { BadgeProps } from "@/components/ui/badge";
 
 interface FilterMenuItem {
   label: string;
   value: unknown;
-  color: string;
+  color?: string;
+  variant?: BadgeProps["variant"];
   Icon?: React.ForwardRefExoticComponent<
     Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>
   >;

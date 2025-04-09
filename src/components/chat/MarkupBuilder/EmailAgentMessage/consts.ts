@@ -1,11 +1,19 @@
+import { BadgeProps } from "@/components/ui/badge";
 import { MailCheck, MailPlus, MailQuestion, MailX } from "lucide-react";
 
-export const PRIORITIES = {
-  0: { label: "Low", color: "bg-slate-300" },
-  1: { label: "Routine", color: "bg-slate-500" },
-  2: { label: "Important", color: "bg-green-500" },
-  3: { label: "High", color: "bg-amber-500" },
-  4: { label: "Urgent", color: "bg-red-500" },
+export interface IPriority {
+  label: string;
+  variant: BadgeProps["variant"];
+}
+
+export const PRIORITIES: {
+  [key: number]: IPriority;
+} = {
+  0: { label: "Low", variant: "muted" },
+  1: { label: "Routine", variant: "info" },
+  2: { label: "Important", variant: "success" },
+  3: { label: "High", variant: "warning" },
+  4: { label: "Urgent", variant: "error" },
 };
 
 export const PRIORITY_FILTER_KEY = "metadata.priority";
