@@ -1,32 +1,50 @@
-import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { CustomTablesContext, ICustomTable } from "./CustomTablesContext";
 import { useTenant } from "@/contexts/TenantContext";
+import { CustomTableService } from "@/services/CustomTableService";
 
 export const CustomTablesProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
   const [customTables, setCustomTables] = useState<ICustomTable[]>([]);
   const params = useParams();
+
   const { tenantId } = useTenant();
+  const [syncing, setSyncing] = useState(false);
+
+  // Tracks which tenantIds have already been synced
+  const didSyncRef = useRef<Set<string>>(new Set());
 
   const fetchCustomTables = useCallback(async () => {
-    if (!tenantId) {
-      return;
+    if (!tenantId || syncing || didSyncRef.current.has(tenantId)) return;
+
+    setSyncing(true);
+
+    try {
+      await CustomTableService.syncSchema();
+
+      didSyncRef.current.add(tenantId);
+    } catch (err) {
+      console.error("Failed to sync schema:", err);
+    } finally {
+      setSyncing(false);
     }
-
-    const { data, error } = await supabase
-      .from("custom_table_definitions")
-      .select("*")
-      .eq("tenant_id", tenantId);
-
-    setCustomTables(data);
-  }, [tenantId]);
+  }, [tenantId, syncing]);
 
   useEffect(() => {
     fetchCustomTables();
   }, [fetchCustomTables]);
+
+  useEffect(() => {
+    const fetchSchema = async () => {
+      const schema = await CustomTableService.getSchema();
+
+      setCustomTables(schema);
+    };
+
+    fetchSchema();
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -34,6 +52,7 @@ export const CustomTablesProvider: React.FC<{
     }),
     [customTables]
   );
+
   return (
     <CustomTablesContext.Provider value={value}>
       {children}

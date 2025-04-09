@@ -1,89 +1,63 @@
 import { ChatMessage } from "@/types/chat";
-import { Button, ButtonProps } from "../../../ui/button";
-import { useChat } from "@/contexts/chat";
+import { useIsMobile } from "@/hooks/use-mobile";
+import EmailModalContent from "./EmailModalContent";
 import {
-  getContainerStyles,
-  messageBubbleStyles,
-  otherMessageStyles,
-} from "../../shared.styles";
-import clsx from "clsx";
+  DialogFooter,
+  DialogHeader,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { DialogContent } from "@/components/ui/dialog";
+import { Dialog } from "@/components/ui/dialog";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  FoldVertical,
-  Mail,
   MailCheck,
   MailPlus,
-  MailQuestion,
   MailX,
-  UnfoldVertical,
+  MailQuestion,
+  LucideProps,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import RenderMarkdown from "../../RenderMarkdown";
-import {
-  NormalizedEmailResponse,
-  NormalizedEmailThreadItem,
-} from "@/types/emailAgentMessage";
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { NormalizedEmailResponse } from "@/types/emailAgentMessage";
+import { useChat } from "@/hooks/useChat";
+import { Button, ButtonProps } from "@/components/ui/button";
 import { toast } from "sonner";
-
-import { useLocation, useNavigate } from "react-router-dom";
-import { LabelAndValue } from "./LabelAndValue";
-import { EmailContent } from "./EmailContent";
-import { Divider } from "@/components/ui/divider";
-import dayjs from "dayjs";
+import EmailMessageBubble from "./EmailMessageBubble";
+import { SlidePanel } from "@/components/ui/slide-panel";
+import FromAndToLabel from "./FromAndToLabel";
 
 interface EmailAgentMessageProps {
   message: ChatMessage;
 }
 
-const EmailAgentMessage = ({ message }: EmailAgentMessageProps) => {
-  const { summary } = message.metadata;
-  const { email_received, email_drafted, email_sent, reasoning } =
-    message.content as unknown as NormalizedEmailResponse;
+const getIcon = (
+  statusText: string
+): React.ForwardRefExoticComponent<
+  Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>
+> => {
+  if (statusText === "Sent") return MailCheck;
+  if (statusText === "Drafted") return MailQuestion;
+  if (statusText === "Received") return MailPlus;
+  if (statusText === "Failed") return MailX;
+};
 
-  const location = useLocation();
-  const messageId = location.search.split("message_id=")[1];
-  const navigate = useNavigate();
-  const [open, setOpen] = useState(!!email_drafted);
+const EmailAgentMessage = ({ message, compact }: EmailAgentMessageProps) => {
+  const isMobile = useIsMobile();
+  const [open, setOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const [isHighlighted, setIsHighlighted] = useState(false);
   const { triggerFunctionCall, replaceMessage, handleUpdateMessage } =
     useChat();
+  const { email_sent, email_drafted, email_received } =
+    message.content as unknown as NormalizedEmailResponse;
 
-  const onUpdateContentPath = useCallback(
-    (path: string, value: string | object) => {
-      let status = email_drafted ? "draft" : "received";
-      if (email_sent) {
-        status = "sent";
-      }
+  let statusText = "";
 
-      console.log("onUpdateContentPath", path, value);
-      handleUpdateMessage({
-        id: message.id,
-        content: {
-          ...message.content,
-          [path]: value,
-        },
-        role: message.role,
-        metadata: { ...message.metadata, status },
-        tenant_id: message.tenant_id,
-      });
-    },
-    [message, handleUpdateMessage, email_drafted, email_sent]
-  );
-
-  const onUpdateDraftEmail = useCallback(
-    (newValue) => {
-      onUpdateContentPath("email_drafted", {
-        to: email_drafted?.to,
-        body: newValue?.body,
-      });
-    },
-    [onUpdateContentPath, email_drafted]
-  );
+  if (email_sent) {
+    statusText = "Sent";
+  } else if (email_drafted) {
+    statusText = "Drafted";
+  } else if (email_received) {
+    statusText = "Received";
+  }
 
   const buttons: {
     label: string;
@@ -139,220 +113,111 @@ const EmailAgentMessage = ({ message }: EmailAgentMessageProps) => {
     },
   ];
 
-  let statusText = "";
+  const Icon = getIcon(statusText);
 
-  if (email_sent) {
-    statusText = "Sent";
-  } else if (email_drafted) {
-    statusText = "Drafted";
-  } else if (email_received) {
-    statusText = "Received";
-  }
-
-  if (isSending) {
-    statusText = "Sending...";
-  }
-
-  const status = (
-    <LabelAndValue
-      labelClassName="w-[80px]"
-      label="Status"
-      value={
-        <>
-          <span>{statusText}</span>
-          {!email_drafted && !email_sent && (
-            <span className="text-muted-foreground ml-1 text-xs">
-              (No response required)
-            </span>
-          )}
-        </>
-      }
-    />
+  const Badges = (
+    <div className="flex items-center gap-2">
+      <Badge variant="outline-muted" className="font-bold text-[10px] px-1.5">
+        Email {statusText}
+      </Badge>
+      {message.metadata?.priority && (
+        <Badge variant="default" className="font-bold text-[10px] px-1.5">
+          priority: {message.metadata?.priority as string}
+        </Badge>
+      )}
+    </div>
   );
 
-  const icon = (
-    <>
-      {statusText === "Sent" && <MailCheck className="text-primary ml-2" />}
-      {statusText === "Drafted" && (
-        <MailQuestion className="text-primary ml-2" />
-      )}
-      {statusText === "Received" && <MailPlus className="text-primary ml-2" />}
-      {statusText === "Failed" && <MailX className="text-primary ml-2" />}
-      {statusText === "Sending..." && (
-        <div className="fit-content">
-          <Mail className="text-primary ml-2 email-sending" />
-        </div>
-      )}
-    </>
+  const buttonMarkup = buttons
+    .filter(({ visible }) => visible)
+    .map(({ label, variant, onClick, disabled }) => (
+      <Button
+        disabled={disabled}
+        key={label}
+        size="sm"
+        onClick={onClick}
+        variant={variant}
+      >
+        {label}
+      </Button>
+    ));
+
+  const headerContent = (
+    <div className="flex flex-col items-start gap-2 w-full">
+      <div>
+        <Badge variant="outline-muted" className="font-bold">
+          Email {statusText}
+        </Badge>
+      </div>
+      <div className="flex flex-col items-start gap-1 w-full">
+        <FromAndToLabel
+          fromEmail={email_received?.from}
+          fromName={email_received?.from_name}
+        />
+        <p className="text-xs text-muted-foreground truncate w-full text-left">
+          Subject:
+          <span className="font-bold"> {email_received?.subject}</span>
+        </p>
+      </div>
+    </div>
   );
-
-  useEffect(() => {
-    if (messageId === message.id) {
-      setTimeout(() => {
-        setIsHighlighted(true);
-      }, 200);
-    }
-
-    setTimeout(() => {
-      setIsHighlighted(false);
-    }, 1500);
-  }, []);
+  if (isMobile) {
+    return (
+      <>
+        <EmailMessageBubble
+          badges={Badges}
+          message={message}
+          onClick={() => setOpen(true)}
+          compact={compact}
+        />
+        <SlidePanel
+          headerContent={headerContent}
+          side="bottom"
+          open={open}
+          onOpenChange={setOpen}
+          footer={<div className="flex justify-end gap-2">{buttonMarkup}</div>}
+          className="rounded-t-md"
+          headerClassName="pb-2"
+          onOpenAutoFocus={(e) => {
+            e.preventDefault();
+          }}
+        >
+          <EmailModalContent
+            message={message}
+            statusText={statusText}
+            Icon={Icon}
+          />
+        </SlidePanel>
+      </>
+    );
+  }
 
   return (
-    <Collapsible
-      className="w-full"
-      open={open}
-      onOpenChange={() => {
-        setOpen(!open);
-      }}
-    >
-      <div className="py-2 pl-3 text-xs text-muted-foreground">
-        {dayjs(message.updated_at).format("DD MMMM, hh:mm a")}
-      </div>
-      <div
-        className={clsx(
-          getContainerStyles({ isUser: false }) +
-            " w-full transition-all !max-w-[100%]",
-          {
-            "scale-[1.04]": isHighlighted,
-          }
-        )}
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <EmailMessageBubble
+          badges={Badges}
+          message={message}
+          onClick={() => setOpen(true)}
+        />
+      </DialogTrigger>
+      <DialogContent
+        className="p-4 border-0 max-w-3xl h-[80vh] bg-white"
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+        }}
       >
-        <div
-          className={clsx(
-            messageBubbleStyles,
-            otherMessageStyles,
-            "flex flex-col gap-3 !py-4  relative min-h-20",
-            {
-              "rounded-b-none": open,
-            }
-          )}
-        >
-          <div className="flex justify-between">
-            {icon}
-            <CollapsibleTrigger>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setOpen(!open)}
-              >
-                {open ? <FoldVertical /> : <UnfoldVertical />}
-              </Button>
-            </CollapsibleTrigger>
-          </div>
-          <div className="flex flex-col gap-1">
-            {status}
-            {!open && (
-              <>
-                {!email_sent && (
-                  <LabelAndValue
-                    labelClassName="w-[80px]"
-                    label="From"
-                    valueClassName="text-xs"
-                    value={email_received?.from}
-                  />
-                )}
-                <LabelAndValue
-                  labelClassName="w-[80px]"
-                  valueClassName="text-xs"
-                  label="To"
-                  value={email_sent?.to}
-                />
-                <LabelAndValue
-                  labelClassName="w-[80px]"
-                  label="Subject"
-                  value={email_received?.subject}
-                />
-                <LabelAndValue
-                  labelClassName="w-[80px]"
-                  label="Summary"
-                  value={summary as string}
-                  isMarkdown
-                />
-
-                {!email_sent && (
-                  <LabelAndValue
-                    labelClassName="w-[80px]"
-                    label="Reasoning"
-                    value={reasoning}
-                  />
-                )}
-              </>
-            )}
-          </div>
-
-          <CollapsibleContent>
-            <EmailContent
-              header="They sent"
-              from={email_received?.from}
-              to={email_received?.to}
-              subject={email_received?.subject}
-              body={email_received?.latest_message.body}
-              thread={email_received?.thread}
-            />
-            {email_drafted && (
-              <>
-                <Divider />
-                <EmailContent
-                  editable
-                  header="I drafted this reply for you, you can edit it if you want"
-                  to={email_drafted?.to}
-                  body={email_drafted?.body}
-                  onEditBody={onUpdateDraftEmail}
-                />
-              </>
-            )}
-            {email_sent && (
-              <>
-                <Divider />
-                <EmailContent
-                  header={`I sent this reply`}
-                  to={email_sent?.to}
-                  body={email_sent?.body}
-                />
-              </>
-            )}
-          </CollapsibleContent>
+        <DialogHeader>{headerContent}</DialogHeader>
+        <div className="h-full overflow-y-auto">
+          <EmailModalContent
+            message={message}
+            statusText={statusText}
+            Icon={Icon}
+          />
         </div>
-        <CollapsibleContent>
-          <div
-            className={clsx(
-              messageBubbleStyles,
-              otherMessageStyles,
-              "flex flex-col gap-3 !py-4 rounded-t-none"
-            )}
-          >
-            <div>
-              <LabelAndValue
-                isMarkdown
-                label="Reasoning"
-                value={reasoning}
-                labelClassName="w-[80px]"
-              />
-            </div>
-            {email_drafted && <p>What would you like me to do?</p>}
-          </div>
-
-          {!isSending && (
-            <div className={`flex gap-2 justify-end mt-2`}>
-              {buttons
-                .filter(({ visible }) => visible)
-                .map(({ label, variant, onClick, disabled }) => (
-                  <Button
-                    disabled={disabled}
-                    key={label}
-                    size="sm"
-                    onClick={onClick}
-                    variant={variant}
-                  >
-                    {label}
-                  </Button>
-                ))}
-            </div>
-          )}
-        </CollapsibleContent>
-      </div>
-    </Collapsible>
+        <DialogFooter>{buttonMarkup}</DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

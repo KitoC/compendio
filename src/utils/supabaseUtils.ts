@@ -8,6 +8,14 @@ interface WindowWithEnv extends Window {
   };
 }
 
+export const getSupabaseKey = () => {
+  if (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
+    return import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  }
+
+  return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpndHVrdnRiZnVjcnZkcGljdnh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgxMDQ3NzQsImV4cCI6MjA1MzY4MDc3NH0.3xvkpYoRUFhdVYa2GylvfmxGp-XYrpsdfausI4JqiQk";
+};
+
 /**
  * Gets the Supabase URL from environment variables or fallback
  */

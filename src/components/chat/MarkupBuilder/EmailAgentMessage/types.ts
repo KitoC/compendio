@@ -10,8 +10,9 @@ export interface EmailContentProps {
   to: string;
   subject?: string;
   body: string;
-  header: string;
+  header?: string | React.ReactNode;
   thread?: NormalizedEmailThreadItem[];
   editable?: boolean;
   onEditBody?: (newValue: { body: string }) => void;
+  type?: string;
 }

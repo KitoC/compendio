@@ -1,5 +1,12 @@
 // SocketProvider.tsx
-import { useEffect, useRef, useState, useCallback, ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  ReactNode,
+  useMemo,
+} from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { SocketContext, SocketMessageListener } from "./SocketContext";
 import { dynamicHeaders } from "@/integrations/supabase/client";
@@ -21,6 +28,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
     socket.onopen = () => {
       setIsOpen(true);
+
       if (session?.access_token) {
         socket.send(
           JSON.stringify({
@@ -92,20 +100,29 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     messageListeners.current = messageListeners.current.filter((f) => f !== fn);
   }, []);
 
+  const value = useMemo(
+    () => ({
+      socket: socketRef.current,
+      isOpen,
+      isAuthenticated,
+      sendMessage,
+      stopStream,
+      reconnect,
+      addMessageListener,
+      removeMessageListener,
+    }),
+    [
+      isOpen,
+      isAuthenticated,
+      sendMessage,
+      stopStream,
+      reconnect,
+      addMessageListener,
+      removeMessageListener,
+    ]
+  );
+
   return (
-    <SocketContext.Provider
-      value={{
-        socket: socketRef.current,
-        isOpen,
-        isAuthenticated,
-        sendMessage,
-        stopStream,
-        reconnect,
-        addMessageListener,
-        removeMessageListener,
-      }}
-    >
-      {children}
-    </SocketContext.Provider>
+    <SocketContext.Provider value={value}>{children}</SocketContext.Provider>
   );
 };

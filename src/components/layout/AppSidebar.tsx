@@ -121,7 +121,7 @@ const AppSidebar = () => {
       hidden: tables.length === 0,
       children: tables.map((table) => ({
         label: table.name,
-        url: ROUTES.CUSTOM_TABLE_DATA.replace(":id", table.id),
+        url: ROUTES.CUSTOM_TABLE_DATA.replace(":id", table.name),
         onClick: onNavItemClick,
       })),
     },

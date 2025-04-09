@@ -7,6 +7,7 @@ const defaultCorsHeaders: HeadersInit = {
 };
 
 const defaultAllowedOrigins = [
+  "http://localhost:8080",
   "http://localhost:8081",
   "https://compendio.netlify.app",
 ];

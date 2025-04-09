@@ -6,6 +6,7 @@ export interface NormalizedEmailThreadItem {
 
 export interface NormalizedEmailReceived {
   from: string;
+  from_name: string;
   to: string;
   subject: string;
   latest_message: NormalizedEmailThreadItem;
@@ -32,4 +33,6 @@ export interface NormalizedEmailResponse {
   event: "email_received" | "email_drafted" | "email_sent" | "both";
   provider: "outlook" | "gmail";
   reasoning: string;
+  summary: string;
+  short_summary: string;
 }

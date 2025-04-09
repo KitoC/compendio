@@ -25,6 +25,7 @@ Your response must be formatted like this:
   "email_id": "string",              // ID of the latest message — used for reply actions
   "email_received": {
     "from": "string",
+    "from_name": "string",
     "latest_message": {
       "body": "string",
       "from": "string",
@@ -44,7 +45,8 @@ Your response must be formatted like this:
   "event": "text",                    // "email_received", "email_drafted", or both
   "provider": "outlook|gmail",
   "reasoning": "string",
-  "summary": "string"
+  "summary": "string",
+  "short_summary": "string"
 }
 \`\`\`
 
@@ -57,6 +59,7 @@ Your response must be formatted like this:
    - \`latest_message.body\`: Extract only the latest message content, preferably in plain text. Fallback to HTML if needed, but do not include quoted replies or earlier thread content.
    - \`to\`: Use the primary recipient(s).
    - \`from\`: Sender's email address.
+   - \`from_name\`: Sender's name.
    - \`subject\`: Subject line of the received message.
    - \`thread\`: If the email is part of a conversation, include earlier messages in the thread.
    - \`email_id\`: Use the provider-specific message ID **for the latest message**. This will be used to reply.
@@ -87,6 +90,9 @@ Your response must be formatted like this:
 
    - Briefly explain why you are sending a response and the thought process behind your reply.
    - Include any assumptions or follow-up questions where relevant.
+   - Explain why you attached the priority number.
+   - Keep it concise and to the point.
+   - Use formatting to separate paragraphs.
 
 6. **Include a \`summary\` string**:
 
@@ -94,6 +100,13 @@ Your response must be formatted like this:
    - Include the main points and any relevant details.
    - Keep it concise and to the point.
    - Use full thread as context.
+
+7. **Include a \`short_summary\` string**:
+   - Summarize the email one sentence.
+   - Keep it concise and to the point.
+   - Use full thread as context.
+
+8. For ALL markup ensure important information is highlighted in bold or italic.
 
 ---
 

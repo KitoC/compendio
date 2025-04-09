@@ -29,8 +29,15 @@ export const useAiAgentsQuery = () => {
         .select("*")
         .eq("tenant_id", tenantId);
 
+      const { data: otherAgents, error: conversationsError } = await supabase
+        .from("ai_agents")
+        .select("*")
+        .eq("tenant_id", tenantId)
+        .not("id", "in", `(${data.map((agent) => agent.id).join(",")})`);
+
       if (error) throw error;
-      return data as IAiAgent[];
+
+      return [...data, ...otherAgents] as IAiAgent[];
     },
     enabled: !!tenantId, // Only run query if we have a tenantId
   });

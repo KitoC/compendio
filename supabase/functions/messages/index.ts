@@ -9,7 +9,7 @@ import {
 import { withCors } from "locals/middleware/withCors";
 
 const handler = async (req: Request, context: AuthenticatedContext) => {
-  const { messagesService } = context;
+  const { messagesService, corsHeaders } = context;
   const { searchParams } = new URL(req.url);
   const method = req.method.toUpperCase();
 
@@ -40,7 +40,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
 
         return {
           body: JSON.stringify(result),
-          headers: { "Content-Type": "application/json" },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 200,
         };
       }
@@ -63,7 +63,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
 
       return {
         body: JSON.stringify(result),
-        headers: { "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       };
     }
@@ -80,7 +80,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
 
       return {
         body: JSON.stringify(result),
-        headers: { "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 201,
       };
     }
@@ -98,7 +98,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
 
       return {
         body: JSON.stringify({ message: "Message updated" }),
-        headers: { "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       };
     }
@@ -109,7 +109,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
       if (!message_id) {
         return {
           body: JSON.stringify({ error: "Missing message_id" }),
-          headers: { "Content-Type": "application/json" },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
           status: 400,
         };
       }
@@ -122,7 +122,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
 
       return {
         body: JSON.stringify({ message: "Message deleted (soft)" }),
-        headers: { "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       };
     }
@@ -130,7 +130,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
     default:
       return {
         body: JSON.stringify({ error: "Method Not Allowed" }),
-        headers: { "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 405,
       };
   }
