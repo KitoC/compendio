@@ -40,10 +40,7 @@ const getIcon = (
   if (statusText === "Failed") return MailX;
 };
 
-const EmailAgentMessage = ({
-  message,
-  compact = true,
-}: EmailAgentMessageProps) => {
+const EmailAgentMessage = ({ message, compact }: EmailAgentMessageProps) => {
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -118,15 +115,13 @@ const EmailAgentMessage = ({
 
   const Icon = getIcon(statusText);
 
-  const noResponseRequired = !email_drafted && !email_sent;
-
   const Badges = (
     <div className="flex items-center gap-2">
-      <Badge variant="outline-muted" className="font-bold">
+      <Badge variant="outline-muted" className="font-bold text-[10px] px-1.5">
         Email {statusText}
       </Badge>
       {message.metadata?.priority && (
-        <Badge variant="default" className="font-bold">
+        <Badge variant="default" className="font-bold text-[10px] px-1.5">
           priority: {message.metadata?.priority as string}
         </Badge>
       )}

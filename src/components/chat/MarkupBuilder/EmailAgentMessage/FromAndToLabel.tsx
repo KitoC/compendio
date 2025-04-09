@@ -1,6 +1,6 @@
 const FromAndToLabel = ({
   fromEmail,
-  fromName = "kito",
+  fromName,
 }: {
   fromEmail: string;
   fromName: string;

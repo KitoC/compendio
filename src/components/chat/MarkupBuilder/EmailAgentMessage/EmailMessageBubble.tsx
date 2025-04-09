@@ -7,11 +7,8 @@ import { Divider } from "@/components/ui/divider";
 import FromAndToLabel from "./FromAndToLabel";
 
 const EmailMessageBubble = ({ message, onClick, badges, compact }) => {
-  const {
-    email_received,
-    summary,
-    short_summary = "This is my short summary",
-  } = message.content as unknown as NormalizedEmailResponse;
+  const { email_received, summary, short_summary } =
+    message.content as unknown as NormalizedEmailResponse;
 
   return (
     <div
@@ -24,25 +21,16 @@ const EmailMessageBubble = ({ message, onClick, badges, compact }) => {
       )}
     >
       <div className="flex items-center gap-2">
-        {compact && (
-          <p className="text-xs text-muted-foreground mr-auto">
-            {email_received?.from_name || "Kito"}
-          </p>
-        )}
+        <div className="w-1/2 mr-auto">
+          <FromAndToLabel
+            fromEmail={email_received?.from}
+            fromName={email_received?.from_name}
+          />
+        </div>
         {badges}
       </div>
 
       <div className="flex flex-col gap-1">
-        {!compact && (
-          <>
-            <FromAndToLabel
-              fromEmail={email_received?.from}
-              fromName={email_received?.from_name}
-            />
-            <Divider className="!my-1" />
-          </>
-        )}
-
         <LabelAndValue
           labelClassName=""
           label={compact ? "" : "AI Summary"}
