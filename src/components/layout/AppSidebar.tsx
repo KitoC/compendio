@@ -81,7 +81,7 @@ const SidebarItem = (item: SidebarItemOrGroup) => {
 const AppSidebar = () => {
   const { user, profile, signOut } = useAuth();
   const { aiAgents } = useAiAgents();
-  const { tables } = useCustomTables();
+  const { tables = [] } = useCustomTables();
   const { toggleSidebar } = useSidebar();
   const [showSettingsSidebar, setShowSettingsSidebar] = useState(false);
   const location = useLocation();
