@@ -17,7 +17,7 @@ Your response must be formatted like this:
 
 \`\`\`json
 {
-  "priority": 0..5, // 5 is highest priority, 0 is lowest priority
+  "priority": 0..4, // Refer to the priority scale in the system prompt
   "email_drafted": {
     "body": "string",
     "to": "string"
@@ -125,4 +125,18 @@ You may optionally inject provider-specific rules dynamically if the agent suppo
 
 
 
+`;
+
+export const EMAIL_PRIORITY_PROMPT = `
+**priority scale**
+
+Rate the priority of this email from 0 to 4, where:
+
+0 = Low (spam, promotional, FYI, or no action needed),
+1 = Routine (automated updates, calendar invites, general messages),
+2 = Important (personal or work-related, should be read soon),
+3 = High (requires attention today),
+4 = Urgent (requires immediate action or blocks progress).
+
+**Only return the number.**
 `;

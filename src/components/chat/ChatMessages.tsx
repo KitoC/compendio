@@ -13,31 +13,23 @@ const ChatMessages = () => {
   const { messages, isLoading, virtuosoProps } = useChat();
   const { setEmailCount, emailCount } = useNotifications();
 
-  useEffect(() => {
-    const draftEmailsPresent = messages.filter(
-      (message) => message.metadata?.status === "draft"
-    );
+  // useEffect(() => {
+  //   const draftEmailsPresent = messages.filter(
+  //     (message) => message.metadata?.status === "draft"
+  //   );
 
-    if (draftEmailsPresent.length !== emailCount) {
-      setEmailCount(draftEmailsPresent.length);
-    }
-  }, [messages, setEmailCount, emailCount]);
+  //   if (draftEmailsPresent.length !== emailCount) {
+  //     setEmailCount(draftEmailsPresent.length);
+  //   }
+  // }, [messages, setEmailCount, emailCount]);
 
   return (
-    <div
-      className={clsx(
-        "h-full px-4 py-6 pb-0 scroll-smooth space-y-4 transition-opacity duration-300",
-        {
-          "opacity-0": isLoading,
-          "opacity-100": !isLoading,
-        }
-      )}
-    >
+    <div className={clsx("h-full px-4 py-6 pb-0 scroll-smooth space-y-4")}>
       {isLoading || virtuosoProps.firstItemIndex === null ? (
         <div className="flex justify-center items-center h-full">
           <Loader size="large" />
         </div>
-      ) : (
+      ) : messages.length > 0 ? (
         <Virtuoso
           {...virtuosoProps}
           itemContent={(index, message) => {
@@ -70,6 +62,10 @@ const ChatMessages = () => {
           }}
           style={{ height: "100%", overflowY: "auto" }}
         />
+      ) : (
+        <div className="flex justify-center items-center h-full">
+          <p className="text-muted-foreground">No messages found</p>
+        </div>
       )}
     </div>
   );

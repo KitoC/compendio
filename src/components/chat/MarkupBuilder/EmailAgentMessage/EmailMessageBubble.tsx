@@ -3,10 +3,22 @@ import { messageBubbleStyles, otherMessageStyles } from "../../shared.styles";
 import { LabelAndValue } from "./LabelAndValue";
 
 import { NormalizedEmailResponse } from "@/types/emailAgentMessage";
-import { Divider } from "@/components/ui/divider";
 import FromAndToLabel from "./FromAndToLabel";
+import { ChatMessage } from "@/types/chat";
 
-const EmailMessageBubble = ({ message, onClick, badges, compact }) => {
+interface EmailMessageBubbleProps {
+  message: ChatMessage;
+  onClick: () => void;
+  badges: React.ReactNode;
+  compact?: boolean;
+}
+
+const EmailMessageBubble = ({
+  message,
+  onClick,
+  badges,
+  compact,
+}: EmailMessageBubbleProps) => {
   const { email_received, summary, short_summary } =
     message.content as unknown as NormalizedEmailResponse;
 
@@ -33,7 +45,7 @@ const EmailMessageBubble = ({ message, onClick, badges, compact }) => {
       <div className="flex flex-col gap-1">
         <LabelAndValue
           labelClassName=""
-          label={compact ? "" : "AI Summary"}
+          label={compact ? "" : "Summary"}
           value={(short_summary || summary) as string}
           isMarkdown
         />

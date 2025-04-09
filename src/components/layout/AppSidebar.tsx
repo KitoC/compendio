@@ -36,6 +36,7 @@ import TenantSwitcher from "./TenantSwitcher";
 import { useNotifications } from "@/contexts/NotificationProvider";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { IAiAgent } from "@/types/aiAgents";
 
 interface SidebarItemOrGroup {
   label: string;
@@ -97,6 +98,13 @@ const AppSidebar = () => {
     }
   };
 
+  const getNotificationCount = (agent: IAiAgent) => {
+    if (agent.name === "email-assistant") {
+      return emailCount;
+    }
+    return 0;
+  };
+
   // Define sidebar items for main navigation
   const sidebarItems = [
     {
@@ -111,7 +119,7 @@ const AppSidebar = () => {
       children: aiAgents.map((agent) => ({
         label: agent.human_name || agent.name,
         url: ROUTES.AGENT_CHAT.replace(":id", agent.name),
-        notificationCount: agent.name === "emaemail-assistant" ? emailCount : 0,
+        notificationCount: getNotificationCount(agent),
         onClick: onNavItemClick,
       })),
     },

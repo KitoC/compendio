@@ -84,9 +84,8 @@ class MessagesService extends BaseSupabaseService {
   }) {
     const decryption_key = getEnvKey("ENCRYPTION_KEY");
 
-    console.log("content_filter ====>", filter);
     const { data, error } = await this.supabase.rpc(
-      "get_conversation_messages_v4",
+      "get_conversation_messages_v7",
       {
         _conversation_id: conversation_id,
         _decryption_key: decryption_key,

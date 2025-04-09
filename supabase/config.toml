@@ -54,4 +54,3 @@ verify_jwt = false
 
 [functions.wss-functions]
 verify_jwt = false
-

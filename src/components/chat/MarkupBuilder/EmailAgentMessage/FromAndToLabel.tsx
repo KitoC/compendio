@@ -7,14 +7,15 @@ const FromAndToLabel = ({
 }) => {
   return (
     <div className="w-full text-left">
-      <p className="text-xs text-muted-foreground truncate w-full">
-        From: <span className="font-bold">{fromName || fromEmail}</span>{" "}
-        {fromName && (
-          <span className="text-muted-foreground text-[10px]">
-            ({fromEmail})
-          </span>
-        )}
+      <p className="text-sm text-muted-foreground truncate w-full">
+        <span className="font-bold">{fromName || fromEmail}</span>{" "}
       </p>
+
+      {fromName && (
+        <p className="text-sm text-muted-foreground truncate w-full">
+          {fromEmail}
+        </p>
+      )}
     </div>
   );
 };

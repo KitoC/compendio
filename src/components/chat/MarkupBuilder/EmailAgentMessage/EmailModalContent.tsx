@@ -80,12 +80,8 @@ const EmailModalContent = ({
       })}
     >
       <div className={clsx("flex flex-col gap-3  relative min-h-20")}>
-        <LabelAndValue
-          label="AI Summary"
-          value={summary as string}
-          isMarkdown
-        />
-        <LabelAndValue isMarkdown label="AI Reasoning" value={reasoning} />
+        <LabelAndValue label="Summary" value={summary as string} isMarkdown />
+        <LabelAndValue isMarkdown label="Message context" value={reasoning} />
 
         <EmailContent
           type={TYPES.RECEIVED}

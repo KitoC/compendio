@@ -57,6 +57,7 @@ class EmailAgentController<
     const response = await this.agentAdapter.sendMessages(
       [
         { role: "system", content: NORMALIZE_EMAIL_PAYLOAD_PROMPT },
+        { role: "system", content: this.agent.prompt || "" },
         { role: "system", content: JSON.stringify(emailNormalizationConfig) },
         { role: "system", content: JSON.stringify(functions) },
         { role: "user", content: JSON.stringify(email) },
@@ -74,6 +75,7 @@ class EmailAgentController<
     const response = await this.agentAdapter.sendMessages(
       [
         { role: "system", content: DRAFT_EMAIL_PROMPT },
+        { role: "system", content: this.agent.prompt || "" },
         { role: "system", content: JSON.stringify(contextData) },
         { role: "user", content: JSON.stringify(normalizedEmailPayload) },
       ],
@@ -103,6 +105,7 @@ class EmailAgentController<
     const contextData = {};
 
     this.logger.info("🔹 Drafting email");
+
     const draftEmail = await this.draftEmail(
       normalizedEmailPayload,
       contextData

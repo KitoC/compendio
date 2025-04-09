@@ -8,23 +8,36 @@ import { MessageService } from "@/services/MessageService";
 import { ChatMessage } from "@/types/chat";
 import { supabase } from "@/integrations/supabase/client";
 import { MARKUP_BUILDER_MAP_ROLES } from "@/components/chat/MarkupBuilder";
+import {
+  EMAIL_STATUS_FILTER_KEY,
+  EMAIL_STATUSES,
+  PRIORITY_FILTER_KEY,
+} from "@/components/chat/MarkupBuilder/EmailAgentMessage/consts";
 
 export const useInfiniteMessages = (conversationId) => {
+  const [filter, setFilter] = useState({
+    [PRIORITY_FILTER_KEY]: [3, 4],
+    [EMAIL_STATUS_FILTER_KEY]: [EMAIL_STATUSES.draft.value],
+  });
+
   const limit = 20;
   const queryClient = useQueryClient();
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteQuery({
-      queryKey: ["messages", conversationId],
+      queryKey: ["messages", conversationId, limit, filter],
       enabled: !!conversationId,
       initialPageParam: 0,
       queryFn: async ({ pageParam }) => {
+        console.log("filter", filter);
         const query = {
           conversation_id: conversationId,
-          limit: String(limit),
-          offset: String(pageParam),
           order: "created_at",
           sort_direction: "desc",
+
+          limit: String(limit),
+          offset: String(pageParam),
+          filter: JSON.stringify(filter),
         };
 
         const loaded = await MessageService.getMessages(conversationId, query);
@@ -145,5 +158,7 @@ export const useInfiniteMessages = (conversationId) => {
     isFetchingNextPage,
     hasNextPage,
     filteredMessages,
+    filter,
+    setFilter,
   };
 };
