@@ -11,7 +11,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="px-4 mx-auto py-8">
+      <div className="px-4 mx-auto py-8 overflow-y-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold">
             Hello {profile?.display_name}, let's see what needs attention today.
