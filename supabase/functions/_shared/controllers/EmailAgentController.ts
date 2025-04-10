@@ -1,7 +1,10 @@
 // NO_CHANGE
 
 import { IConversation } from "locals/services/ConversationsService";
-import { NORMALIZE_EMAIL_PAYLOAD_PROMPT } from "@/SYSTEM_PROMPTS/EMAIL/NORMALIZE_EMAIL_PAYLOAD_PROMPT";
+import {
+  DEFAULT_EMAIL_PRIORITY_SCALE,
+  NORMALIZE_EMAIL_PAYLOAD_PROMPT,
+} from "@/SYSTEM_PROMPTS/EMAIL/NORMALIZE_EMAIL_PAYLOAD_PROMPT";
 import { DRAFT_EMAIL_PROMPT } from "@/SYSTEM_PROMPTS/EMAIL/DRAFT_EMAIL_PROMPT";
 import { AgentController } from "locals/controllers/AgentController";
 
@@ -48,15 +51,26 @@ export type DraftEmailResponse = {
 class EmailAgentController<
   SessionContext extends Record<string, unknown>
 > extends AgentController<SessionContext> {
+  async getPriorityScale() {
+    return DEFAULT_EMAIL_PRIORITY_SCALE;
+  }
   async normalizeEmailPayload(
     email: object,
     emailNormalizationConfig: object
   ): Promise<NormalizedEmailResponse> {
     const functions = await this.getFunctions();
 
+    const priorityScale = await this.getPriorityScale();
+
     const response = await this.agentAdapter.sendMessages(
       [
-        { role: "system", content: NORMALIZE_EMAIL_PAYLOAD_PROMPT },
+        {
+          role: "system",
+          content: NORMALIZE_EMAIL_PAYLOAD_PROMPT.replace(
+            "%%PRIORITY_SCALE%%",
+            priorityScale
+          ),
+        },
         { role: "system", content: this.agent.prompt || "" },
         { role: "system", content: JSON.stringify(emailNormalizationConfig) },
         { role: "system", content: JSON.stringify(functions) },

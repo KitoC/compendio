@@ -29,7 +29,6 @@ const EMAIL_STATUS_CHECK_ITEMS = Object.entries(EMAIL_STATUSES).map(
     Icon: value.Icon,
   })
 );
-console.log(PRIORITY_CHECK_ITEMS);
 
 export const EmailAssistantToolbar = () => {
   return (

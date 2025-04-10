@@ -26,10 +26,6 @@ export interface IAgentProvider {
     talkToAgentParams: ItTalkToAgentParams,
     onFunctionCall: ExecuteFunctionCallback
   ): Promise<ReadableStream<Uint8Array>>;
-  createEmailMessage(
-    email: string,
-    jsonSchema: JSON
-  ): Promise<NormalizedEmailResponse>;
   sendMessages(
     messages: AgentMessage[],
     options?: object

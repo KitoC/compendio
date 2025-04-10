@@ -48,24 +48,6 @@ export default defineConfig(({ mode, command }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  define: {
-    // Expose environment variables to the client
-    "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(
-      process.env.VITE_SUPABASE_URL
-    ),
-    "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(
-      process.env.VITE_SUPABASE_PUBLISHABLE_KEY
-    ),
-    "import.meta.env.VITE_AZURE_CLIENT_ID": JSON.stringify(
-      process.env.VITE_AZURE_CLIENT_ID
-    ),
-    "import.meta.env.VITE_BACKEND_URL": JSON.stringify(
-      process.env.VITE_BACKEND_URL
-    ),
-    "import.meta.env.VITE_SKYBROOK_API_KEY": JSON.stringify(
-      process.env.VITE_SKYBROOK_API_KEY
-    ),
-  },
   build: {
     ...(command === "build" && process.env.LIB_BUILD === "true"
       ? {

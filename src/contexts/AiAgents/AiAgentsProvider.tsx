@@ -13,6 +13,7 @@ const SYSTEM_AGENTS: { [key: string]: IAiAgent } = {
     type: "system",
     human_name: "Onboarding",
     responsibility: "Onboarding",
+    provider: "openai",
   },
 };
 
