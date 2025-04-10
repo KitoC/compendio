@@ -13,12 +13,23 @@ import {
   EMAIL_STATUSES,
   PRIORITY_FILTER_KEY,
 } from "@/components/chat/MarkupBuilder/EmailAgentMessage/consts";
+import { useAiAgents } from "../AiAgents";
 
-export const useInfiniteMessages = (conversationId) => {
-  const [filter, setFilter] = useState({
+const DEFAULT_AGENT_FILTERS = {
+  "email-assistant": {
     [PRIORITY_FILTER_KEY]: [3, 4],
     [EMAIL_STATUS_FILTER_KEY]: [EMAIL_STATUSES.draft.value],
-  });
+  },
+};
+
+export const useInfiniteMessages = (conversationId) => {
+  const { currentAgent } = useAiAgents();
+
+  const [filter, setFilter] = useState(
+    DEFAULT_AGENT_FILTERS[
+      currentAgent.name as keyof typeof DEFAULT_AGENT_FILTERS
+    ] || {}
+  );
 
   const limit = 20;
   const queryClient = useQueryClient();
