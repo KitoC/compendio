@@ -8,6 +8,8 @@ You will receive:
 - A list of available AI functions (provided via a system message), including type \`retrieval\`, with their OpenAI-style parameter definitions.
 - A raw JSON payload from an email provider (such as Microsoft Graph or Gmail API).
 - A list of available AI functions, including type \`retrieval\`, with their OpenAI-style parameter definitions.
+- A priority scale from 0 to 4, where:
+%%PRIORITY_SCALE%%
 
 You must perform the following tasks:
 
@@ -22,6 +24,7 @@ Your response must be formatted like this:
 {
   "email_id": "string",              // ID of the latest message — used for reply actions
   "email_received": {
+    "from_name": "string",           // Name of the sender if available
     "from": "string",
     "latest_message": {
       "body": "string",
@@ -39,9 +42,9 @@ Your response must be formatted like this:
     "to": "string"
   },
   "email_thread_id": "string",       // Thread/conversation ID
-  "event": "text",                    // "email_received" or other relevant labels
+  "event": "text",                   // "email_received" or other relevant labels
   "provider": "outlook|gmail",
-  "function_calls": [                 // Use this array if multiple retrievals are needed
+  "function_calls": [                // Use this array if multiple retrievals are needed
     {
       "name": "string",              // Name of the function from the ai_functions table
       "type": "retrieval",           // Currently only 'retrieval' is supported
@@ -50,8 +53,10 @@ Your response must be formatted like this:
       }
     }
   ],
-  "normalization_reasoning": "string",              // Reasoning behind whether a reply is needed and if context is missing
-  "normalization_summary": "string"                 // Summary of the email content
+  "reply_reasoning": "string", // Reasoning behind whether a reply is needed
+  "email_summary": "string",   // Summary of the email content
+  "short_summary": "string"    // One sentence summary of the email content
+}
 }
 \`\`\`
 
@@ -64,6 +69,7 @@ Your response must be formatted like this:
    - \`latest_message.body\`: Extract only the latest message content, preferably in plain text. Fallback to HTML if needed, but do not include quoted replies or earlier thread content.
    - \`to\`: Use the primary recipient(s).
    - \`from\`: Sender's email address.
+   - \`from_name\`: Sender's name if available.
    - \`subject\`: Subject line of the received message.
    - \`thread\`: If the email is part of a conversation, include earlier messages in the thread.
    - \`email_id\`: Use the provider-specific message ID **for the latest message**. This will be used to reply.
@@ -128,6 +134,11 @@ Your response must be formatted like this:
    - Keep it concise and to the point.
    - Use full thread as context.
 
+8. **Include a \`short_summary\` string**:
+
+   - Summarize the email in one sentence.
+   - Use the full thread as context.
+
 ---
 
 **Provider-specific Notes:**
@@ -172,4 +183,12 @@ These rules are merged into the agent context prior to processing to ensure cons
   - \`email_thread_id\` should be \`conversationId\`.
 
 Provider-specific behavior (e.g., handling of \`message.id\`, \`conversationId\`, or API quirks) should be injected dynamically into the system prompt or agent configuration based on the \`provider\` field for consistency and maintainability.
+`;
+
+export const DEFAULT_EMAIL_PRIORITY_SCALE = `
+  0 = Low (spam, promotional, FYI, or no action needed),
+  1 = Routine (automated updates, calendar invites, general messages),
+  2 = Important (personal or work-related, should be read soon),
+  3 = High (requires attention today),
+  4 = Urgent (requires immediate action or blocks progress).
 `;

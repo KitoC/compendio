@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   useInfiniteQuery,
   useQueryClient,
@@ -11,25 +11,39 @@ import { MARKUP_BUILDER_MAP_ROLES } from "@/components/chat/MarkupBuilder";
 import {
   EMAIL_STATUS_FILTER_KEY,
   EMAIL_STATUSES,
-  PRIORITY_FILTER_KEY,
 } from "@/components/chat/MarkupBuilder/EmailAgentMessage/consts";
 import { useAiAgents } from "../AiAgents";
+import type { IAiAgent } from "@/types/aiAgents";
 
 const DEFAULT_AGENT_FILTERS = {
   "email-assistant": {
-    [PRIORITY_FILTER_KEY]: [3, 4],
     [EMAIL_STATUS_FILTER_KEY]: [EMAIL_STATUSES.draft.value],
   },
+};
+
+const getFromLocalStorage = (key: string) => {
+  const value = localStorage.getItem(key);
+
+  return value ? JSON.parse(value) : null;
+};
+
+const getAgentFilterKey = (agent: IAiAgent) => `${agent?.name}-filter`;
+
+const getInitialFilter = (currentAgent: IAiAgent) => {
+  const key = currentAgent?.name as keyof typeof DEFAULT_AGENT_FILTERS;
+  const filter = DEFAULT_AGENT_FILTERS[key] || {};
+
+  return getFromLocalStorage(getAgentFilterKey(currentAgent)) || filter;
+};
+
+const saveFilterToLocalStorage = (agent: IAiAgent, filter: unknown) => {
+  localStorage.setItem(getAgentFilterKey(agent), JSON.stringify(filter));
 };
 
 export const useInfiniteMessages = (conversationId) => {
   const { currentAgent } = useAiAgents();
 
-  const [filter, setFilter] = useState(
-    DEFAULT_AGENT_FILTERS[
-      currentAgent?.name as keyof typeof DEFAULT_AGENT_FILTERS
-    ] || {}
-  );
+  const [filter, setFilter] = useState(getInitialFilter(currentAgent));
 
   const limit = 20;
   const queryClient = useQueryClient();
@@ -66,6 +80,10 @@ export const useInfiniteMessages = (conversationId) => {
     });
 
   const messages = data?.pages.flat().slice().reverse() ?? [];
+
+  useEffect(() => {
+    saveFilterToLocalStorage(currentAgent, filter);
+  }, [filter, currentAgent]);
 
   const addMessage = useCallback(
     async (message, scrollToBottom?: boolean) => {

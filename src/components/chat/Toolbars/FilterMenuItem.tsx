@@ -36,6 +36,14 @@ const FilterMenu = ({
 }: FilterMenuProps) => {
   const { filter, setFilter } = useChat();
 
+  const removeFilter = () => {
+    setFilter((prev) => {
+      delete prev[filterKey];
+
+      return { ...prev };
+    });
+  };
+
   const handleFilterChange = (value: unknown) => {
     setFilter((prev) => {
       const nextPriority = [...(prev[filterKey] || [])];
@@ -55,15 +63,26 @@ const FilterMenu = ({
 
   return (
     <div className="relative">
-      <div className="absolute top-[-10px] right-[-10px] bg-sidebar rounded-full px-2 py-1 text-xs z-10">
-        {checkedItems.length}
-      </div>
+      {checkedItems.length > 0 && (
+        <div className="absolute top-[-10px] right-[-10px] bg-sidebar rounded-full px-2 py-1 text-xs z-10">
+          {checkedItems.length}
+        </div>
+      )}
       <MenubarMenu>
         <MenubarTrigger>
           {label} <ListFilter className="ml-2 h-4 w-4" />
         </MenubarTrigger>
         <MenubarPortal>
           <MenubarContent className="w-fit min-w-fit">
+            <MenubarCheckboxItem
+              className="MenubarCheckboxItem inset"
+              checked={!filter[filterKey]}
+              onCheckedChange={removeFilter}
+              onSelect={(e) => e.preventDefault()}
+            >
+              <MenubarItemIndicator className="MenubarItemIndicator"></MenubarItemIndicator>
+              <span className="mr-1">Show all</span>
+            </MenubarCheckboxItem>
             {items.map((item) => (
               <MenubarCheckboxItem
                 className="MenubarCheckboxItem inset"
