@@ -59,7 +59,8 @@ export class SendEmailHandler implements IAgentFunctionHandler {
   ): Promise<IAgentFunctionHandlerResult> {
     this.logger.info("🔹 Sending email");
     this.logger.debug("🔹 fnCall", fnCall);
-    const { message_id } = JSON.parse(fnCall.arguments);
+
+    const { message_id } = fnCall.arguments as { message_id: string };
 
     const message = await this.context.messagesService.getMessageById(
       message_id

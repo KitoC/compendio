@@ -8,13 +8,6 @@ import {
 } from "@/components/ui/dialog";
 import { DialogContent } from "@/components/ui/dialog";
 import { Dialog } from "@/components/ui/dialog";
-import {
-  MailCheck,
-  MailPlus,
-  MailX,
-  MailQuestion,
-  LucideProps,
-} from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { NormalizedEmailResponse } from "@/types/emailAgentMessage";
@@ -26,27 +19,25 @@ import { SlidePanel } from "@/components/ui/slide-panel";
 import FromAndToLabel from "./FromAndToLabel";
 import { PRIORITIES, EMAIL_STATUSES } from "./consts";
 import { Divider } from "@/components/ui/divider";
+import { MessageService } from "@/services/MessageService";
+import { useMutation } from "@tanstack/react-query";
+import { FunctionService } from "@/services/functionService";
+import { Alert } from "@/components/ui/alert";
+
 interface EmailAgentMessageProps {
   message: ChatMessage;
   compact?: boolean;
+  refetchMessages?: () => void;
 }
 
-const getIcon = (
-  status: (typeof EMAIL_STATUSES)[keyof typeof EMAIL_STATUSES]
-): React.ForwardRefExoticComponent<
-  Omit<LucideProps, "ref"> & React.RefAttributes<SVGSVGElement>
-> => {
-  if (status.value === "sent") return MailCheck;
-  if (status.value === "draft") return MailQuestion;
-  if (status.value === "received") return MailPlus;
-  if (status.value === "failed") return MailX;
-};
-
-const EmailAgentMessage = ({ message, compact }: EmailAgentMessageProps) => {
+const EmailAgentMessage = ({
+  message,
+  compact,
+  refetchMessages,
+}: EmailAgentMessageProps) => {
   const isMobile = useIsMobile();
   const [open, setOpen] = useState(false);
-  const [isSending, setIsSending] = useState(false);
-  const { triggerFunctionCall, replaceMessage } = useChat();
+  const { replaceMessage } = useChat();
   const { metadata } = message;
   const { email_drafted, email_received } =
     message.content as unknown as NormalizedEmailResponse;
@@ -55,6 +46,60 @@ const EmailAgentMessage = ({ message, compact }: EmailAgentMessageProps) => {
     EMAIL_STATUSES[metadata?.status as keyof typeof EMAIL_STATUSES];
   const statusText = status.label;
 
+  const sendEmailMutation = useMutation({
+    onMutate: () => {
+      return {
+        id: message.id,
+        action: "send-email",
+        errMessage: "Error sending email",
+      };
+    },
+    mutationKey: ["send-email"],
+    mutationFn: async () => {
+      const payload = {
+        manual: true,
+        name: "send_email",
+        arguments: { message_id: message.id },
+      };
+
+      return FunctionService.triggerManualFunction(
+        message?.user_id || "",
+        payload
+      );
+    },
+    onSuccess: (data) => {
+      toast.success("Email sent successfully");
+      replaceMessage(data as ChatMessage);
+      refetchMessages?.();
+      setOpen(false);
+    },
+  });
+
+  const ignoreEmailMutation = useMutation({
+    onMutate: () => {
+      return {
+        id: message.id,
+        action: "ignore-email",
+      };
+    },
+    mutationKey: ["ignore-email"],
+    mutationFn: async () => {
+      return MessageService.updateMessage({
+        ...message,
+        metadata: {
+          ...metadata,
+          status: "ignored",
+        },
+      });
+    },
+    onSuccess: (data) => {
+      toast.success("Email ignored successfully");
+      replaceMessage(data as ChatMessage);
+      refetchMessages?.();
+      setOpen(false);
+    },
+  });
+
   const buttons: {
     label: string;
     variant: ButtonProps["variant"];
@@ -62,50 +107,19 @@ const EmailAgentMessage = ({ message, compact }: EmailAgentMessageProps) => {
     disabled?: boolean;
     visible?: boolean;
   }[] = [
-    // {
-    //   label: "Ignore",
-    //   variant: "outline-destructive",
-    //   visible: !!email_drafted,
-    //   disabled: isSending,
-    //   onClick: () => {
-    //     // triggerFunctionCall({
-    //     //   type: "email:discard",
-    //     //   message_id: message.id,
-    //     // });
-    //   },
-    // },
     {
-      label: isSending ? "Sending..." : "Send",
-      disabled: isSending,
-      variant: "outline-primary",
+      label: ignoreEmailMutation.isPending ? "Ignoring..." : "Ignore",
+      variant: "muted",
       visible: !!email_drafted,
-      onClick: async () => {
-        try {
-          setIsSending(true);
-          setOpen(false);
-
-          const { result, err } = await triggerFunctionCall({
-            manual: true,
-            name: "send_email",
-            arguments: JSON.stringify({
-              message_id: message.id,
-            }),
-          });
-
-          if (err) {
-            setIsSending(false);
-            toast.error("Error sending email");
-          } else {
-            setIsSending(false);
-            toast.success("Email sent successfully");
-            replaceMessage(result as ChatMessage);
-          }
-        } catch (err) {
-          console.error("Error sending email", err);
-          setIsSending(false);
-          toast.error("Error sending email");
-        }
-      },
+      disabled: sendEmailMutation.isPending || ignoreEmailMutation.isPending,
+      onClick: ignoreEmailMutation.mutate,
+    },
+    {
+      label: sendEmailMutation.isPending ? "Sending..." : "Send",
+      disabled: sendEmailMutation.isPending,
+      variant: "default",
+      visible: !!email_drafted,
+      onClick: sendEmailMutation.mutate,
     },
   ];
 
@@ -158,6 +172,28 @@ const EmailAgentMessage = ({ message, compact }: EmailAgentMessageProps) => {
       </div>
     </div>
   );
+
+  const modalContent = (
+    <>
+      {sendEmailMutation.error && (
+        <Alert
+          variant="destructive"
+          className="text-red-500 text-sm overflow-x-auto mb-2 w-full"
+        >
+          {sendEmailMutation.error.message}
+          <pre className="text-red-500 text-sm overflow-x-auto mb-2 w-full">
+            {JSON.stringify(sendEmailMutation.error)}
+          </pre>
+        </Alert>
+      )}
+      <EmailModalContent
+        message={message}
+        statusText={statusText}
+        Icon={Icon}
+      />
+    </>
+  );
+
   if (isMobile) {
     return (
       <>
@@ -179,11 +215,7 @@ const EmailAgentMessage = ({ message, compact }: EmailAgentMessageProps) => {
             e.preventDefault();
           }}
         >
-          <EmailModalContent
-            message={message}
-            statusText={statusText}
-            Icon={Icon}
-          />
+          {modalContent}
         </SlidePanel>
       </>
     );
@@ -205,13 +237,7 @@ const EmailAgentMessage = ({ message, compact }: EmailAgentMessageProps) => {
         }}
       >
         <DialogHeader>{headerContent}</DialogHeader>
-        <div className="h-full overflow-y-auto">
-          <EmailModalContent
-            message={message}
-            statusText={statusText}
-            Icon={Icon}
-          />
-        </div>
+        <div className="h-full overflow-y-auto">{modalContent}</div>
         <DialogFooter>{buttonMarkup}</DialogFooter>
       </DialogContent>
     </Dialog>

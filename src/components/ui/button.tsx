@@ -23,7 +23,7 @@ const buttonVariants = cva(
         success: "bg-success text-success-foreground hover:bg-success/90",
         info: "bg-info text-info-foreground hover:bg-info/90",
         danger: "bg-danger text-danger-foreground hover:bg-danger/90",
-        muted: "bg-muted text-muted-foreground hover:bg-muted/90",
+        muted: "bg-muted text-muted-foreground hover:bg-muted-darker",
         "outline-warning":
           "border border-warning text-warning hover:bg-warning/10",
         "outline-destructive":

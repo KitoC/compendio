@@ -48,36 +48,53 @@ export const useInfiniteMessages = (conversationId) => {
   const limit = 20;
   const queryClient = useQueryClient();
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    useInfiniteQuery({
-      queryKey: ["messages", conversationId, limit, filter],
-      enabled: !!conversationId && !!currentAgent,
-      initialPageParam: 0,
-      queryFn: async ({ pageParam }) => {
-        console.log("filter", filter);
-        const query = {
-          conversation_id: conversationId,
-          order: "created_at",
-          sort_direction: "desc",
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    ...rest
+  } = useInfiniteQuery({
+    queryKey: ["messages", conversationId, limit, filter],
+    enabled: !!conversationId && !!currentAgent,
+    initialPageParam: 0,
+    queryFn: async ({ pageParam }) => {
+      console.log("filter", filter);
+      const query = {
+        conversation_id: conversationId,
+        order: "created_at",
+        sort_direction: "desc",
 
-          limit: String(limit),
-          offset: String(pageParam),
-          filter: JSON.stringify(filter),
-        };
+        limit: String(limit),
+        offset: String(pageParam),
+        filter: JSON.stringify(filter),
+      };
 
-        const loaded = await MessageService.getMessages(conversationId, query);
+      const loaded = await MessageService.getMessages(conversationId, query);
 
-        return loaded.messages || [];
-      },
-      getNextPageParam: (lastPage, allPages) => {
-        if (lastPage.length < limit) return undefined; // No more pages
-        return allPages.flat().length;
-      },
-      // select: (data) => ({
-      //   pages: [...data.pages].reverse(),
-      //   pageParams: [...data.pageParams].reverse(),
-      // }),
-    });
+      return loaded.messages || [];
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      if (lastPage.length < limit) return undefined; // No more pages
+      return allPages.flat().length;
+    },
+    // select: (data) => ({
+    //   pages: [...data.pages].reverse(),
+    //   pageParams: [...data.pageParams].reverse(),
+    // }),
+  });
+
+  console.log({
+    conversationId,
+    currentAgent,
+    enabled: !!conversationId && !!currentAgent,
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  });
 
   const messages = data?.pages.flat().slice().reverse() ?? [];
 

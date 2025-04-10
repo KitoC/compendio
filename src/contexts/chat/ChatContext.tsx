@@ -2,6 +2,7 @@ import { createContext, Dispatch, SetStateAction } from "react";
 import { ChatMessage } from "@/types/chat";
 import { VirtuosoHandle } from "react-virtuoso";
 import { IFunctionCall } from "@/types/aiAgents";
+import { UseMutationResult } from "@tanstack/react-query";
 
 export interface MessageFilter {
   "metadata.priority": number[];
@@ -14,9 +15,11 @@ export interface ChatContextType {
   inputRef: React.RefObject<HTMLTextAreaElement>;
   handleSendMessage: (message: string) => void;
   conversationId: string;
-  triggerFunctionCall: (
-    payload: IFunctionCall
-  ) => Promise<{ err: Error | null; result: unknown | null }>;
+  functionCallMutation: UseMutationResult<
+    { err: Error | null; result: unknown | null },
+    Error,
+    IFunctionCall
+  >;
   replaceMessage: (message: ChatMessage) => void;
   interruptAiAgent: () => void;
   handleUpdateMessage: (message: ChatMessage) => void;

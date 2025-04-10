@@ -67,6 +67,8 @@ export const SupabaseFunctionService = {
 
   async patch(functionName: string, body: object) {
     const headers = await getHeaders();
+
+    console.log("patching", functionName, body);
     const response = await fetch(getFunctionUrl(functionName), {
       method: "PATCH",
       headers,

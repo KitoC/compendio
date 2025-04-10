@@ -1,4 +1,3 @@
-
 import { ChatMessage } from "@/types/chat";
 import { FormBuilder, FormBuilderConfig } from "./FormBuilder";
 import QuickReplyBuilder, { QuickReplyConfig } from "./QuickReplyBuilder";
@@ -43,11 +42,12 @@ const MarkupBuilder = ({ message }: MarkupbuilderProps) => {
   }
 
   // Check if content is a string or has a text property
-  const messageText = typeof content === 'string' 
-    ? content 
-    : content && typeof content === 'object' && 'text' in content 
-      ? content.text as string
-      : '';
+  const messageText =
+    typeof content === "string"
+      ? content
+      : content && typeof content === "object" && "text" in content
+      ? (content.text as string)
+      : "";
 
   return <div>{messageText}</div>;
 };

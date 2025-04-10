@@ -3,7 +3,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { ChatMessage } from "@/types/chat";
 import { useAuth } from "@/hooks/useAuth";
-import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
 import { useTenant } from "@/contexts/TenantContext";
 import { useSocket, SocketData } from "@/contexts/SocketProvider";
 import useChatHelpers from "./useChatHelpers";
@@ -11,7 +10,6 @@ import { MessageService } from "@/services/MessageService";
 import { toast } from "sonner";
 import { listenForFunctionCalls } from "@/services/aiChatService";
 import { User } from "@/types/user";
-import { supabase } from "@/integrations/supabase/client";
 import { useVoiceContext } from "@/contexts/VoiceProvider";
 import { useTTS } from "../TTSProvider";
 import { useDebouncedCallback } from "use-debounce";
@@ -19,6 +17,8 @@ import { FunctionService } from "@/services/functionService";
 import type { IFunctionCall } from "@/types/aiAgents";
 import { VirtuosoHandle } from "react-virtuoso";
 import { IAiAgent } from "@/types/aiAgents";
+import { useMutation } from "@tanstack/react-query";
+
 interface UseChatOptions {
   conversationId: string;
   initiateConversation?: string;
@@ -239,30 +239,25 @@ export const useChatState = ({
     });
   }, [sendMessage, conversationId, currentAgent?.id]);
 
-  const triggerFunctionCall = useCallback(
-    async (payload: IFunctionCall) => {
-      try {
-        if (payload.manual) {
-          const response = await FunctionService.triggerManualFunction(
-            currentAgent?.id || "",
-            payload
-          );
-          return { result: response, err: null };
-        } else {
-          sendMessage({
-            type: "chat:trigger_function_call",
-            conversation_id: conversationId,
-            agent_id: currentAgent?.id,
-            payload,
-          });
-        }
-      } catch (err) {
-        console.error("Error triggering function call", err);
-        return { err, result: null };
+  const functionCallMutation = useMutation({
+    mutationFn: async (payload: IFunctionCall) => {
+      if (payload.manual) {
+        const response = await FunctionService.triggerManualFunction(
+          currentAgent?.id || "",
+          payload
+        );
+
+        return { result: response, err: null };
+      } else {
+        sendMessage({
+          type: "chat:trigger_function_call",
+          conversation_id: conversationId,
+          agent_id: currentAgent?.id,
+          payload,
+        });
       }
     },
-    [sendMessage, conversationId, currentAgent?.id]
-  );
+  });
 
   return {
     isTyping,
@@ -270,7 +265,7 @@ export const useChatState = ({
     inputRef,
     handleSendMessage,
     interruptAiAgent,
-    triggerFunctionCall,
+    functionCallMutation,
     conversationId,
     replaceMessage,
     handleUpdateMessage,

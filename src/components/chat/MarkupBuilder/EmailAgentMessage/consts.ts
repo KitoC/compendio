@@ -1,5 +1,11 @@
 import { BadgeProps } from "@/components/ui/badge";
-import { MailCheck, MailPlus, MailQuestion, MailX } from "lucide-react";
+import {
+  MailCheck,
+  MailPlus,
+  MailQuestion,
+  MailWarning,
+  MailX,
+} from "lucide-react";
 
 export interface IPriority {
   label: string;
@@ -19,6 +25,12 @@ export const PRIORITIES: {
 export const PRIORITY_FILTER_KEY = "metadata.priority";
 
 export const EMAIL_STATUSES = {
+  ignored: {
+    label: "Ignored",
+    color: "bg-gray-500",
+    value: "ignored",
+    Icon: MailX,
+  },
   sent: {
     label: "Sent",
     color: "bg-green-500",
@@ -41,7 +53,7 @@ export const EMAIL_STATUSES = {
     label: "Failed",
     color: "bg-red-500",
     value: "failed",
-    Icon: MailX,
+    Icon: MailWarning,
   },
 };
 

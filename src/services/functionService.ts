@@ -9,7 +9,9 @@ export const FunctionService = {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to fetch messages");
+      const json = await response.json();
+
+      throw json;
     }
 
     return response.json();
