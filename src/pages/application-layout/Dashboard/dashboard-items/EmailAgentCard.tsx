@@ -21,7 +21,7 @@ const EmailAgentCard = ({ agent }: { agent: IAiAgent }) => {
 
   return (
     <ChatProvider conversationId={emailConversation.id} agentOverride={agent}>
-      <Card className="px-1 max-w-[400px] min-w-[400px]">
+      <Card className="px-1 max-w-[400px] md:min-w-[400px]">
         <CardHeader className="pb-3 px-2">
           <div className="flex justify-between items-center">
             <CardTitle className="flex items-center gap-2 w-full">
