@@ -23,12 +23,11 @@ export const CustomTablesProvider: React.FC<{
 
     try {
       await CustomTableService.syncSchema();
-
-      didSyncRef.current.add(tenantId);
     } catch (err) {
       console.error("Failed to sync schema:", err);
     } finally {
       setSyncing(false);
+      didSyncRef.current.add(tenantId);
     }
   }, [tenantId, syncing]);
 
