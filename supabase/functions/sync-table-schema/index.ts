@@ -6,7 +6,7 @@ import {
 } from "locals/middleware/withAuthenticatedContext";
 import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
 import { withCors } from "locals/middleware/withCors";
-
+import { ExternalServiceAiError } from "locals/error-types";
 const handler = async (req: Request, context: AuthenticatedContext) => {
   const method = req.method.toUpperCase();
   const { airtableService, supabase_AS_SUPER_ADMIN, authService } = context;
@@ -81,7 +81,15 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
     );
   } catch (err) {
     console.error("Unexpected error while syncing schema:", err);
-    return new Response("Internal Server Error", { status: 500 });
+
+    const error = (err as Error).message
+      ? (err as ExternalServiceAiError)
+      : { message: "An unknown error occurred", status: 500 };
+
+    return new Response(JSON.stringify(error), {
+      headers: { ...context.corsHeaders, "Content-Type": "application/json" },
+      status: error?.status as number,
+    });
   }
 };
 

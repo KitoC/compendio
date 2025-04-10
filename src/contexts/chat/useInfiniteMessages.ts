@@ -27,7 +27,7 @@ export const useInfiniteMessages = (conversationId) => {
 
   const [filter, setFilter] = useState(
     DEFAULT_AGENT_FILTERS[
-      currentAgent.name as keyof typeof DEFAULT_AGENT_FILTERS
+      currentAgent?.name as keyof typeof DEFAULT_AGENT_FILTERS
     ] || {}
   );
 
@@ -37,7 +37,7 @@ export const useInfiniteMessages = (conversationId) => {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteQuery({
       queryKey: ["messages", conversationId, limit, filter],
-      enabled: !!conversationId,
+      enabled: !!conversationId && !!currentAgent,
       initialPageParam: 0,
       queryFn: async ({ pageParam }) => {
         console.log("filter", filter);
