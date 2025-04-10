@@ -59,10 +59,7 @@ export class AirtableService extends BaseExternalService {
     const base = bases.find((base: AirtableBase) => base.id === this.base_id);
 
     if (!base) {
-      this.throwError("Base not found", {
-        status: 404,
-        message: "Base not found",
-      });
+      this.throwError("Base not found", 404);
     }
 
     const response = await fetch(ENDPOINTS.GET_BASE_SCHEMA(this.base_id), {
@@ -72,7 +69,7 @@ export class AirtableService extends BaseExternalService {
 
     if (!response.ok) {
       const json = await response.json();
-      this.throwError("Failed to get base schema", json);
+      this.throwError("Failed to get base schema", json, response.status);
     }
 
     const json = await response.json();
@@ -91,7 +88,7 @@ export class AirtableService extends BaseExternalService {
 
     if (!response.ok) {
       const json = await response.json();
-      this.throwError("Failed to list records", json);
+      this.throwError("Failed to list records", json, response.status);
     }
 
     return response.json();
@@ -108,7 +105,7 @@ export class AirtableService extends BaseExternalService {
 
     if (!response.ok) {
       const json = await response.json();
-      this.throwError("Failed to retrieve record", json);
+      this.throwError("Failed to retrieve record", json, response.status);
     }
 
     return response.json();
@@ -126,7 +123,7 @@ export class AirtableService extends BaseExternalService {
 
     if (!response.ok) {
       const json = await response.json();
-      this.throwError("Failed to create record", json);
+      this.throwError("Failed to create record", json, response.status);
     }
 
     return response.json();
@@ -144,7 +141,7 @@ export class AirtableService extends BaseExternalService {
 
     if (!response.ok) {
       const json = await response.json();
-      this.throwError("Failed to update record", json);
+      this.throwError("Failed to update record", json, response.status);
     }
 
     return response.json();
@@ -161,7 +158,7 @@ export class AirtableService extends BaseExternalService {
 
     if (!response.ok) {
       const json = await response.json();
-      this.throwError("Failed to delete record", json);
+      this.throwError("Failed to delete record", json, response.status);
     }
 
     return response.json();
@@ -176,7 +173,7 @@ export class AirtableService extends BaseExternalService {
 
     if (!response.ok) {
       const json = await response.json();
-      this.throwError("Failed to create table", json);
+      this.throwError("Failed to create table", json, response.status);
     }
 
     return response.json();
@@ -194,7 +191,7 @@ export class AirtableService extends BaseExternalService {
 
     if (!response.ok) {
       const json = await response.json();
-      this.throwError("Failed to update table", json);
+      this.throwError("Failed to update table", json, response.status);
     }
 
     return response.json();
@@ -211,7 +208,7 @@ export class AirtableService extends BaseExternalService {
 
     if (!response.ok) {
       const json = await response.json();
-      this.throwError("Failed to delete table", json);
+      this.throwError("Failed to delete table", json, response.status);
     }
 
     return response.json();
