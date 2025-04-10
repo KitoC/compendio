@@ -15,14 +15,18 @@ const useEmailAgentNotifications = ({ aiAgents }: { aiAgents: IAiAgent[] }) => {
     (conversation) => conversation.alias === "email-assistant"
   );
 
-  const { data: emailsNeedingAttention = [], isLoading } = useQuery({
+  const {
+    data: emailsNeedingAttention = [],
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: [QUERY_KEYS.aiAgents, emailConversation?.id],
     queryFn: async () => {
       const response = await MessageService.getMessages(emailAgent.id, {
         conversation_id: emailConversation?.id,
         priority_sort_direction: "desc",
         filter: JSON.stringify({
-          "metadata.status": ["draft", "received"],
+          "metadata.status": ["draft"],
           "metadata.priority": [3, 4],
         }),
         order: "updated_at",
@@ -31,9 +35,8 @@ const useEmailAgentNotifications = ({ aiAgents }: { aiAgents: IAiAgent[] }) => {
         offset: "0",
       });
 
-      if (response.total_count) {
-        setEmailCount(response.total_count);
-      }
+      setEmailCount(response.total_count);
+
       return response;
     },
     enabled: !!emailConversation?.id, // Only run query if we have a tenantId
@@ -45,6 +48,7 @@ const useEmailAgentNotifications = ({ aiAgents }: { aiAgents: IAiAgent[] }) => {
     emailsNeedingAttention,
     isLoading,
     emailConversation,
+    refetch,
   };
 };
 

@@ -14,8 +14,13 @@ import { ChatProvider } from "@/contexts/chat/ChatProvider";
 import useEmailAgentNotifications from "@/contexts/NotificationProvider/useEmailNotifications";
 
 const EmailAgentCard = ({ agent }: { agent: IAiAgent }) => {
-  const { emailCount, emailsNeedingAttention, isLoading, emailConversation } =
-    useEmailAgentNotifications({ aiAgents: [agent] });
+  const {
+    emailCount,
+    emailsNeedingAttention,
+    isLoading,
+    emailConversation,
+    refetch,
+  } = useEmailAgentNotifications({ aiAgents: [agent] });
 
   if (!emailConversation) return null;
 
@@ -47,6 +52,7 @@ const EmailAgentCard = ({ agent }: { agent: IAiAgent }) => {
                     message={email}
                     compact={true}
                     key={email.id}
+                    refetchMessages={refetch}
                   />
                 );
               })
