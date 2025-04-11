@@ -1,41 +1,25 @@
 
-import { useMemo, useState, useRef, useEffect } from "react";
+import React, { useMemo, useState } from "react";
+import Timeline from "react-calendar-timeline";
+import "react-calendar-timeline/lib/Timeline.css";
+import moment from "moment";
 import { 
-  format, 
-  isValid, 
   parseISO, 
-  differenceInDays, 
+  isValid, 
+  format, 
   addDays,
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
   addWeeks,
   addMonths,
   addQuarters,
   addYears,
-  startOfQuarter,
-  endOfQuarter,
-  startOfYear,
-  endOfYear,
-  eachDayOfInterval,
-  eachWeekOfInterval,
-  eachMonthOfInterval,
-  eachQuarterOfInterval,
-  eachYearOfInterval,
-  isSameDay,
-  isSameMonth,
-  isSameQuarter,
-  isSameYear
 } from "date-fns";
+
 import { AirtableViewProps, TimeScale } from "./types";
 import { formatFieldValue } from "../utils";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 
 const TimelineView = ({
   records,
@@ -68,9 +52,6 @@ const TimelineView = ({
   const today = new Date();
   const [currentViewStart, setCurrentViewStart] = useState(today);
   
-  // Reference for scroll container
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
   // Get the primary field for the table
   const primaryField = useMemo(() => {
     if (table && table.primaryFieldId) {
@@ -79,310 +60,248 @@ const TimelineView = ({
     return table.fields[0];
   }, [table]);
 
+  // Calculate the visible timespan based on the selected time scale
+  const getTimeRange = () => {
+    const now = moment(currentViewStart);
+    let startTime = now.clone();
+    let endTime = now.clone();
+    
+    switch (timeScale) {
+      case "day":
+        startTime = now.clone().startOf('day');
+        endTime = now.clone().endOf('day');
+        break;
+      case "week":
+        startTime = now.clone().startOf('week');
+        endTime = now.clone().endOf('week');
+        break;
+      case "fortnight":
+        startTime = now.clone().startOf('week');
+        endTime = now.clone().add(2, 'weeks').endOf('week');
+        break;
+      case "month":
+        startTime = now.clone().startOf('month');
+        endTime = now.clone().endOf('month');
+        break;
+      case "quarter":
+        startTime = now.clone().startOf('quarter');
+        endTime = now.clone().endOf('quarter');
+        break;
+      case "year":
+        startTime = now.clone().startOf('year');
+        endTime = now.clone().endOf('year');
+        break;
+      default:
+        startTime = now.clone().startOf('week');
+        endTime = now.clone().endOf('week');
+    }
+    
+    return { startTime, endTime };
+  };
+
+  const { startTime, endTime } = getTimeRange();
+
   // Process records for timeline display
-  const timelineItems = useMemo(() => {
-    if (!startDateField) return [];
+  const { groups, items } = useMemo(() => {
+    if (!startDateField) return { groups: [], items: [] };
     
-    return records
-      .filter(record => {
-        const startValue = record.fields[startDateField];
-        return startValue !== undefined && startValue !== null;
-      })
-      .map(record => {
-        const startDateValue = record.fields[startDateField];
-        let startDate: Date | null = null;
-        
-        if (typeof startDateValue === 'string') {
-          const parsedDate = parseISO(startDateValue);
-          if (isValid(parsedDate)) {
-            startDate = parsedDate;
-          }
-        } else if (startDateValue instanceof Date) {
-          startDate = startDateValue;
+    // Create a map for quick access to groups by ID
+    const groupMap = new Map();
+    const itemsList = [];
+    
+    // Process each record
+    records.forEach((record, index) => {
+      const startDateValue = record.fields[startDateField];
+      if (startDateValue === undefined || startDateValue === null) return;
+      
+      let startDate: Date | null = null;
+      
+      if (typeof startDateValue === 'string') {
+        const parsedDate = parseISO(startDateValue);
+        if (isValid(parsedDate)) {
+          startDate = parsedDate;
         }
-        
-        let endDate = startDate;
-        if (endDateField && endDateField !== startDateField) {
-          const endDateValue = record.fields[endDateField];
-          if (typeof endDateValue === 'string') {
-            const parsedEndDate = parseISO(endDateValue);
-            if (isValid(parsedEndDate)) {
-              endDate = parsedEndDate;
-            }
-          } else if (endDateValue instanceof Date) {
-            endDate = endDateValue;
-          }
-        }
-        
-        // If we couldn't parse either date, skip this record
-        if (!startDate) return null;
-        
-        // Ensure end date is not before start date
-        if (endDate && endDate < startDate) {
-          endDate = startDate;
-        }
-        
-        return {
-          id: record.id,
-          record,
-          startDate,
-          endDate: endDate || addDays(startDate, 1), // Default to 1-day duration
-          title: primaryField ? formatFieldValue(record.fields[primaryField.name], primaryField) : record.id,
-        };
-      })
-      .filter(Boolean) // Remove null entries
-      .sort((a, b) => a!.startDate.getTime() - b!.startDate.getTime()) as Array<{
-        id: string;
-        record: typeof records[0];
-        startDate: Date;
-        endDate: Date;
-        title: string;
-      }>;
-  }, [records, startDateField, endDateField, primaryField]);
-
-  // Get date range based on time scale
-  const getDateRange = (startDate: Date, scale: TimeScale) => {
-    switch (scale) {
-      case "day":
-        return { 
-          start: startDate, 
-          end: startDate,
-          prev: () => addDays(startDate, -1),
-          next: () => addDays(startDate, 1)
-        };
-      case "week":
-        return { 
-          start: startOfWeek(startDate, { weekStartsOn: 1 }), 
-          end: endOfWeek(startDate, { weekStartsOn: 1 }),
-          prev: () => addWeeks(startDate, -1),
-          next: () => addWeeks(startDate, 1)
-        };
-      case "fortnight":
-        return { 
-          start: startOfWeek(startDate, { weekStartsOn: 1 }), 
-          end: endOfWeek(addWeeks(startDate, 1), { weekStartsOn: 1 }),
-          prev: () => addWeeks(startDate, -2),
-          next: () => addWeeks(startDate, 2)
-        };
-      case "month":
-        return { 
-          start: startOfMonth(startDate), 
-          end: endOfMonth(startDate),
-          prev: () => addMonths(startDate, -1),
-          next: () => addMonths(startDate, 1)
-        };
-      case "quarter":
-        return { 
-          start: startOfQuarter(startDate), 
-          end: endOfQuarter(startDate),
-          prev: () => addQuarters(startDate, -1),
-          next: () => addQuarters(startDate, 1)
-        };
-      case "year":
-        return { 
-          start: startOfYear(startDate), 
-          end: endOfYear(startDate),
-          prev: () => addYears(startDate, -1),
-          next: () => addYears(startDate, 1)
-        };
-      default:
-        return { 
-          start: startDate, 
-          end: addDays(startDate, 6),
-          prev: () => addDays(startDate, -7),
-          next: () => addDays(startDate, 7)
-        };
-    }
-  };
-
-  // Calculate visible date range
-  const { start: viewStart, end: viewEnd, prev, next } = useMemo(() => {
-    return getDateRange(currentViewStart, timeScale);
-  }, [currentViewStart, timeScale]);
-
-  // Add padding to visible range for smoother scrolling
-  const { minDate, maxDate } = useMemo(() => {
-    let additionalDays = 0;
-    let additionalBefore = 0;
-    let additionalAfter = 0;
-    
-    switch (timeScale) {
-      case "day":
-        additionalBefore = additionalAfter = 3;
-        break;
-      case "week":
-        additionalBefore = additionalAfter = 7;
-        break;
-      case "fortnight":
-        additionalBefore = additionalAfter = 14;
-        break;
-      case "month":
-        additionalBefore = additionalAfter = 14;
-        break;
-      case "quarter":
-        additionalBefore = additionalAfter = 30;
-        break;
-      case "year":
-        additionalBefore = additionalAfter = 60;
-        break;
-    }
-    
-    return { 
-      minDate: addDays(viewStart, -additionalBefore),
-      maxDate: addDays(viewEnd, additionalAfter)
-    };
-  }, [viewStart, viewEnd, timeScale]);
-
-  // Generate timeline intervals based on time scale
-  const timelineDates = useMemo(() => {
-    const interval = { start: minDate, end: maxDate };
-    
-    switch (timeScale) {
-      case "day":
-        return eachDayOfInterval(interval).map(date => ({
-          date,
-          label: format(date, 'd'),
-          subLabel: format(date, 'EEE'),
-          isFirst: date.getDate() === 1,
-          isPrimary: isSameDay(date, viewStart)
-        }));
-      case "week":
-        return eachDayOfInterval(interval).map(date => ({
-          date,
-          label: format(date, 'd'),
-          subLabel: format(date, 'EEE'),
-          isFirst: date.getDate() === 1,
-          isPrimary: date.getDay() === 1
-        }));
-      case "fortnight":
-        return eachDayOfInterval(interval).map(date => ({
-          date,
-          label: format(date, 'd'),
-          subLabel: format(date, 'EEE'),
-          isFirst: date.getDate() === 1,
-          isPrimary: date.getDay() === 1
-        }));
-      case "month":
-        return eachDayOfInterval(interval).map(date => ({
-          date,
-          label: format(date, 'd'),
-          subLabel: format(date, 'EEE'),
-          isFirst: date.getDate() === 1,
-          isPrimary: date.getDate() === 1
-        }));
-      case "quarter":
-        return eachMonthOfInterval(interval).map(date => ({
-          date,
-          label: format(date, 'MMM'),
-          subLabel: format(date, 'yyyy'),
-          isFirst: date.getMonth() % 3 === 0,
-          isPrimary: date.getMonth() % 3 === 0
-        }));
-      case "year":
-        return eachMonthOfInterval(interval).map(date => ({
-          date,
-          label: format(date, 'MMM'),
-          subLabel: "",
-          isFirst: date.getMonth() === 0,
-          isPrimary: date.getMonth() === 0
-        }));
-      default:
-        return eachDayOfInterval(interval).map(date => ({
-          date,
-          label: format(date, 'd'),
-          subLabel: format(date, 'EEE'),
-          isFirst: date.getDate() === 1,
-          isPrimary: false
-        }));
-    }
-  }, [minDate, maxDate, timeScale, viewStart]);
-
-  // Get column width based on time scale
-  const getColumnWidth = () => {
-    switch (timeScale) {
-      case "day": return "10rem";
-      case "week": return "4rem";  
-      case "fortnight": return "3rem";
-      case "month": return "2.5rem";
-      case "quarter": return "8rem";
-      case "year": return "5rem";
-      default: return "4rem";
-    }
-  };
-
-  // Navigate to previous/next time period
-  const handlePrevious = () => setCurrentViewStart(prev);
-  const handleNext = () => setCurrentViewStart(next);
-  const handleToday = () => setCurrentViewStart(new Date());
-
-  // Reset to appropriate view when time scale changes
-  useEffect(() => {
-    setCurrentViewStart(today);
-  }, [timeScale]);
-
-  // Calculate item positions based on timeline
-  const getItemPositionStyle = (item: {startDate: Date, endDate: Date}) => {
-    let startPosition = 0;
-    let duration = 0;
-    
-    // Find the matching time unit for the start date
-    const startIndex = timelineDates.findIndex(d => {
-      switch (timeScale) {
-        case "day": return isSameDay(d.date, item.startDate);
-        case "week": case "fortnight": case "month": return isSameDay(d.date, item.startDate);
-        case "quarter": return isSameMonth(d.date, item.startDate);
-        case "year": return isSameMonth(d.date, item.startDate);
-        default: return isSameDay(d.date, item.startDate);
+      } else if (startDateValue instanceof Date) {
+        startDate = startDateValue;
       }
+      
+      if (!startDate) return;
+      
+      let endDate = startDate;
+      if (endDateField && endDateField !== startDateField) {
+        const endDateValue = record.fields[endDateField];
+        if (typeof endDateValue === 'string') {
+          const parsedEndDate = parseISO(endDateValue);
+          if (isValid(parsedEndDate)) {
+            endDate = parsedEndDate;
+          }
+        } else if (endDateValue instanceof Date) {
+          endDate = endDateValue;
+        }
+      }
+      
+      // Ensure end date is not before start date
+      if (endDate < startDate) {
+        endDate = startDate;
+      }
+      
+      // Add one day to make sure the event is visible if start and end are the same
+      if (startDate.getTime() === endDate.getTime()) {
+        endDate = addDays(endDate, 1);
+      }
+      
+      // Add record as a group if it doesn't exist
+      if (!groupMap.has(record.id)) {
+        const group = {
+          id: record.id,
+          title: primaryField ? formatFieldValue(record.fields[primaryField.name], primaryField) : record.id,
+          record
+        };
+        groupMap.set(record.id, group);
+      }
+      
+      // Add timeline item
+      itemsList.push({
+        id: `${record.id}-item`,
+        group: record.id,
+        title: primaryField ? formatFieldValue(record.fields[primaryField.name], primaryField) : record.id,
+        start_time: moment(startDate),
+        end_time: moment(endDate),
+        itemProps: {
+          style: {
+            backgroundColor: '#60a5fa',
+            color: 'white',
+            borderRadius: '4px',
+            border: '1px solid #2563eb',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+          },
+          onDoubleClick: () => onRowClick(record)
+        },
+        record // Store the record reference for later use
+      });
     });
     
-    if (startIndex !== -1) {
-      startPosition = startIndex;
-      
-      // Find or estimate the end position
-      const endIndex = timelineDates.findIndex(d => {
-        switch (timeScale) {
-          case "day": return isSameDay(d.date, item.endDate);
-          case "week": case "fortnight": case "month": return isSameDay(d.date, item.endDate);
-          case "quarter": return isSameMonth(d.date, item.endDate);
-          case "year": return isSameMonth(d.date, item.endDate);
-          default: return isSameDay(d.date, item.endDate);
-        }
-      });
-      
-      duration = endIndex !== -1 ? (endIndex - startIndex + 1) : 1;
-    } else {
-      // If start date is before the visible range, calculate offset
-      if (item.startDate < minDate) {
-        startPosition = 0;
-        const endIndex = timelineDates.findIndex(d => {
-          switch (timeScale) {
-            case "day": return isSameDay(d.date, item.endDate);
-            case "week": case "fortnight": case "month": return isSameDay(d.date, item.endDate);
-            case "quarter": return isSameMonth(d.date, item.endDate);
-            case "year": return isSameMonth(d.date, item.endDate);
-            default: return isSameDay(d.date, item.endDate);
-          }
-        });
-        duration = endIndex !== -1 ? (endIndex + 1) : 1;
-      } else {
-        // Start date is after the visible range
-        return { display: "none" };
-      }
-    }
-    
-    // Ensure minimum width
-    duration = Math.max(duration, 1);
-    
-    const colWidth = getColumnWidth();
-    const numericWidth = parseInt(colWidth.replace(/[^\d.]/g, ''), 10);
-    
-    return { 
-      left: `calc(${startPosition} * ${colWidth})`, 
-      width: `calc(${duration} * ${colWidth} - 0.25rem)`,
-      minWidth: "2rem",
-      display: "flex"
+    return {
+      groups: Array.from(groupMap.values()),
+      items: itemsList
     };
+  }, [records, startDateField, endDateField, primaryField]);
+
+  // Navigate to previous/next time period
+  const handlePrevious = () => {
+    switch (timeScale) {
+      case "day":
+        setCurrentViewStart(addDays(currentViewStart, -1));
+        break;
+      case "week":
+        setCurrentViewStart(addWeeks(currentViewStart, -1));
+        break;
+      case "fortnight":
+        setCurrentViewStart(addWeeks(currentViewStart, -2));
+        break;
+      case "month":
+        setCurrentViewStart(addMonths(currentViewStart, -1));
+        break;
+      case "quarter":
+        setCurrentViewStart(addQuarters(currentViewStart, -1));
+        break;
+      case "year":
+        setCurrentViewStart(addYears(currentViewStart, -1));
+        break;
+    }
+  };
+
+  const handleNext = () => {
+    switch (timeScale) {
+      case "day":
+        setCurrentViewStart(addDays(currentViewStart, 1));
+        break;
+      case "week":
+        setCurrentViewStart(addWeeks(currentViewStart, 1));
+        break;
+      case "fortnight":
+        setCurrentViewStart(addWeeks(currentViewStart, 2));
+        break;
+      case "month":
+        setCurrentViewStart(addMonths(currentViewStart, 1));
+        break;
+      case "quarter":
+        setCurrentViewStart(addQuarters(currentViewStart, 1));
+        break;
+      case "year":
+        setCurrentViewStart(addYears(currentViewStart, 1));
+        break;
+    }
+  };
+  
+  const handleToday = () => setCurrentViewStart(new Date());
+
+  // Handle item move if onUpdate is provided
+  const handleItemMove = async (itemId: string, dragTime: number, newGroupOrder: number) => {
+    if (!onUpdate) return;
+
+    const item = items.find(i => i.id === itemId);
+    if (!item) return;
+
+    const record = item.record;
+    
+    // Calculate the duration of the event
+    const originalStart = item.start_time;
+    const originalEnd = item.end_time;
+    const duration = originalEnd.diff(originalStart);
+    
+    // Create new start and end times
+    const newStartTime = moment(dragTime);
+    const newEndTime = moment(dragTime + duration);
+    
+    // Update the record with new dates
+    const updatedRecord = {
+      ...record,
+      fields: {
+        ...record.fields,
+        [startDateField as string]: newStartTime.toISOString(),
+        ...(endDateField && endDateField !== startDateField ? {
+          [endDateField]: newEndTime.toISOString()
+        } : {})
+      }
+    };
+
+    try {
+      await onUpdate(updatedRecord);
+    } catch (error) {
+      console.error("Failed to update record:", error);
+    }
+  };
+
+  // Handle item resize if onUpdate is provided
+  const handleItemResize = async (itemId: string, time: number, edge: string) => {
+    if (!onUpdate || !endDateField || endDateField === startDateField) return;
+
+    const item = items.find(i => i.id === itemId);
+    if (!item) return;
+
+    const record = item.record;
+    const updatedRecord = { ...record };
+
+    if (edge === 'left') {
+      // Update start date
+      updatedRecord.fields = {
+        ...updatedRecord.fields,
+        [startDateField as string]: moment(time).toISOString()
+      };
+    } else {
+      // Update end date
+      updatedRecord.fields = {
+        ...updatedRecord.fields,
+        [endDateField]: moment(time).toISOString()
+      };
+    }
+
+    try {
+      await onUpdate(updatedRecord);
+    } catch (error) {
+      console.error("Failed to update record:", error);
+    }
   };
 
   if (dateFields.length === 0) {
@@ -395,15 +314,13 @@ const TimelineView = ({
     );
   }
 
-  if (records.length === 0) {
+  if (records.length === 0 && !isLoading) {
     return (
       <div className="flex items-center justify-center h-64 border rounded-md">
         <p className="text-muted-foreground">{emptyMessage}</p>
       </div>
     );
   }
-
-  const columnWidth = getColumnWidth();
 
   return (
     <div className="flex flex-col gap-4">
@@ -474,78 +391,50 @@ const TimelineView = ({
         </div>
       </div>
 
-      {timelineItems.length > 0 ? (
-        <Card className="overflow-hidden">
-          <div className="overflow-x-auto" ref={scrollContainerRef}>
-            <div className="min-w-max">
-              {/* Timeline header - dates */}
-              <div className="flex border-b sticky top-0 bg-background z-10">
-                <div className="w-48 shrink-0 p-3 border-r font-medium">
-                  Item
-                </div>
-                <div className="flex">
-                  {timelineDates.map((dateInfo, index) => (
-                    <div 
-                      key={index} 
-                      className={`shrink-0 p-2 text-center text-xs border-r
-                        ${dateInfo.isFirst ? 'bg-muted' : ''}
-                        ${dateInfo.isPrimary ? 'text-primary font-medium' : ''}
-                        ${dateInfo.date.getDay() === 0 || dateInfo.date.getDay() === 6 ? 'text-muted-foreground' : ''}
-                      `}
-                      style={{ width: columnWidth }}
-                    >
-                      {dateInfo.label}
-                      <div className="text-[10px] text-muted-foreground">
-                        {dateInfo.subLabel}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Timeline body */}
-              <div>
-                {timelineItems.map(item => {
-                  const positionStyle = getItemPositionStyle(item);
-                  
-                  return (
-                    <div key={item.id} className="flex border-b hover:bg-muted/30">
-                      <div 
-                        className="w-48 shrink-0 p-3 border-r truncate cursor-pointer"
-                        onClick={() => onRowClick(item.record)}
-                      >
-                        <div className="font-medium">{item.title}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {format(item.startDate, 'MMM d')} 
-                          {item.endDate !== item.startDate && ` - ${format(item.endDate, 'MMM d')}`}
-                        </div>
-                      </div>
-                      <div className="relative flex-1" style={{ height: '60px' }}>
-                        {/* Item on timeline */}
-                        <div 
-                          className="absolute cursor-pointer h-8 rounded-md border bg-blue-100 border-blue-300 top-1/2 -translate-y-1/2 flex items-center justify-center px-2"
-                          style={positionStyle}
-                          onClick={() => onRowClick(item.record)}
-                        >
-                          <span className="text-xs font-medium truncate overflow-hidden">
-                            {timeScale === "day" || timeScale === "week" || positionStyle.width.includes("8") ? item.title : ''}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+      <Card className="overflow-hidden">
+        <div className="min-w-full overflow-x-auto">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
             </div>
-          </div>
-        </Card>
-      ) : (
-        <Card className="p-8 text-center">
-          <p className="text-muted-foreground">
-            No records with valid dates found. Please select different date fields.
-          </p>
-        </Card>
-      )}
+          ) : items.length > 0 ? (
+            <Timeline
+              groups={groups}
+              items={items}
+              defaultTimeStart={startTime}
+              defaultTimeEnd={endTime}
+              visibleTimeStart={startTime.valueOf()}
+              visibleTimeEnd={endTime.valueOf()}
+              canResize={!!onUpdate && !!endDateField && endDateField !== startDateField ? "both" : false}
+              canMove={!!onUpdate}
+              onItemMove={handleItemMove}
+              onItemResize={handleItemResize}
+              lineHeight={50}
+              itemHeightRatio={0.6}
+              sidebarWidth={200}
+              minZoom={24 * 60 * 60 * 1000} // 1 day minimum zoom
+              maxZoom={365 * 24 * 60 * 60 * 1000} // 1 year maximum zoom
+              stackItems
+              sidebarContent={<div className="p-3 font-medium">Items</div>}
+              className="dark:bg-gradient-to-r dark:from-gray-800 dark:to-gray-900"
+              timeSteps={{
+                day: 1,
+                month: 1,
+                year: 1,
+                hour: 1,
+                minute: 15,
+                second: 1
+              }}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-64">
+              <p className="text-muted-foreground">
+                No records with valid dates found. Please select different date fields.
+              </p>
+            </div>
+          )}
+        </div>
+      </Card>
     </div>
   );
 };
