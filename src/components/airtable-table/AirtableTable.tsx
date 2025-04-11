@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   Card,
@@ -386,6 +385,11 @@ const AirtableTable = ({
     [onRowClick, handleEdit]
   );
 
+  const currentViewName = useMemo(() => {
+    const view = table.views?.find((view) => view.id === currentView);
+    return view ? view.name : "Default View";
+  }, [table.views, currentView]);
+
   if (isLoading) {
     return (
       <Card className={className}>
@@ -482,11 +486,6 @@ const AirtableTable = ({
     );
   };
 
-  const currentViewName = useMemo(() => {
-    const view = table.views?.find(view => view.id === currentView);
-    return view ? view.name : "Default View";
-  }, [table.views, currentView]);
-
   return (
     <Card className={className}>
       <CardHeader>
@@ -538,9 +537,15 @@ const AirtableTable = ({
                   {table.views.map((view) => (
                     <SelectItem key={view.id} value={view.id}>
                       <div className="flex items-center">
-                        {view.name === "Grid" && <LayoutGrid className="h-4 w-4 mr-2" />}
-                        {view.name === "List" && <List className="h-4 w-4 mr-2" />}
-                        {!["Grid", "List"].includes(view.name) && <Grid className="h-4 w-4 mr-2" />}
+                        {view.name === "Grid" && (
+                          <LayoutGrid className="h-4 w-4 mr-2" />
+                        )}
+                        {view.name === "List" && (
+                          <List className="h-4 w-4 mr-2" />
+                        )}
+                        {!["Grid", "List"].includes(view.name) && (
+                          <Grid className="h-4 w-4 mr-2" />
+                        )}
                         {view.name}
                       </div>
                     </SelectItem>
@@ -555,14 +560,17 @@ const AirtableTable = ({
             <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
               {Object.entries(filters).map(([fieldName, value]) => {
                 if (value === null || value === "") return null;
-                const field = table.fields.find(f => f.name === fieldName);
-                const displayValue = typeof value === 'boolean' 
-                  ? (value ? 'Yes' : 'No') 
-                  : String(value);
-                
+                const field = table.fields.find((f) => f.name === fieldName);
+                const displayValue =
+                  typeof value === "boolean"
+                    ? value
+                      ? "Yes"
+                      : "No"
+                    : String(value);
+
                 return (
-                  <Tag 
-                    key={fieldName} 
+                  <Tag
+                    key={fieldName}
                     variant="outline"
                     onRemove={() => handleFilterChange(fieldName, null)}
                   >
@@ -570,10 +578,10 @@ const AirtableTable = ({
                   </Tag>
                 );
               })}
-              
+
               {Object.keys(filters).length > 0 && (
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   size="sm"
                   className="h-6 px-2"
                   onClick={() => setFilters({})}
@@ -699,9 +707,9 @@ const AirtableTable = ({
                           key={record.id}
                           className={`animate-fade-in transition-colors ${"cursor-pointer hover:bg-muted/50"}`}
                           onClick={() => handleRowClick(record)}
-                          style={{ 
-                            animationDelay: `${index * 30}ms`, 
-                            height: "60px" 
+                          style={{
+                            animationDelay: `${index * 30}ms`,
+                            height: "60px",
                           }}
                         >
                           {displayFields.length > 0 && (
@@ -752,9 +760,9 @@ const AirtableTable = ({
                           key={record.id}
                           className={`animate-fade-in transition-colors ${"cursor-pointer hover:bg-muted/50"}`}
                           onClick={() => handleRowClick(record)}
-                          style={{ 
+                          style={{
                             animationDelay: `${index * 30}ms`,
-                            height: "60px"
+                            height: "60px",
                           }}
                         >
                           {displayFields.slice(1).map((field) => (
@@ -800,9 +808,9 @@ const AirtableTable = ({
                           <TableRow
                             key={record.id}
                             className="animate-fade-in transition-colors"
-                            style={{ 
+                            style={{
                               animationDelay: `${index * 30}ms`,
-                              height: "60px"
+                              height: "60px",
                             }}
                           >
                             <TableCell className="align-middle p-2">
