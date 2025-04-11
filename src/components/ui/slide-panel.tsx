@@ -22,6 +22,8 @@ interface SlidePanelProps {
   onOpenAutoFocus?: (e: Event) => void;
   headerContent?: React.ReactNode;
   headerClassName?: string;
+  bodyClassName?: string;
+  footerClassName?: string;
 }
 
 export function SlidePanel({
@@ -36,6 +38,8 @@ export function SlidePanel({
   onOpenAutoFocus,
   headerContent,
   headerClassName,
+  bodyClassName,
+  footerClassName,
 }: SlidePanelProps) {
   useEffect(() => {
     // IMPORTANT: This is a workaround to prevent the Sheet from not removing the pointer events when the sheet is closed
@@ -55,7 +59,7 @@ export function SlidePanel({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         className={cn(
-          "w-full sm:max-w-md md:max-w-3xl flex flex-col p-0 h-[calc(100vh-50px)]",
+          "w-full sm:max-w-md md:max-w-3xl flex flex-col p-0 h-[calc(100vh-50px)] gap-0",
           className
         )}
         side={side}
@@ -68,9 +72,14 @@ export function SlidePanel({
             {headerContent && headerContent}
           </SheetHeader>
         )}
-        <div className="flex-1 overflow-auto p-6">{children}</div>
+        <div className={cn("flex-grow overflow-auto p-6", bodyClassName)}>
+          {children}
+        </div>
         {footer && (
-          <div className="border-t p-4 mt-auto" id="slide-panel-footer-portal">
+          <div
+            className={cn("border-t p-4 mt-auto", footerClassName)}
+            id="slide-panel-footer-portal"
+          >
             {footer}
           </div>
         )}

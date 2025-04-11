@@ -23,11 +23,11 @@ export const CustomTableService = {
     return response.data;
   },
 
-  async getTableSchema(table: string) {
+  async getTableSchema(tableId: string) {
     const response = await supabase
       .from("data_tables")
       .select("*, fields:data_fields(*)")
-      .eq("name", table)
+      .eq("external_id", tableId)
       .single();
 
     return response.data;

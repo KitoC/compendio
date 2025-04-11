@@ -188,7 +188,7 @@ const FormBuilder = ({
   }, [values, buttonPortalId]);
 
   const footer = (
-    <CardFooter className={`"flex justify-between" ${footerClassname}`}>
+    <CardFooter className={`flex justify-between ${footerClassname}`}>
       {config.showReset && (
         <Button
           type="button"
@@ -244,7 +244,7 @@ const FormBuilder = ({
           </CardHeader>
         )}
 
-        <CardContent className="space-y-6">
+        <CardContent className={cn("space-y-6", hideTitles && "pt-6")}>
           {config.sections.map((section) => (
             <div key={section.id} className="space-y-4">
               {(section.title || section.description) && (

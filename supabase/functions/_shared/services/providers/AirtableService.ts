@@ -102,13 +102,13 @@ export class AirtableService extends BaseExternalService {
         method: "GET",
       }
     );
+    const json = await response.json();
 
     if (!response.ok) {
-      const json = await response.json();
       this.throwError("Failed to retrieve record", json, response.status);
     }
 
-    return response.json();
+    return json;
   }
 
   async createRecord(tableName: string, fields: object) {

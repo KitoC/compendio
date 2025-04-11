@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -92,7 +92,7 @@ const AirtableTable = ({
   );
   const [isCreating, setIsCreating] = useState(false);
   const [deleteRecordId, setDeleteRecordId] = useState<string | null>(null);
-  const [filters, setFilters] = useState<Record<string, any>>({});
+  const [filters, setFilters] = useState<Record<string, unknown>>({});
   const [filterOpen, setFilterOpen] = useState<string | null>(null);
 
   const permissions: UserPermissions = {
@@ -156,8 +156,8 @@ const AirtableTable = ({
 
         const field = table.fields.find((f) => f.name === fieldName);
         if (!field) return false;
-        const recordDate = new Date(fieldValue).setHours(0, 0, 0, 0);
-        const filterDate = new Date(value).setHours(0, 0, 0, 0);
+        const recordDate = new Date(fieldValue as string).setHours(0, 0, 0, 0);
+        const filterDate = new Date(value as string).setHours(0, 0, 0, 0);
 
         switch (field.type) {
           case "checkbox":
@@ -228,10 +228,13 @@ const AirtableTable = ({
     }
   };
 
-  const handleEdit = (record: AirtableRecord) => {
-    setEditingRecord(record);
-    setIsCreating(false);
-  };
+  const handleEdit = useCallback(
+    (record: AirtableRecord) => {
+      setEditingRecord(record);
+      setIsCreating(false);
+    },
+    [setEditingRecord, setIsCreating]
+  );
 
   const handleCreate = () => {
     setEditingRecord(null);
@@ -269,7 +272,7 @@ const AirtableTable = ({
     }
   };
 
-  const handleFilterChange = (fieldName: string, value: any) => {
+  const handleFilterChange = (fieldName: string, value: unknown) => {
     setFilters((prev) => ({
       ...prev,
       [fieldName]: value,
@@ -318,7 +321,7 @@ const AirtableTable = ({
   };
 
   const displayFields = useMemo(() => {
-    let fields = [...organizedFields];
+    const fields = [...organizedFields];
 
     if (isMobile) {
       return fields.slice(0, 2);
@@ -328,6 +331,17 @@ const AirtableTable = ({
   }, [organizedFields, isMobile]);
 
   const totalPages = Math.ceil(processedRecords.length / pageSize);
+
+  const handleRowClick = useCallback(
+    (record: AirtableRecord) => {
+      if (onRowClick) {
+        onRowClick(record);
+      } else {
+        handleEdit(record);
+      }
+    },
+    [onRowClick, handleEdit]
+  );
 
   if (isLoading) {
     return (
@@ -571,10 +585,8 @@ const AirtableTable = ({
                       paginatedRecords.map((record, index) => (
                         <TableRow
                           key={record.id}
-                          className={`animate-fade-in transition-colors ${
-                            onRowClick ? "cursor-pointer hover:bg-muted/50" : ""
-                          }`}
-                          onClick={() => onRowClick && onRowClick(record)}
+                          className={`animate-fade-in transition-colors ${"cursor-pointer hover:bg-muted/50"}`}
+                          onClick={() => handleRowClick(record)}
                           style={{ animationDelay: `${index * 30}ms` }}
                         >
                           {displayFields.length > 0 && (
@@ -623,10 +635,8 @@ const AirtableTable = ({
                       paginatedRecords.map((record, index) => (
                         <TableRow
                           key={record.id}
-                          className={`animate-fade-in transition-colors ${
-                            onRowClick ? "cursor-pointer hover:bg-muted/50" : ""
-                          }`}
-                          onClick={() => onRowClick && onRowClick(record)}
+                          className={`animate-fade-in transition-colors ${"cursor-pointer hover:bg-muted/50"}`}
+                          onClick={() => handleRowClick(record)}
                           style={{ animationDelay: `${index * 30}ms` }}
                         >
                           {displayFields.slice(1).map((field) => (

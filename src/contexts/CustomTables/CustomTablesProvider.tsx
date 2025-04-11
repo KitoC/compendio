@@ -24,6 +24,9 @@ export const CustomTablesProvider: React.FC<{
 
     try {
       await CustomTableService.syncSchema();
+      const schema = await CustomTableService.getSchema();
+
+      setCustomTables(schema);
     } catch (err) {
       console.error("Failed to sync schema:", err);
       setSyncingFailed(true);

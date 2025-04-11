@@ -1,4 +1,3 @@
-
 import React from "react";
 import { AirtableField } from "@/types/airtable";
 import CheckboxRenderer from "./CheckboxRenderer";
@@ -16,10 +15,12 @@ import PercentRenderer from "./PercentRenderer";
 import PhoneRenderer from "./PhoneRenderer";
 import MultipleLookupRenderer from "./MultipleLookupRenderer";
 import DefaultRenderer from "./DefaultRenderer";
+import MultipleRecordLinksRenderer from "./MultipleRecordLinksRenderer";
+import RollupRenderer from "./RollupRenderer";
 
 export interface FieldRendererProps {
   field: AirtableField;
-  value: any;
+  value: unknown;
 }
 
 /**
@@ -27,7 +28,7 @@ export interface FieldRendererProps {
  */
 export const getFieldRenderer = (
   field: AirtableField,
-  value: any
+  value: unknown
 ): React.ReactNode => {
   if (value === null || value === undefined) {
     return <span className="text-muted-foreground">-</span>;
@@ -51,6 +52,7 @@ export const getFieldRenderer = (
     case "count":
     case "formula":
     case "lookup":
+    case "aiText":
       return <TextRenderer field={field} value={value} />;
     case "multipleLookupValues":
       return <MultipleLookupRenderer field={field} value={value} />;
@@ -72,6 +74,10 @@ export const getFieldRenderer = (
       return <PercentRenderer field={field} value={value} />;
     case "phoneNumber":
       return <PhoneRenderer field={field} value={value} />;
+    case "multipleRecordLinks":
+      return <MultipleRecordLinksRenderer field={field} value={value} />;
+    case "rollup":
+      return <RollupRenderer field={field} value={value} />;
     default:
       return <DefaultRenderer field={field} value={value} />;
   }

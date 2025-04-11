@@ -23,14 +23,19 @@ import { AirtableRecord } from "@/components/airtable-table/types";
 import { useTenant } from "@/contexts/TenantContext";
 import { useCustomTables } from "@/contexts/CustomTables";
 
+interface AirtableTablePageParams extends Record<string, string> {
+  id: string;
+}
+
 const AirtableTablePage = () => {
-  const { tenantData } = useTenant();
-  const { id: tableName, ...params } = useParams<{
-    id: string;
-  }>();
+  const { id: tableName } = useParams<AirtableTablePageParams>();
+
+  const { tables } = useCustomTables();
+
+  const table = tables.find((table) => table.name === tableName);
 
   const { data: tableSchema, isLoading: isLoadingSchema } =
-    useAirtableTableSchemaQuery(tableName);
+    useAirtableTableSchemaQuery(table?.external_id);
   const {
     records,
     isLoading: isLoadingRecords,
@@ -38,7 +43,7 @@ const AirtableTablePage = () => {
     createRecord,
     updateRecord,
     deleteRecord,
-  } = useAirtableRecordsQuery({ tableName });
+  } = useAirtableRecordsQuery({ tableId: table?.external_id });
 
   const getFormConfig = (config: FormConfig, record: AirtableRecord | null) => {
     return config;
@@ -55,7 +60,7 @@ const AirtableTablePage = () => {
 
   const handleUpdate = async (record: AirtableRecord) => {
     try {
-      await updateRecord(record.id, record.fields || {});
+      await updateRecord(record);
       refetch();
     } catch (error) {
       console.error("Error updating record:", error);
@@ -70,8 +75,6 @@ const AirtableTablePage = () => {
       console.error("Error deleting record:", error);
     }
   };
-
-  console.log("records", records);
 
   if (isLoadingSchema) {
     return (
@@ -108,7 +111,8 @@ const AirtableTablePage = () => {
       </Page>
     );
   }
-
+  console.log("tableSchema", tableSchema);
+  console.log("records", records);
   return (
     <AirtableTable
       className="rounded-none border-none h-full"

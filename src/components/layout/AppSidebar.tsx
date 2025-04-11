@@ -17,9 +17,7 @@ import {
   ArrowLeft,
   LogOut,
   Settings,
-  Users2,
   Table2,
-  Palette,
   Bot,
   LayoutDashboard,
 } from "lucide-react";

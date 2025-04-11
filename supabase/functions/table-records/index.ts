@@ -31,10 +31,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
     switch (method) {
       case "GET":
         if (recordId) {
-          const { record: data } = await airtableService.retrieveRecord(
-            table,
-            recordId
-          );
+          const data = await airtableService.retrieveRecord(table, recordId);
 
           return Response.json({ data }, { headers: corsHeaders });
         } else {

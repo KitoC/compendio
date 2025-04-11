@@ -20,7 +20,8 @@ const badgeVariants = cva(
         error: "bg-red-200 text-red-800 border-red-300",
         warning: "bg-yellow-200 text-yellow-800 border-yellow-300",
         info: "bg-blue-200 text-blue-800 border-blue-300",
-        muted: "bg-gray-300 text-gray-800 border-gray-300",
+        muted:
+          "bg-gray-300 text-gray-800 border-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-700",
         "outline-success": "border-green-200 bg-green-50 text-green-800",
         "outline-primary": "border-primary bg-primary/20 text-primary",
         "outline-error": "border-red-200 bg-red-50 text-red-800",

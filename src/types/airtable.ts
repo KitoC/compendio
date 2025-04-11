@@ -1,4 +1,3 @@
-
 export interface AirtableChoice {
   id: string;
   name: string;
@@ -56,12 +55,19 @@ export interface AirtableField {
   isLocked?: boolean;
 }
 
+export interface AirtableView {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 export interface AirtableTable {
   id: string;
   name: string;
   primaryFieldId: string;
   fields: AirtableField[];
   description?: string;
+  views: AirtableView[];
 }
 
 export interface AirtableBase {
@@ -80,6 +86,6 @@ export interface AirtableBaseListResponse {
 
 export interface AirtableRecord {
   id: string;
-  fields: Record<string, any>;
+  fields: Record<string, unknown>;
   createdTime?: string;
 }
