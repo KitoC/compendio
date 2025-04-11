@@ -1,30 +1,54 @@
-import { cn } from "@/lib/utils";
-import { Badge, BadgeProps } from "./badge";
-import { X } from "lucide-react";
 
-interface TagProps extends BadgeProps {
-  children: React.ReactNode;
-  onRemove?: (e: React.MouseEvent<SVGSVGElement>) => void;
-  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
+import * as React from "react";
+import { X } from "lucide-react";
+import { cva, type VariantProps } from "class-variance-authority";
+
+import { cn } from "@/lib/utils";
+
+const tagVariants = cva(
+  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  {
+    variants: {
+      variant: {
+        default:
+          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+        secondary:
+          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        destructive:
+          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+        outline: "text-foreground",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+);
+
+export interface TagProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof tagVariants> {
+  onRemove?: () => void;
 }
 
-const Tag = ({ children, ...props }: TagProps) => {
+function Tag({ className, variant, onRemove, children, ...props }: TagProps) {
   return (
-    <Badge
-      {...props}
-      className={cn("!rounded-sm px-2", props.className)}
-      aria-role={props.onClick || props.onRemove ? "button" : undefined}
-      onClick={props.onClick}
-    >
+    <div className={cn(tagVariants({ variant }), className)} {...props}>
       {children}
-      {props.onRemove && (
-        <X
-          className="ml-1 h-4 w-4 hover:cursor-pointer hover:text-red-500"
-          onClick={(e) => props.onRemove?.(e)}
-        />
+      {onRemove && (
+        <button
+          className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+        >
+          <X className="h-3 w-3" />
+          <span className="sr-only">Remove</span>
+        </button>
       )}
-    </Badge>
+    </div>
   );
-};
+}
 
-export { Tag };
+export { Tag, tagVariants };

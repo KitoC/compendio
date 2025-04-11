@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   Card,
@@ -18,26 +19,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Plus,
   Search,
   Download,
-  ArrowUpDown,
   SlidersHorizontal,
   Filter,
   RefreshCw,
-  Grid,
-  List,
   LayoutGrid,
+  Calendar as CalendarIcon,
+  Table,
+  Kanban,
+  GanttChart,
+  ArrowUpDown,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -65,6 +60,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tag } from "@/components/ui/tag";
+import { GridView, CalendarView, GalleryView, KanbanView, TimelineView, ViewType } from "./views";
 
 const defaultPermissions: UserPermissions = {
   create: true,
@@ -93,7 +89,6 @@ const AirtableTable = ({
   onRefresh,
 }: AirtableTableProps) => {
   const isMobile = useIsMobile();
-  const tableContainerRef = useRef<HTMLDivElement>(null);
 
   // View state
   const [currentView, setCurrentView] = useState<string | null>(
@@ -111,6 +106,7 @@ const AirtableTable = ({
   const [deleteRecordId, setDeleteRecordId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Record<string, unknown>>({});
   const [filterOpen, setFilterOpen] = useState<string | null>(null);
+  const [viewType, setViewType] = useState<ViewType>("grid");
 
   const permissions: UserPermissions = {
     ...defaultPermissions,
@@ -385,10 +381,53 @@ const AirtableTable = ({
     [onRowClick, handleEdit]
   );
 
-  const currentViewName = useMemo(() => {
-    const view = table.views?.find((view) => view.id === currentView);
-    return view ? view.name : "Default View";
+  const currentViewObj = useMemo(() => {
+    if (!table.views || !currentView) return null;
+    return table.views.find((view) => view.id === currentView);
   }, [table.views, currentView]);
+
+  const renderActionsCell = (record: AirtableRecord) => {
+    return (
+      <div className="flex justify-end">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4"
+              >
+                <circle cx="12" cy="12" r="1" />
+                <circle cx="19" cy="12" r="1" />
+                <circle cx="5" cy="12" r="1" />
+              </svg>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {permissions.update && (
+              <DropdownMenuItem onClick={() => handleEdit(record)}>
+                Edit
+              </DropdownMenuItem>
+            )}
+            {permissions.delete && (
+              <DropdownMenuItem
+                className="text-destructive"
+                onClick={() => setDeleteRecordId(record.id)}
+              >
+                Delete
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -443,47 +482,31 @@ const AirtableTable = ({
     );
   }
 
-  const renderActionsCell = (record: AirtableRecord) => {
-    return (
-      <div className="flex justify-end">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-4 w-4"
-              >
-                <circle cx="12" cy="12" r="1" />
-                <circle cx="19" cy="12" r="1" />
-                <circle cx="5" cy="12" r="1" />
-              </svg>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {permissions.update && (
-              <DropdownMenuItem onClick={() => handleEdit(record)}>
-                Edit
-              </DropdownMenuItem>
-            )}
-            {permissions.delete && (
-              <DropdownMenuItem
-                className="text-destructive"
-                onClick={() => setDeleteRecordId(record.id)}
-              >
-                Delete
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    );
+  const renderView = () => {
+    const commonProps = {
+      records: pagination ? paginatedRecords : processedRecords,
+      table,
+      isLoading,
+      onRowClick: handleRowClick,
+      emptyMessage,
+      sortField,
+      sortDirection,
+      handleSort,
+    };
+
+    switch (viewType) {
+      case "calendar":
+        return <CalendarView {...commonProps} />;
+      case "gallery":
+        return <GalleryView {...commonProps} />;
+      case "kanban":
+        return <KanbanView {...commonProps} />;
+      case "timeline":
+        return <TimelineView {...commonProps} />;
+      case "grid":
+      default:
+        return <GridView {...commonProps} />;
+    }
   };
 
   return (
@@ -522,76 +545,118 @@ const AirtableTable = ({
       <CardContent>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
           {/* View selector */}
-          {table.views && table.views.length > 0 && (
-            <div className="w-full sm:w-64">
+          <div className="w-full sm:w-64">
+            {table.views && table.views.length > 0 ? (
               <Select
                 value={currentView || ""}
                 onValueChange={handleViewChange}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select view">
-                    {currentViewName}
+                    {currentViewObj?.name || "Default View"}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {table.views.map((view) => (
                     <SelectItem key={view.id} value={view.id}>
                       <div className="flex items-center">
-                        {view.name === "Grid" && (
-                          <LayoutGrid className="h-4 w-4 mr-2" />
-                        )}
-                        {view.name === "List" && (
-                          <List className="h-4 w-4 mr-2" />
-                        )}
-                        {!["Grid", "List"].includes(view.name) && (
-                          <Grid className="h-4 w-4 mr-2" />
-                        )}
                         {view.name}
                       </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-          )}
+            ) : (
+              <div className="h-9"></div> // Empty space for alignment
+            )}
+          </div>
 
-          {/* Applied filters display */}
-          {Object.keys(filters).length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
-              {Object.entries(filters).map(([fieldName, value]) => {
-                if (value === null || value === "") return null;
-                const field = table.fields.find((f) => f.name === fieldName);
-                const displayValue =
-                  typeof value === "boolean"
-                    ? value
-                      ? "Yes"
-                      : "No"
-                    : String(value);
-
-                return (
-                  <Tag
-                    key={fieldName}
-                    variant="outline"
-                    onRemove={() => handleFilterChange(fieldName, null)}
-                  >
-                    {field?.name || fieldName}: {displayValue}
-                  </Tag>
-                );
-              })}
-
-              {Object.keys(filters).length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 px-2"
-                  onClick={() => setFilters({})}
-                >
-                  Clear all
-                </Button>
-              )}
-            </div>
-          )}
+          {/* View type selector */}
+          <div className="flex gap-2">
+            <Button
+              variant={viewType === "grid" ? "default" : "outline"}
+              size="icon"
+              onClick={() => setViewType("grid")}
+              className="h-9 w-9"
+              title="Grid View"
+            >
+              <Table className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewType === "calendar" ? "default" : "outline"}
+              size="icon"
+              onClick={() => setViewType("calendar")}
+              className="h-9 w-9"
+              title="Calendar View"
+            >
+              <CalendarIcon className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewType === "gallery" ? "default" : "outline"}
+              size="icon"
+              onClick={() => setViewType("gallery")}
+              className="h-9 w-9"
+              title="Gallery View"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewType === "kanban" ? "default" : "outline"}
+              size="icon"
+              onClick={() => setViewType("kanban")}
+              className="h-9 w-9"
+              title="Kanban View"
+            >
+              <Kanban className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewType === "timeline" ? "default" : "outline"}
+              size="icon"
+              onClick={() => setViewType("timeline")}
+              className="h-9 w-9"
+              title="Timeline View"
+            >
+              <GanttChart className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
+
+        {/* Applied filters display */}
+        {Object.keys(filters).length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-2 sm:mt-0 mb-4">
+            {Object.entries(filters).map(([fieldName, value]) => {
+              if (value === null || value === "") return null;
+              const field = table.fields.find((f) => f.name === fieldName);
+              const displayValue =
+                typeof value === "boolean"
+                  ? value
+                    ? "Yes"
+                    : "No"
+                  : String(value);
+
+              return (
+                <Tag
+                  key={fieldName}
+                  variant="outline"
+                  onRemove={() => handleFilterChange(fieldName, null)}
+                >
+                  {field?.name || fieldName}: {displayValue}
+                </Tag>
+              );
+            })}
+
+            {Object.keys(filters).length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2"
+                onClick={() => setFilters({})}
+              >
+                Clear all
+              </Button>
+            )}
+          </div>
+        )}
 
         {searchable && (
           <div className="flex items-center gap-2 mb-4">
@@ -677,163 +742,9 @@ const AirtableTable = ({
           </div>
         )}
 
-        <div className="rounded-md border overflow-hidden">
-          <div
-            className="relative w-full overflow-hidden"
-            ref={tableContainerRef}
-          >
-            <div className="flex w-full">
-              <div className="sticky left-0 z-10 bg-background shadow-sm">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      {displayFields.length > 0 && (
-                        <TableHead
-                          className="cursor-pointer select-none whitespace-nowrap"
-                          onClick={() => handleSort(displayFields[0].name)}
-                        >
-                          <div className="flex items-center space-x-1">
-                            <span>{displayFields[0].name}</span>
-                            <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                        </TableHead>
-                      )}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedRecords.length > 0 ? (
-                      paginatedRecords.map((record, index) => (
-                        <TableRow
-                          key={record.id}
-                          className={`animate-fade-in transition-colors ${"cursor-pointer hover:bg-muted/50"}`}
-                          onClick={() => handleRowClick(record)}
-                          style={{
-                            animationDelay: `${index * 30}ms`,
-                            height: "60px",
-                          }}
-                        >
-                          {displayFields.length > 0 && (
-                            <TableCell className="whitespace-nowrap align-middle p-2">
-                              <div className="h-full flex items-center">
-                                {formatFieldValue(
-                                  record.fields[displayFields[0].name],
-                                  displayFields[0]
-                                )}
-                              </div>
-                            </TableCell>
-                          )}
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell className="h-24 text-center">
-                          {emptyMessage}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+        {renderView()}
 
-              <div className="overflow-x-auto flex-grow">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      {displayFields.slice(1).map((field) => (
-                        <TableHead
-                          key={field.id}
-                          className="cursor-pointer select-none whitespace-nowrap"
-                          onClick={() => handleSort(field.name)}
-                        >
-                          <div className="flex items-center space-x-1">
-                            <span>{field.name}</span>
-                            <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedRecords.length > 0 ? (
-                      paginatedRecords.map((record, index) => (
-                        <TableRow
-                          key={record.id}
-                          className={`animate-fade-in transition-colors ${"cursor-pointer hover:bg-muted/50"}`}
-                          onClick={() => handleRowClick(record)}
-                          style={{
-                            animationDelay: `${index * 30}ms`,
-                            height: "60px",
-                          }}
-                        >
-                          {displayFields.slice(1).map((field) => (
-                            <TableCell
-                              key={field.id}
-                              className="whitespace-nowrap align-middle p-2"
-                            >
-                              <div className="h-full flex items-center">
-                                {formatFieldValue(
-                                  record.fields[field.name],
-                                  field
-                                )}
-                              </div>
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell
-                          colSpan={displayFields.length - 1}
-                          className="h-24 text-center"
-                        >
-                          {emptyMessage}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {(permissions.update || permissions.delete) && (
-                <div className="sticky right-0 z-10 bg-background shadow-sm">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[80px]"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paginatedRecords.length > 0 ? (
-                        paginatedRecords.map((record, index) => (
-                          <TableRow
-                            key={record.id}
-                            className="animate-fade-in transition-colors"
-                            style={{
-                              animationDelay: `${index * 30}ms`,
-                              height: "60px",
-                            }}
-                          >
-                            <TableCell className="align-middle p-2">
-                              <div className="h-full flex items-center justify-end">
-                                {renderActionsCell(record)}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell className="h-24"></TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {pagination && (
+        {pagination && viewType === "grid" && (
           <div className="flex items-center justify-between space-x-2 py-4">
             <div className="text-sm text-muted-foreground">
               Showing {(currentPage - 1) * pageSize + 1}-
