@@ -11,7 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { GripVertical, MoveVertical } from "lucide-react";
+import { GripVertical } from "lucide-react";
+import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 
 const KanbanView = ({
   records,
@@ -31,10 +32,6 @@ const KanbanView = ({
   const [selectedField, setSelectedField] = useState<string | null>(
     selectFields.length > 0 ? selectFields[0].name : null
   );
-
-  // State for drag and drop
-  const [draggedRecord, setDraggedRecord] = useState<string | null>(null);
-  const [draggedOver, setDraggedOver] = useState<string | null>(null);
 
   // Get the primary field for the table
   const primaryField = useMemo(() => {
@@ -90,54 +87,48 @@ const KanbanView = ({
     return groups;
   }, [records, selectedField, fieldOptions]);
 
-  const handleDragStart = (recordId: string) => {
-    setDraggedRecord(recordId);
-  };
+  const handleDragEnd = async (result: DropResult) => {
+    const { source, destination } = result;
+    
+    // If dropped outside a droppable area
+    if (!destination) return;
 
-  const handleDragOver = (e: React.DragEvent, columnName: string) => {
-    e.preventDefault();
-    setDraggedOver(columnName);
-  };
-
-  const handleDragLeave = () => {
-    setDraggedOver(null);
-  };
-
-  const handleDrop = async (e: React.DragEvent, targetColumnName: string) => {
-    e.preventDefault();
-    if (!draggedRecord || !selectedField || !onUpdate) {
-      setDraggedOver(null);
-      setDraggedRecord(null);
+    // If dropped in the same column and position
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) {
       return;
     }
 
-    // Find the record that was dragged
-    const recordToUpdate = records.find((record) => record.id === draggedRecord);
-    if (!recordToUpdate) {
-      setDraggedOver(null);
-      setDraggedRecord(null);
-      return;
+    // Get the record ID from the draggable ID
+    const recordId = result.draggableId;
+    const sourceGroup = source.droppableId;
+    const destinationGroup = destination.droppableId;
+    
+    // If dropped in a different column, update the record with the new status/value
+    if (sourceGroup !== destinationGroup && onUpdate) {
+      // Find the record that was dragged
+      const recordToUpdate = records.find((record) => record.id === recordId);
+      if (!recordToUpdate) return;
+      
+      // Create a copy of the record with the updated field value
+      const updatedRecord = {
+        ...recordToUpdate,
+        fields: {
+          ...recordToUpdate.fields,
+          [selectedField as string]: 
+            destinationGroup === "Uncategorized" ? null : destinationGroup,
+        },
+      };
+
+      // Update the record
+      try {
+        await onUpdate(updatedRecord);
+      } catch (error) {
+        console.error("Error updating record:", error);
+      }
     }
-
-    // Create a copy of the record with the updated field value
-    const updatedRecord = {
-      ...recordToUpdate,
-      fields: {
-        ...recordToUpdate.fields,
-        [selectedField]: targetColumnName === "Uncategorized" ? null : targetColumnName,
-      },
-    };
-
-    // Update the record
-    try {
-      await onUpdate(updatedRecord);
-    } catch (error) {
-      console.error("Error updating record:", error);
-    }
-
-    // Reset drag state
-    setDraggedOver(null);
-    setDraggedRecord(null);
   };
 
   if (selectFields.length === 0) {
@@ -175,111 +166,119 @@ const KanbanView = ({
         </Select>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {Object.entries(groupedRecords).map(([group, groupRecords]) => {
-          if (groupRecords.length === 0) return null;
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <div className="flex gap-4 overflow-x-auto pb-4">
+          {Object.entries(groupedRecords).map(([group, groupRecords]) => {
+            if (groupRecords.length === 0) return null;
 
-          const fieldForColor = table.fields.find(
-            (f) => f.name === selectedField
-          );
-          
-          let groupColor = "bg-muted";
-
-          // Try to find matching option color
-          if (fieldForColor && fieldForColor.options) {
-            const option = fieldForColor.options.choices.find(
-              (opt) => (opt.name || opt.value) === group
+            const fieldForColor = table.fields.find(
+              (f) => f.name === selectedField
             );
-            if (option && option.color) {
-              groupColor = `bg-${option.color.toLowerCase()}-100`;
+            
+            let groupColor = "bg-muted";
+
+            // Try to find matching option color
+            if (fieldForColor && fieldForColor.options) {
+              const option = fieldForColor.options.choices.find(
+                (opt) => (opt.name || opt.value) === group
+              );
+              if (option && option.color) {
+                groupColor = `bg-${option.color.toLowerCase()}-100`;
+              }
             }
-          }
 
-          const isColumnDraggedOver = draggedOver === group;
-
-          return (
-            <div 
-              key={group} 
-              className="flex-shrink-0 w-80"
-              onDragOver={(e) => handleDragOver(e, group)}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, group)}
-            >
-              <Card 
-                className={`${isColumnDraggedOver ? 'ring-2 ring-primary' : ''} transition-all duration-200`}
+            return (
+              <div 
+                key={group} 
+                className="flex-shrink-0 w-80"
               >
-                <CardHeader className={`${groupColor} py-3`}>
-                  <div className="flex justify-between items-center">
-                    <CardTitle className="text-md font-medium">
-                      {group}
-                    </CardTitle>
-                    <Badge variant="secondary">{groupRecords.length}</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent 
-                  className={`p-2 max-h-[70vh] overflow-y-auto ${isColumnDraggedOver ? 'bg-muted/30' : ''}`}
-                >
-                  {groupRecords.map((record) => (
-                    <div
-                      key={record.id}
-                      className={`p-3 mb-2 bg-background border rounded-md cursor-move hover:shadow-sm transition-shadow relative ${
-                        draggedRecord === record.id ? "opacity-50" : ""
-                      }`}
-                      draggable
-                      onDragStart={() => handleDragStart(record.id)}
-                      onClick={(e) => {
-                        // Only trigger row click if it's not a drag operation
-                        if (e.target === e.currentTarget) {
-                          onRowClick(record);
-                        }
-                      }}
-                    >
-                      <div className="absolute left-1 top-1/2 -translate-y-1/2 opacity-30 hover:opacity-70 text-muted-foreground">
-                        <GripVertical size={16} />
-                      </div>
-                      <div className="font-medium truncate pl-5">
-                        {primaryField
-                          ? formatFieldValue(
-                              record.fields[primaryField.name],
-                              primaryField
-                            )
-                          : record.id}
-                      </div>
-                      <div className="text-sm text-muted-foreground mt-1 pl-5">
-                        {/* Show 1-2 fields as details */}
-                        {table.fields
-                          .filter(
-                            (f) =>
-                              f.id !== primaryField?.id &&
-                              f.name !== selectedField
-                          )
-                          .slice(0, 2)
-                          .map((field) => {
-                            const value = record.fields[field.name];
-                            if (value === undefined || value === null)
-                              return null;
+                <Card>
+                  <CardHeader className={`${groupColor} py-3`}>
+                    <div className="flex justify-between items-center">
+                      <CardTitle className="text-md font-medium">
+                        {group}
+                      </CardTitle>
+                      <Badge variant="secondary">{groupRecords.length}</Badge>
+                    </div>
+                  </CardHeader>
+                  <Droppable droppableId={group}>
+                    {(provided, snapshot) => (
+                      <CardContent 
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={`p-2 max-h-[70vh] overflow-y-auto ${snapshot.isDraggingOver ? 'bg-muted/30' : ''}`}
+                      >
+                        {groupRecords.map((record, index) => (
+                          <Draggable 
+                            key={record.id} 
+                            draggableId={record.id} 
+                            index={index}
+                          >
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                className={`p-3 mb-2 bg-background border rounded-md cursor-move hover:shadow-sm transition-shadow relative ${
+                                  snapshot.isDragging ? "shadow-md" : ""
+                                }`}
+                                onClick={() => onRowClick(record)}
+                                style={provided.draggableProps.style}
+                              >
+                                <div 
+                                  className="absolute left-1 top-1/2 -translate-y-1/2 opacity-30 hover:opacity-70 text-muted-foreground"
+                                  {...provided.dragHandleProps}
+                                >
+                                  <GripVertical size={16} />
+                                </div>
+                                <div className="font-medium truncate pl-5">
+                                  {primaryField
+                                    ? formatFieldValue(
+                                        record.fields[primaryField.name],
+                                        primaryField
+                                      )
+                                    : record.id}
+                                </div>
+                                <div className="text-sm text-muted-foreground mt-1 pl-5">
+                                  {/* Show 1-2 fields as details */}
+                                  {table.fields
+                                    .filter(
+                                      (f) =>
+                                        f.id !== primaryField?.id &&
+                                        f.name !== selectedField
+                                    )
+                                    .slice(0, 2)
+                                    .map((field) => {
+                                      const value = record.fields[field.name];
+                                      if (value === undefined || value === null)
+                                        return null;
 
-                            return (
-                              <div key={field.id} className="truncate">
-                                {field.name}:{" "}
-                                {formatFieldValue(value, field, true)}
+                                      return (
+                                        <div key={field.id} className="truncate">
+                                          {field.name}:{" "}
+                                          {formatFieldValue(value, field, true)}
+                                        </div>
+                                      );
+                                    })}
+                                </div>
                               </div>
-                            );
-                          })}
-                      </div>
-                    </div>
-                  ))}
-                  {groupRecords.length === 0 && (
-                    <div className="py-4 text-center text-muted-foreground text-sm">
-                      Drop items here
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          );
-        })}
-      </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                        {groupRecords.length === 0 && (
+                          <div className="py-4 text-center text-muted-foreground text-sm">
+                            Drop items here
+                          </div>
+                        )}
+                      </CardContent>
+                    )}
+                  </Droppable>
+                </Card>
+              </div>
+            );
+          })}
+        </div>
+      </DragDropContext>
     </div>
   );
 };

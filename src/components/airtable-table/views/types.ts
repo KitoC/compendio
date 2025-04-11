@@ -1,9 +1,10 @@
 
-import { AirtableRecord, AirtableTableSchema } from "../types";
+import { AirtableRecord } from "../types";
+import { AirtableTable } from "@/types/airtable";
 
 export interface AirtableViewProps {
   records: AirtableRecord[];
-  table: AirtableTableSchema;
+  table: AirtableTable;
   isLoading: boolean;
   onRowClick: (record: AirtableRecord) => void;
   onUpdate?: (record: AirtableRecord) => Promise<void>;
@@ -16,4 +17,3 @@ export interface AirtableViewProps {
 export type ViewType = "grid" | "calendar" | "gallery" | "kanban" | "timeline";
 
 export type TimeScale = "day" | "week" | "fortnight" | "month" | "quarter" | "year";
-
