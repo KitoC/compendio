@@ -772,6 +772,7 @@ export type Database = {
       }
       data_tables: {
         Row: {
+          config: Json | null
           created_at: string | null
           deleted_at: string | null
           description: string | null
@@ -787,8 +788,10 @@ export type Database = {
           source: string | null
           tenant_id: string
           updated_at: string | null
+          views: Json | null
         }
         Insert: {
+          config?: Json | null
           created_at?: string | null
           deleted_at?: string | null
           description?: string | null
@@ -804,8 +807,10 @@ export type Database = {
           source?: string | null
           tenant_id: string
           updated_at?: string | null
+          views?: Json | null
         }
         Update: {
+          config?: Json | null
           created_at?: string | null
           deleted_at?: string | null
           description?: string | null
@@ -821,6 +826,7 @@ export type Database = {
           source?: string | null
           tenant_id?: string
           updated_at?: string | null
+          views?: Json | null
         }
         Relationships: [
           {
@@ -2001,6 +2007,57 @@ export type Database = {
         Returns: Database["public"]["CompositeTypes"]["paginated_messages"]
       }
       get_conversation_messages_v4: {
+        Args: {
+          _conversation_id: string
+          _decryption_key?: string
+          _search?: string
+          _metadata_search?: string
+          _role?: string
+          _limit?: number
+          _offset?: number
+          _order?: string
+          _sort_direction?: string
+          _include_deleted?: boolean
+          filter?: Json
+          _priority_sort_direction?: string
+        }
+        Returns: Database["public"]["CompositeTypes"]["paginated_messages"]
+      }
+      get_conversation_messages_v5: {
+        Args: {
+          _conversation_id: string
+          _decryption_key?: string
+          _search?: string
+          _metadata_search?: string
+          _role?: string
+          _limit?: number
+          _offset?: number
+          _order?: string
+          _sort_direction?: string
+          _include_deleted?: boolean
+          filter?: Json
+          _priority_sort_direction?: string
+        }
+        Returns: Database["public"]["CompositeTypes"]["paginated_messages"]
+      }
+      get_conversation_messages_v6: {
+        Args: {
+          _conversation_id: string
+          _decryption_key?: string
+          _search?: string
+          _metadata_search?: string
+          _role?: string
+          _limit?: number
+          _offset?: number
+          _order?: string
+          _sort_direction?: string
+          _include_deleted?: boolean
+          filter?: Json
+          _priority_sort_direction?: string
+        }
+        Returns: Database["public"]["CompositeTypes"]["paginated_messages"]
+      }
+      get_conversation_messages_v7: {
         Args: {
           _conversation_id: string
           _decryption_key?: string

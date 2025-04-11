@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   Card,
@@ -35,12 +36,16 @@ import {
   SlidersHorizontal,
   Filter,
   RefreshCw,
+  Grid,
+  List,
+  LayoutGrid,
 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
   Popover,
@@ -53,6 +58,14 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { formatFieldValue } from "./utils";
 import EditModal from "./EditModal";
 import FieldFilter from "./FieldFilter";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tag } from "@/components/ui/tag";
 
 const defaultPermissions: UserPermissions = {
   create: true,
@@ -83,6 +96,11 @@ const AirtableTable = ({
   const isMobile = useIsMobile();
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
+  // View state
+  const [currentView, setCurrentView] = useState<string | null>(
+    table?.views?.length > 0 ? table.views[0]?.id : null
+  );
+
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState<string | null>(null);
@@ -103,6 +121,15 @@ const AirtableTable = ({
   useEffect(() => {
     setCurrentPage(1);
   }, [records.length]);
+
+  // Reset filters and search when view changes
+  useEffect(() => {
+    setFilters({});
+    setSearchTerm("");
+    setSortField(null);
+    setSortDirection("asc");
+    setCurrentPage(1);
+  }, [currentView]);
 
   const primaryField = useMemo(() => {
     if (table && table.primaryFieldId) {
@@ -280,6 +307,22 @@ const AirtableTable = ({
     setFilterOpen(null);
   };
 
+  const handleViewChange = (viewId: string) => {
+    if (viewId !== currentView) {
+      setCurrentView(viewId);
+      // When view changes, we will preserve our state but need to refresh data
+      if (onRefresh) {
+        onRefresh();
+      }
+    }
+  };
+
+  const handleRefresh = () => {
+    if (onRefresh) {
+      onRefresh();
+    }
+  };
+
   const handleExport = () => {
     if (!permissions.export) return;
 
@@ -439,6 +482,11 @@ const AirtableTable = ({
     );
   };
 
+  const currentViewName = useMemo(() => {
+    const view = table.views?.find(view => view.id === currentView);
+    return view ? view.name : "Default View";
+  }, [table.views, currentView]);
+
   return (
     <Card className={className}>
       <CardHeader>
@@ -451,7 +499,7 @@ const AirtableTable = ({
           </div>
           <div className="flex space-x-2">
             {onRefresh && (
-              <Button size="sm" variant="outline" onClick={onRefresh}>
+              <Button size="sm" variant="outline" onClick={handleRefresh}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
@@ -473,6 +521,70 @@ const AirtableTable = ({
         </div>
       </CardHeader>
       <CardContent>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
+          {/* View selector */}
+          {table.views && table.views.length > 0 && (
+            <div className="w-full sm:w-64">
+              <Select
+                value={currentView || ""}
+                onValueChange={handleViewChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select view">
+                    {currentViewName}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {table.views.map((view) => (
+                    <SelectItem key={view.id} value={view.id}>
+                      <div className="flex items-center">
+                        {view.name === "Grid" && <LayoutGrid className="h-4 w-4 mr-2" />}
+                        {view.name === "List" && <List className="h-4 w-4 mr-2" />}
+                        {!["Grid", "List"].includes(view.name) && <Grid className="h-4 w-4 mr-2" />}
+                        {view.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Applied filters display */}
+          {Object.keys(filters).length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
+              {Object.entries(filters).map(([fieldName, value]) => {
+                if (value === null || value === "") return null;
+                const field = table.fields.find(f => f.name === fieldName);
+                const displayValue = typeof value === 'boolean' 
+                  ? (value ? 'Yes' : 'No') 
+                  : String(value);
+                
+                return (
+                  <Tag 
+                    key={fieldName} 
+                    variant="outline"
+                    onRemove={() => handleFilterChange(fieldName, null)}
+                  >
+                    {field?.name || fieldName}: {displayValue}
+                  </Tag>
+                );
+              })}
+              
+              {Object.keys(filters).length > 0 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="h-6 px-2"
+                  onClick={() => setFilters({})}
+                >
+                  Clear all
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+
         {searchable && (
           <div className="flex items-center gap-2 mb-4">
             <div className="relative flex-1">
@@ -587,10 +699,13 @@ const AirtableTable = ({
                           key={record.id}
                           className={`animate-fade-in transition-colors ${"cursor-pointer hover:bg-muted/50"}`}
                           onClick={() => handleRowClick(record)}
-                          style={{ animationDelay: `${index * 30}ms` }}
+                          style={{ 
+                            animationDelay: `${index * 30}ms`, 
+                            height: "60px" 
+                          }}
                         >
                           {displayFields.length > 0 && (
-                            <TableCell className="whitespace-nowrap align-middle">
+                            <TableCell className="whitespace-nowrap align-middle p-2">
                               <div className="h-full flex items-center">
                                 {formatFieldValue(
                                   record.fields[displayFields[0].name],
@@ -637,12 +752,15 @@ const AirtableTable = ({
                           key={record.id}
                           className={`animate-fade-in transition-colors ${"cursor-pointer hover:bg-muted/50"}`}
                           onClick={() => handleRowClick(record)}
-                          style={{ animationDelay: `${index * 30}ms` }}
+                          style={{ 
+                            animationDelay: `${index * 30}ms`,
+                            height: "60px"
+                          }}
                         >
                           {displayFields.slice(1).map((field) => (
                             <TableCell
                               key={field.id}
-                              className="whitespace-nowrap align-middle"
+                              className="whitespace-nowrap align-middle p-2"
                             >
                               <div className="h-full flex items-center">
                                 {formatFieldValue(
@@ -682,9 +800,12 @@ const AirtableTable = ({
                           <TableRow
                             key={record.id}
                             className="animate-fade-in transition-colors"
-                            style={{ animationDelay: `${index * 30}ms` }}
+                            style={{ 
+                              animationDelay: `${index * 30}ms`,
+                              height: "60px"
+                            }}
                           >
-                            <TableCell className="align-middle">
+                            <TableCell className="align-middle p-2">
                               <div className="h-full flex items-center justify-end">
                                 {renderActionsCell(record)}
                               </div>
