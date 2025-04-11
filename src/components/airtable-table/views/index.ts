@@ -4,10 +4,10 @@ import CalendarView from "./CalendarView";
 import GalleryView from "./GalleryView";
 import KanbanView from "./KanbanView";
 import TimelineView from "./TimelineView";
-import { ViewType } from "./types";
+import { ViewType, TimeScale } from "./types";
 
 export { GridView, CalendarView, GalleryView, KanbanView, TimelineView };
-export type { ViewType };
+export type { ViewType, TimeScale };
 
 export const getViewIcon = (viewType: ViewType): string => {
   switch (viewType) {

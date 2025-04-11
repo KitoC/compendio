@@ -14,3 +14,5 @@ export interface AirtableViewProps {
 }
 
 export type ViewType = "grid" | "calendar" | "gallery" | "kanban" | "timeline";
+
+export type TimeScale = "day" | "week" | "fortnight" | "month" | "quarter" | "year";
