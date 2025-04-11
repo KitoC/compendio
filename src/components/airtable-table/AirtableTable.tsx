@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   Card,
@@ -60,7 +59,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tag } from "@/components/ui/tag";
-import { GridView, CalendarView, GalleryView, KanbanView, TimelineView, ViewType } from "./views";
+import {
+  GridView,
+  CalendarView,
+  GalleryView,
+  KanbanView,
+  TimelineView,
+  ViewType,
+} from "./views";
 
 const defaultPermissions: UserPermissions = {
   create: true,
@@ -446,7 +452,7 @@ const AirtableTable = ({
             </div>
             <div className="rounded-md border">
               <div className="relative w-full overflow-auto">
-                <Table>
+                {/* <Table>
                   <TableHeader>
                     <TableRow>
                       {Array(isMobile ? 2 : 5)
@@ -473,7 +479,7 @@ const AirtableTable = ({
                         </TableRow>
                       ))}
                   </TableBody>
-                </Table>
+                </Table> */}
               </div>
             </div>
           </div>
@@ -559,9 +565,7 @@ const AirtableTable = ({
                 <SelectContent>
                   {table.views.map((view) => (
                     <SelectItem key={view.id} value={view.id}>
-                      <div className="flex items-center">
-                        {view.name}
-                      </div>
+                      <div className="flex items-center">{view.name}</div>
                     </SelectItem>
                   ))}
                 </SelectContent>

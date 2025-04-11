@@ -1,10 +1,15 @@
-
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatFieldValue } from "../utils";
 import { AirtableViewProps } from "./types";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const KanbanView = ({
   records,
@@ -15,8 +20,8 @@ const KanbanView = ({
 }: AirtableViewProps) => {
   // Find fields that could be used for kanban categories (single select or status fields)
   const selectFields = useMemo(() => {
-    return table.fields.filter(field => 
-      field.type === "singleSelect" || field.type === "status"
+    return table.fields.filter(
+      (field) => field.type === "singleSelect" || field.type === "status"
     );
   }, [table.fields]);
 
@@ -35,36 +40,37 @@ const KanbanView = ({
   // Get options for the selected field
   const fieldOptions = useMemo(() => {
     if (!selectedField) return [];
-    
-    const field = table.fields.find(f => f.name === selectedField);
+
+    const field = table.fields.find((f) => f.name === selectedField);
     if (!field || !field.options) return [];
-    
+
     return field.options;
   }, [selectedField, table.fields]);
 
   // Group records by the selected field
   const groupedRecords = useMemo(() => {
     if (!selectedField) {
-      return { "Uncategorized": records };
+      return { Uncategorized: records };
     }
-    
+
     const groups: Record<string, typeof records> = {};
-    
+
+    console.log(fieldOptions);
     // Initialize groups with all possible values from the field options
-    fieldOptions.forEach(option => {
+    fieldOptions?.choices?.forEach((option) => {
       groups[option.name || option.value] = [];
     });
 
     // Add an "Uncategorized" group
     groups["Uncategorized"] = [];
-    
+
     // Categorize records
-    records.forEach(record => {
+    records.forEach((record) => {
       const value = record.fields[selectedField];
-      
+
       if (value === undefined || value === null || value === "") {
         groups["Uncategorized"].push(record);
-      } else if (typeof value === 'object' && 'name' in value) {
+      } else if (typeof value === "object" && "name" in value) {
         const groupName = value.name || "Uncategorized";
         if (!groups[groupName]) groups[groupName] = [];
         groups[groupName].push(record);
@@ -74,7 +80,7 @@ const KanbanView = ({
         groups[groupName].push(record);
       }
     });
-    
+
     return groups;
   }, [records, selectedField, fieldOptions]);
 
@@ -104,7 +110,7 @@ const KanbanView = ({
             <SelectValue placeholder="Select a field for columns" />
           </SelectTrigger>
           <SelectContent>
-            {selectFields.map(field => (
+            {selectFields.map((field) => (
               <SelectItem key={field.id} value={field.name}>
                 {field.name}
               </SelectItem>
@@ -112,17 +118,22 @@ const KanbanView = ({
           </SelectContent>
         </Select>
       </div>
-      
+
       <div className="flex gap-4 overflow-x-auto pb-4">
         {Object.entries(groupedRecords).map(([group, groupRecords]) => {
           if (groupRecords.length === 0) return null;
-          
-          const fieldForColor = table.fields.find(f => f.name === selectedField);
+
+          const fieldForColor = table.fields.find(
+            (f) => f.name === selectedField
+          );
+          console.log("fieldForColor", fieldForColor);
           let groupColor = "bg-muted";
-          
+
           // Try to find matching option color
           if (fieldForColor && fieldForColor.options) {
-            const option = fieldForColor.options.find(opt => (opt.name || opt.value) === group);
+            const option = fieldForColor.options.choices.find(
+              (opt) => (opt.name || opt.value) === group
+            );
             if (option && option.color) {
               groupColor = `bg-${option.color.toLowerCase()}-100`;
             }
@@ -140,29 +151,38 @@ const KanbanView = ({
                   </div>
                 </CardHeader>
                 <CardContent className="p-2 max-h-[70vh] overflow-y-auto">
-                  {groupRecords.map(record => (
+                  {groupRecords.map((record) => (
                     <div
                       key={record.id}
                       className="p-3 mb-2 bg-background border rounded-md cursor-pointer hover:shadow-sm transition-shadow"
                       onClick={() => onRowClick(record)}
                     >
                       <div className="font-medium truncate">
-                        {primaryField 
-                          ? formatFieldValue(record.fields[primaryField.name], primaryField)
+                        {primaryField
+                          ? formatFieldValue(
+                              record.fields[primaryField.name],
+                              primaryField
+                            )
                           : record.id}
                       </div>
                       <div className="text-sm text-muted-foreground mt-1">
                         {/* Show 1-2 fields as details */}
                         {table.fields
-                          .filter(f => f.id !== primaryField?.id && f.name !== selectedField)
+                          .filter(
+                            (f) =>
+                              f.id !== primaryField?.id &&
+                              f.name !== selectedField
+                          )
                           .slice(0, 2)
-                          .map(field => {
+                          .map((field) => {
                             const value = record.fields[field.name];
-                            if (value === undefined || value === null) return null;
-                            
+                            if (value === undefined || value === null)
+                              return null;
+
                             return (
                               <div key={field.id} className="truncate">
-                                {field.name}: {formatFieldValue(value, field, true)}
+                                {field.name}:{" "}
+                                {formatFieldValue(value, field, true)}
                               </div>
                             );
                           })}
