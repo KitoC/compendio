@@ -55,8 +55,8 @@ Your response must be formatted like this:
   ],
   "reply_reasoning": "string", // Reasoning behind whether a reply is needed
   "email_summary": "string",   // Summary of the email content
-  "short_summary": "string"    // One sentence summary of the email content
-}
+  "short_summary": "string"    // One sentence summary of the email content,
+  "priority": "0-4"           // Priority of the email, 0 is low, 4 is high. Refer to priority scale for more details.
 }
 \`\`\`
 
