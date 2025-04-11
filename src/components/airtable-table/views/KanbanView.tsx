@@ -1,3 +1,4 @@
+
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatFieldValue } from "../utils";
@@ -10,12 +11,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { GripVertical, MoveVertical } from "lucide-react";
 
 const KanbanView = ({
   records,
   table,
   isLoading,
   onRowClick,
+  onUpdate,
   emptyMessage = "No records available",
 }: AirtableViewProps) => {
   // Find fields that could be used for kanban categories (single select or status fields)
@@ -28,6 +31,10 @@ const KanbanView = ({
   const [selectedField, setSelectedField] = useState<string | null>(
     selectFields.length > 0 ? selectFields[0].name : null
   );
+
+  // State for drag and drop
+  const [draggedRecord, setDraggedRecord] = useState<string | null>(null);
+  const [draggedOver, setDraggedOver] = useState<string | null>(null);
 
   // Get the primary field for the table
   const primaryField = useMemo(() => {
@@ -55,7 +62,6 @@ const KanbanView = ({
 
     const groups: Record<string, typeof records> = {};
 
-    console.log(fieldOptions);
     // Initialize groups with all possible values from the field options
     fieldOptions?.choices?.forEach((option) => {
       groups[option.name || option.value] = [];
@@ -83,6 +89,56 @@ const KanbanView = ({
 
     return groups;
   }, [records, selectedField, fieldOptions]);
+
+  const handleDragStart = (recordId: string) => {
+    setDraggedRecord(recordId);
+  };
+
+  const handleDragOver = (e: React.DragEvent, columnName: string) => {
+    e.preventDefault();
+    setDraggedOver(columnName);
+  };
+
+  const handleDragLeave = () => {
+    setDraggedOver(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetColumnName: string) => {
+    e.preventDefault();
+    if (!draggedRecord || !selectedField || !onUpdate) {
+      setDraggedOver(null);
+      setDraggedRecord(null);
+      return;
+    }
+
+    // Find the record that was dragged
+    const recordToUpdate = records.find((record) => record.id === draggedRecord);
+    if (!recordToUpdate) {
+      setDraggedOver(null);
+      setDraggedRecord(null);
+      return;
+    }
+
+    // Create a copy of the record with the updated field value
+    const updatedRecord = {
+      ...recordToUpdate,
+      fields: {
+        ...recordToUpdate.fields,
+        [selectedField]: targetColumnName === "Uncategorized" ? null : targetColumnName,
+      },
+    };
+
+    // Update the record
+    try {
+      await onUpdate(updatedRecord);
+    } catch (error) {
+      console.error("Error updating record:", error);
+    }
+
+    // Reset drag state
+    setDraggedOver(null);
+    setDraggedRecord(null);
+  };
 
   if (selectFields.length === 0) {
     return (
@@ -126,7 +182,7 @@ const KanbanView = ({
           const fieldForColor = table.fields.find(
             (f) => f.name === selectedField
           );
-          console.log("fieldForColor", fieldForColor);
+          
           let groupColor = "bg-muted";
 
           // Try to find matching option color
@@ -139,9 +195,19 @@ const KanbanView = ({
             }
           }
 
+          const isColumnDraggedOver = draggedOver === group;
+
           return (
-            <div key={group} className="flex-shrink-0 w-80">
-              <Card>
+            <div 
+              key={group} 
+              className="flex-shrink-0 w-80"
+              onDragOver={(e) => handleDragOver(e, group)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, group)}
+            >
+              <Card 
+                className={`${isColumnDraggedOver ? 'ring-2 ring-primary' : ''} transition-all duration-200`}
+              >
                 <CardHeader className={`${groupColor} py-3`}>
                   <div className="flex justify-between items-center">
                     <CardTitle className="text-md font-medium">
@@ -150,14 +216,28 @@ const KanbanView = ({
                     <Badge variant="secondary">{groupRecords.length}</Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="p-2 max-h-[70vh] overflow-y-auto">
+                <CardContent 
+                  className={`p-2 max-h-[70vh] overflow-y-auto ${isColumnDraggedOver ? 'bg-muted/30' : ''}`}
+                >
                   {groupRecords.map((record) => (
                     <div
                       key={record.id}
-                      className="p-3 mb-2 bg-background border rounded-md cursor-pointer hover:shadow-sm transition-shadow"
-                      onClick={() => onRowClick(record)}
+                      className={`p-3 mb-2 bg-background border rounded-md cursor-move hover:shadow-sm transition-shadow relative ${
+                        draggedRecord === record.id ? "opacity-50" : ""
+                      }`}
+                      draggable
+                      onDragStart={() => handleDragStart(record.id)}
+                      onClick={(e) => {
+                        // Only trigger row click if it's not a drag operation
+                        if (e.target === e.currentTarget) {
+                          onRowClick(record);
+                        }
+                      }}
                     >
-                      <div className="font-medium truncate">
+                      <div className="absolute left-1 top-1/2 -translate-y-1/2 opacity-30 hover:opacity-70 text-muted-foreground">
+                        <GripVertical size={16} />
+                      </div>
+                      <div className="font-medium truncate pl-5">
                         {primaryField
                           ? formatFieldValue(
                               record.fields[primaryField.name],
@@ -165,7 +245,7 @@ const KanbanView = ({
                             )
                           : record.id}
                       </div>
-                      <div className="text-sm text-muted-foreground mt-1">
+                      <div className="text-sm text-muted-foreground mt-1 pl-5">
                         {/* Show 1-2 fields as details */}
                         {table.fields
                           .filter(
@@ -189,6 +269,11 @@ const KanbanView = ({
                       </div>
                     </div>
                   ))}
+                  {groupRecords.length === 0 && (
+                    <div className="py-4 text-center text-muted-foreground text-sm">
+                      Drop items here
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>

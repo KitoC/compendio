@@ -6,6 +6,7 @@ export interface AirtableViewProps {
   table: AirtableTableSchema;
   isLoading: boolean;
   onRowClick: (record: AirtableRecord) => void;
+  onUpdate?: (record: AirtableRecord) => Promise<void>;
   emptyMessage?: string;
   sortField?: string | null;
   sortDirection?: "asc" | "desc";
