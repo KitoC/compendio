@@ -1,21 +1,24 @@
 import React, { useMemo, useState } from "react";
-import Timeline from "react-calendar-timeline";
+import Timeline, {
+  SidebarHeader,
+  TimelineHeaders,
+} from "react-calendar-timeline";
 import "react-calendar-timeline/style.css";
 
 import moment from "moment";
+import { parseISO, isValid, format, addQuarters } from "date-fns";
 import {
-  parseISO,
-  isValid,
-  format,
   addDays,
   addWeeks,
   addMonths,
-  addQuarters,
   addYears,
+  startOfDay,
+  startOfWeek,
+  startOfMonth,
+  startOfYear,
 } from "date-fns";
-
-import { AirtableViewProps, TimeScale } from "./types";
-import { formatFieldValue } from "../utils";
+import { AirtableViewProps, TimeScale } from "../types";
+import { formatFieldValue } from "../../utils";
 import { Card } from "@/components/ui/card";
 import {
   Select,
@@ -26,6 +29,36 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { DateHeader } from "react-calendar-timeline";
+
+type ViewScale = "day" | "week" | "month" | "year";
+
+const getTimeRange = (view: ViewScale): [number, number] => {
+  const now = new Date();
+  switch (view) {
+    case "day":
+      return [startOfDay(now).getTime(), addDays(startOfDay(now), 1).getTime()];
+    case "week":
+      return [
+        startOfWeek(now, { weekStartsOn: 1 }).getTime(),
+        addWeeks(startOfWeek(now, { weekStartsOn: 1 }), 1).getTime(),
+      ];
+    case "month":
+      return [
+        startOfMonth(now).getTime(),
+        addMonths(startOfMonth(now), 1).getTime(),
+      ];
+    case "year":
+      return [
+        startOfYear(now).getTime(),
+        addYears(startOfYear(now), 1).getTime(),
+      ];
+    default:
+      return [now.getTime(), now.getTime()];
+  }
+};
+
+const timeScales = ["day", "week", "month", "year"];
 
 const TimelineView = ({
   records,
@@ -35,6 +68,17 @@ const TimelineView = ({
   onUpdate,
   emptyMessage = "No records available",
 }: AirtableViewProps) => {
+  const [timeScale, setTimeScale] = useState<TimeScale>("day");
+
+  const [view, setView] = useState<ViewScale>("day");
+  const [visibleTimeRange, setVisibleTimeRange] = useState(() =>
+    getTimeRange("day")
+  );
+
+  const handleTimeScaleChange = (newTimeScale: ViewScale) => {
+    setTimeScale(newTimeScale);
+    setVisibleTimeRange(getTimeRange(newTimeScale));
+  };
   // Find date fields in the table schema
   const dateFields = useMemo(() => {
     return table.fields.filter((field) =>
@@ -54,7 +98,6 @@ const TimelineView = ({
   );
 
   // State for time scale selection
-  const [timeScale, setTimeScale] = useState<TimeScale>("week");
 
   // State for current view range
   const today = new Date();
@@ -69,43 +112,43 @@ const TimelineView = ({
   }, [table]);
 
   // Calculate the visible timespan based on the selected time scale
-  const getTimeRange = () => {
-    const now = moment(currentViewStart);
-    let startTime = now.clone();
-    let endTime = now.clone();
+  // const getTimeRange = () => {
+  //   const now = moment(currentViewStart);
+  //   let startTime = now.clone();
+  //   let endTime = now.clone();
 
-    switch (timeScale) {
-      case "day":
-        startTime = now.clone().startOf("day");
-        endTime = now.clone().endOf("day");
-        break;
-      case "week":
-        startTime = now.clone().startOf("week");
-        endTime = now.clone().endOf("week");
-        break;
-      case "fortnight":
-        startTime = now.clone().startOf("week");
-        endTime = now.clone().add(2, "weeks").endOf("week");
-        break;
-      case "month":
-        startTime = now.clone().startOf("month");
-        endTime = now.clone().endOf("month");
-        break;
-      case "quarter":
-        startTime = now.clone().startOf("quarter");
-        endTime = now.clone().endOf("quarter");
-        break;
-      case "year":
-        startTime = now.clone().startOf("year");
-        endTime = now.clone().endOf("year");
-        break;
-      default:
-        startTime = now.clone().startOf("week");
-        endTime = now.clone().endOf("week");
-    }
+  //   switch (timeScale) {
+  //     case "day":
+  //       startTime = now.clone().startOf("day");
+  //       endTime = now.clone().endOf("day");
+  //       break;
+  //     case "week":
+  //       startTime = now.clone().startOf("week");
+  //       endTime = now.clone().endOf("week");
+  //       break;
+  //     case "fortnight":
+  //       startTime = now.clone().startOf("week");
+  //       endTime = now.clone().add(2, "weeks").endOf("week");
+  //       break;
+  //     case "month":
+  //       startTime = now.clone().startOf("month");
+  //       endTime = now.clone().endOf("month");
+  //       break;
+  //     case "quarter":
+  //       startTime = now.clone().startOf("quarter");
+  //       endTime = now.clone().endOf("quarter");
+  //       break;
+  //     case "year":
+  //       startTime = now.clone().startOf("year");
+  //       endTime = now.clone().endOf("year");
+  //       break;
+  //     default:
+  //       startTime = now.clone().startOf("week");
+  //       endTime = now.clone().endOf("week");
+  //   }
 
-    return { startTime, endTime };
-  };
+  //   return { startTime, endTime };
+  // };
 
   const { startTime, endTime } = getTimeRange();
 
@@ -406,20 +449,16 @@ const TimelineView = ({
           <Button variant="outline" size="sm" onClick={handleNext}>
             <ChevronRight className="w-4 h-4" />
           </Button>
-          <Select
-            value={timeScale}
-            onValueChange={(value) => setTimeScale(value as TimeScale)}
-          >
+          <Select value={timeScale} onValueChange={handleTimeScaleChange}>
             <SelectTrigger className="w-[120px]">
               <SelectValue placeholder="Time scale" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="day">Day</SelectItem>
-              <SelectItem value="week">Week</SelectItem>
-              <SelectItem value="fortnight">2 Weeks</SelectItem>
-              <SelectItem value="month">Month</SelectItem>
-              <SelectItem value="quarter">Quarter</SelectItem>
-              <SelectItem value="year">Year</SelectItem>
+              {timeScales.map((scale) => (
+                <SelectItem key={scale} value={scale}>
+                  {scale}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -427,51 +466,30 @@ const TimelineView = ({
 
       <Card className="overflow-hidden">
         <div className="min-w-full overflow-x-auto">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
-            </div>
-          ) : items.length > 0 ? (
-            <Timeline
-              groups={groups}
-              items={items}
-              defaultTimeStart={startTime}
-              defaultTimeEnd={endTime}
-              visibleTimeStart={startTime.valueOf()}
-              visibleTimeEnd={endTime.valueOf()}
-              canResize={
-                !!onUpdate && !!endDateField && endDateField !== startDateField
-                  ? "both"
-                  : false
-              }
-              canMove={!!onUpdate}
-              onItemMove={handleItemMove}
-              onItemResize={handleItemResize}
-              lineHeight={50}
-              itemHeightRatio={0.6}
-              sidebarWidth={200}
-              minZoom={24 * 60 * 60 * 1000} // 1 day minimum zoom
-              maxZoom={365 * 24 * 60 * 60 * 1000} // 1 year maximum zoom
-              stackItems
-              sidebarContent={<div className="p-3 font-medium">Items</div>}
-              className="dark:bg-gradient-to-r dark:from-gray-800 dark:to-gray-900"
-              timeSteps={{
-                day: 1,
-                month: 1,
-                year: 1,
-                hour: 1,
-                minute: 15,
-                second: 1,
-              }}
-            />
-          ) : (
-            <div className="flex items-center justify-center h-64">
-              <p className="text-muted-foreground">
-                No records with valid dates found. Please select different date
-                fields.
-              </p>
-            </div>
-          )}
+          <Timeline
+            groups={groups}
+            items={items}
+            defaultTimeStart={moment(visibleTimeRange[0]).valueOf()}
+            defaultTimeEnd={moment(visibleTimeRange[1]).valueOf()}
+            visibleTimeStart={visibleTimeRange[0]}
+            visibleTimeEnd={visibleTimeRange[1]}
+            onTimeChange={(start, end) => setVisibleTimeRange([start, end])}
+          >
+            <TimelineHeaders>
+              <DateHeader unit="primaryHeader" />
+              {view === "day" ? (
+                <DateHeader
+                  unit="hour"
+                  labelFormat={([time]) => {
+                    console.log("time", time);
+                    return time.format("h a");
+                  }}
+                />
+              ) : (
+                <DateHeader />
+              )}
+            </TimelineHeaders>
+          </Timeline>
         </div>
       </Card>
     </div>

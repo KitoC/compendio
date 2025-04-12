@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Page from "@/components/Page";
 import AirtableTable from "@/components/airtable-table";
@@ -6,8 +5,6 @@ import {
   useAirtableTableSchemaQuery,
   useAirtableRecordsQuery,
 } from "@/hooks/useAirtableQuery";
-import { AirtableService } from "@/services/AirtableService";
-import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -17,10 +14,8 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Plus, RefreshCw } from "lucide-react";
 import { FormConfig } from "@/components/form-builder";
 import { AirtableRecord } from "@/components/airtable-table/types";
-import { useTenant } from "@/contexts/TenantContext";
 import { useCustomTables } from "@/contexts/CustomTables";
 
 interface AirtableTablePageParams extends Record<string, string> {

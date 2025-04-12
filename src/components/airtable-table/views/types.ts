@@ -1,5 +1,4 @@
-
-import { AirtableRecord } from "../types";
+import { AirtableRecord, UserPermissions } from "../types";
 import { AirtableTable } from "@/types/airtable";
 
 export interface AirtableViewProps {
@@ -12,8 +11,23 @@ export interface AirtableViewProps {
   sortField?: string | null;
   sortDirection?: "asc" | "desc";
   handleSort?: (fieldName: string) => void;
+  permissions: UserPermissions;
+  paginatedRecords: AirtableRecord[];
+  handleEdit: (record: AirtableRecord) => void;
+  handleCreate: () => void;
+  handleDeleteConfirm: () => void;
+  handleFilterChange: (fieldName: string, value: unknown) => void;
+  handleExport: () => void;
+  handleRefresh: () => void;
+  setDeleteRecordId: (recordId: string) => void;
 }
 
 export type ViewType = "grid" | "calendar" | "gallery" | "kanban" | "timeline";
 
-export type TimeScale = "day" | "week" | "fortnight" | "month" | "quarter" | "year";
+export type TimeScale =
+  | "day"
+  | "week"
+  | "fortnight"
+  | "month"
+  | "quarter"
+  | "year";
