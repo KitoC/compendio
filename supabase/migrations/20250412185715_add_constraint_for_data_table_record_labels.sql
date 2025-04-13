@@ -1,0 +1,1 @@
+ALTER TABLE data_table_record_labels ADD CONSTRAINT data_table_record_labels_data_table_id_external_table_id_record_id_key UNIQUE (data_table_id, external_table_id, record_id);

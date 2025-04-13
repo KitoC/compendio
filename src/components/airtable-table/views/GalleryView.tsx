@@ -1,4 +1,3 @@
-
 import { useMemo } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { formatFieldValue } from "../utils";
@@ -21,8 +20,9 @@ const GalleryView = ({
 
   // Find attachment fields that might contain images
   const attachmentField = useMemo(() => {
-    return table.fields.find(field => 
-      field.type === "attachment" || field.type === "multipleAttachments"
+    return table.fields.find(
+      (field) =>
+        field.type === "attachment" || field.type === "multipleAttachments"
     );
   }, [table.fields]);
 
@@ -30,11 +30,12 @@ const GalleryView = ({
   const detailFields = useMemo(() => {
     // Get up to 3 fields excluding the primary field and attachment fields
     return table.fields
-      .filter(field => 
-        field.id !== primaryField?.id && 
-        field.type !== "attachment" && 
-        field.type !== "multipleAttachments" &&
-        !["createdBy", "lastModifiedBy"].includes(field.type)
+      .filter(
+        (field) =>
+          field.id !== primaryField?.id &&
+          field.type !== "attachment" &&
+          field.type !== "multipleAttachments" &&
+          !["createdBy", "lastModifiedBy"].includes(field.type)
       )
       .slice(0, 3);
   }, [table.fields, primaryField]);
@@ -56,52 +57,65 @@ const GalleryView = ({
           const attachments = record.fields[attachmentField.name];
           if (Array.isArray(attachments) && attachments.length > 0) {
             const firstAttachment = attachments[0];
-            if (firstAttachment.type?.startsWith('image/') && firstAttachment.url) {
+            if (
+              firstAttachment.type?.startsWith("image/") &&
+              firstAttachment.url
+            ) {
               coverImage = firstAttachment.url;
             }
-          } else if (attachments && typeof attachments === 'object' && 'url' in attachments) {
+          } else if (
+            attachments &&
+            typeof attachments === "object" &&
+            "url" in attachments
+          ) {
             coverImage = attachments.url;
           }
         }
 
         return (
-          <Card 
-            key={record.id} 
+          <Card
+            key={record.id}
             className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
             onClick={() => onRowClick(record)}
           >
             {coverImage && (
               <div className="aspect-video w-full overflow-hidden">
-                <img 
-                  src={coverImage} 
+                <img
+                  src={coverImage}
                   alt="Record attachment"
                   className="w-full h-full object-cover"
                 />
               </div>
             )}
-            
-            <CardContent className={`${coverImage ? 'pt-4' : 'pt-6'} pb-2`}>
+
+            <CardContent className={`${coverImage ? "pt-4" : "pt-6"} pb-2`}>
               {primaryField && (
                 <h3 className="font-medium text-lg truncate">
-                  {formatFieldValue(record.fields[primaryField.name], primaryField)}
+                  {formatFieldValue(
+                    record.fields[primaryField.name],
+                    primaryField,
+                    record
+                  )}
                 </h3>
               )}
-              
+
               <div className="mt-2 space-y-1">
-                {detailFields.map(field => {
+                {detailFields.map((field) => {
                   const value = record.fields[field.name];
                   if (value === undefined || value === null) return null;
-                  
+
                   return (
                     <div key={field.id} className="text-sm">
-                      <span className="text-muted-foreground">{field.name}: </span>
-                      <span>{formatFieldValue(value, field)}</span>
+                      <span className="text-muted-foreground">
+                        {field.name}:{" "}
+                      </span>
+                      <span>{formatFieldValue(value, field, record)}</span>
                     </div>
                   );
                 })}
               </div>
             </CardContent>
-            
+
             <CardFooter className="pt-0 pb-3 px-6">
               <div className="text-xs text-muted-foreground mt-2">
                 ID: {record.id.substring(0, 8)}...

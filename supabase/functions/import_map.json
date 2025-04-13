@@ -58,6 +58,7 @@
     "locals/services/ConnectedServicesService": "./_shared/services/ConnectedServicesService.ts",
     "locals/services/ConversationsService": "./_shared/services/ConversationsService.ts",
     "locals/services/CredentialsService": "./_shared/services/CredentialsService.ts",
+    "locals/services/DataTablesService": "./_shared/services/DataTablesService.ts",
     "locals/services/FunctionQueueService": "./_shared/services/FunctionQueueService.ts",
     "locals/services/MessagesService": "./_shared/services/MessagesService.ts",
     "locals/services/OnboardingSessionsService": "./_shared/services/OnboardingSessionsService.ts",

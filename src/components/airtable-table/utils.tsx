@@ -1,12 +1,18 @@
-import { FormConfig, FormField, FormFieldType, FormFieldOption } from "@/components/form-builder/types";
-import { AirtableField, AirtableTable } from "@/types/airtable";
-import { AirtableRecord } from "./types";
+import {
+  FormConfig,
+  FormField,
+  FormFieldType,
+  FormFieldOption,
+} from "@/components/form-builder/types";
+import { AirtableField, AirtableTable, AirtableRecord } from "@/types/airtable";
 import { getFieldRenderer } from "./field-renderers";
-
+import AirtableEntityField from "./AirtableEntityField";
 /**
  * Maps Airtable field types to FormBuilder field types
  */
-export const mapAirtableTypeToFormFieldType = (field: AirtableField): FormFieldType => {
+export const mapAirtableTypeToFormFieldType = (
+  field: AirtableField
+): FormFieldType => {
   switch (field.type) {
     case "singleLineText":
     case "autoNumber":
@@ -26,6 +32,7 @@ export const mapAirtableTypeToFormFieldType = (field: AirtableField): FormFieldT
       return "checkbox";
     case "date":
     case "dateTime":
+      return "datetime";
     case "createdTime":
     case "lastModifiedTime":
       return "date";
@@ -33,9 +40,7 @@ export const mapAirtableTypeToFormFieldType = (field: AirtableField): FormFieldT
       return "email";
     case "singleSelect":
       return "select";
-    case "multipleSelects":
-    case "multipleLookupValues":
-      return "multiselect"; // Using multiselect for both types
+    case "multipleSelects": // Using multiselect for both types
     case "url":
       return "text"; // Use text with URL validation
     case "phoneNumber":
@@ -53,7 +58,7 @@ export const mapAirtableTypeToFormFieldType = (field: AirtableField): FormFieldT
  */
 export const airtableFieldToFormField = (field: AirtableField): FormField => {
   const fieldType = mapAirtableTypeToFormFieldType(field);
-  
+
   const formField: FormField = {
     id: field.id,
     name: field.name,
@@ -70,10 +75,14 @@ export const airtableFieldToFormField = (field: AirtableField): FormField => {
 
   // Add options for select fields
   if (field.type === "singleSelect" && field.options?.choices) {
-    formField.options = field.options.choices.map((choice): FormFieldOption => ({
-      label: choice.name,
-      value: choice.id,
-    }));
+    formField.options = field.options.choices.map(
+      (choice): FormFieldOption => ({
+        label: choice.name,
+        value: choice.name,
+        color: choice.color,
+        variant: "airtable",
+      })
+    );
   }
 
   // Add custom props for specific field types
@@ -81,24 +90,37 @@ export const airtableFieldToFormField = (field: AirtableField): FormField => {
     formField.props = {
       ...(formField.props || {}),
       isCurrency: true,
-      currencySymbol: field.options?.symbol || "$"
+      currencySymbol: field.options?.symbol || "$",
     };
   } else if (field.type === "percent" && fieldType === "number") {
     formField.props = {
       ...(formField.props || {}),
-      isPercent: true
+      isPercent: true,
     };
   } else if (field.type === "rating" && fieldType === "number") {
     formField.props = {
       ...(formField.props || {}),
       isRating: true,
-      maxRating: field.options?.max || 5
+      maxRating: field.options?.max || 5,
     };
-  } else if ((field.type === "multipleAttachments" || field.type === "attachment") && fieldType === "text") {
+  } else if (
+    (field.type === "multipleAttachments" || field.type === "attachment") &&
+    fieldType === "text"
+  ) {
     formField.props = {
       ...(formField.props || {}),
-      isAttachment: true
+      isAttachment: true,
     };
+  }
+
+  if (field.type === "multipleRecordLinks") {
+    formField.CustomComponent = (props) => (
+      <AirtableEntityField
+        {...props}
+        value={props.value as string[]}
+        field={field}
+      />
+    );
   }
 
   return formField;
@@ -114,19 +136,32 @@ export const airtableTableToFormConfig = (
 ): FormConfig => {
   // Convert fields to form fields
   const fields = table.fields
-    .filter(field => !field.isComputed && !field.isLocked && 
-      !["createdTime", "lastModifiedTime", "createdBy", "lastModifiedBy"].includes(field.type))
-    .map(field => airtableFieldToFormField(field));
+    .filter(
+      (field) =>
+        !field.isComputed &&
+        !field.isLocked &&
+        ![
+          "createdTime",
+          "lastModifiedTime",
+          "createdBy",
+          "lastModifiedBy",
+          "aiText",
+          "multipleLookupValues",
+        ].includes(field.type)
+    )
+    .map((field) => airtableFieldToFormField(field));
 
   const formConfig: FormConfig = {
     id: `airtable-form-${table.id}`,
-    title: isCreating ? `Add New ${table.name} Record` : `Edit ${table.name} Record`,
+    title: isCreating
+      ? `Add New ${table.name} Record`
+      : `Edit ${table.name} Record`,
     description: table.description || "",
     sections: [
       {
         id: "main",
-        fields
-      }
+        fields,
+      },
     ],
     submitButtonText: "Save",
     cancelButtonText: "Cancel",
@@ -146,9 +181,9 @@ export const createInitialValues = (
   if (!record) return {};
 
   const values: Record<string, unknown> = {};
-  
+
   // Map record fields to form values
-  table.fields.forEach(field => {
+  table.fields.forEach((field) => {
     if (record.fields[field.name] !== undefined) {
       values[field.name] = record.fields[field.name];
     }
@@ -160,6 +195,10 @@ export const createInitialValues = (
 /**
  * Format a value for display based on field type
  */
-export const formatFieldValue = (value: any, field: AirtableField): React.ReactNode => {
-  return getFieldRenderer(field, value);
+export const formatFieldValue = (
+  value: unknown,
+  field: AirtableField,
+  record: AirtableRecord
+): React.ReactNode => {
+  return getFieldRenderer(field, value, record);
 };

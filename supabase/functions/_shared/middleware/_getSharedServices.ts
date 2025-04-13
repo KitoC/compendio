@@ -11,6 +11,8 @@ import { ConversationsService } from "locals/services/ConversationsService";
 import { WebhookEventService } from "locals/services/WebhookEventService";
 import { CorsContext } from "locals/middleware/withCors";
 import { OnboardingSessionsService } from "locals/services/OnboardingSessionsService";
+import { DataTablesService } from "locals/services/DataTablesService";
+
 interface SupabaseContext {
   supabase: SupabaseClient;
   supabase_AS_SUPER_ADMIN: SupabaseClient;
@@ -27,6 +29,7 @@ export interface WSSContext {
   functionQueueService: FunctionQueueService;
   azureService: AzureService;
   onboardingSessionsService: OnboardingSessionsService;
+  dataTablesService: DataTablesService;
 }
 
 export interface SharedServices extends CorsContext {
@@ -40,6 +43,7 @@ export interface SharedServices extends CorsContext {
   functionQueueService: FunctionQueueService;
   azureService: AzureService;
   onboardingSessionsService: OnboardingSessionsService;
+  dataTablesService: DataTablesService;
 }
 
 export const getSharedServices = (supabaseContext: SupabaseContext) => {
@@ -57,7 +61,7 @@ export const getSharedServices = (supabaseContext: SupabaseContext) => {
   const onboardingSessionsService = new OnboardingSessionsService(
     supabaseContext
   );
-
+  const dataTablesService = new DataTablesService(supabaseContext);
   return {
     credentialsService,
     connectedServicesService,
@@ -69,5 +73,6 @@ export const getSharedServices = (supabaseContext: SupabaseContext) => {
     functionQueueService,
     azureService,
     onboardingSessionsService,
+    dataTablesService,
   };
 };

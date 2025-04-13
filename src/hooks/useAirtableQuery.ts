@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { CustomTableService } from "@/services/CustomTableService";
-import { AirtableTable } from "@/types/airtable";
-import { AirtableRecord } from "@/components/airtable-table/types";
+import { AirtableTable, AirtableRecord } from "@/types/airtable";
 import { toast } from "sonner";
-
+import { useParams } from "react-router-dom";
+import { useCustomTables } from "@/contexts/CustomTables";
 interface UseAirtableQueryOptions {
   baseId?: string;
   tableId?: string;
@@ -11,12 +11,18 @@ interface UseAirtableQueryOptions {
   recordId?: string;
 }
 
+const QUERY_KEYS = {
+  BASE: "airtable_base",
+  RECORDS: "airtable_records",
+  RECORD: "airtable_record",
+};
+
 /**
  * Hook to fetch Airtable base schema
  */
 export const useAirtableTableSchemaQuery = (tableId?: string) => {
   return useQuery({
-    queryKey: ["airtable", "base", tableId],
+    queryKey: [QUERY_KEYS.BASE, tableId],
     queryFn: async () => {
       const table = await CustomTableService.getTableSchema(tableId);
 
@@ -31,11 +37,24 @@ export const useAirtableTableSchemaQuery = (tableId?: string) => {
   });
 };
 
+const useGetCurrentPageQueryKeyFromParams = () => {
+  const params = useParams();
+
+  const { tables } = useCustomTables();
+  const table = tables.find((table) => table.name === params.id);
+
+  if (!table) return null;
+
+  return [QUERY_KEYS.RECORDS, table?.external_id];
+};
+
 /**
  * Hook for creating Airtable records
  */
 export const useCreateRecord = (tableId: string) => {
   const queryClient = useQueryClient();
+
+  const queryKeyFromParams = useGetCurrentPageQueryKeyFromParams();
 
   return useMutation({
     mutationFn: async (fields: Record<string, unknown>) => {
@@ -47,8 +66,15 @@ export const useCreateRecord = (tableId: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["airtable", "records", tableId],
+        queryKey: [QUERY_KEYS.RECORDS, tableId],
       });
+
+      if (queryKeyFromParams) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeyFromParams,
+        });
+      }
+
       toast.success("Record created successfully");
     },
     onError: (error) => {
@@ -63,6 +89,7 @@ export const useCreateRecord = (tableId: string) => {
  */
 export const useUpdateRecord = (tableId: string) => {
   const queryClient = useQueryClient();
+  const queryKeyFromParams = useGetCurrentPageQueryKeyFromParams();
 
   return useMutation({
     mutationFn: async ({
@@ -77,15 +104,27 @@ export const useUpdateRecord = (tableId: string) => {
         id,
         fields
       );
+
       if (response.error) {
         throw new Error(`Failed to update record: ${response.error.message}`);
       }
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (record) => {
       queryClient.invalidateQueries({
-        queryKey: ["airtable", "records", tableId],
+        queryKey: [QUERY_KEYS.RECORDS, tableId],
       });
+
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.RECORD, tableId, record.id],
+      });
+
+      if (queryKeyFromParams) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeyFromParams,
+        });
+      }
+
       toast.success("Record updated successfully");
     },
     onError: (error) => {
@@ -100,6 +139,7 @@ export const useUpdateRecord = (tableId: string) => {
  */
 export const useDeleteRecord = (tableId: string) => {
   const queryClient = useQueryClient();
+  const queryKeyFromParams = useGetCurrentPageQueryKeyFromParams();
 
   return useMutation({
     mutationFn: async (id: string) => {
@@ -111,8 +151,15 @@ export const useDeleteRecord = (tableId: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["airtable", "records", tableId],
+        queryKey: [QUERY_KEYS.RECORDS, tableId],
       });
+
+      if (queryKeyFromParams) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeyFromParams,
+        });
+      }
+
       toast.success("Record deleted successfully");
     },
     onError: (error) => {
@@ -130,7 +177,7 @@ export const useAirtableRecordsQuery = ({
   enableRealtime = false,
 }: UseAirtableQueryOptions = {}) => {
   const { data: records, ...queryResults } = useQuery({
-    queryKey: ["airtable", "records", tableId],
+    queryKey: [QUERY_KEYS.RECORDS, tableId],
     queryFn: async () => {
       if (!tableId) {
         throw new Error("Table name is required");
@@ -156,9 +203,9 @@ export const useAirtableRecordsQuery = ({
   return {
     ...queryResults,
     records,
-    createRecord: createRecordMutation.mutate,
-    updateRecord: updateRecordMutation.mutate,
-    deleteRecord: deleteRecordMutation.mutate,
+    createRecord: createRecordMutation.mutateAsync,
+    updateRecord: updateRecordMutation.mutateAsync,
+    deleteRecord: deleteRecordMutation.mutateAsync,
     createRecordMutation,
     updateRecordMutation,
     deleteRecordMutation,
@@ -174,7 +221,7 @@ export const useAirtableRecordQuery = ({
   enableRealtime = false,
 }: UseAirtableQueryOptions = {}) => {
   const { data: record, ...queryResults } = useQuery({
-    queryKey: ["airtable", "record", tableId, recordId],
+    queryKey: [QUERY_KEYS.RECORD, tableId, recordId],
     queryFn: async () => {
       if (!tableId) {
         throw new Error("Table name is required");
@@ -187,8 +234,6 @@ export const useAirtableRecordQuery = ({
           `Failed to fetch Airtable records: ${response.error.message}`
         );
       }
-
-      console.log("RESPONSE:", response.data);
 
       return response.data as AirtableRecord;
     },

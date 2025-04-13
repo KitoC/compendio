@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,8 +17,10 @@ const CalendarView = ({
 
   // Find date fields in the table schema
   const dateFields = useMemo(() => {
-    return table.fields.filter(field => 
-      ["date", "dateTime", "createdTime", "lastModifiedTime"].includes(field.type)
+    return table.fields.filter((field) =>
+      ["date", "dateTime", "createdTime", "lastModifiedTime"].includes(
+        field.type
+      )
     );
   }, [table.fields]);
 
@@ -31,24 +32,24 @@ const CalendarView = ({
   // Group records by date
   const recordsByDate = useMemo(() => {
     if (!primaryDateField) return {};
-    
+
     const groupedRecords: Record<string, typeof records> = {};
-    
-    records.forEach(record => {
+
+    records.forEach((record) => {
       const dateValue = record.fields[primaryDateField];
       if (!dateValue) return;
-      
+
       let dateStr: string | null = null;
-      
-      if (typeof dateValue === 'string') {
+
+      if (typeof dateValue === "string") {
         const parsedDate = parseISO(dateValue);
         if (isValid(parsedDate)) {
-          dateStr = format(parsedDate, 'yyyy-MM-dd');
+          dateStr = format(parsedDate, "yyyy-MM-dd");
         }
       } else if (dateValue instanceof Date) {
-        dateStr = format(dateValue, 'yyyy-MM-dd');
+        dateStr = format(dateValue, "yyyy-MM-dd");
       }
-      
+
       if (dateStr) {
         if (!groupedRecords[dateStr]) {
           groupedRecords[dateStr] = [];
@@ -56,7 +57,7 @@ const CalendarView = ({
         groupedRecords[dateStr].push(record);
       }
     });
-    
+
     return groupedRecords;
   }, [records, primaryDateField]);
 
@@ -70,11 +71,11 @@ const CalendarView = ({
 
   // Custom render function for calendar days
   const renderDay = (day: Date) => {
-    const dateStr = format(day, 'yyyy-MM-dd');
+    const dateStr = format(day, "yyyy-MM-dd");
     const dayRecords = recordsByDate[dateStr] || [];
-    
+
     if (dayRecords.length === 0) return null;
-    
+
     return (
       <div className="absolute bottom-0 left-0 right-0 flex justify-center">
         <Badge className="text-xs px-1" variant="secondary">
@@ -83,7 +84,7 @@ const CalendarView = ({
       </div>
     );
   };
-  
+
   // When no date fields are available
   if (!primaryDateField) {
     return (
@@ -98,10 +99,10 @@ const CalendarView = ({
   // When a date is selected, show records for that date
   const handleDayClick = (date: Date | undefined) => {
     if (!date) return;
-    
-    const dateStr = format(date, 'yyyy-MM-dd');
+
+    const dateStr = format(date, "yyyy-MM-dd");
     const dayRecords = recordsByDate[dateStr] || [];
-    
+
     if (dayRecords.length === 1) {
       // If there's only one record, go directly to it
       onRowClick(dayRecords[0]);
@@ -121,15 +122,15 @@ const CalendarView = ({
           className="w-full"
           modifiers={{
             hasEvents: (date) => {
-              const dateStr = format(date, 'yyyy-MM-dd');
+              const dateStr = format(date, "yyyy-MM-dd");
               return !!recordsByDate[dateStr];
             },
           }}
           modifiersStyles={{
             hasEvents: {
               fontWeight: "bold",
-              backgroundColor: "rgba(59, 130, 246, 0.1)"
-            }
+              backgroundColor: "rgba(59, 130, 246, 0.1)",
+            },
           }}
           components={{
             Day: ({ date, ...props }) => {
@@ -147,38 +148,45 @@ const CalendarView = ({
       </div>
 
       <div className="grid gap-2">
-        {currentMonth && Object.entries(recordsByDate).map(([dateStr, dayRecords]) => {
-          const recordDate = parseISO(dateStr);
-          
-          // Only show events for the current month
-          if (recordDate.getMonth() !== currentMonth.getMonth() ||
-              recordDate.getFullYear() !== currentMonth.getFullYear()) {
-            return null;
-          }
-          
-          return (
-            <Card key={dateStr} className="overflow-hidden">
-              <div className="bg-muted px-4 py-2 font-medium">
-                {format(recordDate, 'EEEE, MMMM d, yyyy')}
-              </div>
-              <CardContent className="p-0">
-                {dayRecords.map((record) => (
-                  <div 
-                    key={record.id} 
-                    className="px-4 py-3 border-b last:border-0 cursor-pointer hover:bg-muted/50"
-                    onClick={() => onRowClick(record)}
-                  >
-                    <div className="font-medium">
-                      {primaryField ? 
-                        formatFieldValue(record.fields[primaryField.name], primaryField) : 
-                        record.id}
+        {currentMonth &&
+          Object.entries(recordsByDate).map(([dateStr, dayRecords]) => {
+            const recordDate = parseISO(dateStr);
+
+            // Only show events for the current month
+            if (
+              recordDate.getMonth() !== currentMonth.getMonth() ||
+              recordDate.getFullYear() !== currentMonth.getFullYear()
+            ) {
+              return null;
+            }
+
+            return (
+              <Card key={dateStr} className="overflow-hidden">
+                <div className="bg-muted px-4 py-2 font-medium">
+                  {format(recordDate, "EEEE, MMMM d, yyyy")}
+                </div>
+                <CardContent className="p-0">
+                  {dayRecords.map((record) => (
+                    <div
+                      key={record.id}
+                      className="px-4 py-3 border-b last:border-0 cursor-pointer hover:bg-muted/50"
+                      onClick={() => onRowClick(record)}
+                    >
+                      <div className="font-medium">
+                        {primaryField
+                          ? formatFieldValue(
+                              record.fields[primaryField.name],
+                              primaryField,
+                              record
+                            )
+                          : record.id}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          );
-        })}
+                  ))}
+                </CardContent>
+              </Card>
+            );
+          })}
       </div>
     </div>
   );

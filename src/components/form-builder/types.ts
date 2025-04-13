@@ -10,15 +10,20 @@ export type FormFieldType =
   | "checkbox"
   | "radio"
   | "date"
+  | "datetime"
+  | "multiselect"
   | "integer" // Added for custom table fields
   | "boolean" // Added for custom table fields
   | "reference" // Added for custom table fields
   | "timestamp" // Added for custom table fields
-  | "uuid"; // Added for custom table fields
+  | "uuid" // Added for custom table fields
+  | "record-select"; // Added for custom table fields
 
 export interface FormFieldOption {
   label: string;
   value: string;
+  color?: string;
+  variant?: "airtable" | "default";
 }
 
 export interface FormFieldValidation {
@@ -31,6 +36,17 @@ export interface FormFieldValidation {
   custom?: (value: unknown) => boolean | string;
 }
 
+export interface CustomFieldComponentProps {
+  id: string;
+  name: string;
+  type: string;
+  value: unknown;
+  onChange: (name: string, value: unknown) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  error?: string;
+  touched?: boolean;
+}
 export interface FormField {
   id: string;
   name: string;
@@ -44,6 +60,7 @@ export interface FormField {
   className?: string;
   hidden?: boolean;
   props?: Record<string, unknown>;
+  CustomComponent?: React.ComponentType<CustomFieldComponentProps>;
 }
 
 export interface FormSection {

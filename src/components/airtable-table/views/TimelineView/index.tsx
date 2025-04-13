@@ -206,7 +206,11 @@ const TimelineView = ({
         const group = {
           id: record.id,
           title: primaryField
-            ? formatFieldValue(record.fields[primaryField.name], primaryField)
+            ? formatFieldValue(
+                record.fields[primaryField.name],
+                primaryField,
+                record
+              )
             : record.id,
           record,
         };
@@ -218,7 +222,11 @@ const TimelineView = ({
         id: `${record.id}-item`,
         group: record.id,
         title: primaryField
-          ? formatFieldValue(record.fields[primaryField.name], primaryField)
+          ? formatFieldValue(
+              record.fields[primaryField.name],
+              primaryField,
+              record
+            )
           : record.id,
         start_time: moment(startDate),
         end_time: moment(endDate),

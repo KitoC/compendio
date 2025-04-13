@@ -131,7 +131,11 @@ const GridView = ({
         header: () => displayFields[0].name,
         cell: (info) => (
           <div className="h-full flex items-center">
-            {formatFieldValue(info.getValue(), displayFields[0])}
+            {formatFieldValue(
+              info.getValue(),
+              displayFields[0],
+              info.row.original
+            )}
           </div>
         ),
       }),
@@ -141,7 +145,7 @@ const GridView = ({
           header: () => field.name,
           cell: (info) => (
             <div className="h-full flex items-center">
-              {formatFieldValue(info.getValue(), field)}
+              {formatFieldValue(info.getValue(), field, info.row.original)}
             </div>
           ),
         })

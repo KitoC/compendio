@@ -1,6 +1,5 @@
 import { useParams } from "react-router-dom";
 import Page from "@/components/Page";
-import AirtableTable from "@/components/airtable-table";
 import {
   useAirtableTableSchemaQuery,
   useAirtableRecordsQuery,
@@ -15,8 +14,9 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { FormConfig } from "@/components/form-builder";
-import { AirtableRecord } from "@/components/airtable-table/types";
+import { AirtableRecord } from "@/types/airtable";
 import { useCustomTables } from "@/contexts/CustomTables";
+import AirtableViews from "@/components/airtable-table";
 
 interface AirtableTablePageParams extends Record<string, string> {
   id: string;
@@ -35,6 +35,7 @@ const AirtableTablePage = () => {
     records,
     isLoading: isLoadingRecords,
     refetch,
+    isRefetching,
     createRecord,
     updateRecord,
     deleteRecord,
@@ -50,15 +51,6 @@ const AirtableTablePage = () => {
       refetch();
     } catch (error) {
       console.error("Error creating record:", error);
-    }
-  };
-
-  const handleUpdate = async (record: AirtableRecord) => {
-    try {
-      await updateRecord(record);
-      refetch();
-    } catch (error) {
-      console.error("Error updating record:", error);
     }
   };
 
@@ -106,10 +98,9 @@ const AirtableTablePage = () => {
       </Page>
     );
   }
-  console.log("tableSchema", tableSchema);
-  console.log("records", records);
+
   return (
-    <AirtableTable
+    <AirtableViews
       className="rounded-none border-none h-full"
       table={tableSchema}
       records={records || []}
@@ -122,13 +113,14 @@ const AirtableTablePage = () => {
         export: true,
       }}
       onCreate={handleCreate}
-      onUpdate={handleUpdate}
+      onUpdate={updateRecord}
       onDelete={handleDelete}
       getFormConfig={getFormConfig}
       searchable={true}
       pagination={true}
       pageSize={10}
       onRefresh={refetch}
+      isRefreshing={isRefetching}
     />
   );
 };

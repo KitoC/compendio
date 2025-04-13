@@ -24,6 +24,7 @@ interface SlidePanelProps {
   headerClassName?: string;
   bodyClassName?: string;
   footerClassName?: string;
+  footerId?: string;
 }
 
 export function SlidePanel({
@@ -40,6 +41,7 @@ export function SlidePanel({
   headerClassName,
   bodyClassName,
   footerClassName,
+  footerId = "slide-panel-footer-portal",
 }: SlidePanelProps) {
   useEffect(() => {
     // IMPORTANT: This is a workaround to prevent the Sheet from not removing the pointer events when the sheet is closed
@@ -78,7 +80,7 @@ export function SlidePanel({
         {footer && (
           <div
             className={cn("border-t p-4 mt-auto", footerClassName)}
-            id="slide-panel-footer-portal"
+            id={footerId}
           >
             {footer}
           </div>

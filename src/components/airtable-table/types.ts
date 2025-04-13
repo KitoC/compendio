@@ -1,11 +1,5 @@
 import { FormConfig } from "@/components/form-builder/types";
-import { AirtableField, AirtableTable } from "@/types/airtable";
-
-export interface AirtableRecord {
-  id: string;
-  fields: Record<string, any>;
-  createdTime?: string;
-}
+import { AirtableField, AirtableTable, AirtableRecord } from "@/types/airtable";
 
 export interface AirtableTableProps {
   table: AirtableTable;
@@ -27,6 +21,7 @@ export interface AirtableTableProps {
     record: AirtableRecord | null
   ) => FormConfig;
   onRefresh?: () => void;
+  isRefreshing?: boolean;
 }
 
 export interface UserPermissions {
@@ -36,36 +31,6 @@ export interface UserPermissions {
   delete: boolean;
   export: boolean;
 }
-
-export type AirtableFieldType =
-  | "singleLineText"
-  | "longText"
-  | "attachment"
-  | "checkbox"
-  | "multipleSelects"
-  | "singleSelect"
-  | "date"
-  | "dateTime"
-  | "email"
-  | "url"
-  | "number"
-  | "percent"
-  | "currency"
-  | "duration"
-  | "rating"
-  | "phoneNumber"
-  | "formula"
-  | "rollup"
-  | "lookup"
-  | "createdTime"
-  | "lastModifiedTime"
-  | "createdBy"
-  | "lastModifiedBy"
-  | "button"
-  | "count"
-  | "autoNumber"
-  | "barcode"
-  | "foreignKey";
 
 export interface EditModalProps {
   isOpen: boolean;
@@ -83,6 +48,6 @@ export interface EditModalProps {
 
 export interface FieldFilterProps {
   field: AirtableField;
-  value: any;
-  onChange: (value: any) => void;
+  value: unknown;
+  onChange: (value: unknown) => void;
 }

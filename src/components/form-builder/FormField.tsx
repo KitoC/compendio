@@ -1,4 +1,3 @@
-
 import { FormFieldProps } from "./types";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +13,10 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { Star } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { getAirtableColor } from "@/utils/airtable";
+import Multiselect, { MultiselectOption } from "@/components/ui/multiselect";
+import { CalendarInput } from "../ui/calendar-input";
 
 const FormField = ({
   field,
@@ -32,6 +35,7 @@ const FormField = ({
     disabled,
     className,
     props,
+    CustomComponent,
   } = field;
 
   const handleChange = (
@@ -78,7 +82,7 @@ const FormField = ({
   const renderRating = () => {
     const maxRating = props?.maxRating || 5;
     const currentRating = Number(value) || 0;
-    
+
     return (
       <div className="flex items-center gap-1">
         {[...Array(maxRating)].map((_, i) => (
@@ -86,7 +90,9 @@ const FormField = ({
             key={i}
             className={cn(
               "h-5 w-5 cursor-pointer",
-              i < currentRating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+              i < currentRating
+                ? "fill-yellow-400 text-yellow-400"
+                : "text-gray-300"
             )}
             onClick={() => onChange(name, i + 1)}
           />
@@ -121,9 +127,25 @@ const FormField = ({
     if (props?.isRating) {
       return renderRating();
     }
-    
+
     if (props?.isAttachment) {
       return renderAttachmentInput();
+    }
+
+    if (CustomComponent) {
+      return (
+        <CustomComponent
+          id={id}
+          name={name}
+          type={type}
+          value={(value as string) || ""}
+          onChange={(name, value) => onChange(name, value)}
+          placeholder={placeholder}
+          disabled={disabled}
+          error={error}
+          touched={touched}
+        />
+      );
     }
 
     switch (type) {
@@ -168,7 +190,7 @@ const FormField = ({
           return (
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                {props.currencySymbol || "$"}
+                {(props?.currencySymbol as string) || "$"}
               </span>
               <Input
                 id={id}
@@ -188,7 +210,7 @@ const FormField = ({
             </div>
           );
         }
-        
+
         if (props?.isPercent) {
           return (
             <div className="relative">
@@ -213,7 +235,7 @@ const FormField = ({
             </div>
           );
         }
-        
+
         // Default number input
         return (
           <Input
@@ -251,11 +273,32 @@ const FormField = ({
             <SelectContent>
               {options?.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
-                  {option.label}
+                  {option.color ? (
+                    <Badge
+                      variant={option.variant}
+                      className={cn("text-xs", getAirtableColor(option.color))}
+                    >
+                      {option.label}
+                    </Badge>
+                  ) : (
+                    option.label
+                  )}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+        );
+
+      case "multiselect":
+        return (
+          <Multiselect
+            name={name}
+            disabled={disabled}
+            value={value as MultiselectOption[]}
+            onChange={(val) => onChange(name, val)}
+            options={options}
+            {...field.props}
+          />
         );
 
       case "checkbox":
@@ -312,13 +355,30 @@ const FormField = ({
         );
 
       case "date":
+        // TODO: replace with Calendar component
         return (
           <Input
             id={id}
             name={name}
-            type="date"
+            type={"date"}
             value={(value as string) || ""}
             onChange={handleChange}
+            disabled={disabled}
+            className={cn(
+              error && touched ? "border-destructive" : "",
+              className
+            )}
+          />
+        );
+
+      case "datetime":
+        // TODO: replace with Calendar component
+        return (
+          <CalendarInput
+            id={id}
+            name={name}
+            value={(value as string) || ""}
+            onChange={(date) => onChange(name, date)}
             disabled={disabled}
             className={cn(
               error && touched ? "border-destructive" : "",

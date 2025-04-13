@@ -31,11 +31,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { AirtableTableProps, AirtableRecord, UserPermissions } from "./types";
+import { AirtableTableProps, UserPermissions } from "./types";
+import { AirtableRecord } from "@/types/airtable";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatFieldValue } from "./utils";
-import EditModal from "./EditModal";
 import FieldFilter from "./FieldFilter";
 import { Tag } from "@/components/ui/tag";
 import {
@@ -48,6 +48,7 @@ import {
 } from "./views";
 import ViewTypeSelector from "./ViewTypeSelector";
 import { cn } from "@/lib/utils";
+import AirtableModal from "../airtable-modal";
 const defaultPermissions: UserPermissions = {
   create: true,
   read: true,
@@ -56,7 +57,7 @@ const defaultPermissions: UserPermissions = {
   export: true,
 };
 
-const AirtableTable = (props: AirtableTableProps) => {
+const AirtableViews = (props: AirtableTableProps) => {
   const {
     table,
     records,
@@ -74,6 +75,7 @@ const AirtableTable = (props: AirtableTableProps) => {
     pageSize = 10,
     getFormConfig,
     onRefresh,
+    isRefreshing,
   } = props;
   const isMobile = useIsMobile();
 
@@ -84,7 +86,6 @@ const AirtableTable = (props: AirtableTableProps) => {
   const [editingRecord, setEditingRecord] = useState<AirtableRecord | null>(
     null
   );
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [deleteRecordId, setDeleteRecordId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Record<string, unknown>>({});
@@ -278,9 +279,7 @@ const AirtableTable = (props: AirtableTableProps) => {
 
   const handleRefresh = async () => {
     if (onRefresh) {
-      setIsRefreshing(true);
       await onRefresh();
-      setIsRefreshing(false);
     }
   };
 
@@ -297,7 +296,7 @@ const AirtableTable = (props: AirtableTableProps) => {
           if (!field) return "";
 
           const value = record.fields[fieldName];
-          const formatted = formatFieldValue(value, field);
+          const formatted = formatFieldValue(value, field, record);
 
           return value !== null && value !== undefined
             ? `"${String(formatted).replace(/"/g, '""')}"`
@@ -582,18 +581,19 @@ const AirtableTable = (props: AirtableTableProps) => {
           </div>
         )}
 
-        <EditModal
-          isOpen={isCreating || editingRecord !== null}
+        <AirtableModal
+          providedTable={table}
+          providedRecord={editingRecord}
+          tableId={table?.external_id}
+          recordId={editingRecord?.id}
+          isCreating={isCreating}
+          getFormConfig={getFormConfig}
+          onSave={handleSave}
           onClose={() => {
             setEditingRecord(null);
             setIsCreating(false);
           }}
-          record={editingRecord}
-          table={table}
-          onSave={handleSave}
-          idField={idField}
-          isCreating={isCreating}
-          getFormConfig={getFormConfig}
+          isOpen={isCreating || editingRecord !== null}
         />
 
         <AlertDialog
@@ -621,4 +621,4 @@ const AirtableTable = (props: AirtableTableProps) => {
   );
 };
 
-export default AirtableTable;
+export default AirtableViews;

@@ -24,6 +24,10 @@ const ResponsiveModal = ({
   setIsOpen,
   title,
   description,
+  footerId,
+  onOpenAutoFocus = (e) => {
+    e.preventDefault();
+  },
 }: {
   children: React.ReactNode;
   header?: React.ReactNode;
@@ -41,6 +45,8 @@ const ResponsiveModal = ({
   setIsOpen?: (isOpen: boolean) => void;
   title?: string;
   description?: string;
+  footerId?: string;
+  onOpenAutoFocus?: (e: Event) => void;
 }) => {
   const isMobile = useIsMobile();
 
@@ -61,9 +67,8 @@ const ResponsiveModal = ({
           headerClassName={headerClassName}
           bodyClassName={bodyClassName}
           footerClassName={footerClassName}
-          onOpenAutoFocus={(e) => {
-            e.preventDefault();
-          }}
+          footerId={footerId}
+          onOpenAutoFocus={onOpenAutoFocus}
         >
           {children}
         </SlidePanel>
@@ -83,9 +88,7 @@ const ResponsiveModal = ({
           "p-4 border-0 max-w-3xl h-[80vh] bg-background",
           className
         )}
-        onOpenAutoFocus={(e) => {
-          e.preventDefault();
-        }}
+        onOpenAutoFocus={onOpenAutoFocus}
       >
         {header && (
           <DialogHeader className={headerClassName}>

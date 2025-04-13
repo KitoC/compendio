@@ -1,4 +1,3 @@
-
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatFieldValue } from "../utils";
@@ -12,7 +11,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { GripVertical } from "lucide-react";
-import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  DropResult,
+} from "react-beautiful-dnd";
 
 const KanbanView = ({
   records,
@@ -89,7 +93,7 @@ const KanbanView = ({
 
   const handleDragEnd = async (result: DropResult) => {
     const { source, destination } = result;
-    
+
     // If dropped outside a droppable area
     if (!destination) return;
 
@@ -105,19 +109,19 @@ const KanbanView = ({
     const recordId = result.draggableId;
     const sourceGroup = source.droppableId;
     const destinationGroup = destination.droppableId;
-    
+
     // If dropped in a different column, update the record with the new status/value
     if (sourceGroup !== destinationGroup && onUpdate) {
       // Find the record that was dragged
       const recordToUpdate = records.find((record) => record.id === recordId);
       if (!recordToUpdate) return;
-      
+
       // Create a copy of the record with the updated field value
       const updatedRecord = {
         ...recordToUpdate,
         fields: {
           ...recordToUpdate.fields,
-          [selectedField as string]: 
+          [selectedField as string]:
             destinationGroup === "Uncategorized" ? null : destinationGroup,
         },
       };
@@ -174,7 +178,7 @@ const KanbanView = ({
             const fieldForColor = table.fields.find(
               (f) => f.name === selectedField
             );
-            
+
             let groupColor = "bg-muted";
 
             // Try to find matching option color
@@ -188,10 +192,7 @@ const KanbanView = ({
             }
 
             return (
-              <div 
-                key={group} 
-                className="flex-shrink-0 w-80"
-              >
+              <div key={group} className="flex-shrink-0 w-80">
                 <Card>
                   <CardHeader className={`${groupColor} py-3`}>
                     <div className="flex justify-between items-center">
@@ -203,15 +204,17 @@ const KanbanView = ({
                   </CardHeader>
                   <Droppable droppableId={group}>
                     {(provided, snapshot) => (
-                      <CardContent 
+                      <CardContent
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        className={`p-2 max-h-[70vh] overflow-y-auto ${snapshot.isDraggingOver ? 'bg-muted/30' : ''}`}
+                        className={`p-2 max-h-[70vh] overflow-y-auto ${
+                          snapshot.isDraggingOver ? "bg-muted/30" : ""
+                        }`}
                       >
                         {groupRecords.map((record, index) => (
-                          <Draggable 
-                            key={record.id} 
-                            draggableId={record.id} 
+                          <Draggable
+                            key={record.id}
+                            draggableId={record.id}
                             index={index}
                           >
                             {(provided, snapshot) => (
@@ -224,7 +227,7 @@ const KanbanView = ({
                                 onClick={() => onRowClick(record)}
                                 style={provided.draggableProps.style}
                               >
-                                <div 
+                                <div
                                   className="absolute left-1 top-1/2 -translate-y-1/2 opacity-30 hover:opacity-70 text-muted-foreground"
                                   {...provided.dragHandleProps}
                                 >
@@ -234,7 +237,8 @@ const KanbanView = ({
                                   {primaryField
                                     ? formatFieldValue(
                                         record.fields[primaryField.name],
-                                        primaryField
+                                        primaryField,
+                                        record
                                       )
                                     : record.id}
                                 </div>
@@ -253,9 +257,16 @@ const KanbanView = ({
                                         return null;
 
                                       return (
-                                        <div key={field.id} className="truncate">
+                                        <div
+                                          key={field.id}
+                                          className="truncate"
+                                        >
                                           {field.name}:{" "}
-                                          {formatFieldValue(value, field, true)}
+                                          {formatFieldValue(
+                                            value,
+                                            field,
+                                            record
+                                          )}
                                         </div>
                                       );
                                     })}
