@@ -11,6 +11,7 @@ import { uniqueNamesGenerator, colors, Config } from "unique-names-generator";
 import { v4 as uuidv4 } from "uuid";
 import { dynamicHeaders } from "@/integrations/supabase/client"; // wherever it's defined
 
+// TODO: Refactor to use useQuery from tanstack
 export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
   const { tenantId: urlTenantAlias } = useParams<{ tenantId: string }>();
   const location = useLocation();

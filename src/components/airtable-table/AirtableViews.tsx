@@ -49,6 +49,8 @@ import {
 import ViewTypeSelector from "./ViewTypeSelector";
 import { cn } from "@/lib/utils";
 import AirtableModal from "../airtable-modal";
+import pluralize from "pluralize";
+
 const defaultPermissions: UserPermissions = {
   create: true,
   read: true,
@@ -259,7 +261,6 @@ const AirtableViews = (props: AirtableTableProps) => {
     if (deleteRecordId !== null && onDelete) {
       try {
         await onDelete(deleteRecordId);
-        toast.success("Record deleted successfully");
       } catch (error) {
         console.error("Error deleting record:", error);
         toast.error("Failed to delete record");
@@ -408,7 +409,7 @@ const AirtableViews = (props: AirtableTableProps) => {
               {permissions.create && (
                 <Button size="xs" onClick={handleCreate}>
                   <Plus className="h-3 w-3" />
-                  New
+                  New {pluralize.singular(table.name)}
                 </Button>
               )}
             </div>

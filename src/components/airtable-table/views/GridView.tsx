@@ -26,8 +26,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AirtableRecord, UserPermissions } from "../types";
-import { AirtableField } from "@/types/airtable";
+import { UserPermissions } from "../types";
+import { AirtableField, AirtableRecord } from "@/types/airtable";
 
 const columnHelper = createColumnHelper<AirtableRecord>();
 
@@ -78,14 +78,22 @@ function ActionsCell({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           {permissions.update && (
-            <DropdownMenuItem onClick={() => handleEdit(record)}>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEdit(record);
+              }}
+            >
               Edit
             </DropdownMenuItem>
           )}
           {permissions.delete && (
             <DropdownMenuItem
               className="text-destructive"
-              onClick={() => setDeleteRecordId(record.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setDeleteRecordId(record.id);
+              }}
             >
               Delete
             </DropdownMenuItem>
@@ -260,7 +268,9 @@ const GridView = ({
                 <TableRow
                   key={row.id}
                   className="animate-fade-in transition-colors cursor-pointer hover:bg-muted/50"
-                  onClick={() => onRowClick(row.original)}
+                  onClick={() => {
+                    onRowClick(row.original);
+                  }}
                   style={{
                     animationDelay: `${rowIndex * 30}ms`,
                     height: ROW_HEIGHT,

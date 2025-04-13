@@ -7,6 +7,8 @@ import {
 import { AirtableField, AirtableTable, AirtableRecord } from "@/types/airtable";
 import { getFieldRenderer } from "./field-renderers";
 import AirtableEntityField from "./AirtableEntityField";
+import pluralize from "pluralize";
+import { SystemSettings } from "@/contexts/SystemSettingsProvider/SystemSettingsContext";
 /**
  * Maps Airtable field types to FormBuilder field types
  */
@@ -132,7 +134,8 @@ export const airtableFieldToFormField = (field: AirtableField): FormField => {
 export const airtableTableToFormConfig = (
   table: AirtableTable,
   record: AirtableRecord | null,
-  isCreating: boolean
+  isCreating: boolean,
+  systemSettings: SystemSettings
 ): FormConfig => {
   // Convert fields to form fields
   const fields = table.fields
@@ -140,22 +143,23 @@ export const airtableTableToFormConfig = (
       (field) =>
         !field.isComputed &&
         !field.isLocked &&
-        ![
-          "createdTime",
-          "lastModifiedTime",
-          "createdBy",
-          "lastModifiedBy",
-          "aiText",
-          "multipleLookupValues",
-        ].includes(field.type)
+        !(systemSettings.consts.READONLY_FIELDS_AIRTABLE as string[]).includes(
+          field.type
+        )
     )
     .map((field) => airtableFieldToFormField(field));
 
+  const singularTableName = pluralize.singular(table.name);
+  const primaryField = table.fields.find(
+    (field) => field.id === table.primaryFieldId
+  );
+
+  const name = record?.fields?.[primaryField?.name];
+  const editTitle = name ? `${singularTableName} - ${name}` : singularTableName;
+
   const formConfig: FormConfig = {
     id: `airtable-form-${table.id}`,
-    title: isCreating
-      ? `Add New ${table.name} Record`
-      : `Edit ${table.name} Record`,
+    title: isCreating ? `Add New ${singularTableName}` : `Editing ${editTitle}`,
     description: table.description || "",
     sections: [
       {

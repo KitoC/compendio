@@ -54,15 +54,6 @@ const AirtableTablePage = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteRecord(id);
-      refetch();
-    } catch (error) {
-      console.error("Error deleting record:", error);
-    }
-  };
-
   if (isLoadingSchema) {
     return (
       <Page>
@@ -114,7 +105,7 @@ const AirtableTablePage = () => {
       }}
       onCreate={handleCreate}
       onUpdate={updateRecord}
-      onDelete={handleDelete}
+      onDelete={deleteRecord}
       getFormConfig={getFormConfig}
       searchable={true}
       pagination={true}

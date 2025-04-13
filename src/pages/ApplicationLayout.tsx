@@ -15,6 +15,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
 import clsx from "clsx";
 import useEmailAgentNotifications from "@/contexts/NotificationProvider/useEmailNotifications";
+import { SystemSettingsProvider } from "@/contexts/SystemSettingsProvider";
 
 interface ApplicationLayoutProps {
   children?: ReactNode;
@@ -91,68 +92,70 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
   );
 
   return (
-    <UserSettingsProvider>
-      <ThemeProvider defaultTheme="system">
-        <TooltipProvider>
-          <AiAgentsProvider>
-            <CustomTablesProvider>
-              <SidebarProvider
-                className={clsx(
-                  "page-container flex min-h-screen w-full bg-background",
-                  {
-                    "flex flex-col overflow-hidden h-dvh pb-[calc(var(--page-bottom-padding))] pt-[var(--header-height)]":
-                      isMobile,
-                  }
-                )}
-                style={
-                  {
-                    "--header-height": "50px",
-                  } as React.CSSProperties
-                }
-              >
-                {isMobile && (
-                  <header
-                    ref={headerRef}
-                    className="fixed top-0 left-0 right-0 z-40 h-[var(--header-height)]  w-full flex items-center h-fit px-4 border-b bg-background shadow pt-safe-top"
-                  >
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="mr-2 h-14 w-14 p-2"
-                      onClick={() =>
-                        document.dispatchEvent(
-                          new CustomEvent("toggle-sidebar")
-                        )
-                      }
-                    >
-                      <Menu />
-                      <span className="sr-only">Toggle menu</span>
-                    </Button>
-                    <div id="page-header-anchor" className="flex-1"></div>
-                  </header>
-                )}
-                {<AppSidebar />}
-
-                {isMobile ? (
-                  suspensedContent
-                ) : (
-                  <main
-                    className={clsx(" flex-grow overflow-y-scroll relative", {
-                      "h-screen": !isMobile,
-                      "h-[calc(100vh-var(--header-height))] pb-[var(--page-bottom-padding)]":
+    <SystemSettingsProvider>
+      <UserSettingsProvider>
+        <ThemeProvider defaultTheme="system">
+          <TooltipProvider>
+            <AiAgentsProvider>
+              <CustomTablesProvider>
+                <SidebarProvider
+                  className={clsx(
+                    "page-container flex min-h-screen w-full bg-background",
+                    {
+                      "flex flex-col overflow-hidden h-dvh pb-[calc(var(--page-bottom-padding))] pt-[var(--header-height)]":
                         isMobile,
-                    })}
-                  >
-                    {suspensedContent}
-                  </main>
-                )}
-                <PwaInstallPrompt />
-              </SidebarProvider>
-            </CustomTablesProvider>
-          </AiAgentsProvider>
-        </TooltipProvider>
-      </ThemeProvider>
-    </UserSettingsProvider>
+                    }
+                  )}
+                  style={
+                    {
+                      "--header-height": "50px",
+                    } as React.CSSProperties
+                  }
+                >
+                  {isMobile && (
+                    <header
+                      ref={headerRef}
+                      className="fixed top-0 left-0 right-0 z-40 h-[var(--header-height)]  w-full flex items-center h-fit px-4 border-b bg-background shadow pt-safe-top"
+                    >
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="mr-2 h-14 w-14 p-2"
+                        onClick={() =>
+                          document.dispatchEvent(
+                            new CustomEvent("toggle-sidebar")
+                          )
+                        }
+                      >
+                        <Menu />
+                        <span className="sr-only">Toggle menu</span>
+                      </Button>
+                      <div id="page-header-anchor" className="flex-1"></div>
+                    </header>
+                  )}
+                  {<AppSidebar />}
+
+                  {isMobile ? (
+                    suspensedContent
+                  ) : (
+                    <main
+                      className={clsx(" flex-grow overflow-y-scroll relative", {
+                        "h-screen": !isMobile,
+                        "h-[calc(100vh-var(--header-height))] pb-[var(--page-bottom-padding)]":
+                          isMobile,
+                      })}
+                    >
+                      {suspensedContent}
+                    </main>
+                  )}
+                  <PwaInstallPrompt />
+                </SidebarProvider>
+              </CustomTablesProvider>
+            </AiAgentsProvider>
+          </TooltipProvider>
+        </ThemeProvider>
+      </UserSettingsProvider>
+    </SystemSettingsProvider>
   );
 };
 

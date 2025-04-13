@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { AirtableRecord, AirtableTable } from "@/types/airtable";
-import { toast } from "sonner";
 import FormBuilder, { FormConfig } from "@/components/form-builder";
 import {
   airtableTableToFormConfig,
@@ -13,7 +12,7 @@ import {
 } from "@/hooks/useAirtableQuery";
 import { Alert } from "../ui/alert";
 import { Bot } from "lucide-react";
-
+import { useSystemSettings } from "@/contexts/SystemSettingsProvider";
 export interface AirtableModalProps {
   tableId: string;
   recordId: string;
@@ -43,6 +42,7 @@ const AirtableModal = ({
   getFormConfig,
   onLoadingChange,
 }: AirtableModalProps) => {
+  const systemSettings = useSystemSettings();
   const isProvided = !!providedTable && !!providedRecord;
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -76,7 +76,8 @@ const AirtableModal = ({
   const defaultConfig = airtableTableToFormConfig(
     tableSchema,
     record,
-    isCreating
+    isCreating,
+    systemSettings
   );
   const formConfig = getFormConfig
     ? getFormConfig(defaultConfig, record)
@@ -109,6 +110,17 @@ const AirtableModal = ({
 
   const footerId = `airtable-modal-footer-${recordId}`;
 
+  const aiTextItemValues = aiTextItems
+    .map((item) => {
+      const { value } =
+        (record?.fields?.[item?.name] as {
+          value: string;
+        }) || {};
+
+      return { name: item?.name, value };
+    })
+    .filter((item) => item.value);
+
   return (
     <div
       onKeyDown={(e) => {
@@ -135,25 +147,21 @@ const AirtableModal = ({
           }
         }}
       >
-        {aiTextItems.length > 0 && (
+        {aiTextItemValues.length > 0 && (
           <div className="p-6 pb-0 bg-card">
             <Alert variant="info">
-              <div className="relative">
+              <div className="relative flex flex-col gap-2">
                 <div className="absolute top-0 right-0">
                   <Bot className="w-6 h-6 mb-2" />
                 </div>
 
-                {aiTextItems.map((item) => {
-                  const { value } = record?.fields?.[item?.name] as {
-                    value: string;
-                  };
-
-                  if (!value) return null;
-
+                {aiTextItemValues.map((item) => {
                   return (
-                    <div key={item.id} className="mb-2">
+                    <div key={item.name} className="">
                       <p className="font-semibold text-sm">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">{value}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {item.value || "-"}
+                      </p>
                     </div>
                   );
                 })}
@@ -162,15 +170,18 @@ const AirtableModal = ({
           </div>
         )}
         {lookupItems.length > 0 && (
-          <div className="p-6 pb-0 bg-card">
+          <div className="p-6 pb-0 bg-card flex flex-col gap-2">
+            <p className="text-muted-foreground font-bold text-xs">
+              Calculated fields
+            </p>
             {lookupItems.map((item) => {
               const value = record?.fields?.[item?.name] as string;
               return (
-                <div key={item.id} className="mb-2 gap-1">
+                <div key={item.id} className="gap-1">
                   <p className="text-muted-foreground font-bold text-sm">
                     {item.name}
                   </p>
-                  <p className="text-sm">{value}</p>
+                  <p className="text-sm">{value || "-"}</p>
                 </div>
               );
             })}
