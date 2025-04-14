@@ -1,6 +1,6 @@
 // ============================================
 // DataRecordHandler.ts
-// Handles 'get_record' and 'get_records' task type
+// Handles 'get_records' task type
 // ============================================
 
 import { PublicContext } from "locals/middleware/withPublicContext";

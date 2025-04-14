@@ -12,7 +12,7 @@ import {
   get_email_integration_markup_schema,
 } from "@/SYSTEM_FUNCTIONS/ONBOARDING_FUNCTIONS";
 import { send_email } from "@/SYSTEM_FUNCTIONS/EMAIL_FUNCTIONS";
-import { get_record, get_records } from "@/SYSTEM_FUNCTIONS/RECORD_FUNCTIONS";
+import { get_records } from "@/SYSTEM_FUNCTIONS/RECORD_FUNCTIONS";
 import { DataRecordHandler } from "locals/handlers/ai_functions/DataRecordHandler";
 
 export type ExecuteFunctionResult = {
@@ -36,7 +36,6 @@ class FunctionController extends BaseController {
       send_email,
       onboarding_progress_update,
       get_email_integration_markup_schema,
-      get_record,
       get_records,
     };
 
@@ -45,7 +44,6 @@ class FunctionController extends BaseController {
       [onboarding_progress_update.name]: new OnboardingProgressUpdateHandler(
         this.context
       ),
-      [get_record.name]: new DataRecordHandler(this.context),
       [get_records.name]: new DataRecordHandler(this.context),
     };
   }
