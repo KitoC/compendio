@@ -48,9 +48,7 @@ export type DraftEmailResponse = {
   summary: string;
 };
 
-class EmailAgentController<
-  SessionContext extends Record<string, unknown>
-> extends AgentController<SessionContext> {
+class EmailAgentController extends AgentController {
   async getPriorityScale() {
     return DEFAULT_EMAIL_PRIORITY_SCALE;
   }
@@ -166,7 +164,8 @@ class EmailAgentController<
         role: "email_agent",
         tenant_id: this.agent.tenant_id as string,
         user_id: this.agent.id,
-        connected_service_id: this.sessionContext.connected_service_id,
+        connected_service_id: JSON.parse(this.sessionContext)
+          .connected_service_id,
         metadata: {
           uuid,
           status: draftEmail.email_drafted ? "draft" : "received",

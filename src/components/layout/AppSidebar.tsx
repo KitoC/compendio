@@ -139,6 +139,10 @@ const AppSidebar = () => {
       label: "Settings",
       url: ROUTES.SETTINGS_APPEARANCE,
       icon: <Settings className="h-4 w-4" />,
+      onClick: (e) => {
+        e.preventDefault();
+        setShowSettingsSidebar(true);
+      },
     },
   ];
 

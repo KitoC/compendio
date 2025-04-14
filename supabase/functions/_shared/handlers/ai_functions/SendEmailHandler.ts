@@ -16,7 +16,7 @@ import {
   IAgentFunctionHandlerResult,
 } from "locals/interfaces/IAgentFunctionHandler";
 import type { IFunction, IFunctionCall } from "@/types/aiAgents";
-
+import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
 export interface ITaskPayload {
   message_id: string;
   conversation_id: string;
@@ -73,13 +73,13 @@ export class SendEmailHandler implements IAgentFunctionHandler {
       );
 
     const agentController = await EmailAgentController.create({
-      context: this.context,
+      context: this.context as AuthenticatedContext,
       functionController: new FunctionController(this.context),
       agentId: message.user_id,
-      sessionContext: {
+      sessionContext: JSON.stringify({
         connected_service_id: message.connected_service_id,
         tenant_id: message.tenant_id,
-      },
+      }),
     });
 
     if (!connectedService) {

@@ -16,7 +16,11 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
     context,
     functionController: new FunctionController(context),
     agentId: agent_id,
-    sessionContext: {},
+    sessionContext: JSON.stringify({
+      todaysDate: new Date().toISOString(),
+      // TODO: get user timezone from sessionContext
+      timezone: "Australia/Sydney",
+    }),
   });
 
   const result = await agentController.talkToAgent(conversation_id);

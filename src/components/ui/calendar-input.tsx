@@ -1,8 +1,4 @@
-import * as React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Calendar, CalendarProps } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,8 +6,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import dayjs from "dayjs";
-import { useState } from "react";
-import { ChangeEventHandler } from "react";
+import { ChangeEventHandler, useEffect } from "react";
 import { setHours, setMinutes } from "date-fns";
 
 export type CalendarInputProps = CalendarProps & {
@@ -51,8 +46,15 @@ function CalendarInput({ value, onChange, ...props }: CalendarInputProps) {
       hours,
       minutes
     );
+
     onChange(newDate.toISOString());
   };
+
+  useEffect(() => {
+    if (!value) {
+      onChange(new Date().toISOString());
+    }
+  }, [value, onChange]);
 
   return (
     <DropdownMenu>

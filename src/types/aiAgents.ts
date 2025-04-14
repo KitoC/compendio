@@ -57,5 +57,4 @@ export interface IFunctionCall {
 
 export interface IContext {
   functions: Partial<IFunction>[];
-  session: string;
 }

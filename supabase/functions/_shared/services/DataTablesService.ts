@@ -9,11 +9,31 @@ import type { Database } from "@/integrations/supabase/types";
 import { READONLY_FIELDS_AIRTABLE } from "locals/consts";
 
 type DataField = Database["public"]["Tables"]["data_fields"]["Row"];
+type DataTable = Database["public"]["Tables"]["data_tables"]["Row"];
+type DataTableSchema = DataTable & {
+  data_fields: (DataField & {
+    schema: AirtableField;
+  })[];
+};
 
 class DataTablesService extends BaseSupabaseService {
   constructor(public context: BaseRequiredContext) {
     super(context);
     this.tableName = "data_tables";
+  }
+
+  async getTableSchemas({
+    base_id,
+  }: {
+    base_id: string;
+  }): Promise<DataTableSchema[]> {
+    const { data: tableSchemas } = await this.supabase_AS_SUPER_ADMIN
+      .from("data_tables")
+      .select("*, data_fields(*)")
+      .eq("schema_id", base_id)
+      .eq("source", "airtable");
+
+    return tableSchemas;
   }
 
   async getTableSchema({ base_id, table }: { base_id: string; table: string }) {

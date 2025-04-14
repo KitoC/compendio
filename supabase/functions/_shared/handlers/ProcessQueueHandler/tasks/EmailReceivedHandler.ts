@@ -14,7 +14,7 @@ import { EmailAgentController } from "locals/controllers/EmailAgentController";
 import { FunctionController } from "locals/controllers/FunctionController";
 import Logger from "locals/utils/Logger";
 import { PROVIDERS } from "locals/consts";
-
+import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
 export interface ITaskPayload {
   connected_service_id: string;
   tenant_id: string;
@@ -71,10 +71,10 @@ export class EmailReceivedHandler implements ITaskHandler {
     const email = await emailProviderService.getEmail(email_event.email_id);
 
     const agentController = await EmailAgentController.create({
-      context,
+      context: context as AuthenticatedContext,
       functionController: new FunctionController(context),
       agentId,
-      sessionContext: { connected_service_id, tenant_id },
+      sessionContext: JSON.stringify({ connected_service_id, tenant_id }),
     });
 
     await agentController.createEmailMessage(

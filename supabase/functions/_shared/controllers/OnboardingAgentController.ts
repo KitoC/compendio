@@ -11,9 +11,7 @@ import {
 } from "@/SYSTEM_FUNCTIONS/ONBOARDING_FUNCTIONS";
 import { ONBOARDING_STEPS_AGENT_PROMPT } from "@/SYSTEM_PROMPTS/ONBOARDING/ONBOARDING_STEPS_AGENT_PROMPT";
 
-class OnboardingAgentController<
-  SessionContext extends Record<string, unknown>
-> extends AgentController<SessionContext> {
+class OnboardingAgentController extends AgentController {
   async getFunctions(): Promise<IFunction[]> {
     return [onboarding_progress_update, get_email_integration_markup_schema];
   }

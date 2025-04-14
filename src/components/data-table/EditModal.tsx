@@ -1,12 +1,11 @@
-
 // NO_CHANGE
 
 import { useState } from "react";
 import { EditModalProps } from "./types";
 import { toast } from "sonner";
-import { SlidePanel } from "../ui/slide-panel";
 import FormBuilder from "@/components/form-builder";
 import { columnsToFormConfig, createInitialValues } from "./utils";
+import ResponsiveModal from "../ui/responsive-modal";
 
 function EditModal<T extends Record<string, unknown>>({
   isOpen,
@@ -58,9 +57,10 @@ function EditModal<T extends Record<string, unknown>>({
   };
 
   return (
-    <SlidePanel
-      open={isOpen}
-      onOpenChange={(open) => !open && onClose()}
+    <ResponsiveModal
+      isOpen={isOpen}
+      isSlider
+      setIsOpen={(open) => !open && onClose()}
       title={formConfig.title}
       description={formConfig.description}
       footer={<div></div>}
@@ -75,7 +75,7 @@ function EditModal<T extends Record<string, unknown>>({
         className="border-none shadow-none p-0"
         buttonPortalId="slide-panel-footer-portal"
       />
-    </SlidePanel>
+    </ResponsiveModal>
   );
 }
 

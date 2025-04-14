@@ -19,10 +19,10 @@ const SYSTEM_AGENTS: { [key: string]: IAiAgent } = {
 };
 
 const getAgentController = async (
-  context: PublicContext | AuthenticatedContext,
+  context: AuthenticatedContext,
   functionController: FunctionController,
   agentId: string,
-  sessionContext: Record<string, unknown>
+  sessionContext: string
 ) => {
   if (agentId === "onboarding") {
     const agent = SYSTEM_AGENTS.ONBOARDING;

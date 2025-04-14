@@ -16,9 +16,11 @@ const handler = async (req: Request) => {
     try {
       const data = JSON.parse(event.data);
       if (data.type === "auth" && !context) {
+        const Authorization = `Bearer ${data.token}`;
+        const { tenant_id } = data;
         const authContext = await getAuthenticatedContext(
-          `Bearer ${data.token}`,
-          data.tenant_id,
+          Authorization,
+          tenant_id,
           true
         );
 
@@ -30,7 +32,14 @@ const handler = async (req: Request) => {
           return;
         }
 
-        context = { ...authContext, corsHeaders: {}, allowedOrigins: [] };
+        context = {
+          ...authContext,
+          corsHeaders: {
+            "x-tenant-id": tenant_id,
+            Authorization,
+          },
+          allowedOrigins: [],
+        };
         socket.send(JSON.stringify({ type: "Authenticated", value: true }));
         return;
       }

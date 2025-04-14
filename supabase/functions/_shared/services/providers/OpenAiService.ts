@@ -2,10 +2,7 @@ import type { IFunctionCall, IOpenAiFunction } from "@/types/aiAgents";
 import type { OpenAiMessage, OpenAiRole } from "@/types/chat";
 import { BaseExternalService } from "locals/services/_BaseExternalService";
 import { getEnvKey } from "locals/utils/env";
-import {
-  ExecuteFunctionCallback,
-  ExecuteFunctionResult,
-} from "locals/controllers/FunctionController";
+import { ExecuteFunctionCallback } from "locals/controllers/FunctionController";
 
 const OPEN_AI_URL = "https://api.openai.com";
 
@@ -33,7 +30,11 @@ interface IStreamMessage {
 
 type IToolCall = {
   id: string;
-  functionCall: IFunctionCall;
+  functionCall: {
+    name: string;
+    arguments: string;
+  };
+  index: number;
 };
 
 export class OpenAiService extends BaseExternalService {
@@ -66,6 +67,7 @@ export class OpenAiService extends BaseExternalService {
         parameters: fn.parameters,
       },
       metadata: fn.metadata,
+      strict: true,
     }));
 
     const body = {
@@ -77,6 +79,7 @@ export class OpenAiService extends BaseExternalService {
     };
 
     let stringifiedBody;
+
     try {
       stringifiedBody = JSON.stringify(body);
     } catch (e) {
@@ -119,6 +122,7 @@ export class OpenAiService extends BaseExternalService {
     const text = new TextDecoder().decode(chunk);
     let content = "";
     const toolCalls: IToolCall[] = [];
+    const toolCallMap: Record<string, IToolCall> = {};
 
     const lines = text.split("\n").filter((line) => line.trim() !== "");
 
@@ -137,22 +141,26 @@ export class OpenAiService extends BaseExternalService {
 
           // ✅ Handle new tool_calls array (streamed piece by piece)
           const toolCallChunk = choice?.delta?.tool_calls?.[0];
-          if (toolCallChunk?.function?.name) {
-            toolCalls.push({
+
+          if (toolCallMap[toolCallChunk?.index]) {
+            toolCallMap[toolCallChunk.index].functionCall.arguments +=
+              toolCallChunk.function.arguments;
+          } else if (toolCallChunk?.index >= 0) {
+            toolCallMap[toolCallChunk.index] = {
               id: toolCallChunk.id,
+              index: toolCallChunk.index,
               functionCall: {
                 name: toolCallChunk.function.name,
-                arguments: toolCallChunk.function.arguments
-                  ? JSON.parse(toolCallChunk.function.arguments)
-                  : {},
+                arguments: toolCallChunk.function.arguments,
               },
-            });
+            };
           }
 
           // Optional fallback for legacy support
           if (choice?.delta?.function_call && toolCalls.length === 0) {
             toolCalls.push({
               id: "legacy",
+              index: 0,
               functionCall: {
                 name: choice.delta.function_call.name,
                 arguments: choice.delta.function_call.arguments
@@ -168,7 +176,7 @@ export class OpenAiService extends BaseExternalService {
       }
     }
 
-    return { content, toolCalls };
+    return { content, toolCalls: Object.values(toolCallMap) };
   }
 
   /**
@@ -204,9 +212,9 @@ export class OpenAiService extends BaseExternalService {
 
     return new ReadableStream({
       start: async (controller) => {
-        this.logger.info("🔹 Starting streamAndCallFunction");
+        this.logger.info("Starting streamAndCallFunction");
         const encoder = new TextEncoder();
-        const allToolCalls: IFunctionCall[] = [];
+        let allToolCalls: IToolCall[] = [];
 
         const enqueueContent = (content: string) => {
           if (content) {
@@ -219,20 +227,39 @@ export class OpenAiService extends BaseExternalService {
         // Initial streaming pass — detect tool calls
         while (true) {
           const { done, value } = await reader.read();
+
           if (done) break;
 
           const { content, toolCalls } = this.processStreamChunk(value);
+
           enqueueContent(content);
 
           if (toolCalls.length > 0) {
-            allToolCalls.push(
-              ...toolCalls.map((toolCall) => toolCall.functionCall)
+            const hasToolCall = allToolCalls.find((toolCall) =>
+              toolCalls.find((tc) => tc.index === toolCall.index)
             );
-            break;
+
+            if (hasToolCall) {
+              allToolCalls = allToolCalls.map((toolCall) => {
+                const newToolCall = toolCalls.find(
+                  (tc) => tc.index === toolCall.index
+                );
+
+                if (newToolCall) {
+                  toolCall.functionCall.arguments +=
+                    newToolCall.functionCall.arguments;
+                }
+
+                return toolCall;
+              });
+            } else {
+              allToolCalls = [...allToolCalls, ...toolCalls];
+            }
           }
         }
 
         if (!allToolCalls.length) {
+          this.logger.debug("no tool calls --> closing stream");
           controller.close();
           return;
         }
@@ -244,24 +271,28 @@ export class OpenAiService extends BaseExternalService {
           content: string;
         }[] = [];
 
+        this.logger.debug("allToolCalls --> ", allToolCalls);
+
         for (const call of allToolCalls) {
-          if (TOOLS_METADATA_REGISTRY[call.name].is_background_task) {
-            message.background_tasks.push({
-              name: call.name,
-              arguments: call.arguments,
-            });
+          const functionCall = {
+            name: call.functionCall.name,
+            arguments: JSON.parse(call.functionCall.arguments),
+          };
+
+          if (TOOLS_METADATA_REGISTRY[functionCall.name].is_background_task) {
+            message.background_tasks.push(functionCall);
 
             functionResults.push({
               role: "function" as OpenAiRole,
-              name: call.name,
+              name: functionCall.name,
               content: "Background task started",
             });
           } else {
-            const result = await onFunctionCall(call);
+            const result = await onFunctionCall(functionCall);
 
             functionResults.push({
               role: "function" as OpenAiRole,
-              name: call.name,
+              name: functionCall.name,
               content:
                 result.functionMessage || JSON.stringify(result.result) || "",
             });

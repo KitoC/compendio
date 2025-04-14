@@ -33,6 +33,7 @@ export const mapAirtableTypeToFormFieldType = (
     case "checkbox":
       return "checkbox";
     case "date":
+      return "date";
     case "dateTime":
       return "datetime";
     case "createdTime":

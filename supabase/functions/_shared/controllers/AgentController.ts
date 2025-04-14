@@ -7,7 +7,6 @@ import type {
   IFunction,
 } from "@/types/aiAgents";
 import type { ChatMessage, OpenAiRole } from "@/types/chat";
-import { PublicContext } from "locals/middleware/withPublicContext";
 import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
 import { BaseController } from "locals/controllers/_BaseController";
 import { FunctionController } from "locals/controllers/FunctionController";
@@ -15,28 +14,26 @@ import { getAgentProvider } from "locals/providers/agents/AgentProviderRegistry"
 import { IAgentProvider } from "locals/interfaces/IAgentProvider";
 import Logger from "locals/utils/Logger";
 import { UpdateChatMessageParams } from "locals/services/MessagesService";
+import { RECORD_FUNCTIONS } from "@/SYSTEM_FUNCTIONS/RECORD_FUNCTIONS";
+import { GET_RECORDS_PROMPT } from "@/SYSTEM_PROMPTS/GET_RECORDS_PROMPT";
 
-interface AgentControllerFactoryArgs<
-  SessionContext extends Record<string, unknown>
-> {
-  context: PublicContext | AuthenticatedContext;
+interface AgentControllerFactoryArgs {
+  context: AuthenticatedContext;
   functionController: FunctionController;
   agentId: string;
-  sessionContext: SessionContext;
+  sessionContext: string;
 }
 
-class AgentController<
-  SessionContext extends Record<string, unknown>
-> extends BaseController {
+class AgentController extends BaseController {
   public agent: IAiAgent;
   public agentAdapter: IAgentProvider;
 
   constructor(
-    public context: PublicContext | AuthenticatedContext,
+    public context: AuthenticatedContext,
     public functionController: FunctionController,
     agent: IAiAgent,
     agentAdapter: IAgentProvider,
-    public sessionContext: SessionContext
+    public sessionContext: string
   ) {
     super();
     this.agent = agent;
@@ -45,17 +42,14 @@ class AgentController<
     this.logger = new Logger({ name: "AgentController" });
   }
 
-  static async create<
-    T extends typeof AgentController,
-    SessionContext extends Record<string, unknown>
-  >(
+  static async create<T extends typeof AgentController>(
     this: T,
     {
       context,
       functionController,
       agentId,
       sessionContext,
-    }: AgentControllerFactoryArgs<SessionContext>
+    }: AgentControllerFactoryArgs
   ): Promise<InstanceType<T>> {
     const agent = await context.agentsService.getById(agentId);
 
@@ -106,11 +100,46 @@ class AgentController<
     return functionIds;
   }
 
+  async getTableSchemas() {
+    const base_id = this.context.airtableService.base_id;
+
+    const tableSchemas = await this.context.dataTablesService.getTableSchemas({
+      base_id,
+    });
+
+    return tableSchemas;
+  }
+
+  async buildTableSchemasPrompt() {
+    const tableSchemas = await this.getTableSchemas();
+
+    const tablesPrompt = tableSchemas
+      .map((table) => {
+        return `#### ${table.name}\n${table.data_fields
+          .map((field) => {
+            const options = field.schema?.options?.choices
+              ?.map((choice) => choice.name)
+              .join("|");
+            const fieldType = field.schema?.type;
+
+            return `- ${field.schema.name} type[${fieldType}] ${
+              options ? `options[${options}]` : ""
+            }`;
+          })
+          .join("\n")}`;
+      })
+      .join("\n");
+
+    return tablesPrompt;
+  }
+
   async buildAgentPrompt(agentId: string, context: IContext) {
-    const { functions, session } = context;
+    const { functions } = context;
     const { prompt, human_name, name } = this.agent;
 
     let interpolatedPrompt = prompt;
+
+    const AVAILABLE_TABLES = await this.buildTableSchemasPrompt();
 
     [
       {
@@ -122,15 +151,20 @@ class AgentController<
         variable: "{{AI_NAME}}",
         replacement: () => human_name || name,
       },
-      {
-        variable: "{{SESSION}}",
-        replacement: () => session,
-      },
     ].forEach(({ variable, replacement }) => {
       interpolatedPrompt = interpolatedPrompt?.replace(variable, replacement());
     });
 
-    return interpolatedPrompt;
+    const tablesPrompt = GET_RECORDS_PROMPT.replace(
+      "{{AVAILABLE_TABLES}}",
+      AVAILABLE_TABLES
+    );
+
+    return [
+      `SESSION: ${this.sessionContext}`,
+      interpolatedPrompt,
+      tablesPrompt,
+    ].join("\n\n");
   }
 
   async getLastNMessages(conversation_id: string, n: number) {
@@ -170,7 +204,7 @@ class AgentController<
           )
         : allFunctions;
 
-    return functions;
+    return [...functions, ...RECORD_FUNCTIONS];
   }
 
   async getRequestArgs(conversationId: string) {
@@ -178,9 +212,10 @@ class AgentController<
 
     const functions = await this.getFunctions();
 
+    this.logger.debug("Session context --> ", this.sessionContext);
+
     const agentPrompt = await this.buildAgentPrompt(this.agent.id, {
       functions,
-      session: "",
     });
 
     const LAST_N = 5; // TODO: make this dynamic
