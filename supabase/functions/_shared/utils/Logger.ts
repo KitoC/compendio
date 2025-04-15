@@ -82,7 +82,7 @@ class Logger {
   // Info logs
   info(message: string, data?: unknown): void {
     if (this.currentLogLevel >= LogLevel.INFO) {
-      console.log(this.formatLogMessage("❓INFO", message, data));
+      console.log(this.formatLogMessage("ℹ️ INFO", message, data));
     }
   }
 
@@ -97,7 +97,7 @@ class Logger {
   debug(message: string, data?: unknown): void {
     if (this.currentLogLevel >= LogLevel.DEBUG) {
       console.log(
-        this.formatLogMessage("🔶DEBUG", message),
+        this.formatLogMessage("🔶 DEBUG", message),
         JSON.stringify(data, null, 2)
       );
     }

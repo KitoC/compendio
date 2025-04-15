@@ -112,6 +112,8 @@ class EmailAgentController extends AgentController {
       emailNormalizationConfig
     );
 
+    this.logger.debug("normalizedEmailPayload -->", normalizedEmailPayload);
+
     this.logger.info("🔹 Retrieving context data");
 
     const contextData = {};
@@ -122,6 +124,8 @@ class EmailAgentController extends AgentController {
       normalizedEmailPayload,
       contextData
     );
+
+    this.logger.debug("draftEmail -->", draftEmail);
 
     const emailContent = {
       ...draftEmail,

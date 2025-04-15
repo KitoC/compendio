@@ -1,14 +1,16 @@
 import { IEmailEvent } from "locals/handlers/WebhookEventHandler";
 import { BaseExternalService } from "locals/services/_BaseExternalService";
 
-const BASE_URL = "https://graph.microsoft.com";
+const BASE_URL = "https://gmail.googleapis.com";
 
 const ENDPOINTS = {
-  MESSAGES: `${BASE_URL}/v1.0/me/messages`,
   SEND_MAIL: `${BASE_URL}/v1.0/me/sendMail`,
+  HISTORY: `${BASE_URL}/gmail/v1/users/me/history`,
+  MESSAGES: `${BASE_URL}/gmail/v1/users/me/messages`,
+  THREADS: `${BASE_URL}/gmail/v1/users/me/threads`,
 };
 
-export class AzureService extends BaseExternalService {
+export class GmailService extends BaseExternalService {
   private accessToken: string | null;
 
   constructor() {
@@ -18,12 +20,9 @@ export class AzureService extends BaseExternalService {
 
   get emailNormalizationConfig() {
     return {
-      provider: "outlook",
-      id_handling:
-        "message.id may change on folder moves or updates; always use latest ID for replies.",
-      thread_id_field: "conversationId",
-      etag_behavior:
-        "@odata.etag will change on metadata updates (e.g., read status).",
+      provider: "gmail",
+      messages: "Latest message is the most recent message in the thread.",
+      thread_id_field: "threadId",
     };
   }
 
@@ -38,14 +37,53 @@ export class AzureService extends BaseExternalService {
     this.accessToken = accessToken;
   }
 
-  async getEmail(emailEvent: IEmailEvent) {
+  async getThread(threadId: string) {
     const response = await fetch(
-      `${ENDPOINTS.MESSAGES}/${emailEvent.email_id}?$select=subject,body,from,toRecipients,receivedDateTime,attachments,bodyPreview,conversationId`,
+      `${ENDPOINTS.THREADS}/${threadId}?format=full`,
       {
         method: "GET",
         headers: {
           ...this.headers,
-          Prefer: 'outlook.body-content-type="text"',
+        },
+      }
+    );
+
+    const json = await response.json();
+
+    if (!response.ok) {
+      this.throwError("Failed to fetch message", json, 500);
+    }
+
+    return json;
+  }
+
+  async getEmail(emailEvent: IEmailEvent) {
+    const response = await fetch(
+      `${ENDPOINTS.MESSAGES}/${emailEvent.email_id}?format=full`,
+      {
+        method: "GET",
+        headers: {
+          ...this.headers,
+        },
+      }
+    );
+
+    const json = await response.json();
+
+    if (!response.ok) {
+      this.throwError("Failed to fetch message", json, 500);
+    }
+
+    return json;
+  }
+
+  async getHistory(historyId: string) {
+    const response = await fetch(
+      `${ENDPOINTS.HISTORY}?startHistoryId=${historyId}`,
+      {
+        method: "GET",
+        headers: {
+          ...this.headers,
         },
       }
     );

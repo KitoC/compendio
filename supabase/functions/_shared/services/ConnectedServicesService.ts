@@ -59,6 +59,19 @@ class ConnectedServicesService extends BaseSupabaseService {
 
     return data;
   }
+  async getConnectedServiceBySubscriptionId(subscription_id: string) {
+    const { data, error } = await this.supabase
+      .from("connected_services")
+      .select("*")
+      .eq("subscription_id", `${subscription_id}`)
+      .single();
+
+    if (error) {
+      this.throwError("Error getting connected service", error, 500);
+    }
+
+    return data;
+  }
 
   async updateConnectedService(args: UpdateConnectedServiceArgs) {
     const update = await this.supabase

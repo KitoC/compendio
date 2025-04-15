@@ -9,6 +9,7 @@ const AZURE_GRAPH_API_URL = "https://graph.microsoft.com/v1.0/subscriptions";
 const logger = new Logger({ name: "AzureWebhookProvider" });
 
 export class AzureWebhookProvider implements IWebhookProvider {
+  supports_refresh = true;
   async subscribeToWebhook({
     accessToken,
     clientState,

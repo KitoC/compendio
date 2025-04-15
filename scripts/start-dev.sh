@@ -27,7 +27,7 @@ update_env_file() {
 echo "🌐 Starting ngrok tunnel..."
 rm -f "$NGROK_LOG"
 
-ngrok http $SUPABASE_PORT --log=stdout > "$NGROK_LOG" 2>&1 &
+ngrok http $SUPABASE_PORT --domain=wasp-pleasing-gnu.ngrok-free.app --log=stdout > "$NGROK_LOG" 2>&1 &
 
 NGROK_PID=$!
 

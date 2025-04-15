@@ -64,9 +64,15 @@ class WebhookController extends BaseController {
         return;
       }
 
-      const { provider } = this.credential;
+      if (!this.connectedService) {
+        this.throwError("No connected service found", 500);
+        return;
+      }
 
-      const webhookProvider = getWebhookProvider(provider);
+      const { provider } = this.credential;
+      const { service_type } = this.connectedService;
+
+      const webhookProvider = getWebhookProvider(provider, service_type);
 
       this.logger.debug("Subscribing to webhook", {
         provider,
@@ -235,7 +241,19 @@ class WebhookController extends BaseController {
       items: services,
       batchSize: 5,
       processor: async (service) => {
-        const provider = getWebhookProvider(service.credential!.provider);
+        const provider = getWebhookProvider(
+          service.credential!.provider,
+          service.service_type
+        );
+
+        if (!provider.supports_refresh) {
+          return {
+            ...service,
+            subscription_id: service.subscription_id,
+            subscription_expires_at: service.subscription_expires_at,
+          };
+        }
+
         const accessToken = await this.oauthController.getRefreshedAccessToken(
           service.credential_id
         );
@@ -285,7 +303,10 @@ class WebhookController extends BaseController {
       items: services,
       batchSize: 5,
       processor: async (service) => {
-        const provider = getWebhookProvider(service.credential!.provider);
+        const provider = getWebhookProvider(
+          service.credential!.provider,
+          service.service_type
+        );
         const accessToken = await this.oauthController.getRefreshedAccessToken(
           service.credential_id
         );

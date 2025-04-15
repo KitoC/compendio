@@ -6,8 +6,25 @@ export const gmailFormConfig: FormConfig = {
   id: "gmail-config",
   title: "Gmail OAuth Setup",
   description: "Click below to authenticate with your Google account.",
-  sections: [],
+  sections: [
+    {
+      id: "connection",
+      title: "",
+      fields: [
+        {
+          id: "name",
+          name: "name",
+          label: "Name",
+          type: "text",
+          validation: { required: true },
+        },
+      ],
+    },
+  ],
   submitButtonText: "Connect with Google",
+  initialValues: {
+    name: "Gmail",
+  },
 };
 
 export const outlookFormConfig: FormConfig = {

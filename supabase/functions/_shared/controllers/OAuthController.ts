@@ -21,7 +21,7 @@ interface IOauthProviderConfig {
   clientId: string;
   clientSecret: string;
   redirectUri: string;
-  defaultTenantId: string;
+  defaultTenantId?: string;
   userInfoUrl: string;
   extractEmailFromUserInfo: (userInfo: Record<string, string>) => string;
 }
@@ -68,6 +68,15 @@ class OAuthController extends BaseController {
         extractEmailFromUserInfo: (userInfo: Record<string, string>) =>
           userInfo.mail,
       },
+      google: {
+        tokenExchangeUrl: "https://oauth2.googleapis.com/token",
+        clientId: getEnvKey("GOOGLE_CLIENT_ID"),
+        clientSecret: getEnvKey("GOOGLE_CLIENT_SECRET"),
+        redirectUri: getEnvKey("GOOGLE_REDIRECT_URI"),
+        userInfoUrl: "https://www.googleapis.com/oauth2/v3/userinfo",
+        extractEmailFromUserInfo: (userInfo: Record<string, string>) =>
+          userInfo.email,
+      },
     };
   }
 
@@ -76,7 +85,11 @@ class OAuthController extends BaseController {
       this.providerConfigs[provider];
 
     const tid = this.tid || defaultTenantId;
-    const url = tokenExchangeUrl.replace("{{tid}}", tid);
+    let url = tokenExchangeUrl;
+
+    if (!tid) {
+      url = tokenExchangeUrl.replace("{{tid}}", tid as string);
+    }
 
     return url;
   }
@@ -103,6 +116,16 @@ class OAuthController extends BaseController {
       };
     }
 
+    if (this.oAuthState?.provider === "google") {
+      return {
+        code,
+        client_id: this.providerConfigs.google.clientId,
+        client_secret: this.providerConfigs.google.clientSecret,
+        redirect_uri: this.oAuthState.redirect_uri,
+        grant_type: "authorization_code",
+      };
+    }
+
     return null;
   }
 
@@ -122,6 +145,16 @@ class OAuthController extends BaseController {
         grant_type: "refresh_token",
         scope,
         client_secret: this.providerConfigs.azure.clientSecret,
+      };
+    }
+
+    if (provider === "google") {
+      return {
+        client_id: this.providerConfigs.google.clientId,
+        refresh_token,
+        grant_type: "refresh_token",
+        scope,
+        client_secret: this.providerConfigs.google.clientSecret,
       };
     }
 

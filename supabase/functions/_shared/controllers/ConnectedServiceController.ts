@@ -42,6 +42,7 @@ class ConnectedServiceController extends BaseController {
     return {
       accessToken,
       credential,
+      connectedService,
     };
   }
 }

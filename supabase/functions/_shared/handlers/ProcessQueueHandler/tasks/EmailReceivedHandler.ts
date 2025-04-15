@@ -10,11 +10,15 @@ import { OAuthController } from "locals/controllers/OAuthController";
 import { ConnectedServiceController } from "@/controllers/ConnectedServiceController";
 import type { IEmailEvent } from "locals/handlers/WebhookEventHandler";
 import { AzureService } from "locals/services/providers/AzureService";
+import { GmailService } from "locals/services/providers/GmailService";
 import { EmailAgentController } from "locals/controllers/EmailAgentController";
 import { FunctionController } from "locals/controllers/FunctionController";
 import Logger from "locals/utils/Logger";
 import { PROVIDERS } from "locals/consts";
 import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
+import { ConnectedService } from "locals/services/ConnectedServicesService";
+import { parseGmailMessageForAI } from "locals/utils/email/parseGmailMessageForAI";
+
 export interface ITaskPayload {
   connected_service_id: string;
   tenant_id: string;
@@ -25,7 +29,15 @@ export interface ITaskPayload {
 
 type EmailProviderServiceMap = {
   azure: AzureService;
+  google: GmailService;
 };
+
+interface ISubHandlerPayload<Service> {
+  emailProviderService: Service;
+  email_event: IEmailEvent;
+  agentController: EmailAgentController;
+  connectedService: ConnectedService;
+}
 
 export class EmailReceivedHandler implements ITaskHandler {
   emailProviderServiceMap: EmailProviderServiceMap;
@@ -34,6 +46,7 @@ export class EmailReceivedHandler implements ITaskHandler {
     this.logger = new Logger({ name: "EmailReceivedHandler" });
     this.emailProviderServiceMap = {
       azure: context.azureService,
+      google: context.gmailService,
     };
   }
 
@@ -60,15 +73,7 @@ export class EmailReceivedHandler implements ITaskHandler {
       return { success: false, error: "Failed to get connected service" };
     }
 
-    const { accessToken } = response;
-
-    this.logger.info("Getting email provider service");
-    const emailProviderService = this.emailProviderServiceMap[provider];
-
-    emailProviderService.setAccessToken(accessToken);
-
-    this.logger.info("Getting email");
-    const email = await emailProviderService.getEmail(email_event.email_id);
+    const { accessToken, connectedService } = response;
 
     const agentController = await EmailAgentController.create({
       context: context as AuthenticatedContext,
@@ -77,12 +82,86 @@ export class EmailReceivedHandler implements ITaskHandler {
       sessionContext: JSON.stringify({ connected_service_id, tenant_id }),
     });
 
+    this.logger.info("Getting email provider service", provider);
+    const emailProviderService = this.emailProviderServiceMap[provider];
+
+    if (!emailProviderService) {
+      return { success: false, error: "Invalid provider" };
+    }
+
+    emailProviderService.setAccessToken(accessToken);
+
+    const subHandlerPayload = {
+      emailProviderService,
+      email_event,
+      agentController,
+      connectedService,
+    };
+
+    if (provider === "azure") {
+      await this.handleAzureEmail(
+        subHandlerPayload as unknown as ISubHandlerPayload<AzureService>
+      );
+    } else if (provider === "google") {
+      await this.handleGmailEmail(
+        subHandlerPayload as unknown as ISubHandlerPayload<GmailService>
+      );
+    }
+
+    this.logger.info("Email received handler completed");
+    return { success: true };
+  }
+
+  async handleGmailEmail({
+    emailProviderService,
+    email_event,
+    agentController,
+    connectedService,
+  }: ISubHandlerPayload<GmailService>) {
+    const { history, historyId } = await emailProviderService.getHistory(
+      connectedService.subscription_id
+    );
+
+    const threadIds: string[] = [];
+
+    history.forEach(
+      (h: { messagesAdded: { message: { threadId: string } }[] }) => {
+        h.messagesAdded.forEach((m) => {
+          if (m.message.threadId && !threadIds.includes(m.message.threadId)) {
+            threadIds.push(m.message.threadId);
+          }
+        });
+      }
+    );
+
+    await Promise.all(
+      threadIds.map(async (id) => {
+        const thread = await emailProviderService.getThread(id);
+
+        const parsedThread = {
+          threadId: thread.id,
+          threadMessages: thread.messages.map(parseGmailMessageForAI),
+        };
+
+        await agentController.createEmailMessage(
+          parsedThread,
+          emailProviderService.emailNormalizationConfig
+        );
+      })
+    );
+  }
+
+  async handleAzureEmail({
+    emailProviderService,
+    email_event,
+    agentController,
+  }: ISubHandlerPayload<AzureService>) {
+    this.logger.info("Getting email");
+    const email = await emailProviderService.getEmail(email_event);
+
     await agentController.createEmailMessage(
       email,
       emailProviderService.emailNormalizationConfig
     );
-
-    this.logger.info("Email received handler completed");
-    return { success: true };
   }
 }
