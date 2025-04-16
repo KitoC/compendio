@@ -14,6 +14,7 @@ import { OnboardingSessionsService } from "locals/services/OnboardingSessionsSer
 import { DataTablesService } from "locals/services/DataTablesService";
 import { FunctionsService } from "locals/services/FunctionsService";
 import { GmailService } from "locals/services/providers/GmailService";
+import { WorkflowsService } from "locals/services/WorkflowsService";
 interface SupabaseContext {
   supabase: SupabaseClient;
   supabase_AS_SUPER_ADMIN: SupabaseClient;
@@ -33,6 +34,7 @@ export interface WSSContext {
   dataTablesService: DataTablesService;
   functionsService: FunctionsService;
   gmailService: GmailService;
+  workflowsService: WorkflowsService;
 }
 
 export interface SharedServices extends CorsContext {
@@ -49,6 +51,7 @@ export interface SharedServices extends CorsContext {
   dataTablesService: DataTablesService;
   functionsService: FunctionsService;
   gmailService: GmailService;
+  workflowsService: WorkflowsService;
 }
 
 export const getSharedServices = (supabaseContext: SupabaseContext) => {
@@ -69,7 +72,7 @@ export const getSharedServices = (supabaseContext: SupabaseContext) => {
   const dataTablesService = new DataTablesService(supabaseContext);
   const functionsService = new FunctionsService(supabaseContext);
   const gmailService = new GmailService();
-
+  const workflowsService = new WorkflowsService(supabaseContext);
   return {
     credentialsService,
     connectedServicesService,
@@ -84,5 +87,6 @@ export const getSharedServices = (supabaseContext: SupabaseContext) => {
     dataTablesService,
     functionsService,
     gmailService,
+    workflowsService,
   };
 };

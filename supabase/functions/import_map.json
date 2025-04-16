@@ -70,6 +70,7 @@
     "locals/services/MessagesService": "./_shared/services/MessagesService.ts",
     "locals/services/OnboardingSessionsService": "./_shared/services/OnboardingSessionsService.ts",
     "locals/services/WebhookEventService": "./_shared/services/WebhookEventService.ts",
+    "locals/services/WorkflowsService": "./_shared/services/WorkflowsService.ts",
     "locals/services/_BaseExternalService": "./_shared/services/_BaseExternalService.ts",
     "locals/services/_BaseSupabaseService": "./_shared/services/_BaseSupabaseService.ts",
     "locals/services/getSharedServices": "./_shared/middleware/_getSharedServices.ts",
