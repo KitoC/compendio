@@ -2,16 +2,16 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { getEnvKey } from "locals/utils/env";
-import Logger from "locals/utils/Logger";
-import GoogleCloudController from "locals/controllers/GoogleCloudController";
+import { getEnvKey } from "@/utils/env";
+import Logger from "@/utils/Logger";
+import GoogleCloudController from "@/controllers/GoogleCloudController";
 import {
   AuthenticatedContext,
   withAuthenticatedContext,
-} from "locals/middleware/withAuthenticatedContext";
-import { withCors } from "locals/middleware/withCors";
-import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
-import { withRequestHandlers } from "locals/middleware/withRequestHandlers";
+} from "@/middleware/withAuthenticatedContext";
+import { withCors } from "@/middleware/withCors";
+import { withErrorBoundary } from "@/middleware/withErrorBoundary";
+import { withRequestHandlers } from "@/middleware/withRequestHandlers";
 
 // functions/v1/tts
 const handler = async (req: Request, context: AuthenticatedContext) => {

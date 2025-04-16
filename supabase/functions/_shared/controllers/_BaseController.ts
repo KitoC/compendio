@@ -1,5 +1,5 @@
-import { ControllerError, ServiceError } from "locals/error-types";
-import Logger from "locals/utils/Logger";
+import { ControllerError, ServiceError } from "@/error-types";
+import Logger from "@/utils/Logger";
 
 export class BaseController {
   public logger: Logger;

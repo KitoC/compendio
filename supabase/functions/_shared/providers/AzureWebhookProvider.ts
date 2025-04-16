@@ -1,8 +1,8 @@
 // providers/AzureWebhookProvider.ts
-import { ProviderError } from "locals/error-types";
-import { IWebhookProvider } from "locals/interfaces/IWebhookProvider";
-import Logger from "locals/utils/Logger";
-import { withRetry } from "locals/utils/withRetry";
+import { ProviderError } from "@/error-types";
+import { IWebhookProvider } from "@/interfaces/IWebhookProvider";
+import Logger from "@/utils/Logger";
+import { withRetry } from "@/utils/withRetry";
 
 const AZURE_GRAPH_API_URL = "https://graph.microsoft.com/v1.0/subscriptions";
 

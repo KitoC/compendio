@@ -1,6 +1,6 @@
-import { BaseController } from "locals/controllers/_BaseController";
-import { Migration, JsonSchemaPayload } from "locals/dsl/Migration";
-import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
+import { BaseController } from "@/controllers/_BaseController";
+import { Migration, JsonSchemaPayload } from "@/dsl/Migration";
+import { AuthenticatedContext } from "@/middleware/withAuthenticatedContext";
 
 class TableBuilderController extends BaseController {
   constructor(private req: Request, private context: AuthenticatedContext) {

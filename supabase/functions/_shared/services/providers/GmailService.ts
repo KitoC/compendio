@@ -1,5 +1,5 @@
-import { IEmailEvent } from "locals/handlers/WebhookEventHandler";
-import { BaseExternalService } from "locals/services/_BaseExternalService";
+import { IEmailEvent } from "@/handlers/WebhookEventHandler";
+import { BaseExternalService } from "@/services/_BaseExternalService";
 
 const BASE_URL = "https://gmail.googleapis.com";
 

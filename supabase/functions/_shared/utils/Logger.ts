@@ -1,6 +1,6 @@
 // NO_CHANGE
-import { ProviderError } from "locals/error-types";
-import { getEnvKey } from "locals/utils/env";
+import { ProviderError } from "@/error-types";
+import { getEnvKey } from "@/utils/env";
 /**
  * Logger utility for consistent logging across the application
  * Provides different log levels and formatting for better debugging

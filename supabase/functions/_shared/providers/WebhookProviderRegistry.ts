@@ -1,7 +1,7 @@
 // providers/WebhookProviderRegistry.ts
-import { AzureWebhookProvider } from "locals/providers/AzureWebhookProvider";
-import { GmailWebhookProvider } from "locals/providers/GmailWebhookProvider";
-import { IWebhookProvider } from "locals/interfaces/IWebhookProvider";
+import { AzureWebhookProvider } from "@/providers/AzureWebhookProvider";
+import { GmailWebhookProvider } from "@/providers/GmailWebhookProvider";
+import { IWebhookProvider } from "@/interfaces/IWebhookProvider";
 
 const providerMap: Record<string, IWebhookProvider> = {
   azure: new AzureWebhookProvider(),

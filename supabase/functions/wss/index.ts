@@ -1,8 +1,8 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { getAuthenticatedContext } from "locals/middleware/_getAuthenticatedContext";
-import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
-import { ChatSocketHandler } from "locals/handlers/wss/ChatSocketHandler";
+import { getAuthenticatedContext } from "@/middleware/_getAuthenticatedContext";
+import { AuthenticatedContext } from "@/middleware/withAuthenticatedContext";
+import { ChatSocketHandler } from "@/handlers/wss/ChatSocketHandler";
 
 const handler = async (req: Request) => {
   let context: AuthenticatedContext | null = null;

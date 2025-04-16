@@ -1,13 +1,13 @@
-import { getEnvKey } from "locals/utils/env";
-import { BaseController } from "locals/controllers/_BaseController";
-import { PublicContext } from "locals/middleware/withPublicContext";
-import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
-import { ICredential } from "locals/services/CredentialsService";
-import { OAuthController } from "locals/controllers/OAuthController";
-import { ConnectedService } from "locals/services/ConnectedServicesService";
-import { getWebhookProvider } from "locals/providers/WebhookProviderRegistry";
-import { ProviderError } from "locals/error-types";
-import { processInBatches } from "locals/utils/processInBatches";
+import { getEnvKey } from "@/utils/env";
+import { BaseController } from "@/controllers/_BaseController";
+import { PublicContext } from "@/middleware/withPublicContext";
+import { AuthenticatedContext } from "@/middleware/withAuthenticatedContext";
+import { ICredential } from "@/services/CredentialsService";
+import { OAuthController } from "@/controllers/OAuthController";
+import { ConnectedService } from "@/services/ConnectedServicesService";
+import { getWebhookProvider } from "@/providers/WebhookProviderRegistry";
+import { ProviderError } from "@/error-types";
+import { processInBatches } from "@/utils/processInBatches";
 
 interface ISubscribeToWebhookParams {
   tenant_id: string;

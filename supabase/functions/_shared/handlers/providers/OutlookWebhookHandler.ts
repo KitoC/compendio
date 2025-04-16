@@ -1,8 +1,8 @@
-import { PublicContext } from "locals/middleware/withPublicContext";
-import { RequestHandlerResponse } from "locals/middleware/withRequestHandlers";
-import { ConnectedService } from "locals/services/ConnectedServicesService";
-import { IWebhookProvider } from "locals/interfaces/IWebhookProvider";
-import Logger from "locals/utils/Logger";
+import { PublicContext } from "@/middleware/withPublicContext";
+import { RequestHandlerResponse } from "@/middleware/withRequestHandlers";
+import { ConnectedService } from "@/services/ConnectedServicesService";
+import { IWebhookProvider } from "@/interfaces/IWebhookProvider";
+import Logger from "@/utils/Logger";
 import type { IEmailEvent } from "../WebhookEventHandler";
 
 export interface IHandleParams {

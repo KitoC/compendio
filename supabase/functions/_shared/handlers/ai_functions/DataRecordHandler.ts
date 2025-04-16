@@ -3,13 +3,13 @@
 // Handles 'get_records' task type
 // ============================================
 
-import { PublicContext } from "locals/middleware/withPublicContext";
+import { PublicContext } from "@/middleware/withPublicContext";
 
-import Logger from "locals/utils/Logger";
+import Logger from "@/utils/Logger";
 import {
   IAgentFunctionHandler,
   IAgentFunctionHandlerResult,
-} from "locals/interfaces/IAgentFunctionHandler";
+} from "@/interfaces/IAgentFunctionHandler";
 import type { IFunction, IFunctionCall } from "@/types/aiAgents";
 
 export interface ITaskPayload {

@@ -1,8 +1,8 @@
-import { getEnvKey } from "locals/utils/env";
-import { BaseController } from "locals/controllers/_BaseController";
-import { PublicContext } from "locals/middleware/withPublicContext";
-import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
-import { ICredential } from "locals/services/CredentialsService";
+import { getEnvKey } from "@/utils/env";
+import { BaseController } from "@/controllers/_BaseController";
+import { PublicContext } from "@/middleware/withPublicContext";
+import { AuthenticatedContext } from "@/middleware/withAuthenticatedContext";
+import { ICredential } from "@/services/CredentialsService";
 
 interface IOauthState {
   id: string;

@@ -1,11 +1,11 @@
 // @ts-expect-error - Supabase client is not typed
 import { SupabaseClient } from "supabase-js";
-import { AuthService } from "locals/services/AuthService";
-import { SharedServices } from "locals/middleware/_getSharedServices";
-import { CorsContext } from "locals/middleware/withCors";
-import { getAuthenticatedContext } from "locals/middleware/_getAuthenticatedContext";
+import { AuthService } from "@/services/AuthService";
+import { SharedServices } from "@/middleware/_getSharedServices";
+import { CorsContext } from "@/middleware/withCors";
+import { getAuthenticatedContext } from "@/middleware/_getAuthenticatedContext";
 import type { User } from "@/types/user";
-import { AirtableService } from "locals/services/providers/AirtableService";
+import { AirtableService } from "@/services/providers/AirtableService";
 
 export interface AuthenticatedContext extends SharedServices {
   supabase: SupabaseClient;

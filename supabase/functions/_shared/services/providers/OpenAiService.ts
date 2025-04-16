@@ -1,8 +1,8 @@
 import type { IFunctionCall, IOpenAiFunction } from "@/types/aiAgents";
 import type { OpenAiMessage, OpenAiRole } from "@/types/chat";
-import { BaseExternalService } from "locals/services/_BaseExternalService";
-import { getEnvKey } from "locals/utils/env";
-import { ExecuteFunctionCallback } from "locals/controllers/FunctionController";
+import { BaseExternalService } from "@/services/_BaseExternalService";
+import { getEnvKey } from "@/utils/env";
+import { ExecuteFunctionCallback } from "@/controllers/FunctionController";
 
 const OPEN_AI_URL = "https://api.openai.com";
 

@@ -1,11 +1,11 @@
-import { WebhookController } from "locals/controllers/WebhookController";
-import { PublicContext } from "locals/middleware/withPublicContext";
-import { RequestHandlerResponse } from "locals/middleware/withRequestHandlers";
-import { OAuthController } from "locals/controllers/OAuthController";
-import { getWebhookProvider } from "locals/providers/WebhookProviderRegistry";
-import { OutlookWebhookHandler } from "locals/handlers/providers/OutlookWebhookHandler";
-import { GmailWebhookHandler } from "locals/handlers/providers/GmailWebhookHandler";
-import Logger from "locals/utils/Logger";
+import { WebhookController } from "@/controllers/WebhookController";
+import { PublicContext } from "@/middleware/withPublicContext";
+import { RequestHandlerResponse } from "@/middleware/withRequestHandlers";
+import { OAuthController } from "@/controllers/OAuthController";
+import { getWebhookProvider } from "@/providers/WebhookProviderRegistry";
+import { OutlookWebhookHandler } from "@/handlers/providers/OutlookWebhookHandler";
+import { GmailWebhookHandler } from "@/handlers/providers/GmailWebhookHandler";
+import Logger from "@/utils/Logger";
 export interface IEmailEvent {
   // For Outlook
   email_id?: string;

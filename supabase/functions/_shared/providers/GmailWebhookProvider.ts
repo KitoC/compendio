@@ -1,11 +1,11 @@
 // providers/GmailWebhookProvider.ts
-import { ProviderError } from "locals/error-types";
+import { ProviderError } from "@/error-types";
 import {
   IWebhookProvider,
   IWebhookProviderSubscribeParams,
-} from "locals/interfaces/IWebhookProvider";
-import { GoogleCloudHelper } from "locals/utils/GoogleCloudHelper";
-import Logger from "locals/utils/Logger";
+} from "@/interfaces/IWebhookProvider";
+import { GoogleCloudHelper } from "@/utils/GoogleCloudHelper";
+import Logger from "@/utils/Logger";
 
 const GOOGLE_GMAIL_API_URL = "https://gmail.googleapis.com/gmail/v1";
 const GOOGLE_PUBSUB_API_URL = "https://pubsub.googleapis.com/v1";

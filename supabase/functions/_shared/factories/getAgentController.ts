@@ -1,10 +1,10 @@
 import type { IAiAgent } from "@/types/aiAgents";
-import { AgentController } from "locals/controllers/AgentController";
-import { FunctionController } from "locals/controllers/FunctionController";
-import { OnboardingAgentController } from "locals/controllers/OnboardingAgentController";
-import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
-import { PublicContext } from "locals/middleware/withPublicContext";
-import { getAgentProvider } from "locals/providers/agents/AgentProviderRegistry";
+import { AgentController } from "@/controllers/AgentController";
+import { FunctionController } from "@/controllers/FunctionController";
+import { OnboardingAgentController } from "@/controllers/OnboardingAgentController";
+import { AuthenticatedContext } from "@/middleware/withAuthenticatedContext";
+import { PublicContext } from "@/middleware/withPublicContext";
+import { getAgentProvider } from "@/providers/agents/AgentProviderRegistry";
 
 const SYSTEM_AGENTS: { [key: string]: IAiAgent } = {
   ONBOARDING: {

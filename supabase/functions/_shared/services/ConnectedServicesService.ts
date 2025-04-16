@@ -2,8 +2,8 @@
 import {
   BaseRequiredContext,
   BaseSupabaseService,
-} from "locals/services/_BaseSupabaseService";
-import { ICredential } from "locals/services/CredentialsService";
+} from "@/services/_BaseSupabaseService";
+import { ICredential } from "@/services/CredentialsService";
 
 type CreateWebhookEventArgs = {
   source: string;

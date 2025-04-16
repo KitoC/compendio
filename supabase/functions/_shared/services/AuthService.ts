@@ -1,11 +1,11 @@
 // NO_CHANGE
 
-import Logger from "locals/utils/Logger";
+import Logger from "@/utils/Logger";
 import {
   BaseRequiredContext,
   BaseSupabaseService,
-} from "locals/services/_BaseSupabaseService";
-import type { User } from "locals/types";
+} from "@/services/_BaseSupabaseService";
+import type { User } from "@/types";
 
 const ROLES = {
   SUPER_ADMIN: "super-admin",

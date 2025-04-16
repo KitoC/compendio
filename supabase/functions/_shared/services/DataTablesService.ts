@@ -4,9 +4,9 @@ import type { AirtableField, AirtableRecord } from "@/types/airtable";
 import {
   BaseRequiredContext,
   BaseSupabaseService,
-} from "locals/services/_BaseSupabaseService";
+} from "@/services/_BaseSupabaseService";
 import type { Database } from "@/integrations/supabase/types";
-import { READONLY_FIELDS_AIRTABLE } from "locals/consts";
+import { READONLY_FIELDS_AIRTABLE } from "@/consts";
 
 type DataField = Database["public"]["Tables"]["data_fields"]["Row"];
 type DataTable = Database["public"]["Tables"]["data_tables"]["Row"];

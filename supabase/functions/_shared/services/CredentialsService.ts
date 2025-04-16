@@ -3,8 +3,8 @@
 import {
   BaseRequiredContext,
   BaseSupabaseService,
-} from "locals/services/_BaseSupabaseService";
-import { getEnvKey } from "locals/utils/env";
+} from "@/services/_BaseSupabaseService";
+import { getEnvKey } from "@/utils/env";
 
 interface CreateCredentialArgs {
   access_token: string;

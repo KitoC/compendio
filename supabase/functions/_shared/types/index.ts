@@ -1,6 +1,6 @@
-import { WSSContext } from "locals/middleware/_getSharedServices";
-import { PublicContext } from "locals/middleware/withPublicContext";
-import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
+import { WSSContext } from "@/middleware/_getSharedServices";
+import { PublicContext } from "@/middleware/withPublicContext";
+import { AuthenticatedContext } from "@/middleware/withAuthenticatedContext";
 
 export type Context = WSSContext | PublicContext | AuthenticatedContext;
 

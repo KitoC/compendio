@@ -5,9 +5,9 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import {
   withAuthenticatedContext,
   type AuthenticatedContext,
-} from "locals/middleware/withAuthenticatedContext";
-import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
-import { withCors } from "locals/middleware/withCors";
+} from "@/middleware/withAuthenticatedContext";
+import { withErrorBoundary } from "@/middleware/withErrorBoundary";
+import { withCors } from "@/middleware/withCors";
 import type { Database } from "@/integrations/supabase/types";
 import type { AirtableRecord, AirtableField } from "@/types/airtable";
 

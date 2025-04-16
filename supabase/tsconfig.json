@@ -11,7 +11,6 @@
     "target": "ESNext",
     "baseUrl": ".",
     "paths": {
-      "locals/*": ["./functions/_shared/*"],
       "@/*": ["./functions/_shared/*"],
       "@/queue/*": ["./functions/_shared/handlers/ProcessQueueHandler/*"],
       "@/types/*": ["../src/types/*"],

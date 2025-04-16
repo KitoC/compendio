@@ -1,6 +1,6 @@
 // @ts-expect-error - Supabase client is not typed
 import { SupabaseClient } from "supabase-js";
-import { BaseDSLLayer } from "locals/dsl/_BaseDSLLayer";
+import { BaseDSLLayer } from "@/dsl/_BaseDSLLayer";
 
 export type FieldType =
   | "text"

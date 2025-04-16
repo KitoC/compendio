@@ -1,8 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 // @ts-expect-error - Supabase client is not typed
 import { createClient } from "supabase-js";
-import Logger from "locals/utils/Logger";
-import { getEnvKey } from "locals/utils/env";
+import Logger from "@/utils/Logger";
+import { getEnvKey } from "@/utils/env";
 
 const logger = new Logger({
   name: "custom-table-data",

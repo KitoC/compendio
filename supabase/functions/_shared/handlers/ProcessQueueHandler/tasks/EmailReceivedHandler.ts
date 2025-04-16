@@ -3,21 +3,21 @@
 // Handles 'process-email-received' task type
 // ============================================
 
-import { ITaskHandler } from "locals/interfaces/ITaskHandler";
-import { PublicContext } from "locals/middleware/withPublicContext";
+import { ITaskHandler } from "@/interfaces/ITaskHandler";
+import { PublicContext } from "@/middleware/withPublicContext";
 
-import { OAuthController } from "locals/controllers/OAuthController";
+import { OAuthController } from "@/controllers/OAuthController";
 import { ConnectedServiceController } from "@/controllers/ConnectedServiceController";
-import type { IEmailEvent } from "locals/handlers/WebhookEventHandler";
-import { AzureService } from "locals/services/providers/AzureService";
-import { GmailService } from "locals/services/providers/GmailService";
-import { EmailAgentController } from "locals/controllers/EmailAgentController";
-import { FunctionController } from "locals/controllers/FunctionController";
-import Logger from "locals/utils/Logger";
-import { PROVIDERS } from "locals/consts";
-import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
-import { ConnectedService } from "locals/services/ConnectedServicesService";
-import { parseGmailMessageForAI } from "locals/utils/email/parseGmailMessageForAI";
+import type { IEmailEvent } from "@/handlers/WebhookEventHandler";
+import { AzureService } from "@/services/providers/AzureService";
+import { GmailService } from "@/services/providers/GmailService";
+import { EmailAgentController } from "@/controllers/EmailAgentController";
+import { FunctionController } from "@/controllers/FunctionController";
+import Logger from "@/utils/Logger";
+import { PROVIDERS } from "@/consts";
+import { AuthenticatedContext } from "@/middleware/withAuthenticatedContext";
+import { ConnectedService } from "@/services/ConnectedServicesService";
+import { parseGmailMessageForAI } from "@/utils/email/parseGmailMessageForAI";
 
 export interface ITaskPayload {
   connected_service_id: string;

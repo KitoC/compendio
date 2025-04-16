@@ -1,20 +1,20 @@
 // @ts-expect-error - Supabase client is not typed
 import { SupabaseClient } from "supabase-js";
-import { MessagesService } from "locals/services/MessagesService";
-import { FunctionQueueService } from "locals/services/FunctionQueueService";
-import { ConnectedServicesService } from "locals/services/ConnectedServicesService";
-import { AzureService } from "locals/services/providers/AzureService";
-import { CredentialsService } from "locals/services/CredentialsService";
-import { AgentsService } from "locals/services/AgentsService";
-import { AgentFunctionsService } from "locals/services/AgentFunctionsService";
-import { ConversationsService } from "locals/services/ConversationsService";
-import { WebhookEventService } from "locals/services/WebhookEventService";
-import { CorsContext } from "locals/middleware/withCors";
-import { OnboardingSessionsService } from "locals/services/OnboardingSessionsService";
-import { DataTablesService } from "locals/services/DataTablesService";
-import { FunctionsService } from "locals/services/FunctionsService";
-import { GmailService } from "locals/services/providers/GmailService";
-import { WorkflowsService } from "locals/services/WorkflowsService";
+import { MessagesService } from "@/services/MessagesService";
+import { FunctionQueueService } from "@/services/FunctionQueueService";
+import { ConnectedServicesService } from "@/services/ConnectedServicesService";
+import { AzureService } from "@/services/providers/AzureService";
+import { CredentialsService } from "@/services/CredentialsService";
+import { AgentsService } from "@/services/AgentsService";
+import { AgentFunctionsService } from "@/services/AgentFunctionsService";
+import { ConversationsService } from "@/services/ConversationsService";
+import { WebhookEventService } from "@/services/WebhookEventService";
+import { CorsContext } from "@/middleware/withCors";
+import { OnboardingSessionsService } from "@/services/OnboardingSessionsService";
+import { DataTablesService } from "@/services/DataTablesService";
+import { FunctionsService } from "@/services/FunctionsService";
+import { GmailService } from "@/services/providers/GmailService";
+import { WorkflowsService } from "@/services/WorkflowsService";
 interface SupabaseContext {
   supabase: SupabaseClient;
   supabase_AS_SUPER_ADMIN: SupabaseClient;

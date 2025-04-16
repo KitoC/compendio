@@ -1,12 +1,12 @@
 // NO_CHANGE
 
-import { IConversation } from "locals/services/ConversationsService";
+import { IConversation } from "@/services/ConversationsService";
 import {
   DEFAULT_EMAIL_PRIORITY_SCALE,
   NORMALIZE_EMAIL_PAYLOAD_PROMPT,
 } from "@/SYSTEM_PROMPTS/EMAIL/NORMALIZE_EMAIL_PAYLOAD_PROMPT";
 import { DRAFT_EMAIL_PROMPT } from "@/SYSTEM_PROMPTS/EMAIL/DRAFT_EMAIL_PROMPT";
-import { AgentController } from "locals/controllers/AgentController";
+import { AgentController } from "@/controllers/AgentController";
 
 export type NormalizedEmailThreadMessage = {
   body: string;

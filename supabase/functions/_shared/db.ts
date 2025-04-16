@@ -1,4 +1,4 @@
-import { getEnvKey } from "locals/utils/env";
+import { getEnvKey } from "@/utils/env";
 // @ts-expect-error - Supabase client is not typed
 import { createClient } from "supabase-js";
 

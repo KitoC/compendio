@@ -3,7 +3,7 @@ import type { ChatMessage } from "@/types/chat";
 import {
   ExecuteFunctionCallback,
   FunctionController,
-} from "locals/controllers/FunctionController";
+} from "@/controllers/FunctionController";
 import type { NormalizedEmailResponse } from "@/types/emailAgentMessage";
 import type { IFunction } from "@/types/aiAgents";
 

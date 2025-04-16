@@ -1,10 +1,10 @@
-import { getADMINClient } from "locals/db";
-import { getClient } from "locals/db";
-import { ServiceError } from "locals/error-types";
-import { AuthService } from "locals/services/AuthService";
-import Logger from "locals/utils/Logger";
-import { getSharedServices } from "locals/middleware/_getSharedServices";
-import { AirtableService } from "locals/services/providers/AirtableService";
+import { getADMINClient } from "@/db";
+import { getClient } from "@/db";
+import { ServiceError } from "@/error-types";
+import { AuthService } from "@/services/AuthService";
+import Logger from "@/utils/Logger";
+import { getSharedServices } from "@/middleware/_getSharedServices";
+import { AirtableService } from "@/services/providers/AirtableService";
 const logger = new Logger({ name: "AuthenticatedContext" });
 
 export const getAuthenticatedContext = async (

@@ -1,9 +1,9 @@
-import { BaseController } from "locals/controllers/_BaseController";
-import { PublicContext } from "locals/middleware/withPublicContext";
-import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
-import { ICredential } from "locals/services/CredentialsService";
-import { OAuthController } from "locals/controllers/OAuthController";
-import { ConnectedService } from "locals/services/ConnectedServicesService";
+import { BaseController } from "@/controllers/_BaseController";
+import { PublicContext } from "@/middleware/withPublicContext";
+import { AuthenticatedContext } from "@/middleware/withAuthenticatedContext";
+import { ICredential } from "@/services/CredentialsService";
+import { OAuthController } from "@/controllers/OAuthController";
+import { ConnectedService } from "@/services/ConnectedServicesService";
 
 class ConnectedServiceController extends BaseController {
   public connectedService: ConnectedService | null;

@@ -3,10 +3,10 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import {
   withAuthenticatedContext,
   type AuthenticatedContext,
-} from "locals/middleware/withAuthenticatedContext";
-import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
-import { withCors } from "locals/middleware/withCors";
-import { ExternalServiceAiError } from "locals/error-types";
+} from "@/middleware/withAuthenticatedContext";
+import { withErrorBoundary } from "@/middleware/withErrorBoundary";
+import { withCors } from "@/middleware/withCors";
+import { ExternalServiceAiError } from "@/error-types";
 import type { Database } from "@/integrations/supabase/types";
 
 type DataTable = Database["public"]["Tables"]["data_tables"]["Row"];

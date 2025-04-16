@@ -3,9 +3,9 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import {
   withAuthenticatedContext,
   type AuthenticatedContext,
-} from "locals/middleware/withAuthenticatedContext";
-import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
-import { withCors } from "locals/middleware/withCors";
+} from "@/middleware/withAuthenticatedContext";
+import { withErrorBoundary } from "@/middleware/withErrorBoundary";
+import { withCors } from "@/middleware/withCors";
 
 const handler = async (req: Request, context: AuthenticatedContext) => {
   const { workflowsService, corsHeaders } = context;

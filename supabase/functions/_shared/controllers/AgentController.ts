@@ -7,13 +7,13 @@ import type {
   IFunction,
 } from "@/types/aiAgents";
 import type { ChatMessage, OpenAiRole } from "@/types/chat";
-import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
-import { BaseController } from "locals/controllers/_BaseController";
-import { FunctionController } from "locals/controllers/FunctionController";
-import { getAgentProvider } from "locals/providers/agents/AgentProviderRegistry";
-import { IAgentProvider } from "locals/interfaces/IAgentProvider";
-import Logger from "locals/utils/Logger";
-import { UpdateChatMessageParams } from "locals/services/MessagesService";
+import { AuthenticatedContext } from "@/middleware/withAuthenticatedContext";
+import { BaseController } from "@/controllers/_BaseController";
+import { FunctionController } from "@/controllers/FunctionController";
+import { getAgentProvider } from "@/providers/agents/AgentProviderRegistry";
+import { IAgentProvider } from "@/interfaces/IAgentProvider";
+import Logger from "@/utils/Logger";
+import { UpdateChatMessageParams } from "@/services/MessagesService";
 import { RECORD_FUNCTIONS } from "@/SYSTEM_FUNCTIONS/RECORD_FUNCTIONS";
 import { GET_RECORDS_PROMPT } from "@/SYSTEM_PROMPTS/GET_RECORDS_PROMPT";
 

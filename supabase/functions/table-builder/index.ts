@@ -1,16 +1,16 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-import { ROLES } from "locals/services/AuthService";
-import OpenAIController from "locals/controllers/OpenAIController";
+import { ROLES } from "@/services/AuthService";
+import OpenAIController from "@/controllers/OpenAIController";
 import type { OpenAiRole } from "@/types/chat";
-import { TableBuilderController } from "locals/controllers/TableBuilderController";
-import type { JsonSchemaPayload } from "locals/dsl/Migration";
-import { withAuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
-import { withRequestHandlers } from "locals/middleware/withRequestHandlers";
-import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
-import type { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
-import { withCors } from "locals/middleware/withCors";
+import { TableBuilderController } from "@/controllers/TableBuilderController";
+import type { JsonSchemaPayload } from "@/dsl/Migration";
+import { withAuthenticatedContext } from "@/middleware/withAuthenticatedContext";
+import { withRequestHandlers } from "@/middleware/withRequestHandlers";
+import { withErrorBoundary } from "@/middleware/withErrorBoundary";
+import type { AuthenticatedContext } from "@/middleware/withAuthenticatedContext";
+import { withCors } from "@/middleware/withCors";
 
 const PROMPT_FOR_TABLE_CREATION_V2 = `
 You are TableSmart, an AI assistant specialized in designing database schemas for business applications.

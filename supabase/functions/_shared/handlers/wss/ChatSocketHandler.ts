@@ -1,7 +1,7 @@
-import { AgentController } from "locals/controllers/AgentController";
-import { FunctionController } from "locals/controllers/FunctionController";
+import { AgentController } from "@/controllers/AgentController";
+import { FunctionController } from "@/controllers/FunctionController";
 import { getAgentController } from "@/factories/getAgentController";
-import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
+import { AuthenticatedContext } from "@/middleware/withAuthenticatedContext";
 
 type ChatSocketMessage = {
   type: string;

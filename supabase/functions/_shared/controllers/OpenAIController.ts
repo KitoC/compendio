@@ -3,9 +3,9 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import type { OpenAiMessage, OpenAiRole } from "@/types/chat";
 import type { IFunctionCall, IOpenAiFunction } from "@/types/aiAgents";
-import Logger from "locals/utils/Logger";
-import { getEnvKey } from "locals/utils/env";
-import RequestController from "locals/controllers/RequestController";
+import Logger from "@/utils/Logger";
+import { getEnvKey } from "@/utils/env";
+import RequestController from "@/controllers/RequestController";
 
 const OPEN_AI_URL = "https://api.openai.com";
 

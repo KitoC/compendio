@@ -1,4 +1,4 @@
-import { RequestHandlerResponse } from "locals/middleware/withRequestHandlers";
+import { RequestHandlerResponse } from "@/middleware/withRequestHandlers";
 
 // interfaces/IWebhookProvider.ts
 export interface IHandler<Context> {

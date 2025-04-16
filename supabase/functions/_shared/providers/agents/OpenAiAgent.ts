@@ -2,7 +2,7 @@
 import type {
   IAgentProvider,
   ItTalkToAgentParams,
-} from "locals/interfaces/IAgentProvider";
+} from "@/interfaces/IAgentProvider";
 import type { IAiAgent, IOpenAiFunction } from "@/types/aiAgents";
 import type {
   OpenAiMessage,
@@ -13,9 +13,9 @@ import type {
 import {
   ExecuteFunctionCallback,
   FunctionController,
-} from "locals/controllers/FunctionController";
-import { OpenAiService } from "locals/services/providers/OpenAiService";
-import Logger from "locals/utils/Logger";
+} from "@/controllers/FunctionController";
+import { OpenAiService } from "@/services/providers/OpenAiService";
+import Logger from "@/utils/Logger";
 // TODO: Move this to a file or DB and inject schema for Email.
 const VALID_OPENAI_ROLES = ["user", "assistant", "function", "system"];
 

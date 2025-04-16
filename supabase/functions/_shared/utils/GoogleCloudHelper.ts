@@ -1,4 +1,4 @@
-import { getEnvKey } from "locals/utils/env";
+import { getEnvKey } from "@/utils/env";
 
 // @ts-expect-error - djwt is not typed in Deno
 import { create } from "djwt";

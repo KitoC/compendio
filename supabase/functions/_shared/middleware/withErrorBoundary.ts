@@ -1,6 +1,6 @@
-import { RequestError } from "locals/controllers/RequestController";
-import Logger from "locals/utils/Logger";
-import { CorsContext } from "locals/middleware/withCors";
+import { RequestError } from "@/controllers/RequestController";
+import Logger from "@/utils/Logger";
+import { CorsContext } from "@/middleware/withCors";
 
 const logger = new Logger({ name: "Request Handler" });
 

@@ -1,6 +1,6 @@
 import type { AirtableBase } from "@/types/airtable";
-import { BaseExternalService } from "locals/services/_BaseExternalService";
-import { getEnvKey } from "locals/utils/env";
+import { BaseExternalService } from "@/services/_BaseExternalService";
+import { getEnvKey } from "@/utils/env";
 
 const BASE_URL = "https://api.airtable.com/v0";
 

@@ -3,10 +3,10 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import {
   withAuthenticatedContext,
   type AuthenticatedContext,
-} from "locals/middleware/withAuthenticatedContext";
-import { withRequestHandlers } from "locals/middleware/withRequestHandlers";
-import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
-import { withCors } from "locals/middleware/withCors";
+} from "@/middleware/withAuthenticatedContext";
+import { withRequestHandlers } from "@/middleware/withRequestHandlers";
+import { withErrorBoundary } from "@/middleware/withErrorBoundary";
+import { withCors } from "@/middleware/withCors";
 
 const handler = async (req: Request, context: AuthenticatedContext) => {
   const { tenant_id, user_id, credential_name, access_token, provider } =

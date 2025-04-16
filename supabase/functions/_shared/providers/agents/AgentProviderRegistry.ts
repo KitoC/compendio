@@ -1,9 +1,9 @@
 // providers/AgentProviderRegistry.ts
 
-import { IAgentProvider } from "locals/interfaces/IAgentProvider";
-import { OpenAiAgent } from "locals/providers/agents/OpenAiAgent";
+import { IAgentProvider } from "@/interfaces/IAgentProvider";
+import { OpenAiAgent } from "@/providers/agents/OpenAiAgent";
 import type { IAiAgent } from "@/types/aiAgents";
-import { FunctionController } from "locals/controllers/FunctionController";
+import { FunctionController } from "@/controllers/FunctionController";
 
 type Factory = (agent: IAiAgent) => IAgentProvider;
 

@@ -1,12 +1,12 @@
-import { getClient, getADMINClient } from "locals/db";
+import { getClient, getADMINClient } from "@/db";
 // @ts-expect-error - Supabase client is not typed
 import { SupabaseClient } from "supabase-js";
 import {
   SharedServices,
   getSharedServices,
-} from "locals/middleware/_getSharedServices";
-import { AuthService } from "locals/services/AuthService";
-import { CorsContext } from "locals/middleware/withCors";
+} from "@/middleware/_getSharedServices";
+import { AuthService } from "@/services/AuthService";
+import { CorsContext } from "@/middleware/withCors";
 export interface PublicContext extends SharedServices {
   supabase: SupabaseClient;
   supabase_AS_SUPER_ADMIN: SupabaseClient;

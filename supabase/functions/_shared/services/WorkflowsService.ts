@@ -3,8 +3,8 @@
 import {
   BaseRequiredContext,
   BaseSupabaseService,
-} from "locals/services/_BaseSupabaseService";
-import { getEnvKey } from "locals/utils/env";
+} from "@/services/_BaseSupabaseService";
+import { getEnvKey } from "@/utils/env";
 
 class WorkflowsService extends BaseSupabaseService {
   n8n_api_key: string;
