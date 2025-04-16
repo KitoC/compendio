@@ -1,4 +1,6 @@
 import Authentication from "@/components/integrations/AddIntegrationWizard/steps/Authentication";
+import ConfirmIntegrationSettings from "@/components/integrations/AddIntegrationWizard/steps/ConfirmIntegrationSettings";
+import CustomIntegrationSettings from "@/components/integrations/AddIntegrationWizard/steps/CustomIntegrationSettings";
 import { IntegrationType } from "@/components/integrations/AddIntegrationWizard/types";
 import {
   Palette,
@@ -117,6 +119,27 @@ export const INTEGRATION_TYPES: IntegrationType[] = [
   //     // SelectView,
   //   ],
   // },
+  {
+    id: "google-drive",
+    name: "Google Drive",
+    description: "Connect to Google Drive to access your files",
+    icon: "google-drive",
+    authType: "oauth",
+    oauthProvider: "google",
+    requiredScopes: ["https://www.googleapis.com/auth/drive.readonly"],
+    formConfig: {
+      id: "google-drive-config",
+      title: "Google Drive OAuth Setup",
+      description: "Click below to authenticate with your Google account.",
+      sections: [],
+      submitButtonText: "Connect with Google Drive",
+    },
+    steps: [
+      Authentication,
+      CustomIntegrationSettings,
+      ConfirmIntegrationSettings,
+    ],
+  },
   {
     id: "gmail",
     name: "Gmail",

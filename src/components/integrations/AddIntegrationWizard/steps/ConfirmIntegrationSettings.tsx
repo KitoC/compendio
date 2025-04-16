@@ -112,12 +112,14 @@ const ConfirmIntegrationSettings = ({
               </h3>
               {credential_id && <CredentialCard credentialId={credential_id} />}
             </div>
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium font-bold text-muted-foreground">
-                Agent
-              </h3>
-              <AiAgentCard id={agent_id} />
-            </div>
+            {agent_id && (
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium font-bold text-muted-foreground">
+                  Agent
+                </h3>
+                <AiAgentCard id={agent_id} />
+              </div>
+            )}
           </div>
 
           {configValues.description && (

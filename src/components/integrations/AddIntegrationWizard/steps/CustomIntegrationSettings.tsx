@@ -36,7 +36,7 @@ const CustomIntegrationSettings = ({
       <div className="">
         <FormBuilder
           footerClassname="border-none p-0"
-          className="border-none p-0"
+          className="border-none p-0 bg-transparent shadow-none"
           config={integrationSettingsConfig}
           onSubmit={handleFormSubmit}
           onCancel={prevStep}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { INTEGRATION_TYPES } from "@/lib/constants";
 import FormBuilder from "@/components/form-builder";
 import { INTEGRATION_FORM_CONFIGS } from "@/forms/integrations";
@@ -19,6 +19,8 @@ import ExistingCredentialSelector from "./components/ExistingCredentialSelector"
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
 import { callSupabaseFunction } from "@/services/supabaseFunctionServices";
+import { hasValidationError } from "../utils";
+import { useCredentialsQuery } from "../queries/useCredentialsQuery";
 
 export const OAUTH_INTEGRATION_CALLBACK_DATA_KEY =
   "oauth_integration_callback_data";
@@ -33,13 +35,21 @@ const Authentication = ({
   const { tenantId } = useTenant();
   const { service_type, credential_id } = wizardState;
 
-  const [isLoadingCredentials, setIsLoadingCredentials] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCreatingNewCredential, setIsCreatingNewCredential] = useState(false);
 
   const selectedType = INTEGRATION_TYPES.find((t) => t.id === service_type);
   const authType = selectedType?.authType || "custom";
   const formConfig = selectedType && INTEGRATION_FORM_CONFIGS[service_type];
+
+  const provider = selectedType?.oauthProvider || "google";
+
+  const { data: existingCredentials } = useCredentialsQuery({
+    service_type,
+    authType,
+    provider,
+    tenantId,
+  });
 
   const handleCredentialSelect = (credential_id: string) => {
     onStepDataCapture({ credential_id });
@@ -63,6 +73,12 @@ const Authentication = ({
     setIsSubmitting(false);
   };
 
+  useEffect(() => {
+    if (existingCredentials.length && !credential_id) {
+      onStepDataCapture({ credential_id: existingCredentials[0].id });
+    }
+  }, [existingCredentials, credential_id, onStepDataCapture]);
+
   return (
     <>
       <DialogHeader>
@@ -77,8 +93,8 @@ const Authentication = ({
       <ExistingCredentialSelector
         wizardState={wizardState}
         handleCredentialSelect={handleCredentialSelect}
-        setIsLoadingCredentials={setIsLoadingCredentials}
         isCreatingNewCredential={isCreatingNewCredential}
+        existingCredentials={existingCredentials}
       />
 
       <div>
@@ -125,7 +141,17 @@ const Authentication = ({
           <Button variant="outline" onClick={prevStep}>
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
-          <Button onClick={nextStep} disabled={isSubmitting || !credential_id}>
+          <Button
+            onClick={nextStep}
+            disabled={
+              isSubmitting ||
+              !credential_id ||
+              !!hasValidationError(
+                selectedType,
+                existingCredentials?.find((c) => c.id === credential_id)
+              )
+            }
+          >
             Next <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </DialogFooter>

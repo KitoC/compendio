@@ -1,4 +1,4 @@
-import { WizardState } from "./types";
+import { IntegrationType, ICredential, WizardState } from "./types";
 
 export const INTEGRATION_WIZARD_STATE_KEY = "integration_wizard_state";
 
@@ -33,4 +33,21 @@ export const setIntegrationWizardState = (state: WizardState) => {
 
 export const clearIntegrationWizardState = () => {
   sessionStorage.removeItem(INTEGRATION_WIZARD_STATE_KEY);
+};
+
+export const hasValidationError = (
+  selectedType: IntegrationType,
+  credential?: ICredential
+) => {
+  if (!credential) return "No credential selected";
+
+  if (selectedType?.requiredScopes) {
+    const hasRequiredScopes = selectedType.requiredScopes.every((scope) =>
+      credential.scopes.includes(scope)
+    );
+
+    if (!hasRequiredScopes) return "Missing required scopes";
+  }
+
+  return false;
 };

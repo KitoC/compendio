@@ -10,9 +10,11 @@ import { Button } from "@/components/ui/button";
 const CredentialCard = ({
   credentialId,
   onRefresh,
+  hasValidationError,
 }: {
   credentialId: string;
   onRefresh?: (credential: ICredential) => void;
+  hasValidationError?: string | boolean;
 }) => {
   const [credential, setCredential] = useState<ICredential | null>(null);
   // TODO: Show valid/refresh state
@@ -41,7 +43,8 @@ const CredentialCard = ({
     <Card
       className={clsx("cursor-pointer transition-colors ", {
         "border-success bg-success/5 hover:border-success": !refreshFailed,
-        "border-warning bg-warning/5 hover:border-warning": refreshFailed,
+        "border-warning bg-warning/5 hover:border-warning":
+          refreshFailed || hasValidationError,
       })}
     >
       {credential && (
@@ -70,23 +73,30 @@ const CredentialCard = ({
                 Created: {new Date(credential.created_at).toLocaleDateString()}
               </p>
             </div>
-            <div className="flex gap-2 items-center">
-              {/* TODO: Add refresh button back in */}
-              {/* {isExpired && onRefresh && (
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2 items-center">
+                {hasValidationError && (
+                  <p className="text-sm font-bold text-warning">
+                    {hasValidationError}
+                  </p>
+                )}
+                {/* TODO: Add refresh button back in */}
+                {!refreshFailed && !hasValidationError && (
+                  <ShieldCheck className="h-5 w-5 text-success" />
+                )}
+                {!refreshFailed && hasValidationError && (
+                  <ShieldAlert className="h-5 w-5 text-warning" />
+                )}
+              </div>
+              {hasValidationError && (
                 <Button
                   variant="warning"
                   size="sm"
                   onClick={() => onRefresh(credential)}
                 >
-                  Refresh
+                  Reauthenticate
                   <RefreshCw className="h-4 w-4" />
                 </Button>
-              )} */}
-              {!refreshFailed && (
-                <ShieldCheck className="h-5 w-5 text-success" />
-              )}
-              {refreshFailed && (
-                <ShieldAlert className="h-5 w-5 text-warning" />
               )}
             </div>
           </div>

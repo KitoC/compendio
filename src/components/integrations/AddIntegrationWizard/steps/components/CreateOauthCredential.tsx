@@ -41,7 +41,10 @@ const CreateOauthCredential = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const provider = authType?.oauthProvider || "google";
-  const formConfig = authType && INTEGRATION_FORM_CONFIGS[service_type];
+  const formConfig =
+    authType &&
+    (INTEGRATION_FORM_CONFIGS[provider] ||
+      INTEGRATION_FORM_CONFIGS[service_type]);
 
   const handleIntegrationCallback = useCallback(async () => {
     if (!user || !tenantId) {
