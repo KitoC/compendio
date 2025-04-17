@@ -8,26 +8,51 @@ import { withErrorBoundary } from "@/middleware/withErrorBoundary";
 import { withCors } from "@/middleware/withCors";
 
 const handler = async (req: Request, context: AuthenticatedContext) => {
-  const { workflowsService, corsHeaders } = context;
+  const { workflowsService, corsHeaders, authService } = context;
   const { searchParams } = new URL(req.url);
   const method = req.method.toUpperCase();
 
+  if (!authService.tenant) {
+    return new Response("Unauthorized", {
+      status: 401,
+      headers: corsHeaders,
+    });
+  }
+
   const id = searchParams.get("id") ?? undefined;
+  const tag_id = authService.tenant?.tag_id;
+  const workspaceTag = await workflowsService.getWorkspaceTag(tag_id as string);
+
+  if (!workspaceTag) {
+    return new Response("Unauthorized", {
+      status: 401,
+      headers: corsHeaders,
+    });
+  }
 
   try {
     switch (method) {
       case "GET":
         if (id) {
-          return Response.json({ data: null }, { headers: corsHeaders });
+          const data = await workflowsService.getWorkflow(id);
+
+          return Response.json({ data }, { headers: corsHeaders });
         } else {
-          return Response.json({ data: [] }, { headers: corsHeaders });
+          const data = await workflowsService.getWorkflows(workspaceTag.name);
+
+          return Response.json({ data }, { headers: corsHeaders });
         }
 
       case "POST": {
-        return Response.json(
-          { data: null },
-          { status: 201, headers: corsHeaders }
-        );
+        const body = await req.json();
+
+        const data = await workflowsService.createWorkflow(workspaceTag, {
+          ...body,
+          tenant_id: authService.tenant?.id,
+          user_id: authService.user?.id,
+        });
+
+        return Response.json({ data }, { status: 201, headers: corsHeaders });
       }
 
       case "PATCH": {
@@ -37,8 +62,14 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
             headers: corsHeaders,
           });
         }
+        const body = await req.json();
 
-        return Response.json({ data: null }, { headers: corsHeaders });
+        const data = await workflowsService.updateWorkflow(workspaceTag, {
+          ...body,
+          id,
+        });
+
+        return Response.json({ data }, { headers: corsHeaders });
       }
 
       case "DELETE": {
@@ -49,7 +80,9 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
           });
         }
 
-        return Response.json({ data: null }, { headers: corsHeaders });
+        await workflowsService.deleteWorkflow(workspaceTag, id);
+
+        return Response.json({ success: true }, { headers: corsHeaders });
       }
 
       default:

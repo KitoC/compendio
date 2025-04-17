@@ -6,6 +6,9 @@ import {
   BaseSupabaseService,
 } from "@/services/_BaseSupabaseService";
 import type { User } from "@/types";
+import type { Database } from "@/integrations/supabase/types";
+
+type Tenant = Database["public"]["Tables"]["tenants"]["Row"];
 
 const ROLES = {
   SUPER_ADMIN: "super-admin",
@@ -23,6 +26,7 @@ class AuthService extends BaseSupabaseService {
   public logger: Logger;
   public roles: string[] | null;
   public user: User | null;
+  public tenant: Tenant | null;
 
   constructor(
     public context: BaseRequiredContext,
@@ -35,6 +39,7 @@ class AuthService extends BaseSupabaseService {
     this.token = null;
     this.roles = null;
     this.user = null;
+    this.tenant = null;
     this.authHeader = null;
   }
 
@@ -42,6 +47,7 @@ class AuthService extends BaseSupabaseService {
     this.getToken();
 
     await this.getUserTenantAndRoles();
+    await this.getTenant();
   }
 
   getToken() {
@@ -73,6 +79,23 @@ class AuthService extends BaseSupabaseService {
     }
 
     return data.user;
+  }
+
+  async getTenant() {
+    const { data: tenant, tenantError } =
+      await this.context.supabase_AS_SUPER_ADMIN
+        .from("tenants")
+        .select("*")
+        .eq("id", this.tenantId)
+        .single();
+
+    if (tenantError) {
+      this.throwError("Error getting tenant", tenantError, 500);
+    }
+
+    this.tenant = tenant;
+
+    return tenant;
   }
 
   async getUserTenantAndRoles() {
