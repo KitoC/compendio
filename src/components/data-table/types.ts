@@ -1,5 +1,6 @@
 // NO_CHANGE
 
+import { DataGridColumn, GridAction } from "../DataGrid";
 import { FormConfig } from "../form-builder/types";
 
 export type Permission = "create" | "read" | "update" | "delete" | "export";
@@ -26,7 +27,8 @@ export interface Column<T = unknown> {
 export interface DataTableProps<T extends object> {
   data: T[];
   idField?: keyof T;
-  columns?: Column<T>[];
+  columns?: DataGridColumn<T>[];
+  actions?: GridAction[];
   permissions?: Partial<UserPermissions>;
   title?: string;
   subtitle?: string;

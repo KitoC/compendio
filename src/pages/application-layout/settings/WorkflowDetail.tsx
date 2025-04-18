@@ -60,7 +60,7 @@ interface Function {
 const WorkflowDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { tenantId } = useTenant();
+  const { tenantId, urlTenantAlias } = useTenant();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -411,7 +411,14 @@ const WorkflowDetail = () => {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate(`${ROUTES.SETTINGS}/workflows`)}
+          onClick={() =>
+            navigate(
+              `${ROUTES.SETTINGS.replace(
+                ":tenantId",
+                urlTenantAlias
+              )}/workflows`
+            )
+          }
         >
           <ArrowLeft size={16} />
         </Button>

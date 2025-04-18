@@ -127,7 +127,7 @@ const AgentsSettings = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <>
       <DataTable
         data={agents}
         columns={columns}
@@ -198,7 +198,7 @@ const AgentsSettings = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 };
 

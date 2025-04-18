@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTenant } from "@/contexts/TenantContext";
+import Page from "@/components/Page";
 interface WorkflowInstance {
   id: string;
   workflow_id: string;
@@ -282,217 +283,223 @@ const WorkflowInstancesSettings = () => {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Workflow Executions</h1>
-      </div>
-
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <label className="text-sm font-medium mb-2 block">Workflow</label>
-          <Select value={filterWorkflow} onValueChange={setFilterWorkflow}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by workflow" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Workflows</SelectItem>
-              {workflows.map((workflow) => (
-                <SelectItem key={workflow.id} value={workflow.id}>
-                  {workflow.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+    <Page>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Workflow Executions</h1>
         </div>
 
-        <div>
-          <label className="text-sm font-medium mb-2 block">Agent</label>
-          <Select value={filterAgent} onValueChange={setFilterAgent}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by agent" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Agents</SelectItem>
-              {agents.map((agent) => (
-                <SelectItem key={agent.id} value={agent.id}>
-                  {agent.human_name || agent.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label className="text-sm font-medium mb-2 block">Workflow</label>
+            <Select value={filterWorkflow} onValueChange={setFilterWorkflow}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by workflow" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Workflows</SelectItem>
+                {workflows.map((workflow) => (
+                  <SelectItem key={workflow.id} value={workflow.id}>
+                    {workflow.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-2 block">Agent</label>
+            <Select value={filterAgent} onValueChange={setFilterAgent}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by agent" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Agents</SelectItem>
+                {agents.map((agent) => (
+                  <SelectItem key={agent.id} value={agent.id}>
+                    {agent.human_name || agent.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-2 block">Status</label>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="error">Error</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <div>
-          <label className="text-sm font-medium mb-2 block">Status</label>
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="in_progress">In Progress</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="error">Error</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+        <DataTable
+          data={instances}
+          columns={columns}
+          onRowClick={handleRowClick}
+          permissions={{
+            create: false,
+            read: true,
+            update: false,
+            delete: true,
+            export: true,
+          }}
+          onDelete={handleDeleteInstance}
+          isLoading={isLoading}
+          searchable={true}
+          pagination={true}
+          pageSize={10}
+          emptyMessage="No workflow executions found."
+        />
 
-      <DataTable
-        data={instances}
-        columns={columns}
-        onRowClick={handleRowClick}
-        permissions={{
-          create: false,
-          read: true,
-          update: false,
-          delete: true,
-          export: true,
-        }}
-        onDelete={handleDeleteInstance}
-        isLoading={isLoading}
-        searchable={true}
-        pagination={true}
-        pageSize={10}
-        emptyMessage="No workflow executions found."
-      />
-
-      {showResponsesDialog && selectedInstance && (
-        <Dialog
-          open={showResponsesDialog}
-          onOpenChange={setShowResponsesDialog}
-        >
-          <DialogContent className="sm:max-w-[800px] sm:max-h-[80vh] overflow-auto">
-            <DialogHeader>
-              <DialogTitle>Workflow Execution Details</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 mt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-semibold text-sm">Workflow:</h4>
-                  <p>{selectedInstance.workflow_name}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-sm">Agent:</h4>
-                  <p>{selectedInstance.agent_name}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-sm">Status:</h4>
-                  <Badge
-                    variant={
-                      selectedInstance.status === "completed"
-                        ? "success"
-                        : selectedInstance.status === "in_progress"
-                        ? "warning"
-                        : selectedInstance.status === "error"
-                        ? "destructive"
-                        : "default"
-                    }
-                  >
-                    {selectedInstance.status.replace("_", " ")}
-                  </Badge>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-sm">Current Step:</h4>
-                  <p>{selectedInstance.current_step}</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-sm">Started:</h4>
-                  <p>
-                    {new Date(selectedInstance.created_at).toLocaleString()}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-sm">Completed:</h4>
-                  <p>
-                    {selectedInstance.completed_at
-                      ? new Date(selectedInstance.completed_at).toLocaleString()
-                      : "—"}
-                  </p>
-                </div>
-              </div>
-
-              <Tabs defaultValue="steps" className="w-full mt-6">
-                <TabsList>
-                  <TabsTrigger value="steps">Steps & Responses</TabsTrigger>
-                  <TabsTrigger value="raw">Raw Data</TabsTrigger>
-                </TabsList>
-                <TabsContent value="steps" className="space-y-4 pt-4">
-                  {instanceResponses.length === 0 ? (
-                    <p className="text-muted-foreground">
-                      No responses recorded for this workflow execution.
+        {showResponsesDialog && selectedInstance && (
+          <Dialog
+            open={showResponsesDialog}
+            onOpenChange={setShowResponsesDialog}
+          >
+            <DialogContent className="sm:max-w-[800px] sm:max-h-[80vh] overflow-auto">
+              <DialogHeader>
+                <DialogTitle>Workflow Execution Details</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-semibold text-sm">Workflow:</h4>
+                    <p>{selectedInstance.workflow_name}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-sm">Agent:</h4>
+                    <p>{selectedInstance.agent_name}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-sm">Status:</h4>
+                    <Badge
+                      variant={
+                        selectedInstance.status === "completed"
+                          ? "success"
+                          : selectedInstance.status === "in_progress"
+                          ? "warning"
+                          : selectedInstance.status === "error"
+                          ? "destructive"
+                          : "default"
+                      }
+                    >
+                      {selectedInstance.status.replace("_", " ")}
+                    </Badge>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-sm">Current Step:</h4>
+                    <p>{selectedInstance.current_step}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-sm">Started:</h4>
+                    <p>
+                      {new Date(selectedInstance.created_at).toLocaleString()}
                     </p>
-                  ) : (
-                    <div className="space-y-4">
-                      {instanceResponses.map((response) => (
-                        <div
-                          key={response.id}
-                          className="border rounded-md p-4"
-                        >
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <h4 className="font-medium">
-                                Step {response.step_index + 1}
-                              </h4>
-                              <p className="text-xs text-muted-foreground">
-                                {new Date(response.created_at).toLocaleString()}
-                              </p>
-                            </div>
-                            <Badge
-                              variant={
-                                response.status === "success"
-                                  ? "success"
-                                  : response.status === "pending"
-                                  ? "warning"
-                                  : response.status === "error"
-                                  ? "destructive"
-                                  : "default"
-                              }
-                            >
-                              {response.status}
-                            </Badge>
-                          </div>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-sm">Completed:</h4>
+                    <p>
+                      {selectedInstance.completed_at
+                        ? new Date(
+                            selectedInstance.completed_at
+                          ).toLocaleString()
+                        : "—"}
+                    </p>
+                  </div>
+                </div>
 
-                          {response.error_message && (
-                            <div className="bg-red-50 border border-red-200 rounded p-2 mb-2">
-                              <p className="text-red-700 text-sm">
-                                {response.error_message}
-                              </p>
+                <Tabs defaultValue="steps" className="w-full mt-6">
+                  <TabsList>
+                    <TabsTrigger value="steps">Steps & Responses</TabsTrigger>
+                    <TabsTrigger value="raw">Raw Data</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="steps" className="space-y-4 pt-4">
+                    {instanceResponses.length === 0 ? (
+                      <p className="text-muted-foreground">
+                        No responses recorded for this workflow execution.
+                      </p>
+                    ) : (
+                      <div className="space-y-4">
+                        {instanceResponses.map((response) => (
+                          <div
+                            key={response.id}
+                            className="border rounded-md p-4"
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <h4 className="font-medium">
+                                  Step {response.step_index + 1}
+                                </h4>
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(
+                                    response.created_at
+                                  ).toLocaleString()}
+                                </p>
+                              </div>
+                              <Badge
+                                variant={
+                                  response.status === "success"
+                                    ? "success"
+                                    : response.status === "pending"
+                                    ? "warning"
+                                    : response.status === "error"
+                                    ? "destructive"
+                                    : "default"
+                                }
+                              >
+                                {response.status}
+                              </Badge>
                             </div>
-                          )}
 
-                          <div className="mt-2">
-                            <h5 className="text-sm font-medium mb-1">
-                              Response:
-                            </h5>
-                            <pre className="bg-muted p-3 rounded-md text-xs overflow-auto max-h-48">
-                              {JSON.stringify(response.response, null, 2)}
-                            </pre>
+                            {response.error_message && (
+                              <div className="bg-red-50 border border-red-200 rounded p-2 mb-2">
+                                <p className="text-red-700 text-sm">
+                                  {response.error_message}
+                                </p>
+                              </div>
+                            )}
+
+                            <div className="mt-2">
+                              <h5 className="text-sm font-medium mb-1">
+                                Response:
+                              </h5>
+                              <pre className="bg-muted p-3 rounded-md text-xs overflow-auto max-h-48">
+                                {JSON.stringify(response.response, null, 2)}
+                              </pre>
+                            </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-                <TabsContent value="raw" className="space-y-4 pt-4">
-                  <pre className="bg-muted p-4 rounded-md overflow-auto max-h-96 text-xs">
-                    {JSON.stringify(
-                      {
-                        instance: selectedInstance,
-                        responses: instanceResponses,
-                      },
-                      null,
-                      2
+                        ))}
+                      </div>
                     )}
-                  </pre>
-                </TabsContent>
-              </Tabs>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-    </div>
+                  </TabsContent>
+                  <TabsContent value="raw" className="space-y-4 pt-4">
+                    <pre className="bg-muted p-4 rounded-md overflow-auto max-h-96 text-xs">
+                      {JSON.stringify(
+                        {
+                          instance: selectedInstance,
+                          responses: instanceResponses,
+                        },
+                        null,
+                        2
+                      )}
+                    </pre>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
+    </Page>
   );
 };
 

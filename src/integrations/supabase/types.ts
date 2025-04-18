@@ -1435,6 +1435,7 @@ export type Database = {
           name: string | null;
           tenant_owner_id: string;
           workspace: string | null;
+          tag_id: string | null;
         };
         Insert: {
           base_id?: string | null;
@@ -1443,6 +1444,7 @@ export type Database = {
           name?: string | null;
           tenant_owner_id: string;
           workspace?: string | null;
+          tag_id?: string | null;
         };
         Update: {
           base_id?: string | null;
@@ -1451,6 +1453,7 @@ export type Database = {
           name?: string | null;
           tenant_owner_id?: string;
           workspace?: string | null;
+          tag_id?: string | null;
         };
         Relationships: [];
       };

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
@@ -10,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { useUserSettings } from "@/contexts/UserSettingsProvider";
 
+import Page from "@/components/Page";
 const AppearanceSettings = () => {
   const { user } = useAuth();
   const { tenantId } = useTenant();
@@ -46,50 +46,52 @@ const AppearanceSettings = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-medium mb-4">Appearance</h2>
-        <p className="text-muted-foreground mb-4">
-          Customize how the application looks and feels.
-        </p>
-      </div>
+    <Page>
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-medium mb-4">Appearance</h2>
+          <p className="text-muted-foreground mb-4">
+            Customize how the application looks and feels.
+          </p>
+        </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="theme" className="text-base">
-                Theme
-              </Label>
-              <RadioGroup
-                value={theme}
-                onValueChange={setTheme}
-                className="mt-3 space-y-3"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="light" id="light" />
-                  <Label htmlFor="light">Light</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="dark" id="dark" />
-                  <Label htmlFor="dark">Dark</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="system" id="system" />
-                  <Label htmlFor="system">System</Label>
-                </div>
-              </RadioGroup>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="theme" className="text-base">
+                  Theme
+                </Label>
+                <RadioGroup
+                  value={theme}
+                  onValueChange={setTheme}
+                  className="mt-3 space-y-3"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="light" id="light" />
+                    <Label htmlFor="light">Light</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="dark" id="dark" />
+                    <Label htmlFor="dark">Dark</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="system" id="system" />
+                    <Label htmlFor="system">System</Label>
+                  </div>
+                </RadioGroup>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      <div className="flex justify-end">
-        <Button onClick={handleSaveAppearance} disabled={isSaving}>
-          {isSaving ? "Saving..." : "Save changes"}
-        </Button>
+        <div className="flex justify-end">
+          <Button onClick={handleSaveAppearance} disabled={isSaving}>
+            {isSaving ? "Saving..." : "Save changes"}
+          </Button>
+        </div>
       </div>
-    </div>
+    </Page>
   );
 };
 
