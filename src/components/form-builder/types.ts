@@ -60,6 +60,7 @@ export interface FormField {
   className?: string;
   hidden?: boolean;
   props?: Record<string, unknown>;
+  description?: string;
   CustomComponent?: React.ComponentType<CustomFieldComponentProps>;
 }
 

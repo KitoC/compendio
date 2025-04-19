@@ -22,6 +22,19 @@ export const TRIGGER_TEXT = {
   [TRIGGER_TYPES.EMAIL_RECEIVED]: "When email received",
 };
 
+export const TRIGGER_DESCRIPTION = {
+  [TRIGGER_TYPES.RECORD_CREATED]:
+    "This trigger will fire when a record is created in the selected table.",
+  [TRIGGER_TYPES.RECORD_UPDATED]:
+    "This trigger will fire when a record is updated in the selected table.",
+  [TRIGGER_TYPES.RECORD_DELETED]:
+    "This trigger will fire when a record is deleted in the selected table.",
+  [TRIGGER_TYPES.WEBHOOK_RECEIVED]:
+    "This trigger will fire when a webhook is received.",
+  [TRIGGER_TYPES.EMAIL_RECEIVED]:
+    "This trigger will fire when an email is received.",
+};
+
 export const getTriggerText = (trigger, tables) => {
   if (!trigger) {
     return "";

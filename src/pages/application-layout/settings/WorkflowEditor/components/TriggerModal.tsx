@@ -4,6 +4,7 @@ import {
   getTriggerText,
   TIGGER_FORM_CONFIGS,
   TRIGGER_OPTIONS,
+  TRIGGER_DESCRIPTION,
 } from "../consts/triggers";
 import { useState, useEffect } from "react";
 import FormBuilder from "@/components/form-builder";
@@ -21,6 +22,7 @@ const TriggerModal = ({ isOpen, onClose, id }) => {
   const triggerText = getTriggerText(trigger, tables);
 
   const triggerFormConfig = TIGGER_FORM_CONFIGS[trigger?.event_type];
+  const triggerDescription = TRIGGER_DESCRIPTION[trigger?.event_type];
 
   useEffect(() => {
     const container = document.getElementById("workflow-editor-container");
@@ -69,6 +71,7 @@ const TriggerModal = ({ isOpen, onClose, id }) => {
                     name: "event_type",
                     label: "Trigger type",
                     options: TRIGGER_OPTIONS,
+                    description: triggerDescription,
                     CustomComponent: (props) => (
                       <TriggerSelect
                         {...props}

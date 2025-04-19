@@ -29,6 +29,7 @@ const FormField = ({
     id,
     name,
     label,
+    description,
     type,
     placeholder,
     options,
@@ -403,6 +404,9 @@ const FormField = ({
         </Label>
       )}
       {renderField()}
+      {description && (
+        <p className="text-xs text-muted-foreground">{description}</p>
+      )}
       {error && touched && (
         <p className="text-xs font-medium text-destructive">{error}</p>
       )}
