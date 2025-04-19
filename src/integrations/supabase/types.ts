@@ -4,6 +4,7 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
+  | Record<string, unknown>
   | Json[];
 
 export type Database = {
@@ -1783,6 +1784,46 @@ export type Database = {
             columns: ["workflow_id"];
             isOneToOne: false;
             referencedRelation: "workflows";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      workflow_triggers: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          workflow_id: string | null;
+          event_type: string | null;
+          metadata: Json | null;
+          created_at: string | null;
+          deleted_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          tenant_id: string;
+          workflow_id?: string | null;
+          event_type?: string | null;
+          metadata?: Json | null;
+          created_at?: string | null;
+          deleted_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id: string;
+          tenant_id: string;
+          workflow_id?: string | null;
+          event_type?: string | null;
+          metadata?: Json | null;
+          updated_at?: string | null;
+          created_at?: string | null;
+          deleted_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fk_workflow_triggers_tenant";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
             referencedColumns: ["id"];
           }
         ];

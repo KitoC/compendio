@@ -10,25 +10,7 @@ import {
 } from "./dialog";
 import { cn } from "@/lib/utils";
 
-const ResponsiveModal = ({
-  children,
-  header,
-  footer,
-  Trigger,
-  isSlider = false,
-  className,
-  headerClassName,
-  footerClassName,
-  bodyClassName,
-  isOpen = false,
-  setIsOpen,
-  title,
-  description,
-  footerId,
-  onOpenAutoFocus = (e) => {
-    e.preventDefault();
-  },
-}: {
+type ResponsiveModalProps = {
   children: React.ReactNode;
   header?: React.ReactNode;
   footer?: React.ReactNode;
@@ -47,7 +29,33 @@ const ResponsiveModal = ({
   description?: string;
   footerId?: string;
   onOpenAutoFocus?: (e: Event) => void;
-}) => {
+  hideOverlay?: boolean;
+  onPointerDownOutside?: (e: Event) => void;
+  container?: HTMLElement;
+};
+
+const ResponsiveModal = ({
+  children,
+  header,
+  footer,
+  Trigger,
+  isSlider = false,
+  className,
+  headerClassName,
+  footerClassName,
+  bodyClassName,
+  isOpen = false,
+  setIsOpen,
+  title,
+  description,
+  footerId,
+  onOpenAutoFocus = (e) => {
+    e.preventDefault();
+  },
+  hideOverlay = false,
+  onPointerDownOutside,
+  container,
+}: ResponsiveModalProps) => {
   const isMobile = useIsMobile();
 
   if (isMobile || isSlider) {
@@ -56,6 +64,7 @@ const ResponsiveModal = ({
         {Trigger && <Trigger isOpen={isOpen} setIsOpen={setIsOpen} />}
 
         <SlidePanel
+          hideOverlay={hideOverlay}
           title={title}
           description={description}
           headerContent={header}
@@ -69,6 +78,8 @@ const ResponsiveModal = ({
           footerClassName={footerClassName}
           footerId={footerId}
           onOpenAutoFocus={onOpenAutoFocus}
+          onPointerDownOutside={onPointerDownOutside}
+          container={container}
         >
           {children}
         </SlidePanel>
@@ -89,6 +100,8 @@ const ResponsiveModal = ({
           className
         )}
         onOpenAutoFocus={onOpenAutoFocus}
+        hideOverlay={hideOverlay}
+        onPointerDownOutside={onPointerDownOutside}
       >
         {header && (
           <DialogHeader className={headerClassName}>

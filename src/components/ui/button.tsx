@@ -4,8 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-const outlineAndGhost =
-  "bg-transparent hover:bg-[rgba(0,0,0,0.1)] hover:text-muted-foreground";
+const outlineAndGhost = "bg-transparent  hover:text-muted-foreground";
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
@@ -44,8 +43,7 @@ const buttonVariants = cva(
         sm: "h-9 rounded-md px-3 [&_svg]:size-5",
         lg: "h-11 rounded-md px-8 [&_svg]:size-6",
         icon: "h-10 w-10 [&_svg]:size-5",
-        "icon-only":
-          "h-fi w-fi [&_svg]:size-5 h-fit w-fit !p-0 hover:bg-transparent",
+        "icon-only": "h-fit w-fit h-fit w-fit !p-0 hover:bg-transparent",
       },
     },
     defaultVariants: {

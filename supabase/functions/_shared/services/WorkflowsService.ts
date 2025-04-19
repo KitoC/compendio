@@ -15,72 +15,11 @@ const ENDPOINTS = {
   TAG: "/tags/:tagId",
 };
 
-interface WorkflowNode {
-  id: string;
-  name: string;
-  type: string;
-  position: [number, number];
-  webhookId: string;
-  disabled: boolean;
-  notesInFlow: boolean;
-  notes: string;
-  typeVersion: number;
-  executeOnce: boolean;
-  alwaysOutputData: boolean;
-  retryOnFail: boolean;
-  maxTries: number;
-  waitBetweenTries: number;
-  continueOnFail: boolean;
-  onError: string;
-  // parameters: {
-  //   additionalProperties: Record<string, unknown>;
-  // };
-  // credentials: {
-  //   jiraSoftwareCloudApi: {
-  //     id: string;
-  //     name: string;
-  //   };
-  // };
-}
-
-interface WorkflowConnection {
-  node: string;
-  type: string;
-  index: number;
-}
-
-interface ExternalWorkflow {
-  id: string;
-  name: string;
-  description: string;
-  nodes: WorkflowNode[];
-  connections: { main: WorkflowConnection[] };
-  settings: Record<string, unknown>;
-  staticData: Record<string, unknown>;
-}
-interface WorkflowPayload {
-  id?: string;
-  name: string;
-  description: string;
-  user_id: string;
-  tenant_id: string;
-  externalWorkflow?: ExternalWorkflow;
-}
-
-interface WorkspaceTag {
-  id: string;
-  name: string;
-}
-
-interface CallN8NApiParams {
-  path: string;
-  method: string;
-  body?: unknown;
-  queryParams?: Record<string, string>;
-  options?: {
-    noJson?: boolean;
-  };
-}
+import type {
+  CallN8NApiParams,
+  WorkspaceTag,
+  WorkflowPayload,
+} from "@/types/workflows";
 
 class WorkflowsService extends BaseSupabaseService {
   n8n_api_key: string;
@@ -150,8 +89,6 @@ class WorkflowsService extends BaseSupabaseService {
 
   async getWorkflow(workflowId: string) {
     const internalWorkflow = await this.getById(workflowId);
-
-    console.log("internalWorkflow", internalWorkflow);
 
     if (!internalWorkflow) {
       this.throwError("Workflow not found", 404);

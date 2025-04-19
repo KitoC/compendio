@@ -4,6 +4,7 @@ import { useTenant } from "@/contexts/TenantContext";
 import { CustomTableService } from "@/services/CustomTableService";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Loader from "@/components/ui/loader";
+import { CustomTable } from "./CustomTablesContext";
 
 const QUERY_KEYS = {
   SYNC_SCHEMA: "sync-data-tables-schema",
@@ -24,7 +25,7 @@ const useSyncSchemaQuery = () => {
         return schema;
       });
 
-      return schema;
+      return schema as CustomTable[];
     },
     enabled: !!tenantId,
   });

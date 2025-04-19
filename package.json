@@ -19,6 +19,7 @@
     "safari >= 11"
   ],
   "dependencies": {
+    "@dagrejs/dagre": "^1.1.4",
     "@fingerprintjs/fingerprintjs": "^4.6.1",
     "@floating-ui/react": "^0.27.5",
     "@hookform/resolvers": "^3.9.0",
@@ -58,6 +59,7 @@
     "@types/react-speech-recognition": "^3.9.5",
     "@types/uuid": "^10.0.0",
     "@uidotdev/usehooks": "^2.4.1",
+    "@xyflow/react": "^12.6.0",
     "axios": "^1.8.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

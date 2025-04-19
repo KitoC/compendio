@@ -25,6 +25,9 @@ interface SlidePanelProps {
   bodyClassName?: string;
   footerClassName?: string;
   footerId?: string;
+  hideOverlay?: boolean;
+  onPointerDownOutside?: (e: Event) => void;
+  container?: HTMLElement;
 }
 
 export function SlidePanel({
@@ -42,6 +45,9 @@ export function SlidePanel({
   bodyClassName,
   footerClassName,
   footerId = "slide-panel-footer-portal",
+  hideOverlay = false,
+  onPointerDownOutside,
+  container,
 }: SlidePanelProps) {
   useEffect(() => {
     // IMPORTANT: This is a workaround to prevent the Sheet from not removing the pointer events when the sheet is closed
@@ -60,12 +66,15 @@ export function SlidePanel({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
+        container={container}
         className={cn(
           "w-full sm:max-w-md md:max-w-3xl flex flex-col p-0 h-[calc(100vh-50px)] gap-0",
           className
         )}
         side={side}
         onOpenAutoFocus={onOpenAutoFocus}
+        hideOverlay={hideOverlay}
+        onPointerDownOutside={onPointerDownOutside}
       >
         {(title || description || headerContent) && (
           <SheetHeader className={cn("p-6 border-b", headerClassName)}>

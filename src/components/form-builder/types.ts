@@ -68,6 +68,8 @@ export interface FormSection {
   title?: string;
   description?: string;
   fields: FormField[];
+  className?: string;
+  divider?: boolean;
 }
 
 export interface FormConfig {
@@ -100,6 +102,8 @@ export interface FormBuilderProps {
   hideSubmitButton?: boolean;
   hideTitles?: boolean;
   footerClassname?: string;
+  submitOnChange?: boolean;
+  contentClassName?: string;
 }
 
 export interface FormFieldProps {
