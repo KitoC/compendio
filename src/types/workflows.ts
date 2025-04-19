@@ -30,7 +30,7 @@ export interface ExternalWorkflow {
   name: string;
   description: string;
   nodes: WorkflowNode[];
-  connections: { main: WorkflowConnection[] };
+  connections: { [key: string]: WorkflowConnection[] };
   settings: Record<string, unknown>;
   staticData: Record<string, unknown>;
 }

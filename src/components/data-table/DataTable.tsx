@@ -65,6 +65,7 @@ function DataTable<T extends object>({
   className,
   getFormConfig,
   actions,
+  headerItems,
 }: DataTableProps<T>) {
   const isMobile = useIsMobile();
 
@@ -326,6 +327,7 @@ function DataTable<T extends object>({
             {subtitle && <CardDescription>{subtitle}</CardDescription>}
           </div>
           <div className="flex space-x-2">
+            {headerItems}
             {permissions.create && (
               <Button size="sm" onClick={handleCreate}>
                 <Plus className="h-4 w-4 mr-2" />

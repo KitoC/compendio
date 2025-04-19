@@ -25,7 +25,7 @@ const TriggerCard = ({ trigger, isOpen, setIsOpen }) => {
     <>
       <Card
         onClick={() => setIsOpen(!isOpen)}
-        className={cn("p-2 w-[300px] !rounded-sm")}
+        className={cn("p-2 !rounded-sm")}
       >
         <CardContent className="p-2 flex items-start gap-2">
           <Icon className="w-4 h-4" />

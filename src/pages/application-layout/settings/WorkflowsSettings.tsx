@@ -1,14 +1,17 @@
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/lib/constants";
 import DataTable, { Column } from "@/components/data-table";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Plus, Loader2 } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
 import {
   useWorkflowsQuery,
   useDeleteWorkflow,
+  useCreateWorkflow,
 } from "@/hooks/useWorkflowsQuery";
 import { GridAction } from "@/components/DataGrid";
+import { Button } from "@/components/ui/button";
+import { buildPathWithParams } from "@/utils/urlHelpers";
 
 interface Workflow {
   id: string;
@@ -24,10 +27,13 @@ interface Workflow {
 const WorkflowsSettings = () => {
   const { urlTenantAlias } = useTenant();
   const navigate = useNavigate();
+  const [isCreating, setIsCreating] = useState(false);
 
   const { workflows, isLoading } = useWorkflowsQuery();
 
   const deleteWorkflow = useDeleteWorkflow();
+
+  const createWorkflow = useCreateWorkflow();
 
   const columns: Column<Workflow>[] = useMemo(
     () => [
@@ -84,6 +90,41 @@ const WorkflowsSettings = () => {
     [handleRowClick, deleteWorkflow]
   );
 
+  const onCreateWorkflow = useCallback(async () => {
+    setIsCreating(true);
+    const { id } = await createWorkflow.mutateAsync({
+      name: `My workflow ${workflows.length + 1}`,
+      description: "",
+      externalWorkflow: {
+        nodes: [
+          {
+            parameters: {
+              workflowInputs: {
+                values: [
+                  { name: "tenant_id" },
+                  { name: "payload", type: "object" },
+                  { name: "base_url" },
+                ],
+              },
+            },
+            type: "n8n-nodes-base.executeWorkflowTrigger",
+            typeVersion: 1.1,
+            position: [0, 0],
+            name: "payload",
+          },
+        ],
+        connections: { main: [] },
+        settings: {},
+      },
+    });
+    navigate(
+      buildPathWithParams(ROUTES.SETTINGS_WORKFLOW_DETAIL, {
+        tenantId: urlTenantAlias,
+        id,
+      })
+    );
+  }, [createWorkflow, workflows, navigate, urlTenantAlias]);
+
   return (
     <DataTable
       data={workflows}
@@ -91,6 +132,25 @@ const WorkflowsSettings = () => {
       onRowClick={handleRowClick}
       isLoading={isLoading}
       actions={actions}
+      permissions={{
+        create: false,
+        read: true,
+        update: true,
+        delete: true,
+        export: false,
+      }}
+      headerItems={
+        <>
+          <Button disabled={isCreating} onClick={onCreateWorkflow}>
+            {isCreating ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Plus className="w-4 h-4 mr-2" />
+            )}
+            Create Workflow
+          </Button>
+        </>
+      }
     />
   );
 };

@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import { useCustomTables } from "@/contexts/CustomTables";
 import { WorkflowService } from "@/services/WorkflowService";
 import { WorkflowTrigger } from "@/services/WorkflowService";
+import { Workflow } from "@/types/workflows";
 
 const QUERY_KEYS = {
   WORKFLOWS: "workflows",
@@ -51,6 +52,32 @@ export const useDeleteWorkflow = () => {
     onError: (error) => {
       console.error("Error deleting workflow:", error);
       toast.error("Failed to delete workflow");
+    },
+  });
+};
+
+export const useCreateWorkflow = () => {
+  const queryClient = useQueryClient();
+  const queryKeyFromParams = useGetCurrentPageQueryKeyFromParams();
+
+  return useMutation({
+    mutationFn: WorkflowService.createWorkflow,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEYS.WORKFLOWS],
+      });
+
+      if (queryKeyFromParams) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeyFromParams,
+        });
+      }
+
+      toast.success("Workflow created successfully");
+    },
+    onError: (error) => {
+      console.error("Error creating workflow:", error);
+      toast.error("Failed to create workflow");
     },
   });
 };

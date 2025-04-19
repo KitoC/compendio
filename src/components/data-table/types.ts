@@ -43,6 +43,7 @@ export interface DataTableProps<T extends object> {
   emptyMessage?: string;
   className?: string;
   getFormConfig?: (config: FormConfig, value: T) => FormConfig;
+  headerItems?: React.ReactNode;
 }
 
 export interface TableHeaderProps<T extends object> {

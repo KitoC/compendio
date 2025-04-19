@@ -48,7 +48,7 @@ export const WorkflowService = {
       throw new Error("Failed to create record");
     }
 
-    return response.json();
+    return (await response.json())?.data;
   },
 
   async updateWorkflow(workflowId: string, workflow: Record<string, unknown>) {

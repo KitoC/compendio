@@ -135,9 +135,10 @@ class WorkflowsService extends BaseSupabaseService {
 
     const n8nWorkflowPayload = {
       name: `[${workspaceTag.name}] ${payload.name}`,
-      nodes: [],
+      nodes: payload.externalWorkflow?.nodes || [],
       connections: {
         main: [],
+        ...(payload.externalWorkflow?.connections || {}),
       },
       settings: {
         saveExecutionProgress: true,
@@ -149,6 +150,7 @@ class WorkflowsService extends BaseSupabaseService {
         // TODO: Make this dynamic
         timezone: "Australia/Sydney",
         executionOrder: "v1",
+        ...(payload.externalWorkflow?.settings || {}),
       },
       staticData: {},
     };

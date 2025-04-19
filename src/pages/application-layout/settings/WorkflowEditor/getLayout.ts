@@ -1,8 +1,26 @@
 import dagre from "@dagrejs/dagre";
 
-const dagreGraph = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
+interface Node {
+  id: string;
+  measured: {
+    width: number;
+    height: number;
+  };
+}
 
-const getLayout = (nodes, edges, direction = "TB") => {
+interface Edge {
+  source: string;
+  target: string;
+}
+
+type Direction = "TB" | "LR";
+
+const getLayout = (
+  nodes: Node[],
+  edges: Edge[],
+  direction: Direction = "TB"
+) => {
+  const dagreGraph = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
   const isHorizontal = direction === "LR";
 
   dagreGraph.setGraph({
@@ -13,9 +31,11 @@ const getLayout = (nodes, edges, direction = "TB") => {
   });
 
   nodes.forEach((node) => {
+    const { measured } = node;
+
     dagreGraph.setNode(node.id, {
-      width: node.measured.width,
-      height: node.measured.height,
+      width: measured.width,
+      height: measured.height,
     });
   });
 
@@ -28,19 +48,15 @@ const getLayout = (nodes, edges, direction = "TB") => {
   const newNodes = nodes.map((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
 
-    const newNode = {
+    return {
       ...node,
       targetPosition: isHorizontal ? "left" : "top",
       sourcePosition: isHorizontal ? "right" : "bottom",
-      // We are shifting the dagre node position (anchor=center center) to the top left
-      // so it matches the React Flow node anchor point (top left).
       position: {
         x: nodeWithPosition.x - node.measured.width / 2,
         y: nodeWithPosition.y - node.measured.height / 2,
       },
     };
-
-    return newNode;
   });
 
   return { nodes: newNodes, edges };

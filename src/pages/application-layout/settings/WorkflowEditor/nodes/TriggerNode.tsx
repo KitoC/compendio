@@ -5,6 +5,7 @@ import { WorkflowTrigger } from "@/types/workflows";
 import { useCreateWorkflowTrigger } from "@/hooks/useWorkflowsQuery";
 import { useTenant } from "@/contexts/TenantContext";
 import TriggerCard from "../components/TriggerCard";
+import { NODE_WIDTH } from "../consts/nodes";
 
 type TriggerNodeProps = {
   data: {
@@ -36,7 +37,7 @@ const TriggerNode = memo(({ data, isConnectable }: TriggerNodeProps) => {
   };
 
   return (
-    <div>
+    <div className={NODE_WIDTH}>
       <div className="p-3 w-full flex justify-start text-xs text-muted-foreground font-medium">
         <p>{triggers.length} Triggers</p>
       </div>
