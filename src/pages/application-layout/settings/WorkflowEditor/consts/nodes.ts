@@ -7,4 +7,13 @@ const NODE_TYPES = {
 
 export const NODE_WIDTH = "w-[300px]";
 
+export const NODE_BORDER = {
+  VALID: "border border-solid border-2 border-primary rounded-sm",
+  INVALID: "border border-dashed border-2 border-red-500 rounded-sm",
+};
+
+export const NODE_CARD = {
+  VALID: "border border-solid border-2 border-primary rounded-sm",
+  INVALID: "border border-solid border-2 border-red-200 rounded-sm",
+};
 export default NODE_TYPES;

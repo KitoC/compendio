@@ -1,14 +1,31 @@
-import { Workflow, WorkflowTrigger } from "@/types/workflows";
+import { Workflow } from "@/types/workflows";
 import NODE_TYPES from "./consts/nodes";
+import { sortBy } from "lodash";
 
-const buildNodesAndEdges = (
-  workflow: Workflow,
-  triggers: WorkflowTrigger[]
-) => {
-  const nodes = [
+interface WorkflowNode {
+  id: string;
+  position: { x: number; y: number };
+  draggable: boolean;
+  type: string;
+  measured: { height: number; width: number };
+  data: Record<string, unknown>;
+}
+
+const buildNodesAndEdges = (workflow: Workflow) => {
+  if (!workflow) {
+    return { nodes: [], edges: [] };
+  }
+  const { triggers } = workflow;
+
+  const nodes: WorkflowNode[] = [
     {
       id: "triggers",
-      data: { label: "Triggers", triggers, workflowId: workflow.id },
+      data: {
+        label: "Triggers",
+        triggers,
+        workflowId: workflow.id,
+        position: "0",
+      },
       position: { x: 0, y: 0 },
       draggable: false,
       type: NODE_TYPES.TRIGGER,
@@ -17,7 +34,49 @@ const buildNodesAndEdges = (
   ];
   const edges = [];
 
-  if (triggers.length) {
+  const actionNodes = workflow.actions.map((action) => {
+    if (action.position === "1") {
+      edges.push({
+        id: `${action.id}-edge`,
+        source: "triggers",
+        target: action.id,
+      });
+    }
+    return {
+      id: action.id,
+      data: {
+        id: action.id,
+        label: action.action_type,
+        action_type: action.action_type,
+        actionId: action.id,
+        position: action.position,
+        metadata: action.metadata,
+        workflowId: action.workflow_id,
+      },
+      position: { x: 0, y: 0 },
+      draggable: false,
+      type: NODE_TYPES.ACTION,
+      measured: { height: 0, width: 0 },
+    };
+  });
+
+  nodes.push(...actionNodes);
+
+  sortBy(actionNodes, "data.position").forEach((node) => {
+    const { connections = [] } = node.data.metadata;
+
+    connections.forEach((connection) => {
+      edges.push({
+        id: `${node.id}-${connection.id}`,
+        source: node.id,
+        target: connection.id,
+      });
+    });
+  });
+
+  const lastNode = nodes[nodes.length - 1];
+
+  if (lastNode.type === NODE_TYPES.TRIGGER && triggers.length) {
     edges.push({
       id: "add-action-edge",
       source: nodes[nodes.length - 1].id,

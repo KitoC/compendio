@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -9,16 +9,18 @@ import {
 } from "@xyflow/react";
 
 import "@xyflow/react/dist/style.css";
+import getLayout from "./getLayout";
+import { Workflow } from "@/types/workflows";
+import buildNodesAndEdges from "./buildNodesAndEdges";
+import NODE_TYPES from "./consts/nodes";
+
+import ActionNode from "./nodes/ActionNode";
+import AddActionNode from "./nodes/AddActionNode";
 import TriggerNode from "./nodes/TriggerNode";
 import UnknownNode from "./nodes/UnknownNode";
-import getLayout from "./getLayout";
-import { Workflow, WorkflowTrigger } from "@/types/workflows";
-import buildNodesAndEdges from "./buildNodesAndEdges";
-import AddActionNode from "./nodes/AddActionNode";
-import NODE_TYPES from "./consts/nodes";
+
 interface WorkflowEditorProps {
   workflow: Workflow;
-  workflowTriggers: WorkflowTrigger[];
   isLoading: boolean;
 }
 
@@ -35,6 +37,7 @@ const nodeTypes = {
   [NODE_TYPES.TRIGGER]: TriggerNode,
   [NODE_TYPES.UNKNOWN]: UnknownNode,
   [NODE_TYPES.ADD_ACTION]: AddActionNode,
+  [NODE_TYPES.ACTION]: ActionNode,
 };
 
 const WorkflowEditor = (props: WorkflowEditorProps) => {
@@ -43,76 +46,44 @@ const WorkflowEditor = (props: WorkflowEditorProps) => {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [layouted, setLayouted] = useState(false);
 
-  const onLayout = useCallback(
-    (direction) => {
-      const isMeasured = nodes.every(
-        (node) => node?.measured?.height && node?.measured?.width
-      );
-
-      if (!isMeasured) {
-        return;
-      }
-
-      const { nodes: layoutedNodes, edges: layoutedEdges } = getLayout(
-        nodes,
-        edges,
-        direction
-      );
-
-      setNodes([...layoutedNodes]);
-      setEdges([...layoutedEdges]);
-    },
-    [nodes, edges, setNodes, setEdges]
-  );
-
-  const measurements = useMemo(() => {
-    return nodes.reduce(
-      (acc, node) =>
-        acc + (node?.measured.height || 0) + (node?.measured.width || 0),
-      0
-    );
-  }, [nodes]);
-
-  const previousMeasurements = useRef(measurements);
-
   useEffect(() => {
-    if (previousMeasurements.current !== measurements) {
-      onLayout("TB");
-      previousMeasurements.current = measurements;
-      if (!layouted) {
-        setLayouted(true);
+    if (!layouted) {
+      setLayouted(true);
 
-        reactFlow.setViewport({
-          zoom: 1.2,
-          y: 100,
-          x: 400,
-        });
-      }
+      reactFlow.setViewport({
+        zoom: 1.2,
+        y: 100,
+        x: 400,
+      });
     }
-  }, [
-    nodes,
-    layouted,
-    onLayout,
-    reactFlow,
-    measurements,
-    previousMeasurements,
-  ]);
+  }, [nodes, edges, layouted, reactFlow]);
 
   useEffect(() => {
     const { nodes: newNodes, edges: newEdges } = buildNodesAndEdges(
-      props.workflow,
-      props.workflowTriggers
+      props.workflow
     );
 
     setNodes([...newNodes]);
     setEdges([...newEdges]);
-  }, [props.workflow, props.workflowTriggers, setNodes, setEdges]);
+  }, [props.workflow, setNodes, setEdges]);
+
+  const layoutedNodesAndEdges = useMemo(() => {
+    const isMeasured = nodes.every(
+      (node) => node?.measured?.height && node?.measured?.width
+    );
+
+    if (!isMeasured) {
+      return { nodes, edges };
+    }
+
+    return getLayout(nodes, edges, "TB");
+  }, [nodes, edges]);
 
   return (
     <div className="w-full h-full">
       <ReactFlow
-        nodes={nodes}
-        edges={edges}
+        nodes={layoutedNodesAndEdges.nodes}
+        edges={layoutedNodesAndEdges.edges}
         panOnScroll
         selectionOnDrag
         nodeTypes={nodeTypes}

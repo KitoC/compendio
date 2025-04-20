@@ -7,19 +7,22 @@ import {
 } from "../consts/triggers";
 import TriggerModal from "./TriggerModal";
 import { useCustomTables } from "@/contexts/CustomTables";
-import { useDeleteWorkflowTrigger } from "@/hooks/useWorkflowsQuery";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import ConfirmationDialog from "@/components/ConfirmationDialog";
-import { useState } from "react";
+import { useCallback } from "react";
+import { useWorkflowEditor } from "@/contexts/WorkflowEditorProvider";
 
 const TriggerCard = ({ trigger, isOpen, setIsOpen }) => {
+  const { workflow, updateWorkflow } = useWorkflowEditor();
   const Icon = TRIGGER_ICONS[trigger.event_type];
   const { tables } = useCustomTables();
 
-  const deleteTriggerMutation = useDeleteWorkflowTrigger();
-
-  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
+  const removeTrigger = useCallback(() => {
+    updateWorkflow({
+      ...workflow,
+      triggers: workflow.triggers.filter((t) => t.id !== trigger.id),
+    });
+  }, [trigger, updateWorkflow, workflow]);
 
   return (
     <>
@@ -48,7 +51,7 @@ const TriggerCard = ({ trigger, isOpen, setIsOpen }) => {
             className="ml-auto hover:text-red-500"
             onClick={(e) => {
               e.stopPropagation();
-              setShowConfirmationDialog(true);
+              removeTrigger();
             }}
           >
             <Trash2 className="w-4 h-4" />
@@ -59,16 +62,6 @@ const TriggerCard = ({ trigger, isOpen, setIsOpen }) => {
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         id={trigger.id}
-      />
-      <ConfirmationDialog
-        isOpen={showConfirmationDialog}
-        onClose={() => setShowConfirmationDialog(false)}
-        title="Delete Trigger"
-        description="Are you sure you want to delete this trigger?"
-        onConfirm={() => deleteTriggerMutation.mutateAsync(trigger.id)}
-        onConfirmText="Delete"
-        onConfirmLoading={deleteTriggerMutation.isPending}
-        disabled={deleteTriggerMutation.isPending}
       />
     </>
   );

@@ -1,0 +1,1 @@
+ALTER TABLE workflow_actions ADD COLUMN position INTEGER;

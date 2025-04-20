@@ -34,6 +34,16 @@ export interface ExternalWorkflow {
   settings: Record<string, unknown>;
   staticData: Record<string, unknown>;
 }
+
+export interface WorkflowAction {
+  id?: string;
+  action_type: string;
+  metadata: Record<string, unknown>;
+  position: string;
+  tenant_id: string;
+  workflow_id: string;
+}
+
 export interface WorkflowPayload {
   id?: string;
   name: string;
@@ -41,6 +51,8 @@ export interface WorkflowPayload {
   user_id: string;
   tenant_id: string;
   externalWorkflow?: ExternalWorkflow;
+  actions?: WorkflowAction[];
+  triggers?: WorkflowTriggerUpdate[];
 }
 
 export interface Workflow {
@@ -50,10 +62,14 @@ export interface Workflow {
   user_id: string;
   tenant_id: string;
   externalWorkflow?: ExternalWorkflow;
+  actions?: WorkflowAction[];
+  triggers?: WorkflowTrigger[];
 }
 
 export type WorkflowTrigger =
   Database["public"]["Tables"]["workflow_triggers"]["Row"];
+export type WorkflowTriggerUpdate =
+  Database["public"]["Tables"]["workflow_triggers"]["Update"];
 
 export interface WorkspaceTag {
   id: string;

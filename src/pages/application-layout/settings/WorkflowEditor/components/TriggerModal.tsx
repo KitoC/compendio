@@ -1,8 +1,7 @@
 import ResponsiveModal from "@/components/ui/responsive-modal";
-import { useWorkflowTriggerQuery } from "@/hooks/useWorkflowsQuery";
 import {
   getTriggerText,
-  TIGGER_FORM_CONFIGS,
+  TRIGGER_FORM_CONFIGS,
   TRIGGER_OPTIONS,
   TRIGGER_DESCRIPTION,
 } from "../consts/triggers";
@@ -11,17 +10,21 @@ import FormBuilder from "@/components/form-builder";
 import TriggerSelect from "./TriggerSelect";
 import { useCustomTables } from "@/contexts/CustomTables";
 import { FormFieldType } from "@/components/form-builder/types";
+import { useWorkflowEditor } from "@/contexts/WorkflowEditorProvider";
 
 const TriggerModal = ({ isOpen, onClose, id }) => {
   const [container, setContainer] = useState<HTMLElement | null>(null);
-  const { data: trigger, updateTrigger } = useWorkflowTriggerQuery(id);
+  const { workflow, updateWorkflow } = useWorkflowEditor();
+
+  const trigger = workflow.triggers.find((t) => t.id === id);
+
   const [isPersisting, setIsPersisting] = useState(false);
 
   const { tables } = useCustomTables();
 
   const triggerText = getTriggerText(trigger, tables);
 
-  const triggerFormConfig = TIGGER_FORM_CONFIGS[trigger?.event_type];
+  const triggerFormConfig = TRIGGER_FORM_CONFIGS[trigger?.event_type];
   const triggerDescription = TRIGGER_DESCRIPTION[trigger?.event_type];
 
   useEffect(() => {
@@ -40,7 +43,7 @@ const TriggerModal = ({ isOpen, onClose, id }) => {
       setIsOpen={onClose}
       isSlider
       hideOverlay
-      className="w-1/3 shadow-lg p-0 bg-card"
+      className="sm:max-w-md md:max-w-xl shadow-lg p-0 bg-card"
       bodyClassName="p-0 px-0"
       onPointerDownOutside={(e) => {
         e.preventDefault();
@@ -94,11 +97,13 @@ const TriggerModal = ({ isOpen, onClose, id }) => {
           onSubmit={async ({ event_type, ...metadata }) => {
             setIsPersisting(true);
 
-            await updateTrigger({
-              id,
-              tenant_id: trigger.tenant_id,
-              event_type: event_type as string,
-              metadata,
+            updateWorkflow({
+              ...workflow,
+              triggers: workflow.triggers.map((t) =>
+                t.id === id
+                  ? { ...t, event_type: event_type as string, metadata }
+                  : t
+              ),
             });
 
             setIsPersisting(false);

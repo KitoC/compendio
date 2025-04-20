@@ -17,7 +17,7 @@ export const WorkflowService = {
   async getWorkflows() {
     const { data, error } = await supabase
       .from(WORKFLOWS_TABLE_NAME)
-      .select("*");
+      .select("*, actions:workflow_actions(*)");
 
     if (error) {
       throw new Error("Failed to fetch workflows");
@@ -51,9 +51,9 @@ export const WorkflowService = {
     return (await response.json())?.data;
   },
 
-  async updateWorkflow(workflowId: string, workflow: Record<string, unknown>) {
+  async updateWorkflow(workflow: Workflow) {
     const response = await SupabaseFunctionService.patch(
-      `${WORKFLOWS_TABLE_NAME}?id=${workflowId}`,
+      `${WORKFLOWS_TABLE_NAME}?id=${workflow.id}`,
       workflow
     );
 

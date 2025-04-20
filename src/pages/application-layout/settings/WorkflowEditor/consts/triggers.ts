@@ -99,7 +99,7 @@ interface TriggerFormConfig {
   }) => FormSection[];
 }
 
-export const TIGGER_FORM_CONFIGS: Record<string, TriggerFormConfig> = {
+export const TRIGGER_FORM_CONFIGS: Record<string, TriggerFormConfig> = {
   [TRIGGER_TYPES.RECORD_CREATED]: {
     getSections: ({ tables }) => [
       {

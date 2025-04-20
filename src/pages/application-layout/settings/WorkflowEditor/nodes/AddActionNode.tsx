@@ -3,12 +3,37 @@ import { Handle, Position } from "@xyflow/react";
 import { cn } from "@/lib/utils";
 import ActionSelect from "../components/ActionSelect";
 import { NODE_WIDTH } from "../consts/nodes";
-
+import { v4 as uuidv4 } from "uuid";
+import { useWorkflowEditor } from "@/contexts/WorkflowEditorProvider";
 type AddActionNodeProps = {
   isConnectable: boolean;
 };
 
 const AddActionNode = memo(({ isConnectable }: AddActionNodeProps) => {
+  const { workflow, updateWorkflow, setCurrentlyOpenModal } =
+    useWorkflowEditor();
+
+  const onAddAction = (action: string) => {
+    const actionId = uuidv4();
+
+    setCurrentlyOpenModal(actionId);
+
+    updateWorkflow({
+      ...workflow,
+      actions: [
+        ...workflow.actions,
+        {
+          id: actionId,
+          action_type: action,
+          metadata: {},
+          position: (workflow.actions.length + 1).toString(),
+          tenant_id: workflow.tenant_id,
+          workflow_id: workflow.id,
+        },
+      ],
+    });
+  };
+
   return (
     <div
       className={cn(
@@ -22,7 +47,7 @@ const AddActionNode = memo(({ isConnectable }: AddActionNodeProps) => {
         isConnectable={isConnectable}
       />
       <div className="p-2">
-        <ActionSelect onChange={() => {}} value={""} />
+        <ActionSelect onChange={onAddAction} value={""} />
       </div>
 
       <Handle

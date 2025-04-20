@@ -19,6 +19,8 @@ import type {
   CallN8NApiParams,
   WorkspaceTag,
   WorkflowPayload,
+  WorkflowAction,
+  WorkflowTrigger,
 } from "@/types/workflows";
 
 class WorkflowsService extends BaseSupabaseService {
@@ -61,11 +63,13 @@ class WorkflowsService extends BaseSupabaseService {
     let json = null;
 
     if (!options.noJson) {
+      console.log("JSON", options);
       json = await response.json();
     }
 
     if (!response.ok) {
-      if (method === "PUT") {
+      if (method === "PUT" && options.noJson) {
+        console.log("JSON", method);
         json = await response.json();
       }
 
@@ -88,7 +92,10 @@ class WorkflowsService extends BaseSupabaseService {
   }
 
   async getWorkflow(workflowId: string) {
-    const internalWorkflow = await this.getById(workflowId);
+    const internalWorkflow = await this.getById(
+      workflowId,
+      "*, actions:workflow_actions(*), triggers:workflow_triggers(*)"
+    );
 
     if (!internalWorkflow) {
       this.throwError("Workflow not found", 404);
@@ -197,7 +204,7 @@ class WorkflowsService extends BaseSupabaseService {
   }
 
   async updateWorkflow(workspaceTag: WorkspaceTag, payload: WorkflowPayload) {
-    const { externalWorkflow: _, ...rest } = payload;
+    const { externalWorkflow: _, actions, triggers, ...rest } = payload;
 
     if (!payload.id) {
       return this.throwError("Workflow ID is required", 406);
@@ -206,6 +213,11 @@ class WorkflowsService extends BaseSupabaseService {
     if (!payload.externalWorkflow) {
       return this.throwError("External workflow is required", 406);
     }
+
+    // const existingActions = await this.getById(
+    //   payload.id,
+    //   "actions:workflow_actions(*)"
+    // );
 
     let externalWorkflow = payload.externalWorkflow;
 
@@ -226,6 +238,78 @@ class WorkflowsService extends BaseSupabaseService {
     const internalResponse = await this.update(payload.id, {
       ...rest,
     });
+
+    if (actions) {
+      const { data: existingActions }: { data: WorkflowAction[] } =
+        await this.supabase_AS_SUPER_ADMIN
+          .from("workflow_actions")
+          .select("*")
+          .eq("workflow_id", payload.id);
+
+      const actionsToDelete = existingActions.filter(
+        (action: WorkflowAction) => !actions.some((a) => a.id === action.id)
+      );
+
+      const { error: deleteError } = await this.supabase_AS_SUPER_ADMIN
+        .from("workflow_actions")
+        .delete()
+        .eq(
+          "id",
+          actionsToDelete.map((action) => action.id)
+        );
+
+      if (deleteError) {
+        this.logger.error("Error deleting actions:", deleteError);
+      }
+
+      const { data: updatedActions, error: updateActionsError } =
+        await this.supabase_AS_SUPER_ADMIN
+          .from("workflow_actions")
+          .upsert(actions)
+          .select();
+
+      console.log("updatedActions --> ", updatedActions);
+      console.log("updateActionsError --> ", updateActionsError);
+      if (updateActionsError) {
+        this.throwError("Error updating actions --> ", updateActionsError);
+      }
+    }
+
+    if (triggers) {
+      const { data: existingTriggers }: { data: WorkflowTrigger[] } =
+        await this.supabase_AS_SUPER_ADMIN
+          .from("workflow_triggers")
+          .select("*")
+          .eq("workflow_id", payload.id);
+
+      const triggersToDelete = existingTriggers.filter(
+        (trigger: WorkflowTrigger) => !triggers.some((t) => t.id === trigger.id)
+      );
+
+      const { error: deleteError } = await this.supabase_AS_SUPER_ADMIN
+        .from("workflow_triggers")
+        .delete()
+        .eq(
+          "id",
+          triggersToDelete.map((trigger) => trigger.id)
+        );
+
+      if (deleteError) {
+        this.logger.error("Error deleting triggers:", deleteError);
+      }
+
+      const { data: updatedTriggers, error: updateTriggersError } =
+        await this.supabase_AS_SUPER_ADMIN
+          .from("workflow_triggers")
+          .upsert(triggers)
+          .select();
+
+      console.log("updatedTriggers --> ", updatedTriggers);
+      console.log("updateTriggersError --> ", updateTriggersError);
+      if (updateTriggersError) {
+        this.throwError("Error updating triggers --> ", updateTriggersError);
+      }
+    }
 
     return { ...internalResponse[0], externalWorkflow };
   }
