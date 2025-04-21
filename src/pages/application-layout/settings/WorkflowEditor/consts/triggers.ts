@@ -5,7 +5,7 @@ import {
   CustomTable,
   CustomTableField,
 } from "@/contexts/CustomTables/CustomTablesContext";
-
+import pluralize from "pluralize";
 export const TRIGGER_TYPES = {
   RECORD_CREATED: "record-created",
   RECORD_UPDATED: "record-updated",
@@ -35,22 +35,32 @@ export const TRIGGER_DESCRIPTION = {
     "This trigger will fire when an email is received.",
 };
 
-export const getTriggerText = (trigger, tables) => {
+export const getTriggerText = (
+  trigger,
+  tables
+): {
+  markdown: string;
+  plainText: string;
+} => {
   if (!trigger) {
-    return "";
+    return { markdown: "", plainText: "" };
   }
 
-  let baseText = TRIGGER_TEXT[trigger.event_type];
+  let markdown = TRIGGER_TEXT[trigger.event_type];
+  let plainText = TRIGGER_TEXT[trigger.event_type];
 
   if (trigger.metadata.table && tables) {
     const table = tables.find((table) => table.id === trigger.metadata.table);
 
     if (table) {
-      baseText += ` in ${table.name}`;
+      const singular = pluralize.singular(table.name);
+
+      markdown = markdown.replace("record", `a **${singular}**`) as string;
+      plainText = plainText.replace("record", `${singular}`) as string;
     }
   }
 
-  return baseText;
+  return { markdown, plainText };
 };
 
 export const TRIGGER_ICONS = {

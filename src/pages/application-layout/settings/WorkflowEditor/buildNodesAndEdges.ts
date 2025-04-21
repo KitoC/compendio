@@ -17,6 +17,8 @@ const buildNodesAndEdges = (workflow: Workflow) => {
   }
   const { triggers } = workflow;
 
+  const workflowConnections = workflow?.metadata?.connections || [];
+
   const nodes: WorkflowNode[] = [
     {
       id: "triggers",
@@ -32,16 +34,10 @@ const buildNodesAndEdges = (workflow: Workflow) => {
       measured: { height: 0, width: 0 },
     },
   ];
+
   const edges = [];
 
   const actionNodes = workflow.actions.map((action) => {
-    if (action.position === "1") {
-      edges.push({
-        id: `${action.id}-edge`,
-        source: "triggers",
-        target: action.id,
-      });
-    }
     return {
       id: action.id,
       data: {
@@ -62,30 +58,31 @@ const buildNodesAndEdges = (workflow: Workflow) => {
 
   nodes.push(...actionNodes);
 
-  sortBy(actionNodes, "data.position").forEach((node) => {
-    const { connections = [] } = node.data.metadata;
+  const lastNode = nodes[nodes.length - 1];
 
-    connections.forEach((connection) => {
-      edges.push({
-        id: `${node.id}-${connection.id}`,
-        source: node.id,
-        target: connection.id,
-      });
+  workflowConnections.forEach((connection) => {
+    edges.push({
+      id: `${connection.source}-${connection.target}`,
+      source: connection.source,
+      target: connection.target,
     });
   });
 
-  const lastNode = nodes[nodes.length - 1];
-
-  if (lastNode.type === NODE_TYPES.TRIGGER && triggers.length) {
+  if (lastNode) {
     edges.push({
       id: "add-action-edge",
-      source: nodes[nodes.length - 1].id,
+      source: lastNode.id,
       target: "add-action-node",
     });
 
     nodes.push({
       id: "add-action-node",
-      data: { label: "Add Action", triggers, workflowId: workflow.id },
+      data: {
+        label: "Add Action",
+        connectionParentId: lastNode.id,
+        triggers,
+        workflowId: workflow.id,
+      },
       position: { x: 0, y: 0 },
       draggable: false,
       type: NODE_TYPES.ADD_ACTION,

@@ -1,10 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { getActionText, ACTION_ICONS } from "../consts/actions";
+import { ACTION_VALIDATIONS } from "../consts/actions/action_validations";
 import { useCustomTables } from "@/contexts/CustomTables";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { NODE_CARD } from "../consts/nodes";
 import ActionModal from "./ActionModal";
 import { useWorkflowEditor } from "@/contexts/WorkflowEditorProvider";
@@ -22,11 +23,17 @@ const ActionCard = ({ action }) => {
   const removeAction = useCallback(() => {
     updateWorkflow({
       ...workflow,
+      metadata: {
+        ...workflow.metadata,
+        connections: workflow.metadata.connections.filter(
+          (c) => ![c.source, c.target].includes(action.id)
+        ),
+      },
       actions: workflow.actions.filter((a) => a.id !== action.id),
     });
   }, [action, updateWorkflow, workflow]);
 
-  const isValid = false;
+  const isValid = ACTION_VALIDATIONS[action.action_type](action);
 
   return (
     <>

@@ -18,9 +18,6 @@ type ActionNodeProps = {
 };
 
 const ActionNode = memo(({ data, isConnectable }: ActionNodeProps) => {
-  const { connections = [] } = data.metadata;
-  const isValid = false;
-
   return (
     <div className={cn("flex flex-col gap-2 rounded-sm relative", NODE_WIDTH)}>
       <Handle
@@ -30,14 +27,11 @@ const ActionNode = memo(({ data, isConnectable }: ActionNodeProps) => {
       />
       <ActionCard action={data} />
 
-      {connections.map((connection) => (
-        <Handle
-          key={connection.id}
-          type="source"
-          position={Position.Bottom}
-          isConnectable={isConnectable}
-        />
-      ))}
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        isConnectable={isConnectable}
+      />
     </div>
   );
 });

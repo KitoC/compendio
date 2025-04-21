@@ -199,7 +199,6 @@ const FormBuilder = ({
 
   useEffect(() => {
     if (submitOnChange && previousValue && !isEqual(values, previousValue)) {
-      console.log({ values, previousValue });
       debouncedHandleSubmit();
     }
   }, [values, debouncedHandleSubmit, submitOnChange, previousValue]);
@@ -289,7 +288,11 @@ const FormBuilder = ({
 
                 <div className="space-y-4">
                   {section.fields
-                    .filter((field) => !field.hidden)
+                    .filter((field) =>
+                      typeof field.hidden === "function"
+                        ? !field?.hidden(values)
+                        : !field.hidden
+                    )
                     .map((field) => (
                       <FormField
                         key={field.id}
@@ -298,6 +301,8 @@ const FormBuilder = ({
                         onChange={handleChange}
                         error={errors[field.name]}
                         touched={touched[field.name]}
+                        formValues={values}
+                        setFormValues={setValues}
                       />
                     ))}
                 </div>

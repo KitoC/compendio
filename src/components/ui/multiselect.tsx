@@ -21,7 +21,10 @@ interface MultiselectProps extends Props<MultiselectOption> {
 
 const defaultComponents = {
   MultiValueContainer: ({ children }) => (
-    <Badge variant="outline" className="mr-1">
+    <Badge
+      variant="outline"
+      className="mr-1 bg-sidebar dark:bg-sidebar [&>*]:!text-white"
+    >
       {children}
     </Badge>
   ),
@@ -39,10 +42,6 @@ const defaultStyles = {
     padding: "2px",
     height: "100%",
     marginLeft: "4px",
-  }),
-  control: (base) => ({
-    ...base,
-    borderRadius: "0.5rem",
   }),
 };
 
@@ -67,9 +66,16 @@ const Multiselect = ({
       options={options}
       onChange={onChange}
       isClearable={isClearable}
-      className="border-none"
       classNamePrefix="select"
       menuPlacement="auto"
+      classNames={{
+        control: (state) =>
+          "bg-background dark:bg-background !border-none !rounded-md overflow-hidden",
+        multiValue: (state) => "!bg-sidebar !dark:bg-sidebar text-white",
+        menu: (state) => "!bg-sidebar !dark:bg-sidebar text-white",
+        option: (state) =>
+          "!bg-sidebar !dark:bg-sidebar hover:!bg-muted text-white",
+      }}
       styles={{
         ...defaultStyles,
         ...styles,

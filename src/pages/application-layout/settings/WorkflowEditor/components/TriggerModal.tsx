@@ -22,7 +22,7 @@ const TriggerModal = ({ isOpen, onClose, id }) => {
 
   const { tables } = useCustomTables();
 
-  const triggerText = getTriggerText(trigger, tables);
+  const triggerText = getTriggerText(trigger, tables).plainText;
 
   const triggerFormConfig = TRIGGER_FORM_CONFIGS[trigger?.event_type];
   const triggerDescription = TRIGGER_DESCRIPTION[trigger?.event_type];
@@ -38,7 +38,7 @@ const TriggerModal = ({ isOpen, onClose, id }) => {
 
   return (
     <ResponsiveModal
-      title={triggerText}
+      title={triggerText.replace(/\*\*/g, "").trim()}
       isOpen={isOpen}
       setIsOpen={onClose}
       isSlider
@@ -49,11 +49,6 @@ const TriggerModal = ({ isOpen, onClose, id }) => {
         e.preventDefault();
       }}
       container={container}
-      //   footer={
-      //     <div>
-      //       <Button>Cancel</Button>
-      //     </div>
-      //   }
     >
       {trigger && (
         <FormBuilder

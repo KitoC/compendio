@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { getAirtableColor } from "@/utils/airtable";
 import Multiselect, { MultiselectOption } from "@/components/ui/multiselect";
 import { CalendarInput } from "../ui/calendar-input";
+import { Switch } from "../ui/switch";
 
 const FormField = ({
   field,
@@ -24,6 +25,8 @@ const FormField = ({
   onChange,
   error,
   touched,
+  formValues,
+  setFormValues,
 }: FormFieldProps) => {
   const {
     id,
@@ -140,11 +143,15 @@ const FormField = ({
           name={name}
           type={type}
           value={(value as string) || ""}
-          onChange={(name, value) => onChange(name, value)}
+          onChange={(name, value) => {
+            onChange(name, value);
+          }}
           placeholder={placeholder}
           disabled={disabled}
           error={error}
           touched={touched}
+          formValues={formValues}
+          setFormValues={setFormValues}
         />
       );
     }
@@ -321,6 +328,25 @@ const FormField = ({
           </div>
         );
 
+      case "switch":
+        return (
+          <div className="flex items-center space-x-2">
+            <Switch
+              id={id}
+              checked={Boolean(value)}
+              onCheckedChange={(checked) => onChange(name, checked)}
+              disabled={disabled}
+              className={className}
+            />
+            <Label
+              htmlFor={id}
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              {label}
+            </Label>
+          </div>
+        );
+
       case "radio":
         return (
           <RadioGroup
@@ -395,7 +421,7 @@ const FormField = ({
 
   return (
     <div className="space-y-2">
-      {type !== "checkbox" && (
+      {type !== "checkbox" && type !== "switch" && (
         <Label
           htmlFor={id}
           className={cn(error && touched ? "text-destructive" : "")}

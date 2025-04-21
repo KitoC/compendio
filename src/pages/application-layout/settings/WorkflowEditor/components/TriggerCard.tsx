@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { useCallback } from "react";
 import { useWorkflowEditor } from "@/contexts/WorkflowEditorProvider";
+import RenderMarkdown from "@/components/chat/RenderMarkdown";
 
 const TriggerCard = ({ trigger, isOpen, setIsOpen }) => {
   const { workflow, updateWorkflow } = useWorkflowEditor();
@@ -34,9 +35,12 @@ const TriggerCard = ({ trigger, isOpen, setIsOpen }) => {
           <Icon className="w-4 h-4" />
 
           <div className="flex flex-col gap-1">
-            <p key={trigger.id} className="flex items-center gap-2 text-xs">
-              {getTriggerText(trigger, tables)}
-            </p>
+            <RenderMarkdown
+              key={trigger.id}
+              message={getTriggerText(trigger, tables).markdown}
+              className="flex items-center gap-2 text-xs"
+              isUser={false}
+            />
 
             {trigger.event_type === TRIGGER_TYPES.RECORD_UPDATED &&
               trigger?.metadata?.fields && (

@@ -40,17 +40,12 @@ const ActionModal = ({ isOpen, onClose, id, workflowId }) => {
       setIsOpen={onClose}
       isSlider
       hideOverlay
-      className="sm:max-w-md md:max-w-xl  shadow-lg p-0 bg-card"
+      className="sm:max-w-md md:max-w-2xl  shadow-lg p-0 bg-card"
       bodyClassName="p-0 px-0"
       onPointerDownOutside={(e) => {
         e.preventDefault();
       }}
       container={container}
-      //   footer={
-      //     <div>
-      //       <Button>Cancel</Button>
-      //     </div>
-      //   }
     >
       {action && (
         <FormBuilder
@@ -62,7 +57,11 @@ const ActionModal = ({ isOpen, onClose, id, workflowId }) => {
           config={{
             id: "trigger-configuration",
             sections: [
-              ...(actionFormConfig?.getSections({ tables, action }) || []),
+              ...(actionFormConfig?.getSections({
+                tables,
+                action,
+                workflow,
+              }) || []),
             ].map((section) => ({
               ...section,
               className:
@@ -71,14 +70,12 @@ const ActionModal = ({ isOpen, onClose, id, workflowId }) => {
           }}
           isSubmitting={isPersisting}
           onSubmit={async ({ event_type, ...metadata }) => {
-            // setIsPersisting(true);
-            // await updateTrigger({
-            //   id,
-            //   tenant_id: trigger.tenant_id,
-            //   event_type: event_type as string,
-            //   metadata,
-            // });
-            // setIsPersisting(false);
+            updateWorkflow({
+              ...workflow,
+              actions: workflow.actions.map((action) =>
+                action.id === id ? { ...action, metadata } : action
+              ),
+            });
           }}
           initialValues={{
             action_type: action?.action_type,

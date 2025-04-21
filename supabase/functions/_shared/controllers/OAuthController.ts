@@ -87,7 +87,7 @@ class OAuthController extends BaseController {
     const tid = this.tid || defaultTenantId;
     let url = tokenExchangeUrl;
 
-    if (!tid) {
+    if (tid) {
       url = tokenExchangeUrl.replace("{{tid}}", tid as string);
     }
 

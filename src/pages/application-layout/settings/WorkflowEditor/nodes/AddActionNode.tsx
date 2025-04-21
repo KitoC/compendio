@@ -5,11 +5,16 @@ import ActionSelect from "../components/ActionSelect";
 import { NODE_WIDTH } from "../consts/nodes";
 import { v4 as uuidv4 } from "uuid";
 import { useWorkflowEditor } from "@/contexts/WorkflowEditorProvider";
+import { DEFAULT_ACTION_TYPE_DATA } from "../consts/actions";
+
 type AddActionNodeProps = {
+  data: {
+    connectionParentId: string;
+  };
   isConnectable: boolean;
 };
 
-const AddActionNode = memo(({ isConnectable }: AddActionNodeProps) => {
+const AddActionNode = memo(({ isConnectable, data }: AddActionNodeProps) => {
   const { workflow, updateWorkflow, setCurrentlyOpenModal } =
     useWorkflowEditor();
 
@@ -20,12 +25,19 @@ const AddActionNode = memo(({ isConnectable }: AddActionNodeProps) => {
 
     updateWorkflow({
       ...workflow,
+      metadata: {
+        ...workflow.metadata,
+        connections: [
+          ...(workflow.metadata?.connections || []),
+          { source: data.connectionParentId, target: actionId },
+        ],
+      },
       actions: [
         ...workflow.actions,
         {
           id: actionId,
           action_type: action,
-          metadata: {},
+          metadata: DEFAULT_ACTION_TYPE_DATA[action] || {},
           position: (workflow.actions.length + 1).toString(),
           tenant_id: workflow.tenant_id,
           workflow_id: workflow.id,

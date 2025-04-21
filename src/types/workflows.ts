@@ -44,6 +44,11 @@ export interface WorkflowAction {
   workflow_id: string;
 }
 
+interface InternalWorkflowConnection {
+  source: string;
+  target: string;
+}
+
 export interface WorkflowPayload {
   id?: string;
   name: string;
@@ -53,6 +58,9 @@ export interface WorkflowPayload {
   externalWorkflow?: ExternalWorkflow;
   actions?: WorkflowAction[];
   triggers?: WorkflowTriggerUpdate[];
+  metadata?: {
+    connections?: InternalWorkflowConnection[];
+  };
 }
 
 export interface Workflow {
@@ -64,6 +72,9 @@ export interface Workflow {
   externalWorkflow?: ExternalWorkflow;
   actions?: WorkflowAction[];
   triggers?: WorkflowTrigger[];
+  metadata?: {
+    connections?: InternalWorkflowConnection[];
+  };
 }
 
 export type WorkflowTrigger =

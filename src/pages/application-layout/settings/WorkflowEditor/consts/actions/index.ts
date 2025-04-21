@@ -1,14 +1,10 @@
-import { FormSection } from "@/components/form-builder/types";
-import { CustomTable } from "@/contexts/CustomTables/CustomTablesContext";
-import { FilePlus2, FileSymlink, FileX2, Split } from "lucide-react";
-import { WorkflowAction } from "@/types/workflows";
+export * from "./types";
+export * from "./default_data";
+export * from "./action_form_configs";
 
-export const ACTION_TYPES = {
-  CREATE_RECORD: "create-record",
-  UPDATE_RECORD: "update-record",
-  DELETE_RECORD: "delete-record",
-  CONDITIONAL: "conditional",
-};
+import { CheckSquare, FilePlus2, FileSymlink, FileX2 } from "lucide-react";
+
+import { ACTION_TYPES } from "./types";
 
 export const ACTION_TEXT = {
   [ACTION_TYPES.CREATE_RECORD]: "Create Record",
@@ -50,7 +46,7 @@ export const ACTION_ICONS = {
   [ACTION_TYPES.CREATE_RECORD]: FilePlus2,
   [ACTION_TYPES.UPDATE_RECORD]: FileSymlink,
   [ACTION_TYPES.DELETE_RECORD]: FileX2,
-  [ACTION_TYPES.CONDITIONAL]: Split,
+  [ACTION_TYPES.CONDITIONAL]: CheckSquare,
 };
 
 const DATA_ACTIONS = [
@@ -72,45 +68,3 @@ export const ACTION_OPTIONS = [
     Icon: ACTION_ICONS[type],
   })),
 }));
-
-interface ActionFormConfig {
-  getSections: (context: {
-    tables: CustomTable[];
-    action: WorkflowAction;
-  }) => FormSection[];
-}
-
-export const ACTION_FORM_CONFIGS: Record<string, ActionFormConfig> = {
-  [ACTION_TYPES.CONDITIONAL]: {
-    getSections: ({ tables }) => [
-      {
-        id: "conditional-action-form",
-        fields: [],
-      },
-    ],
-  },
-  [ACTION_TYPES.CREATE_RECORD]: {
-    getSections: ({ tables }) => [
-      {
-        id: "create-record-action-form",
-        fields: [],
-      },
-    ],
-  },
-  [ACTION_TYPES.UPDATE_RECORD]: {
-    getSections: ({ tables }) => [
-      {
-        id: "update-record-action-form",
-        fields: [],
-      },
-    ],
-  },
-  [ACTION_TYPES.DELETE_RECORD]: {
-    getSections: ({ tables }) => [
-      {
-        id: "delete-record-action-form",
-        fields: [],
-      },
-    ],
-  },
-};

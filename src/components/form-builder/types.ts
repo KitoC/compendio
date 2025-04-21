@@ -14,6 +14,7 @@ export type FormFieldType =
   | "multiselect"
   | "integer" // Added for custom table fields
   | "boolean" // Added for custom table fields
+  | "switch"
   | "reference" // Added for custom table fields
   | "timestamp" // Added for custom table fields
   | "uuid" // Added for custom table fields
@@ -46,6 +47,8 @@ export interface CustomFieldComponentProps {
   disabled?: boolean;
   error?: string;
   touched?: boolean;
+  formValues: Record<string, unknown>;
+  setFormValues: (values: Record<string, unknown>) => void;
 }
 export interface FormField {
   id: string;
@@ -58,7 +61,7 @@ export interface FormField {
   validation?: FormFieldValidation;
   disabled?: boolean;
   className?: string;
-  hidden?: boolean;
+  hidden?: boolean | ((values: Record<string, unknown>) => boolean);
   props?: Record<string, unknown>;
   description?: string;
   CustomComponent?: React.ComponentType<CustomFieldComponentProps>;
@@ -113,4 +116,6 @@ export interface FormFieldProps {
   onChange: (name: string, value: unknown) => void;
   error?: string;
   touched?: boolean;
+  formValues: Record<string, unknown>;
+  setFormValues: (values: Record<string, unknown>) => void;
 }
