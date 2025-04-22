@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { ROUTES } from "@/lib/constants";
 
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Undo2, Redo2 } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
 import WorkflowEditor from "./WorkflowEditor";
 import { buildPathWithParams } from "@/utils/urlHelpers";
@@ -13,8 +13,18 @@ import { Button } from "@/components/ui/button";
 import Loader from "@/components/ui/loader";
 
 const WorkflowDetail = () => {
-  const { workflow, isLoading, isChanged, isSaving, saveWorkflow } =
-    useWorkflowEditor();
+  const {
+    workflow,
+    isLoading,
+    isChanged,
+    isSaving,
+    saveWorkflow,
+    // revertChange,
+    // redoChange,
+    // currentChangeIndex,
+    // changes,
+    revertChanges,
+  } = useWorkflowEditor();
   const { urlTenantAlias } = useTenant();
 
   if (isLoading) {
@@ -49,7 +59,31 @@ const WorkflowDetail = () => {
             {workflow?.name || "Workflow Detail"}
           </h2>
 
-          <div className="ml-auto">
+          <div className="ml-auto gap-2 flex items-center">
+            <Button
+              size="xs"
+              onClick={revertChanges}
+              disabled={!isChanged || isSaving}
+            >
+              <Undo2 size="small" />
+              Revert changes
+            </Button>
+            {/* <Button
+              size="xs"
+              variant="outline"
+              onClick={revertChange}
+              disabled={currentChangeIndex === 0 || isSaving}
+            >
+              <Undo2 size="small" />
+            </Button> */}
+            {/* <Button
+              size="xs"
+              variant="outline"
+              onClick={redoChange}
+              disabled={currentChangeIndex === changes.length - 1 || isSaving}
+            >
+              <Redo2 size="small" />
+            </Button> */}
             <Button
               size="xs"
               onClick={saveWorkflow}

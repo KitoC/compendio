@@ -10,6 +10,11 @@ export interface WorkflowEditorContextType {
   isChanged: boolean;
   setCurrentlyOpenModal: (modalId: string | null) => void;
   currentlyOpenModal: string | null;
+  currentChangeIndex: number;
+  changes: Workflow[];
+  revertChange: () => void;
+  redoChange: () => void;
+  revertChanges: () => void;
 }
 
 export const WorkflowEditorContext = createContext<

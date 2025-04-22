@@ -15,6 +15,7 @@ import { LucideProps } from "lucide-react";
 
 export type CascaderOption = {
   label: string;
+  valueLabel?: string;
   value: string;
   hidden?: boolean;
   Icon?: React.ComponentType<LucideProps>;
@@ -28,10 +29,11 @@ type CascaderProps = {
   onChange: (value: CascaderOption) => void;
   options: CascaderOption[];
   disabled?: boolean;
+  placeholder?: string;
 };
 
 const Cascader = (props: CascaderProps) => {
-  const { value, onChange, disabled } = props;
+  const { value, onChange, disabled, placeholder } = props;
   const [inputWidth, setInputWidth] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -76,75 +78,78 @@ const Cascader = (props: CascaderProps) => {
     : Value?.option.label;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild disabled={disabled}>
-        <Input
-          disabled={disabled}
-          icon={ParentIcon && <ParentIcon className="mr-2 h-4 w-4" />}
-          className="flex-start text-left"
-          ref={inputRef}
-          value={value ? ValueLabel : ""}
-        />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="start"
-        className="w-full"
-        style={{ width: inputWidth }}
-      >
-        {props.options
-          .filter((action) => !action.hidden)
-          .map((action) => {
-            if (action.children) {
-              return (
-                <DropdownMenuSub>
-                  <DropdownMenuSubTrigger className="DropdownMenuSubTrigger">
-                    {action.Icon && <action.Icon className="mr-2 h-4 w-4" />}
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger disabled={disabled} className="w-full">
+          <Input
+            disabled={disabled}
+            icon={ParentIcon && <ParentIcon className="mr-2 h-4 w-4" />}
+            className="w-full flex-start text-left"
+            ref={inputRef}
+            value={value ? ValueLabel : undefined}
+            placeholder={placeholder}
+          />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="start"
+          className="w-full"
+          style={{ width: inputWidth }}
+        >
+          {props.options
+            .filter((action) => !action.hidden)
+            .map((action) => {
+              if (action.children) {
+                return (
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="hover:text-accent-foreground focus:text-accent-foreground data-[state=open]:text-accent-foreground">
+                      {action.Icon && <action.Icon className="mr-2 h-4 w-4" />}
+                      {action.label}
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                      <DropdownMenuSubContent
+                        className="DropdownMenuSubContent"
+                        sideOffset={2}
+                        alignOffset={-5}
+                      >
+                        {action.children.map((child) => (
+                          <DropdownMenuItem
+                            key={child.value}
+                            onClick={(e) => {
+                              onChange(child);
+                            }}
+                          >
+                            {child.label}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuSub>
+                );
+              }
+
+              if (action.isGroupLabel) {
+                return (
+                  <DropdownMenuLabel className="DropdownMenuLabel">
                     {action.label}
-                  </DropdownMenuSubTrigger>
-                  <DropdownMenuPortal>
-                    <DropdownMenuSubContent
-                      className="DropdownMenuSubContent"
-                      sideOffset={2}
-                      alignOffset={-5}
-                    >
-                      {action.children.map((child) => (
-                        <DropdownMenuItem
-                          key={child.value}
-                          onClick={(e) => {
-                            onChange(child);
-                          }}
-                        >
-                          {child.label}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuSubContent>
-                  </DropdownMenuPortal>
-                </DropdownMenuSub>
-              );
-            }
+                  </DropdownMenuLabel>
+                );
+              }
 
-            if (action.isGroupLabel) {
               return (
-                <DropdownMenuLabel className="DropdownMenuLabel">
+                <DropdownMenuItem
+                  key={action.label}
+                  onClick={(e) => {
+                    onChange(action);
+                  }}
+                >
+                  {action.Icon && <action.Icon className="mr-2 h-4 w-4" />}
                   {action.label}
-                </DropdownMenuLabel>
+                </DropdownMenuItem>
               );
-            }
-
-            return (
-              <DropdownMenuItem
-                key={action.label}
-                onClick={(e) => {
-                  onChange(action);
-                }}
-              >
-                {action.Icon && <action.Icon className="mr-2 h-4 w-4" />}
-                {action.label}
-              </DropdownMenuItem>
-            );
-          })}
-      </DropdownMenuContent>
-    </DropdownMenu>
+            })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   );
 };
 

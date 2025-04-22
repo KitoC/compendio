@@ -14,6 +14,6 @@ export const NODE_BORDER = {
 
 export const NODE_CARD = {
   VALID: "border border-solid border-2 border-primary rounded-sm",
-  INVALID: "border border-solid border-2 border-red-200 rounded-sm",
+  INVALID: "border border-solid border-2 border-rose-400 rounded-sm",
 };
 export default NODE_TYPES;

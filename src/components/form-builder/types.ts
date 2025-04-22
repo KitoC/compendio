@@ -10,6 +10,7 @@ export type FormFieldType =
   | "checkbox"
   | "radio"
   | "date"
+  | "custom"
   | "datetime"
   | "multiselect"
   | "integer" // Added for custom table fields
@@ -42,8 +43,10 @@ export interface CustomFieldComponentProps {
   id: string;
   name: string;
   type: string;
-  value: unknown;
-  onChange: (name: string, value: unknown) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  value: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onChange: (name: string, value: any) => void;
   placeholder?: string;
   disabled?: boolean;
   error?: string;
@@ -51,10 +54,18 @@ export interface CustomFieldComponentProps {
   formValues: Record<string, unknown>;
   setFormValues: (values: Record<string, unknown>) => void;
 }
+
+export interface FormFieldSideEffectParams {
+  name: string;
+  value: unknown;
+  formValues: Record<string, unknown>;
+  setFormValues: (values: Record<string, unknown>) => void;
+}
+
 export interface FormField {
   id: string;
   name: string;
-  label: string;
+  label?: string;
   type: FormFieldType;
   placeholder?: string;
   defaultValue?: unknown;
@@ -65,6 +76,8 @@ export interface FormField {
   hidden?: boolean | ((values: Record<string, unknown>) => boolean);
   props?: Record<string, unknown>;
   description?: string;
+  afterLabel?: React.ReactNode;
+  onChangeSideEffect?: (params: FormFieldSideEffectParams) => void;
   CustomComponent?: React.ComponentType<CustomFieldComponentProps>;
 }
 

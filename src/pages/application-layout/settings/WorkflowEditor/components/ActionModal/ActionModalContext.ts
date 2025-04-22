@@ -1,6 +1,15 @@
 import { createContext, useContext } from "react";
+import { Workflow, WorkflowAction } from "@/types/workflows";
 
-const ActionModalContext = createContext({});
+interface ActionModalContextType {
+  action: WorkflowAction | null;
+  workflow: Workflow | null;
+}
+
+const ActionModalContext = createContext<ActionModalContextType>({
+  action: null,
+  workflow: null,
+});
 
 export const useActionModalContext = () => {
   return useContext(ActionModalContext);

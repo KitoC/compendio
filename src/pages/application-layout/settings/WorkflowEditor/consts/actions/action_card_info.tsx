@@ -3,7 +3,6 @@ import { ACTION_TYPES } from "./types";
 export const ACTION_CARD_INFO = {
   [ACTION_TYPES.CREATE_RECORD]: () => null,
   [ACTION_TYPES.UPDATE_RECORD]: () => null,
-  [ACTION_TYPES.DELETE_RECORD]: () => null,
   [ACTION_TYPES.CONDITIONAL]: (action) => {
     if (action.metadata?.use_ai_prompt) {
       return (

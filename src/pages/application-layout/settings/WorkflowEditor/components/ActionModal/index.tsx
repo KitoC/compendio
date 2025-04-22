@@ -1,17 +1,14 @@
 import ResponsiveModal from "@/components/ui/responsive-modal";
-import { useState, useEffect, useRef, createContext, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import FormBuilder from "@/components/form-builder";
 import { useCustomTables } from "@/contexts/CustomTables";
 import {
   ACTION_FORM_CONFIGS,
   getActionText,
-  ACTION_VALIDATIONS,
+  DEFAULT_ACTION_TYPE_DATA,
 } from "../../consts/actions";
 import { useWorkflowEditor } from "@/contexts/WorkflowEditorProvider";
-import isEqual from "lodash/isEqual";
-import { useDebouncedCallback } from "use-debounce";
 import ActionModalContext from "./ActionModalContext";
-import { callSupabaseFunction } from "@/services/supabaseFunctionServices";
 
 const ActionModal = ({ isOpen, onClose, id }) => {
   const [container, setContainer] = useState<HTMLElement | null>(null);
@@ -19,11 +16,9 @@ const ActionModal = ({ isOpen, onClose, id }) => {
 
   const action = workflow?.actions.find((action) => action.id === id);
 
-  const [touched, setTouched] = useState(false);
-
   const { tables } = useCustomTables();
 
-  const actionText = getActionText(action, tables);
+  const actionText = getActionText(action, tables).plainText;
 
   const actionFormConfig = ACTION_FORM_CONFIGS[action?.action_type];
 
@@ -32,48 +27,6 @@ const ActionModal = ({ isOpen, onClose, id }) => {
 
     setContainer(container);
   }, []);
-
-  // const updateAiDescription = useCallback(
-  //   async (nextValue) => {
-  //     const res = await callSupabaseFunction("openai", {
-  //       stream: false,
-  //       messages: [
-  //         {
-  //           role: "user",
-  //           content: `Describe succinctly what this action does in one sentence: ${JSON.stringify(
-  //             action
-  //           )}`,
-  //         },
-  //       ],
-  //     });
-
-  //     const data = await res.json();
-
-  //     updateWorkflow({
-  //       ...workflow,
-  //       actions: workflow.actions.map((action) =>
-  //         action.id === id
-  //           ? {
-  //               ...nextValue,
-  //               metadata: {
-  //                 ...nextValue?.metadata,
-  //                 aiDescription: data?.choices?.[0]?.message?.content,
-  //               },
-  //             }
-  //           : action
-  //       ),
-  //     });
-  //   },
-  //   [action, workflow, id, updateWorkflow]
-  // );
-
-  // const debouncedAIDescription = useDebouncedCallback(
-  //   updateAiDescription,
-  //   1000,
-  //   {
-  //     leading: false,
-  //   }
-  // );
 
   const onSubmit = useCallback(
     async ({ event_type, ...metadata }) => {
@@ -84,7 +37,6 @@ const ActionModal = ({ isOpen, onClose, id }) => {
           ...metadata,
         },
       };
-      setTouched(true);
 
       updateWorkflow({
         ...workflow,
@@ -125,17 +77,21 @@ const ActionModal = ({ isOpen, onClose, id }) => {
           hideSubmitButton
           submitOnChange={true}
           config={{
-            id: "trigger-configuration",
-            sections: actionFormConfig?.sections.map((section) => ({
-              ...section,
-              className:
-                "border-b py-6 px-4 !space-y-0  last:border-b-transparent",
-            })),
+            id: "action-configuration",
+            sections:
+              actionFormConfig
+                ?.getSections({ tables, action, workflow })
+                .map((section) => ({
+                  ...section,
+                  className:
+                    "border-b py-6 px-4 !space-y-0  last:border-b-transparent",
+                })) || [],
           }}
           onSubmit={onSubmit}
           initialValues={{
             action_type: action?.action_type,
-            ...(action.metadata as object),
+            ...(DEFAULT_ACTION_TYPE_DATA[action?.action_type] || {}),
+            ...((action?.metadata as object) || {}),
           }}
         />
       </ActionModalContext.Provider>

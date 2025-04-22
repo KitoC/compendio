@@ -23,7 +23,7 @@ const defaultComponents = {
   MultiValueContainer: ({ children }) => (
     <Badge
       variant="outline"
-      className="mr-1 bg-sidebar dark:bg-sidebar [&>*]:!text-white"
+      className="mr-1 bg-sidebar dark:bg-sidebar dark:[&>*]:!text-white"
     >
       {children}
     </Badge>
@@ -70,11 +70,10 @@ const Multiselect = ({
       menuPlacement="auto"
       classNames={{
         control: (state) =>
-          "bg-background dark:bg-background !border-none !rounded-md overflow-hidden",
-        multiValue: (state) => "!bg-sidebar !dark:bg-sidebar text-white",
-        menu: (state) => "!bg-sidebar !dark:bg-sidebar text-white",
-        option: (state) =>
-          "!bg-sidebar !dark:bg-sidebar hover:!bg-muted text-white",
+          "bg-background dark:bg-background border border-input !rounded-md overflow-hidden",
+        multiValue: (state) => "!dark:bg-sidebar dark:text-white",
+        menu: (state) => "dark:bg-sidebar dark:text-white",
+        option: (state) => "dark:bg-sidebar hover:!bg-muted dark:text-white",
       }}
       styles={{
         ...defaultStyles,

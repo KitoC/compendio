@@ -1,5 +1,11 @@
 import { ACTION_TYPES } from "./types";
 
+const DEFAULT_CREATE_OR_UPDATE_RECORD_DATA = {
+  use_ai: false,
+  source_data: [],
+  fields: [],
+};
+
 export const DEFAULT_ACTION_TYPE_DATA = {
   [ACTION_TYPES.CONDITIONAL]: {
     use_ai_prompt: false,
@@ -13,4 +19,6 @@ export const DEFAULT_ACTION_TYPE_DATA = {
       },
     ],
   },
+  [ACTION_TYPES.CREATE_RECORD]: DEFAULT_CREATE_OR_UPDATE_RECORD_DATA,
+  [ACTION_TYPES.UPDATE_RECORD]: DEFAULT_CREATE_OR_UPDATE_RECORD_DATA,
 };

@@ -12,19 +12,43 @@ export const WorkflowEditorProvider: React.FC<{
     null
   );
 
-  const [workflow, setWorkflow] = useState<Workflow | null>(null);
+  const [currentChangeIndex, setCurrentChangeIndex] = useState<number>(0);
+  const [changes, setChanges] = useState<Workflow[]>([]);
   const { id } = useParams<{ id: string }>();
   const { data, isLoading } = useWorkflowQuery(id);
+
+  const [workflow, setWorkflow] = useState<Workflow>(data);
+
+  // const workflow = changes?.[currentChangeIndex] || data;
 
   const updateWorkflowMutation = useUpdateWorkflow(id);
 
   const updateWorkflow = useCallback((workflow: Workflow) => {
+    // setChanges((prev) =>
+    //   currentChangeIndex === prev.length - 1
+    //     ? [...prev, workflow]
+    //     : [...prev.slice(0, currentChangeIndex + 1), workflow]
+    // );
+    // setCurrentChangeIndex((prev) => prev + 1);
     setWorkflow(workflow);
   }, []);
 
   const saveWorkflow = useCallback(() => {
     updateWorkflowMutation.mutate(workflow);
   }, [updateWorkflowMutation, workflow]);
+
+  const revertChange = useCallback(() => {
+    // setCurrentChangeIndex((prev) => prev - 1);
+  }, []);
+
+  const redoChange = useCallback(() => {
+    // setCurrentChangeIndex((prev) => prev + 1);
+  }, []);
+
+  const revertChanges = useCallback(() => {
+    setWorkflow(data);
+    setCurrentChangeIndex(currentChangeIndex - 1);
+  }, [data, currentChangeIndex]);
 
   useEffect(() => {
     if (data) {
@@ -47,6 +71,11 @@ export const WorkflowEditorProvider: React.FC<{
       isChanged,
       setCurrentlyOpenModal,
       currentlyOpenModal,
+      currentChangeIndex,
+      changes,
+      revertChange,
+      redoChange,
+      revertChanges,
     }),
     [
       workflow,
@@ -57,11 +86,16 @@ export const WorkflowEditorProvider: React.FC<{
       isChanged,
       setCurrentlyOpenModal,
       currentlyOpenModal,
+      currentChangeIndex,
+      changes,
+      revertChange,
+      redoChange,
+      revertChanges,
     ]
   );
 
   return (
-    <WorkflowEditorContext.Provider value={value}>
+    <WorkflowEditorContext.Provider value={value} key={currentChangeIndex}>
       {isLoading ? (
         <div className="flex items-center justify-center h-screen">
           <Loader size="large" />

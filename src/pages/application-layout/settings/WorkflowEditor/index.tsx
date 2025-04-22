@@ -90,6 +90,7 @@ const WorkflowEditor = (props: WorkflowEditorProps) => {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         defaultEdgeOptions={defaultEdgeOptions}
+        zoomOnDoubleClick={false}
       >
         <Background
           // variant={BackgroundVariant.Cross}

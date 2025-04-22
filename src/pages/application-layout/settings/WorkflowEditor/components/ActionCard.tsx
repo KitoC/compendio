@@ -54,7 +54,7 @@ const ActionCard = ({ action }) => {
 
           <div className="flex flex-col gap-1 max-w-[80%]">
             <p key={action.id} className="flex items-center gap-2 text-xs ">
-              {getActionText(action, tables)}
+              {getActionText(action, tables).plainText}
             </p>
             {cardInfo}
           </div>
@@ -64,7 +64,10 @@ const ActionCard = ({ action }) => {
             className="ml-auto hover:text-red-500"
             onClick={(e) => {
               e.stopPropagation();
-              removeAction();
+              setCurrentlyOpenModal(null);
+              setTimeout(() => {
+                removeAction();
+              }, 100);
             }}
           >
             <Trash2 className="w-4 h-4" />
@@ -72,7 +75,7 @@ const ActionCard = ({ action }) => {
         </CardContent>
       </Card>
       <ActionModal
-        isOpen={currentlyOpenModal === action.id}
+        isOpen={action && currentlyOpenModal === action.id}
         onClose={() => setCurrentlyOpenModal(null)}
         id={action.id}
       />

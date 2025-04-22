@@ -37,7 +37,7 @@ const buildNodesAndEdges = (workflow: Workflow) => {
 
   const edges = [];
 
-  const actionNodes = workflow.actions.map((action) => {
+  const actionNodes = workflow.actions.map((action, index) => {
     return {
       id: action.id,
       data: {
@@ -49,7 +49,7 @@ const buildNodesAndEdges = (workflow: Workflow) => {
         metadata: action.metadata,
         workflowId: action.workflow_id,
       },
-      position: { x: 0, y: 0 },
+      position: { x: index * 200, y: 0 },
       draggable: false,
       type: NODE_TYPES.ACTION,
       measured: { height: 0, width: 0 },

@@ -18,6 +18,7 @@ import { getAirtableColor } from "@/utils/airtable";
 import Multiselect, { MultiselectOption } from "@/components/ui/multiselect";
 import { CalendarInput } from "../ui/calendar-input";
 import { Switch } from "../ui/switch";
+import { useCallback } from "react";
 
 const FormField = ({
   field,
@@ -39,33 +40,59 @@ const FormField = ({
     disabled,
     className,
     props,
+    afterLabel,
+    onChangeSideEffect,
     CustomComponent,
   } = field;
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    let newValue: string | number | string[] = e.target.value;
+  const handleChangeSideEffect = useCallback(
+    (newFormValues: Record<string, unknown>) => {
+      onChangeSideEffect?.({
+        name,
+        value,
+        formValues: newFormValues,
+        setFormValues,
+      });
+    },
+    [onChangeSideEffect, name, value, setFormValues]
+  );
 
-    // Convert to number for number inputs
-    if (type === "number" && newValue !== "") {
-      newValue = Number(newValue);
-    }
+  const handleChange = useCallback(
+    (
+      e: React.ChangeEvent<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >
+    ) => {
+      let newValue: string | number | string[] = e.target.value;
 
-    onChange(name, newValue);
+      // Convert to number for number inputs
+      if (type === "number" && newValue !== "") {
+        newValue = Number(newValue);
+      }
 
-    // Mark field as touched
-    if (!touched) {
-      // This is handled in FormBuilder
-    }
+      onChange(name, newValue);
+      handleChangeSideEffect({ ...formValues, [name]: newValue });
 
-    // Clear error if it exists
-    if (error) {
-      // This is handled in FormBuilder
-    }
-  };
+      // Mark field as touched
+      if (!touched) {
+        // This is handled in FormBuilder
+      }
+
+      // Clear error if it exists
+      if (error) {
+        // This is handled in FormBuilder
+      }
+    },
+    [error, touched, onChange, name, type, handleChangeSideEffect, formValues]
+  );
+
+  const onFieldChange = useCallback(
+    (fieldValue: unknown) => {
+      onChange(name, fieldValue);
+      handleChangeSideEffect({ ...formValues, [name]: fieldValue });
+    },
+    [onChange, name, handleChangeSideEffect, formValues]
+  );
 
   // Format currency value for display
   const formatCurrency = (value: number | string): string => {
@@ -98,7 +125,7 @@ const FormField = ({
                 ? "fill-yellow-400 text-yellow-400"
                 : "text-gray-300"
             )}
-            onClick={() => onChange(name, i + 1)}
+            onClick={() => onFieldChange(i + 1)}
           />
         ))}
       </div>
@@ -116,7 +143,7 @@ const FormField = ({
           // Handle file uploads - simplified for now
           const files = e.target.files;
           if (files && files.length > 0) {
-            onChange(name, files);
+            onFieldChange(files);
           }
         }}
         disabled={disabled}
@@ -143,9 +170,7 @@ const FormField = ({
           name={name}
           type={type}
           value={(value as string) || ""}
-          onChange={(name, value) => {
-            onChange(name, value);
-          }}
+          onChange={(name, value) => onFieldChange(value)}
           placeholder={placeholder}
           disabled={disabled}
           error={error}
@@ -266,7 +291,7 @@ const FormField = ({
         return (
           <Select
             value={(value as string) || ""}
-            onValueChange={(val) => onChange(name, val)}
+            onValueChange={onFieldChange}
             disabled={disabled}
           >
             <SelectTrigger
@@ -303,7 +328,7 @@ const FormField = ({
             name={name}
             disabled={disabled}
             value={value as MultiselectOption[]}
-            onChange={(val) => onChange(name, val)}
+            onChange={onFieldChange}
             options={options}
             {...field.props}
           />
@@ -315,7 +340,7 @@ const FormField = ({
             <Checkbox
               id={id}
               checked={Boolean(value)}
-              onCheckedChange={(checked) => onChange(name, checked)}
+              onCheckedChange={onFieldChange}
               disabled={disabled}
               className={className}
             />
@@ -334,7 +359,7 @@ const FormField = ({
             <Switch
               id={id}
               checked={Boolean(value)}
-              onCheckedChange={(checked) => onChange(name, checked)}
+              onCheckedChange={onFieldChange}
               disabled={disabled}
               className={className}
             />
@@ -351,7 +376,7 @@ const FormField = ({
         return (
           <RadioGroup
             value={(value as string) || ""}
-            onValueChange={(val) => onChange(name, val)}
+            onValueChange={onFieldChange}
             className={
               props?.orientation === "horizontal"
                 ? "flex items-center"
@@ -405,7 +430,7 @@ const FormField = ({
             id={id}
             name={name}
             value={(value as string) || ""}
-            onChange={(date) => onChange(name, date)}
+            onChange={onFieldChange}
             disabled={disabled}
             className={cn(
               error && touched ? "border-destructive" : "",
@@ -421,13 +446,16 @@ const FormField = ({
 
   return (
     <div className="space-y-2">
-      {type !== "checkbox" && type !== "switch" && (
-        <Label
-          htmlFor={id}
-          className={cn(error && touched ? "text-destructive" : "")}
-        >
-          {label}
-        </Label>
+      {type !== "checkbox" && type !== "switch" && label && (
+        <div className="flex items-center gap-2">
+          <Label
+            htmlFor={id}
+            className={cn(error && touched ? "text-destructive" : "")}
+          >
+            {label}
+          </Label>
+          {afterLabel && afterLabel}
+        </div>
       )}
       {renderField()}
       {description && (
