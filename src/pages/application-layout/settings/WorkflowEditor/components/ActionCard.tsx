@@ -1,6 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { getActionText, ACTION_ICONS } from "../consts/actions";
+import {
+  getActionText,
+  ACTION_ICONS,
+  ACTION_CARD_INFO,
+} from "../consts/actions";
 import { ACTION_VALIDATIONS } from "../consts/actions/action_validations";
 import { useCustomTables } from "@/contexts/CustomTables";
 import { Button } from "@/components/ui/button";
@@ -34,6 +38,7 @@ const ActionCard = ({ action }) => {
   }, [action, updateWorkflow, workflow]);
 
   const isValid = ACTION_VALIDATIONS[action.action_type](action);
+  const cardInfo = ACTION_CARD_INFO[action.action_type](action);
 
   return (
     <>
@@ -44,13 +49,14 @@ const ActionCard = ({ action }) => {
           [NODE_CARD.INVALID]: !isValid,
         })}
       >
-        <CardContent className="p-2 flex items-start gap-2">
+        <CardContent className="p-2 flex items-start gap-2 w-full">
           <Icon className="w-4 h-4" />
 
-          <div className="flex flex-col gap-1">
-            <p key={action.id} className="flex items-center gap-2 text-xs">
+          <div className="flex flex-col gap-1 max-w-[80%]">
+            <p key={action.id} className="flex items-center gap-2 text-xs ">
               {getActionText(action, tables)}
             </p>
+            {cardInfo}
           </div>
           <Button
             variant="ghost"
@@ -69,7 +75,6 @@ const ActionCard = ({ action }) => {
         isOpen={currentlyOpenModal === action.id}
         onClose={() => setCurrentlyOpenModal(null)}
         id={action.id}
-        workflowId={action.workflowId}
       />
     </>
   );

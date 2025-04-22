@@ -1,24 +1,19 @@
 import { ACTION_TYPES } from "./types";
 import { FormSection } from "@/components/form-builder/types";
-import { CustomTable } from "@/contexts/CustomTables/CustomTablesContext";
-import { WorkflowAction, Workflow } from "@/types/workflows";
-import { ConditionBuilder, Condition } from "../../components/ConditionBuilder";
+import { ConditionBuilder } from "../../components/ActionModal/ConditionBuilder";
 
 interface ActionFormConfig {
-  getSections: (context: {
-    tables: CustomTable[];
-    action: WorkflowAction;
-    workflow: Workflow;
-  }) => FormSection[];
+  sections: FormSection[];
 }
 
 export const ACTION_FORM_CONFIGS: Record<string, ActionFormConfig> = {
   [ACTION_TYPES.CONDITIONAL]: {
-    getSections: ({ action, workflow }) => [
+    sections: [
       {
         id: "conditional-action-form",
         fields: [
           {
+            id: "use_ai_prompt",
             name: "use_ai_prompt",
             type: "switch",
             label: "Let AI decide",
@@ -28,38 +23,31 @@ export const ACTION_FORM_CONFIGS: Record<string, ActionFormConfig> = {
             disabled: false,
           },
           {
+            id: "ai_prompt",
             name: "ai_prompt",
             type: "textarea",
             label: "Describe how you want this condition to work.",
             description:
               "This will be used to inform the AI how to evaluate the condition.",
             defaultValue: "",
-            hidden: ({ use_ai_prompt }) => {
-              return !use_ai_prompt;
-            },
+            hidden: (values) => !values.use_ai_prompt,
           },
+
           {
+            id: "conditions",
             name: "conditions",
             type: "conditional",
             label: "Conditions",
-            CustomComponent: (props) => (
-              <ConditionBuilder
-                {...props}
-                value={props.value as Condition[]}
-                context={{ action, workflow }}
-              />
-            ),
+            CustomComponent: ConditionBuilder,
             defaultValue: [],
-            hidden: ({ use_ai_prompt }) => {
-              return use_ai_prompt;
-            },
+            hidden: (values) => values.use_ai_prompt,
           },
         ],
       },
     ],
   },
   [ACTION_TYPES.CREATE_RECORD]: {
-    getSections: ({ tables }) => [
+    sections: [
       {
         id: "create-record-action-form",
         fields: [],
@@ -67,7 +55,7 @@ export const ACTION_FORM_CONFIGS: Record<string, ActionFormConfig> = {
     ],
   },
   [ACTION_TYPES.UPDATE_RECORD]: {
-    getSections: ({ tables }) => [
+    sections: [
       {
         id: "update-record-action-form",
         fields: [],
@@ -75,7 +63,7 @@ export const ACTION_FORM_CONFIGS: Record<string, ActionFormConfig> = {
     ],
   },
   [ACTION_TYPES.DELETE_RECORD]: {
-    getSections: ({ tables }) => [
+    sections: [
       {
         id: "delete-record-action-form",
         fields: [],

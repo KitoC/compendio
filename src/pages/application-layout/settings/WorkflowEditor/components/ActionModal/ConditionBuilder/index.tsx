@@ -13,10 +13,12 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { v4 as uuidv4 } from "uuid";
+import { useActionModalContext } from "../ActionModalContext";
 
 const ConditionInput = ({ value, onChange, context, onRemove }) => {
   return (
-    <div className="flex gap-2 w-full items-center">
+    <div className="flex gap-2 w-full items-center" key={value.id}>
       {onRemove && (
         <Button variant="ghost" size="icon-only" onClick={onRemove}>
           <X className="w-4 h-4" />
@@ -32,6 +34,7 @@ const ConditionInput = ({ value, onChange, context, onRemove }) => {
 };
 
 export interface Condition {
+  id: string;
   leftValue: string;
   operator: string;
   rightValue: string;
@@ -41,10 +44,6 @@ interface ConditionBuilderProps {
   value: Condition[];
   onChange: (name: string, value: Condition[]) => void;
   name: string;
-  context: {
-    action: WorkflowAction;
-    workflow: Workflow;
-  };
   formValues: Record<string, unknown>;
   setFormValues: (values: Record<string, unknown>) => void;
 }
@@ -53,14 +52,15 @@ export const ConditionBuilder = ({
   value,
   onChange,
   name,
-  context,
   formValues,
   setFormValues,
 }: ConditionBuilderProps) => {
+  const context = useActionModalContext();
+
   return (
     <div className="flex flex-col items-start gap-2">
       {value.map((condition, index) => (
-        <div key={index} className="flex flex-col gap-4 w-full">
+        <div key={condition.id} className="flex flex-col gap-4 w-full">
           {index === 1 && (
             <Select
               value={formValues.andOrValue as string}
@@ -84,7 +84,7 @@ export const ConditionBuilder = ({
           )}
 
           <ConditionInput
-            key={index}
+            key={condition.id}
             value={condition}
             context={context}
             onChange={(conditionValue) => {
@@ -111,7 +111,7 @@ export const ConditionBuilder = ({
         onClick={() => {
           onChange(name, [
             ...value,
-            { leftValue: "", operator: "", rightValue: "" },
+            { id: uuidv4(), leftValue: "", operator: "", rightValue: "" },
           ]);
         }}
       >

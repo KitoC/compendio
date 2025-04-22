@@ -1,6 +1,6 @@
 import Cascader, { CascaderOption } from "@/components/ui/cascader";
 import { useCustomTables } from "@/contexts/CustomTables";
-import { getTriggerText } from "../../consts/triggers";
+import { getTriggerText } from "../../../consts/triggers";
 import { AIRTABLE_OPERATORS } from "./OperatorSelect";
 
 const buildOptions = (context) => {

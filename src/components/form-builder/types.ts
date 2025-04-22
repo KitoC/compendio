@@ -15,6 +15,7 @@ export type FormFieldType =
   | "integer" // Added for custom table fields
   | "boolean" // Added for custom table fields
   | "switch"
+  | "conditional"
   | "reference" // Added for custom table fields
   | "timestamp" // Added for custom table fields
   | "uuid" // Added for custom table fields

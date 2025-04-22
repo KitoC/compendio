@@ -193,7 +193,7 @@ const FormBuilder = ({
   }, [values, buttonPortalId]);
 
   const debouncedHandleSubmit = useDebouncedCallback(handleSubmit, 500, {
-    leading: true,
+    leading: false,
   });
   const previousValue = usePrevious(values);
 

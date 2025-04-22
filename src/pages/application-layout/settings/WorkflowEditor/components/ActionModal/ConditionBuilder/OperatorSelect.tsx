@@ -92,7 +92,7 @@ const OperatorSelect = ({ value, onChange, context }) => {
   }
 
   useEffect(() => {
-    if (!value.operator) {
+    if (!value.operator && value.leftValue?.data?.fieldType) {
       onChange({ ...value, operator: options[0] });
     }
   }, [value.operator, options, onChange, value]);

@@ -58,7 +58,9 @@ const buildNodesAndEdges = (workflow: Workflow) => {
 
   nodes.push(...actionNodes);
 
-  const lastNode = nodes[nodes.length - 1];
+  const lastNode = nodes.sort(
+    (a, b) => Number(a.data.position) - Number(b.data.position)
+  )[nodes.length - 1];
 
   workflowConnections.forEach((connection) => {
     edges.push({

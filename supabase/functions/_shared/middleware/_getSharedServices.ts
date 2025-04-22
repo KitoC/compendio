@@ -15,6 +15,7 @@ import { DataTablesService } from "@/services/DataTablesService";
 import { FunctionsService } from "@/services/FunctionsService";
 import { GmailService } from "@/services/providers/GmailService";
 import { WorkflowsService } from "@/services/WorkflowsService";
+import { OpenAiService } from "@/services/providers/OpenAiService";
 interface SupabaseContext {
   supabase: SupabaseClient;
   supabase_AS_SUPER_ADMIN: SupabaseClient;
@@ -35,6 +36,7 @@ export interface WSSContext {
   functionsService: FunctionsService;
   gmailService: GmailService;
   workflowsService: WorkflowsService;
+  openAiService: OpenAiService;
 }
 
 export interface SharedServices extends CorsContext {
@@ -52,6 +54,7 @@ export interface SharedServices extends CorsContext {
   functionsService: FunctionsService;
   gmailService: GmailService;
   workflowsService: WorkflowsService;
+  openAiService: OpenAiService;
 }
 
 export const getSharedServices = (supabaseContext: SupabaseContext) => {
@@ -73,6 +76,7 @@ export const getSharedServices = (supabaseContext: SupabaseContext) => {
   const functionsService = new FunctionsService(supabaseContext);
   const gmailService = new GmailService();
   const workflowsService = new WorkflowsService(supabaseContext);
+  const openAiService = new OpenAiService();
   return {
     credentialsService,
     connectedServicesService,
@@ -88,5 +92,6 @@ export const getSharedServices = (supabaseContext: SupabaseContext) => {
     functionsService,
     gmailService,
     workflowsService,
+    openAiService,
   };
 };

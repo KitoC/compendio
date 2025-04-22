@@ -33,7 +33,7 @@ const ActionSelect = ({ onChange, value, disabled = false }) => {
       </SelectTrigger>
       <SelectContent>
         {ACTION_OPTIONS.map(({ options, group }) => (
-          <React.Fragment key={group}>
+          <div key={group}>
             <SelectGroup>
               <SelectLabel>{group}</SelectLabel>
               {options.map((option) => (
@@ -48,7 +48,7 @@ const ActionSelect = ({ onChange, value, disabled = false }) => {
               ))}
             </SelectGroup>
             <SelectSeparator />
-          </React.Fragment>
+          </div>
         ))}
       </SelectContent>
     </Select>
