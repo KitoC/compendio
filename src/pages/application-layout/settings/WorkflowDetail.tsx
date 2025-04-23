@@ -11,6 +11,8 @@ import {
 } from "@/contexts/WorkflowEditorProvider";
 import { Button } from "@/components/ui/button";
 import Loader from "@/components/ui/loader";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
 
 const WorkflowDetail = () => {
   const {
@@ -24,8 +26,10 @@ const WorkflowDetail = () => {
     // currentChangeIndex,
     // changes,
     revertChanges,
+    updateWorkflow,
   } = useWorkflowEditor();
   const { urlTenantAlias } = useTenant();
+  const [name, setName] = useState(workflow?.name);
 
   if (isLoading) {
     return (
@@ -55,8 +59,18 @@ const WorkflowDetail = () => {
             <ArrowLeft size={16} />
           </NavLink>
 
-          <h2 className="text-lg font-medium">
-            {workflow?.name || "Workflow Detail"}
+          <h2 className="text-lg font-medium w-fit">
+            <Input
+              className="w-fit max-w-[550px] min-w-[250px] !text-lg border-none truncate"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onBlur={() => {
+                updateWorkflow({ ...workflow, name });
+              }}
+              style={{
+                width: `${Math.max(`${workflow?.name}`?.length * 10, 50)}px`,
+              }}
+            />
           </h2>
 
           <div className="ml-auto gap-2 flex items-center">
