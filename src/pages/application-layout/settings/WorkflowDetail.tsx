@@ -11,7 +11,7 @@ import {
 } from "@/contexts/WorkflowEditorProvider";
 import { Button } from "@/components/ui/button";
 import Loader from "@/components/ui/loader";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 
 const WorkflowDetail = () => {
@@ -30,6 +30,10 @@ const WorkflowDetail = () => {
   } = useWorkflowEditor();
   const { urlTenantAlias } = useTenant();
   const [name, setName] = useState(workflow?.name);
+
+  useEffect(() => {
+    setName(workflow?.name);
+  }, [workflow?.name]);
 
   if (isLoading) {
     return (
@@ -61,14 +65,12 @@ const WorkflowDetail = () => {
 
           <h2 className="text-lg font-medium w-fit">
             <Input
-              className="w-fit max-w-[550px] min-w-[250px] !text-lg border-none truncate"
+              resize
+              className="w-fit max-w-550px] min-w-[250px] !text-lg border-none truncate"
               value={name}
               onChange={(e) => setName(e.target.value)}
               onBlur={() => {
                 updateWorkflow({ ...workflow, name });
-              }}
-              style={{
-                width: `${Math.max(`${workflow?.name}`?.length * 10, 50)}px`,
               }}
             />
           </h2>
