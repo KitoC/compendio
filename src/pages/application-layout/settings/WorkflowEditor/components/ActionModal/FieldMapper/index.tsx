@@ -11,11 +11,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Label } from "@/components/ui/label";
 import StepPayloadSelect from "../../StepPayloadSelect";
 import { Input } from "@/components/ui/input";
+import { FIELD_TYPE_ICONS } from "../../../consts/actions/action_card_info";
 
 export interface FieldMapperField {
   id: string;
@@ -109,12 +110,19 @@ const FieldMapper = ({ value: values, onChange, name, ...rest }) => {
                     onFieldChange({ ...fieldValue, type: value, value: "" })
                   }
                 >
-                  <ToggleGroupItem value="fixed">Fixed</ToggleGroupItem>
-                  <ToggleGroupItem value="expression">
-                    Expression
+                  <ToggleGroupItem value="fixed" title="Fixed value">
+                    <FIELD_TYPE_ICONS.fixed className="w-4 h-4" />
+                  </ToggleGroupItem>
+                  <ToggleGroupItem
+                    value="expression"
+                    title="From previous step"
+                  >
+                    <FIELD_TYPE_ICONS.expression className="w-4 h-4" />
                   </ToggleGroupItem>
 
-                  <ToggleGroupItem value="ai">AI generated</ToggleGroupItem>
+                  <ToggleGroupItem value="ai" title="Generate with AI">
+                    <FIELD_TYPE_ICONS.ai className="w-4 h-4" />
+                  </ToggleGroupItem>
                 </ToggleGroup>
               </div>
             </div>

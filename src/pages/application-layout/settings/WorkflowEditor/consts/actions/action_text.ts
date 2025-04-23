@@ -1,4 +1,6 @@
 import { ACTION_TYPES } from "./types";
+import pluralize from "pluralize";
+
 export const ACTION_TEXT = {
   [ACTION_TYPES.CREATE_RECORD]: "Create Record",
   [ACTION_TYPES.UPDATE_RECORD]: "Update Record",
@@ -15,8 +17,17 @@ export const getActionText = (action, tables): { plainText: string } => {
   if (action.metadata.table && tables) {
     const table = tables.find((table) => table.id === action.metadata.table);
 
-    if (table) {
-      plainText += ` in ${table.name}`;
+    if (plainText === "Create Record") {
+      plainText = plainText.replace(
+        "Record",
+        `new ${pluralize.singular(table.name)}`
+      );
+    }
+    if (plainText === "Update Record") {
+      plainText = plainText.replace(
+        "Record",
+        `${pluralize.singular(table.name)}`
+      );
     }
   }
 

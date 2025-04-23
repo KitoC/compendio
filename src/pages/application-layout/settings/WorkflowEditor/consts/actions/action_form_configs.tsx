@@ -99,6 +99,15 @@ const getAirtableUpdateAndCreateActionForm = ({ tables, action, workflow }) => {
               }),
           ],
         },
+        {
+          id: "ai_prompt",
+          name: "ai_prompt",
+          type: "textarea",
+          label: "Inform the AI how to handle the data.",
+          description:
+            "This will be used in conjunction with the source data to inform the AI how to handle the data.",
+          defaultValue: "",
+        },
       ],
     });
   }

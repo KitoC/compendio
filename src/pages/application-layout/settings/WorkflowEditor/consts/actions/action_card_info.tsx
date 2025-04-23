@@ -1,8 +1,75 @@
+import { Sparkles, LetterText, Workflow } from "lucide-react";
 import { ACTION_TYPES } from "./types";
+import pluralize from "pluralize";
+
+export const FIELD_TYPE_ICONS = {
+  fixed: LetterText,
+  expression: Workflow,
+  ai: Sparkles,
+};
+const FIELD_LIMIT = 3;
+
+const getCreateOrUpdateRecordCardInfo = (action) => {
+  if (action.metadata.use_ai) {
+    return (
+      <>
+        {action.metadata.ai_prompt && (
+          <p
+            className="text-xs text-muted-foreground truncate mb-2"
+            title={action.metadata.ai_prompt}
+          >
+            {action.metadata.ai_prompt}
+          </p>
+        )}
+
+        <p className="text-xs text-muted-foreground">
+          (AI will generate data from {action.metadata.source_data.length}{" "}
+          {pluralize("source", action.metadata.source_data.length)})
+        </p>
+      </>
+    );
+  }
+
+  const firstFiveFields = action.metadata?.fields?.slice(0, FIELD_LIMIT);
+  const remainingFields = action.metadata?.fields?.slice(FIELD_LIMIT);
+
+  return (
+    <>
+      {firstFiveFields &&
+        firstFiveFields.map((field) => {
+          let value = field.value?.valueLabel || field.value;
+
+          if (!value && field.type === "ai") {
+            value = "AI generated";
+          }
+
+          const Icon = FIELD_TYPE_ICONS[field.type || "fixed"];
+
+          return (
+            <p
+              key={field.id}
+              className="text-xs text-muted-foreground flex items-center gap-1 "
+            >
+              <Icon className="w-3 h-3" />
+              <span className="truncate">
+                {field.name} - {value}
+              </span>
+            </p>
+          );
+        })}
+      {remainingFields && remainingFields.length > 0 && (
+        <p className="text-xs text-muted-foreground">
+          + {remainingFields.length} more{" "}
+          {pluralize("field", remainingFields.length)}
+        </p>
+      )}
+    </>
+  );
+};
 
 export const ACTION_CARD_INFO = {
-  [ACTION_TYPES.CREATE_RECORD]: () => null,
-  [ACTION_TYPES.UPDATE_RECORD]: () => null,
+  [ACTION_TYPES.CREATE_RECORD]: getCreateOrUpdateRecordCardInfo,
+  [ACTION_TYPES.UPDATE_RECORD]: getCreateOrUpdateRecordCardInfo,
   [ACTION_TYPES.CONDITIONAL]: (action) => {
     if (action.metadata?.use_ai_prompt) {
       return (
