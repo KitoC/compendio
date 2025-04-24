@@ -63,7 +63,13 @@ export class DataRecordHandler implements IAgentFunctionHandler {
 
     this.logger.debug("result", result);
 
-    const json = await result.json();
+    let json = null;
+
+    if (result.headers.get("content-type") === "application/json") {
+      json = await result.json();
+    } else {
+      json = await result.text();
+    }
 
     this.logger.debug("json", JSON.stringify(json));
 

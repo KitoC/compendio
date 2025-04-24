@@ -58,6 +58,7 @@ export interface WorkflowPayload {
   externalWorkflow?: ExternalWorkflow;
   actions?: WorkflowAction[];
   triggers?: WorkflowTriggerUpdate[];
+  connections?: InternalWorkflowConnection[];
   metadata?: {
     connections?: InternalWorkflowConnection[];
   };

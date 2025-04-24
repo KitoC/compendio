@@ -11,6 +11,7 @@ import TriggerSelect from "./TriggerSelect";
 import { useCustomTables } from "@/contexts/CustomTables";
 import { FormFieldType } from "@/components/form-builder/types";
 import { useWorkflowEditor } from "@/contexts/WorkflowEditorProvider";
+import { getSupabaseFunctionsUrl } from "@/utils/supabaseUtils";
 
 const TriggerModal = ({ isOpen, onClose, id }) => {
   const [container, setContainer] = useState<HTMLElement | null>(null);
@@ -104,6 +105,9 @@ const TriggerModal = ({ isOpen, onClose, id }) => {
             setIsPersisting(false);
           }}
           initialValues={{
+            webhook_url:
+              getSupabaseFunctionsUrl() +
+              `/webhook?trigger_id=${trigger.id}&workflow_id=${workflow.id}`,
             event_type: trigger?.event_type,
             ...(trigger.metadata as object),
           }}

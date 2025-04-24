@@ -43,6 +43,7 @@ const FormField = ({
     afterLabel,
     onChangeSideEffect,
     CustomComponent,
+    renderAfterInput,
   } = field;
 
   const handleChangeSideEffect = useCallback(
@@ -457,7 +458,10 @@ const FormField = ({
           {afterLabel && afterLabel}
         </div>
       )}
-      {renderField()}
+      <div className="flex items-center">
+        {renderField()}
+        {renderAfterInput?.(value, formValues)}
+      </div>
       {description && (
         <p className="text-xs text-muted-foreground">{description}</p>
       )}

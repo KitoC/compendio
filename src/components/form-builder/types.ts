@@ -79,6 +79,10 @@ export interface FormField {
   afterLabel?: React.ReactNode;
   onChangeSideEffect?: (params: FormFieldSideEffectParams) => void;
   CustomComponent?: React.ComponentType<CustomFieldComponentProps>;
+  renderAfterInput?: (
+    value: unknown,
+    formValues: Record<string, unknown>
+  ) => React.ReactNode;
 }
 
 export interface FormSection {

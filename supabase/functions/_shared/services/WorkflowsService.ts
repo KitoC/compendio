@@ -28,6 +28,7 @@ class WorkflowsService extends BaseSupabaseService {
   n8n_instance: string;
   n8n_project_id: string;
   BASE_URL: string;
+  WEBHOOK_URL: string;
 
   constructor(public context: BaseRequiredContext) {
     super(context);
@@ -36,6 +37,7 @@ class WorkflowsService extends BaseSupabaseService {
     this.n8n_instance = getEnvKey("N8N_INSTANCE");
     this.n8n_project_id = getEnvKey("N8N_PROJECT_ID");
     this.BASE_URL = `https://${this.n8n_instance}/api/v1`;
+    this.WEBHOOK_URL = getEnvKey("N8N_WEBHOOK_URL");
   }
 
   async callN8NApi({
@@ -89,6 +91,74 @@ class WorkflowsService extends BaseSupabaseService {
     });
 
     return response;
+  }
+
+  async updateWorkflowTrigger(
+    workflowId: string,
+    triggerId: string,
+    payload: WorkflowTrigger
+  ) {
+    const { data, error } = await this.supabase_AS_SUPER_ADMIN
+      .from("workflow_triggers")
+      .update(payload)
+      .eq("id", triggerId)
+      .eq("workflow_id", workflowId);
+
+    console.log("data -->", data);
+    console.log("error -->", error);
+    if (error) {
+      this.throwError("Error updating workflow trigger", error);
+    }
+
+    return data;
+  }
+
+  async triggerWorkflow(
+    workflowId: string,
+    payload: unknown,
+    user_agent: string
+  ) {
+    const internalWorkflow = await this.getById(
+      workflowId,
+      "*, triggers:workflow_triggers(*)"
+    );
+    const externalWorkflowId = internalWorkflow.external_workflow_id;
+
+    const webhookTrigger = internalWorkflow.triggers.find(
+      (trigger: WorkflowTrigger) => trigger.event_type === "webhook-received"
+    );
+
+    if (webhookTrigger) {
+      await this.updateWorkflowTrigger(workflowId, webhookTrigger.id, {
+        ...webhookTrigger,
+        metadata: {
+          ...webhookTrigger.metadata,
+          last_triggered: new Date().toISOString(),
+          payload,
+          user_agent,
+        },
+      });
+    }
+
+    const response = await fetch(`${this.WEBHOOK_URL}`, {
+      method: "POST",
+      body: JSON.stringify({
+        workflow_id: externalWorkflowId,
+        tenant_id: internalWorkflow.tenant_id,
+        payload,
+      }),
+    });
+
+    if (!response.ok) {
+      const json = await response.json();
+      console.log("Failed to trigger workflow", json);
+      this.throwError("Failed to trigger workflow", json);
+    }
+
+    const json = await response.json();
+    this.logger.info("Workflow triggered", json);
+
+    return json;
   }
 
   async getWorkflow(workflowId: string) {

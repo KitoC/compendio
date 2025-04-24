@@ -81,9 +81,11 @@ const TriggerNode = memo(({ data, isConnectable }: TriggerNodeProps) => {
               />
             ))}
 
-          <div className="flex flex-col gap-2">
-            <TriggerSelect onChange={onAddTrigger} value={""} />
-          </div>
+          {triggers.length === 0 && (
+            <div className="flex flex-col gap-2">
+              <TriggerSelect onChange={onAddTrigger} value={""} />
+            </div>
+          )}
         </div>
       </div>
       <Handle

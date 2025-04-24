@@ -11,24 +11,31 @@ const buildOptions = (context) => {
       (table) => table.id === trigger.metadata.table
     );
 
+    if (trigger.metadata.type === "airtable") {
+      return {
+        label: getTriggerText(trigger, tables).plainText,
+        value: trigger.id,
+        children: targetTable?.fields
+          ?.filter((field) => AIRTABLE_OPERATORS[field.schema.type])
+          .map((field) => ({
+            label: `${field.schema.name}`,
+            value: field.id,
+            data: {
+              type: "airtable",
+              triggerId: trigger.id,
+              parentValue: trigger.id,
+              tableId: targetTable.id,
+              fieldId: field.id,
+              fieldType: field.schema.type,
+              schema: field.schema,
+            },
+          })),
+      };
+    }
+
     return {
       label: getTriggerText(trigger, tables).plainText,
       value: trigger.id,
-      children: targetTable.fields
-        .filter((field) => AIRTABLE_OPERATORS[field.schema.type])
-        .map((field) => ({
-          label: `${field.schema.name}`,
-          value: field.id,
-          data: {
-            type: "airtable",
-            triggerId: trigger.id,
-            parentValue: trigger.id,
-            tableId: targetTable.id,
-            fieldId: field.id,
-            fieldType: field.schema.type,
-            schema: field.schema,
-          },
-        })),
     };
   });
 

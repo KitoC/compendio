@@ -1,4 +1,11 @@
-import { FilePlus2, FileSymlink, FileX2, Mail, Webhook } from "lucide-react";
+import {
+  FilePlus2,
+  FileSymlink,
+  FileX2,
+  Mail,
+  Webhook,
+  Copy,
+} from "lucide-react";
 import { WorkflowTrigger } from "@/services/WorkflowService";
 import { FormSection } from "@/components/form-builder/types";
 import {
@@ -6,6 +13,8 @@ import {
   CustomTableField,
 } from "@/contexts/CustomTables/CustomTablesContext";
 import pluralize from "pluralize";
+import { CopyToClipboardButton } from "@/components/CopyButton";
+
 export const TRIGGER_TYPES = {
   RECORD_CREATED: "record-created",
   RECORD_UPDATED: "record-updated",
@@ -150,11 +159,15 @@ export const TRIGGER_FORM_CONFIGS: Record<string, TriggerFormConfig> = {
         id: "webhook-received-trigger-form",
         fields: [
           {
-            id: "webhook-url",
-            name: "webhook-url",
+            id: "webhook_url",
+            name: "webhook_url",
             label: "Webhook URL",
             type: "text",
             required: true,
+            disabled: true,
+            renderAfterInput: (value) => {
+              return <CopyToClipboardButton className="ml-1" value={value} />;
+            },
           },
         ],
       },

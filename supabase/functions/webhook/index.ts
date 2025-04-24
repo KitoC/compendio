@@ -17,7 +17,7 @@ const handler = async (
   req: Request,
   context: PublicContext
 ): Promise<RequestHandlerResponse> => {
-  return new WebhookEventHandler().handle(req, context);
+  return new WebhookEventHandler(context).handle(req, context);
 };
 
 serve(

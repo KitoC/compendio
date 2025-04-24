@@ -56,7 +56,24 @@ export class WebhookEventHandler {
   ): Promise<RequestHandlerResponse> {
     const url = new URL(req.url);
     const body = await req.json();
+    const userAgent = req.headers.get("user-agent");
 
+    const trigger_id = url.searchParams.get("trigger_id");
+    const workflow_id = url.searchParams.get("workflow_id");
+
+    if (trigger_id && workflow_id) {
+      await context.workflowsService.triggerWorkflow(
+        workflow_id,
+        body,
+        userAgent || ""
+      );
+
+      return {
+        body: "Workflow triggered",
+        headers: { "Content-Type": "text/plain" },
+        status: 200,
+      };
+    }
     const connected_service_id = await getConnectedServiceId(url, body);
 
     if (!connected_service_id) {
