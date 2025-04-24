@@ -91,27 +91,30 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
         permissions: {},
       }));
 
-      const fieldsToDelete = existingTable.data_fields.filter(
-        (field: DataField) =>
-          !externalFieldsToSync.some((f) => f.external_id === field.external_id)
-      );
-
-      await supabase_AS_SUPER_ADMIN
-        .from("data_fields")
-        .delete()
-        .in(
-          "id",
-          fieldsToDelete.map((f: DataField) => f.id)
+      if (existingTable) {
+        const fieldsToDelete = existingTable?.data_fields.filter(
+          (field: DataField) =>
+            !externalFieldsToSync.some(
+              (f) => f.external_id === field.external_id
+            )
         );
 
-      const { error: fieldError } = await supabase_AS_SUPER_ADMIN
-        .from("data_fields")
-        .upsert(externalFieldsToSync, {
-          onConflict: "external_id, schema_id, source",
-        });
+        await supabase_AS_SUPER_ADMIN
+          .from("data_fields")
+          .delete()
+          .in(
+            "id",
+            fieldsToDelete.map((f: DataField) => f.id)
+          );
 
-      if (fieldError) {
-        console.error("Error upserting fields:", fieldError);
+        const { error: fieldError } = await supabase_AS_SUPER_ADMIN
+          .from("data_fields")
+          .upsert(externalFieldsToSync, {
+            onConflict: "external_id, schema_id, source",
+          });
+        if (fieldError) {
+          console.error("Error upserting fields:", fieldError);
+        }
       }
     }
 
