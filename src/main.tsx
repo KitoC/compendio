@@ -1,9 +1,14 @@
-
 import "regenerator-runtime/runtime"; // Import regenerator runtime for Safari compatibility
 import "core-js/stable";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 // Finding the root element
 const rootElement = document.getElementById("root");

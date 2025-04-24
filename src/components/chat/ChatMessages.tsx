@@ -50,7 +50,10 @@ const ChatMessages = () => {
                 className={clsx("animate-fadeIn w-full")}
               >
                 <div className="py-2 pl-3 text-xs text-muted-foreground">
-                  {dayjs(message.created_at).format("DD MMMM, hh:mm a")}
+                  {dayjs(message.created_at)
+                    .utc(true)
+                    .local()
+                    .format("DD MMMM, hh:mm a")}
                 </div>
                 <ChatMessage
                   message={message}
