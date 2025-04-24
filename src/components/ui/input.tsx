@@ -43,12 +43,10 @@ const Input = React.forwardRef<
     };
 
     if (resize) {
-      console.log("resize");
       measureTextWidth();
     }
   }, [props.value, className, resize]);
 
-  console.log("inputWidth", inputWidth);
   return (
     <div className="relative flex items-center w-full">
       {icon && (

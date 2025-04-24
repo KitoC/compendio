@@ -9,12 +9,25 @@ import {
 } from "lucide-react";
 import { useEffect } from "react";
 
+const arrayOperators = [
+  "contains",
+  "does not contain",
+  "is empty",
+  "is not empty",
+  "length equal to",
+  "length not equal to",
+  "length greater than",
+  "length less than",
+  "length greater than or equal to",
+  "length less than or equal to",
+];
 const OPERATORS = {
   string: ["equals", "not equals", "contains", "does not contain"],
   number: ["equals", "not equals", "greater than", "less than"],
   dateTime: ["equals", "not equals", "greater than", "less than"],
   boolean: ["equals", "not equals"],
-  array: ["contains", "does not contain"],
+  array: arrayOperators,
+  list: arrayOperators,
   object: ["equals", "not equals"],
 };
 
@@ -57,6 +70,12 @@ const OPERATOR_GROUPS: Record<string, CascaderOption> = {
     Icon: ListIcon,
     children: OPERATORS.array.map((op) => toOption(op, "array")),
   },
+  list: {
+    label: "Array",
+    value: "array",
+    Icon: ListIcon,
+    children: OPERATORS.array.map((op) => toOption(op, "array")),
+  },
   object: {
     label: "Object",
     value: "object",
@@ -88,6 +107,10 @@ const OperatorSelect = ({ value, onChange, context }) => {
   if (value.leftValue?.data?.fieldType) {
     options = AIRTABLE_OPERATORS[value.leftValue.data.fieldType].map((op) =>
       toOption(op, value.leftValue.data.fieldType)
+    );
+  } else if (value.leftValue?.data?.type) {
+    options = OPERATORS[value.leftValue.data.type].map((op) =>
+      toOption(op, value.leftValue.data.type)
     );
   }
 

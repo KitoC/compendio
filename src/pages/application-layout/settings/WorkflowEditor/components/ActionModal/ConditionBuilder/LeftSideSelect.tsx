@@ -1,6 +1,6 @@
 import Cascader, { CascaderOption } from "@/components/ui/cascader";
 import { useCustomTables } from "@/contexts/CustomTables";
-import { getTriggerText } from "../../../consts/triggers";
+import { getTriggerText, TRIGGER_TYPES } from "../../../consts/triggers";
 import { AIRTABLE_OPERATORS } from "./OperatorSelect";
 
 const buildOptions = (context) => {
@@ -30,6 +30,57 @@ const buildOptions = (context) => {
               schema: field.schema,
             },
           })),
+      };
+    }
+
+    if (trigger.event_type === TRIGGER_TYPES.WEBHOOK_RECEIVED) {
+      const payload = trigger.metadata.payload;
+      let children = [];
+
+      const extractFieldsRecursively = (data, parentKey = "") => {
+        const options = [];
+
+        Object.entries(data).map(([key, dataValue]) => {
+          const value = `${parentKey ? `${parentKey}.` : ""}${key}`;
+          const type = Array.isArray(dataValue) ? "list" : typeof dataValue;
+
+          if (Array.isArray(dataValue) && dataValue.length > 0) {
+            options.push({
+              label: value.split(".").join(" -> "),
+              value,
+              secondaryLabel: type,
+              // children: extractFieldsRecursively(dataValue[0], value),
+              data: { type },
+            });
+          } else if (type === "object") {
+            options.push({
+              label: value.split(".").join(" -> "),
+              value,
+              secondaryLabel: type,
+              children: extractFieldsRecursively(dataValue, value),
+              data: { type },
+            });
+          } else {
+            options.push({
+              label: value.split(".").join(" -> "),
+              value,
+              secondaryLabel: type,
+              data: { type },
+            });
+          }
+        });
+
+        return options;
+      };
+
+      if (payload) {
+        children = extractFieldsRecursively(payload);
+      }
+
+      return {
+        label: getTriggerText(trigger, tables).plainText,
+        value: trigger.id,
+        children,
       };
     }
 

@@ -15,6 +15,7 @@ import { LucideProps } from "lucide-react";
 
 export type CascaderOption = {
   label: string;
+  secondaryLabel?: string;
   valueLabel?: string;
   value: string;
   hidden?: boolean;
@@ -77,6 +78,67 @@ const Cascader = (props: CascaderProps) => {
     ? Value?.option.formatValue(Value?.option.label)
     : Value?.option.label;
 
+  const renderMenuItems = (options: CascaderOption[]) => {
+    return options
+      .filter((action) => !action.hidden)
+      .map((action) => {
+        if (action.children) {
+          return (
+            <DropdownMenuSub key={action.value}>
+              <DropdownMenuSubTrigger className="hover:text-accent-foreground focus:text-accent-foreground data-[state=open]:text-accent-foreground">
+                {action.Icon && <action.Icon className="mr-2 h-4 w-4" />}
+                {action.label}
+                {action.secondaryLabel && (
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    {action.secondaryLabel}
+                  </span>
+                )}
+              </DropdownMenuSubTrigger>
+              <DropdownMenuPortal>
+                <DropdownMenuSubContent
+                  className="DropdownMenuSubContent"
+                  sideOffset={2}
+                  alignOffset={-5}
+                >
+                  {renderMenuItems(action.children)}
+                </DropdownMenuSubContent>
+              </DropdownMenuPortal>
+            </DropdownMenuSub>
+          );
+        }
+
+        if (action.isGroupLabel) {
+          return (
+            <DropdownMenuLabel key={action.value} className="DropdownMenuLabel">
+              {action.label}
+              {action.secondaryLabel && (
+                <span className="ml-2 text-xs text-muted-foreground">
+                  {action.secondaryLabel}
+                </span>
+              )}
+            </DropdownMenuLabel>
+          );
+        }
+
+        return (
+          <DropdownMenuItem
+            key={action.value}
+            onClick={(e) => {
+              onChange(action);
+            }}
+          >
+            {action.Icon && <action.Icon className="mr-2 h-4 w-4" />}
+            {action.label}
+            {action.secondaryLabel && (
+              <span className="ml-2 text-xs text-muted-foreground">
+                {action.secondaryLabel}
+              </span>
+            )}
+          </DropdownMenuItem>
+        );
+      });
+  };
+
   return (
     <>
       <DropdownMenu>
@@ -88,6 +150,7 @@ const Cascader = (props: CascaderProps) => {
             ref={inputRef}
             value={value ? ValueLabel : undefined}
             placeholder={placeholder}
+            title={ValueLabel || value}
           />
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -95,58 +158,7 @@ const Cascader = (props: CascaderProps) => {
           className="w-full"
           style={{ width: inputWidth }}
         >
-          {props.options
-            .filter((action) => !action.hidden)
-            .map((action) => {
-              if (action.children) {
-                return (
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger className="hover:text-accent-foreground focus:text-accent-foreground data-[state=open]:text-accent-foreground">
-                      {action.Icon && <action.Icon className="mr-2 h-4 w-4" />}
-                      {action.label}
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuPortal>
-                      <DropdownMenuSubContent
-                        className="DropdownMenuSubContent"
-                        sideOffset={2}
-                        alignOffset={-5}
-                      >
-                        {action.children.map((child) => (
-                          <DropdownMenuItem
-                            key={child.value}
-                            onClick={(e) => {
-                              onChange(child);
-                            }}
-                          >
-                            {child.label}
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuSubContent>
-                    </DropdownMenuPortal>
-                  </DropdownMenuSub>
-                );
-              }
-
-              if (action.isGroupLabel) {
-                return (
-                  <DropdownMenuLabel className="DropdownMenuLabel">
-                    {action.label}
-                  </DropdownMenuLabel>
-                );
-              }
-
-              return (
-                <DropdownMenuItem
-                  key={action.label}
-                  onClick={(e) => {
-                    onChange(action);
-                  }}
-                >
-                  {action.Icon && <action.Icon className="mr-2 h-4 w-4" />}
-                  {action.label}
-                </DropdownMenuItem>
-              );
-            })}
+          {renderMenuItems(props.options)}
         </DropdownMenuContent>
       </DropdownMenu>
     </>
