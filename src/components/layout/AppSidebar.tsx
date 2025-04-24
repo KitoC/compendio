@@ -17,9 +17,7 @@ import {
   ArrowLeft,
   LogOut,
   Settings,
-  Users2,
   Table2,
-  Palette,
   Bot,
   LayoutDashboard,
 } from "lucide-react";
@@ -141,6 +139,10 @@ const AppSidebar = () => {
       label: "Settings",
       url: ROUTES.SETTINGS_APPEARANCE,
       icon: <Settings className="h-4 w-4" />,
+      onClick: (e) => {
+        e.preventDefault();
+        setShowSettingsSidebar(true);
+      },
     },
   ];
 

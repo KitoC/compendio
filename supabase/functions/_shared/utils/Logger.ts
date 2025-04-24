@@ -1,6 +1,6 @@
 // NO_CHANGE
-import { ProviderError } from "locals/error-types";
-import { getEnvKey } from "locals/utils/env";
+import { ProviderError } from "@/error-types";
+import { getEnvKey } from "@/utils/env";
 /**
  * Logger utility for consistent logging across the application
  * Provides different log levels and formatting for better debugging
@@ -62,7 +62,7 @@ class Logger {
   // Error logs - always shown
   error(message: string, error?: Error): void {
     if (this.currentLogLevel >= LogLevel.ERROR) {
-      const errorMessage = this.formatLogMessage("ERROR", message, error);
+      const errorMessage = this.formatLogMessage("❗ERROR", message, error);
       console.error(errorMessage);
 
       // Log stack trace if available
@@ -75,14 +75,14 @@ class Logger {
   // Warning logs
   warn(message: string, data?: unknown): void {
     if (this.currentLogLevel >= LogLevel.WARN) {
-      console.info(this.formatLogMessage("WARN", message, data));
+      console.info(this.formatLogMessage("⚠️ WARN", message, data));
     }
   }
 
   // Info logs
   info(message: string, data?: unknown): void {
     if (this.currentLogLevel >= LogLevel.INFO) {
-      console.log(this.formatLogMessage("INFO", message, data));
+      console.log(this.formatLogMessage("ℹ️ INFO", message, data));
     }
   }
 
@@ -97,7 +97,8 @@ class Logger {
   debug(message: string, data?: unknown): void {
     if (this.currentLogLevel >= LogLevel.DEBUG) {
       console.log(
-        this.formatLogMessage("DEBUG", message, JSON.stringify(data, null, 2))
+        this.formatLogMessage("🔶 DEBUG", message),
+        JSON.stringify(data, null, 2)
       );
     }
   }

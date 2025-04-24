@@ -15,6 +15,9 @@ import {
 import FormField from "./FormField";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useDebouncedCallback } from "use-debounce";
+import isEqual from "lodash/isEqual";
+import { usePrevious } from "@uidotdev/usehooks";
 
 const FormBuilder = ({
   config,
@@ -27,6 +30,8 @@ const FormBuilder = ({
   hideSubmitButton,
   hideTitles = false,
   footerClassname,
+  submitOnChange = false,
+  contentClassName,
 }: FormBuilderProps) => {
   const [values, setValues] = useState<Record<string, unknown>>(initialValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -160,8 +165,8 @@ const FormBuilder = ({
     return isValid;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (e?: React.FormEvent) => {
+    e?.preventDefault();
 
     if (validateForm()) {
       onSubmit(values);
@@ -187,8 +192,19 @@ const FormBuilder = ({
     }, 0);
   }, [values, buttonPortalId]);
 
+  const debouncedHandleSubmit = useDebouncedCallback(handleSubmit, 500, {
+    leading: false,
+  });
+  const previousValue = usePrevious(values);
+
+  useEffect(() => {
+    if (submitOnChange && previousValue && !isEqual(values, previousValue)) {
+      debouncedHandleSubmit();
+    }
+  }, [values, debouncedHandleSubmit, submitOnChange, previousValue]);
+
   const footer = (
-    <CardFooter className={`"flex justify-between" ${footerClassname}`}>
+    <CardFooter className={`flex justify-between ${footerClassname}`}>
       {config.showReset && (
         <Button
           type="button"
@@ -244,37 +260,54 @@ const FormBuilder = ({
           </CardHeader>
         )}
 
-        <CardContent className="space-y-6">
+        <CardContent
+          className={cn(
+            "space-y-6",
+            hideTitles && "pt-6 px-0",
+            contentClassName
+          )}
+        >
           {config.sections.map((section) => (
-            <div key={section.id} className="space-y-4">
-              {(section.title || section.description) && (
-                <div className="space-y-2">
-                  {section.title && (
-                    <h3 className="text-lg font-medium">{section.title}</h3>
-                  )}
-                  {section.description && (
-                    <p className="text-sm text-muted-foreground">
-                      {section.description}
-                    </p>
-                  )}
-                </div>
-              )}
+            <>
+              <div
+                key={section.id}
+                className={cn("space-y-4", section.className || "")}
+              >
+                {(section.title || section.description) && (
+                  <div className="space-y-2">
+                    {section.title && (
+                      <h3 className="text-lg font-medium">{section.title}</h3>
+                    )}
+                    {section.description && (
+                      <p className="text-sm text-muted-foreground">
+                        {section.description}
+                      </p>
+                    )}
+                  </div>
+                )}
 
-              <div className="space-y-4">
-                {section.fields
-                  .filter((field) => !field.hidden)
-                  .map((field) => (
-                    <FormField
-                      key={field.id}
-                      field={field}
-                      value={values[field.name] ?? field.defaultValue ?? ""}
-                      onChange={handleChange}
-                      error={errors[field.name]}
-                      touched={touched[field.name]}
-                    />
-                  ))}
+                <div className="space-y-4">
+                  {section.fields
+                    .filter((field) =>
+                      typeof field.hidden === "function"
+                        ? !field?.hidden(values)
+                        : !field.hidden
+                    )
+                    .map((field) => (
+                      <FormField
+                        key={field.id}
+                        field={field}
+                        value={values[field.name] ?? field.defaultValue ?? ""}
+                        onChange={handleChange}
+                        error={errors[field.name]}
+                        touched={touched[field.name]}
+                        formValues={values}
+                        setFormValues={setValues}
+                      />
+                    ))}
+                </div>
               </div>
-            </div>
+            </>
           ))}
         </CardContent>
         {!footerEl && footer}

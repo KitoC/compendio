@@ -1,63 +1,72 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { useParams } from "react-router-dom";
-import { CustomTablesContext, ICustomTable } from "./CustomTablesContext";
+import { useMemo } from "react";
+import { CustomTablesContext } from "./CustomTablesContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { CustomTableService } from "@/services/CustomTableService";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import Loader from "@/components/ui/loader";
+import { CustomTable } from "./CustomTablesContext";
+
+const QUERY_KEYS = {
+  SYNC_SCHEMA: "sync-data-tables-schema",
+  DATA_TABLE_SCHEMA: "data-tables-schema",
+};
+
+const useSyncSchemaQuery = () => {
+  const { tenantId } = useTenant();
+  const queryClient = useQueryClient();
+
+  return useQuery({
+    queryKey: [QUERY_KEYS.SYNC_SCHEMA, tenantId],
+    queryFn: async () => {
+      await CustomTableService.syncSchema();
+      const schema = await CustomTableService.getSchema();
+
+      queryClient.setQueryData([QUERY_KEYS.DATA_TABLE_SCHEMA, tenantId], () => {
+        return schema;
+      });
+
+      return schema as CustomTable[];
+    },
+    enabled: !!tenantId,
+  });
+};
+
+const useDataTableSchemaQuery = () => {
+  const { tenantId } = useTenant();
+
+  return useQuery({
+    queryKey: [QUERY_KEYS.DATA_TABLE_SCHEMA, tenantId],
+    queryFn: async () => {
+      const schema = await CustomTableService.getSchema();
+
+      return schema;
+    },
+    enabled: !!tenantId,
+  });
+};
 
 export const CustomTablesProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
-  const [customTables, setCustomTables] = useState<ICustomTable[]>([]);
-
-  const { tenantId } = useTenant();
-  const [syncing, setSyncing] = useState(false);
-  const [syncingFailed, setSyncingFailed] = useState(false);
-
-  // Tracks which tenantIds have already been synced
-  const didSyncRef = useRef<Set<string>>(new Set());
-
-  const fetchCustomTables = useCallback(async () => {
-    if (!tenantId || syncing || didSyncRef.current.has(tenantId)) return;
-    if (syncingFailed) return;
-
-    setSyncing(true);
-
-    try {
-      await CustomTableService.syncSchema();
-    } catch (err) {
-      console.error("Failed to sync schema:", err);
-      setSyncingFailed(true);
-    } finally {
-      setSyncing(false);
-
-      didSyncRef.current.add(tenantId);
-    }
-  }, [tenantId, syncing, syncingFailed]);
-
-  useEffect(() => {
-    fetchCustomTables();
-  }, [fetchCustomTables]);
-
-  useEffect(() => {
-    const fetchSchema = async () => {
-      const schema = await CustomTableService.getSchema();
-
-      setCustomTables(schema);
-    };
-
-    fetchSchema();
-  }, []);
+  useSyncSchemaQuery();
+  const { data: tables, isLoading } = useDataTableSchemaQuery();
 
   const value = useMemo(
     () => ({
-      tables: customTables,
+      tables: tables?.sort((a, b) => a.name.localeCompare(b.name)),
     }),
-    [customTables]
+    [tables]
   );
 
   return (
     <CustomTablesContext.Provider value={value}>
-      {children}
+      {isLoading ? (
+        <div className="flex items-center justify-center h-screen">
+          <Loader size="large" />
+        </div>
+      ) : (
+        children
+      )}
     </CustomTablesContext.Provider>
   );
 };

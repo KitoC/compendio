@@ -1,17 +1,19 @@
 // NO_CHANGE
-import { RequestError } from "locals/controllers/RequestController";
+import { RequestError } from "@/controllers/RequestController";
 import type { IFunction, IFunctionCall } from "@/types/aiAgents";
-import { BaseController } from "locals/controllers/_BaseController";
-import { PublicContext } from "locals/middleware/withPublicContext";
-import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
-import { SendEmailHandler } from "locals/handlers/ai_functions/SendEmailHandler";
-import { IAgentFunctionHandler } from "locals/interfaces/IAgentFunctionHandler";
-import { OnboardingProgressUpdateHandler } from "locals/handlers/ai_functions/OnboardingProgressUpdateHandler";
+import { BaseController } from "@/controllers/_BaseController";
+import { PublicContext } from "@/middleware/withPublicContext";
+import { AuthenticatedContext } from "@/middleware/withAuthenticatedContext";
+import { SendEmailHandler } from "@/handlers/ai_functions/SendEmailHandler";
+import { IAgentFunctionHandler } from "@/interfaces/IAgentFunctionHandler";
+import { OnboardingProgressUpdateHandler } from "@/handlers/ai_functions/OnboardingProgressUpdateHandler";
 import {
   onboarding_progress_update,
   get_email_integration_markup_schema,
 } from "@/SYSTEM_FUNCTIONS/ONBOARDING_FUNCTIONS";
 import { send_email } from "@/SYSTEM_FUNCTIONS/EMAIL_FUNCTIONS";
+import { get_records } from "@/SYSTEM_FUNCTIONS/RECORD_FUNCTIONS";
+import { DataRecordHandler } from "@/handlers/ai_functions/DataRecordHandler";
 
 export type ExecuteFunctionResult = {
   result: object | string | undefined | null;
@@ -34,6 +36,7 @@ class FunctionController extends BaseController {
       send_email,
       onboarding_progress_update,
       get_email_integration_markup_schema,
+      get_records,
     };
 
     this.FUNCTION_HANDLERS = {
@@ -41,6 +44,7 @@ class FunctionController extends BaseController {
       [onboarding_progress_update.name]: new OnboardingProgressUpdateHandler(
         this.context
       ),
+      [get_records.name]: new DataRecordHandler(this.context),
     };
   }
 

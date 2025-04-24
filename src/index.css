@@ -16,9 +16,9 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 25 95% 53%;
+    --primary: 264 36% 56.5%;
     --primary-foreground: 210 40% 98%;
-    --primary-darker: 25 95% 53%;
+    --primary-darker: 264 36% 41%;
 
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
@@ -60,9 +60,9 @@
     --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 25 95% 53%;
+    --primary: 264 36% 56.5%;
     --primary-foreground: 210 40% 98%;
-    --primary-darker: 25 95% 53%;
+    --primary-darker: 264 36% 41%;
 
     --secondary: 217 33% 18%;
     --secondary-foreground: 210 40% 98%;
@@ -77,7 +77,7 @@
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217 33% 18%;
+    --border: 217 33% 20%;
     --input: 217 33% 18%;
     --ring: 213 27% 84%;
   }
@@ -356,5 +356,14 @@
 
   .ml-safe-left {
     margin-left: env(safe-area-inset-left);
+  }
+
+  .shadow-md-t {
+    --tw-shadow: -5px -4px 6px -1px rgb(0 0 0 / 0.1),
+      -5px -2px 4px -2px rgb(0 0 0 / 0.1);
+    --tw-shadow-colored: 0 4px 6px -1px var(--tw-shadow-color),
+      0 2px 4px -2px var(--tw-shadow-color);
+    box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000),
+      var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
   }
 }

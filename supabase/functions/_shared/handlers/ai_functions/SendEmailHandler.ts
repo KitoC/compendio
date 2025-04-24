@@ -3,20 +3,20 @@
 // Handles 'process-email-received' task type
 // ============================================
 
-import { PublicContext } from "locals/middleware/withPublicContext";
+import { PublicContext } from "@/middleware/withPublicContext";
 
-import { OAuthController } from "locals/controllers/OAuthController";
+import { OAuthController } from "@/controllers/OAuthController";
 import { ConnectedServiceController } from "@/controllers/ConnectedServiceController";
-import { AzureService } from "locals/services/providers/AzureService";
-import { EmailAgentController } from "locals/controllers/EmailAgentController";
-import { FunctionController } from "locals/controllers/FunctionController";
-import Logger from "locals/utils/Logger";
+import { AzureService } from "@/services/providers/AzureService";
+import { EmailAgentController } from "@/controllers/EmailAgentController";
+import { FunctionController } from "@/controllers/FunctionController";
+import Logger from "@/utils/Logger";
 import {
   IAgentFunctionHandler,
   IAgentFunctionHandlerResult,
-} from "locals/interfaces/IAgentFunctionHandler";
+} from "@/interfaces/IAgentFunctionHandler";
 import type { IFunction, IFunctionCall } from "@/types/aiAgents";
-
+import { AuthenticatedContext } from "@/middleware/withAuthenticatedContext";
 export interface ITaskPayload {
   message_id: string;
   conversation_id: string;
@@ -73,13 +73,13 @@ export class SendEmailHandler implements IAgentFunctionHandler {
       );
 
     const agentController = await EmailAgentController.create({
-      context: this.context,
+      context: this.context as AuthenticatedContext,
       functionController: new FunctionController(this.context),
       agentId: message.user_id,
-      sessionContext: {
+      sessionContext: JSON.stringify({
         connected_service_id: message.connected_service_id,
         tenant_id: message.tenant_id,
-      },
+      }),
     });
 
     if (!connectedService) {

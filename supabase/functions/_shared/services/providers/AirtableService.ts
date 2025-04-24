@@ -1,6 +1,6 @@
 import type { AirtableBase } from "@/types/airtable";
-import { BaseExternalService } from "locals/services/_BaseExternalService";
-import { getEnvKey } from "locals/utils/env";
+import { BaseExternalService } from "@/services/_BaseExternalService";
+import { getEnvKey } from "@/utils/env";
 
 const BASE_URL = "https://api.airtable.com/v0";
 
@@ -102,13 +102,13 @@ export class AirtableService extends BaseExternalService {
         method: "GET",
       }
     );
+    const json = await response.json();
 
     if (!response.ok) {
-      const json = await response.json();
       this.throwError("Failed to retrieve record", json, response.status);
     }
 
-    return response.json();
+    return json;
   }
 
   async createRecord(tableName: string, fields: object) {

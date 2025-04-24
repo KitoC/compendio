@@ -9,67 +9,26 @@ import {
 import { Select } from "@/components/ui/select";
 import CredentialCard from "./CredentialCard";
 import { ICredential, WizardState } from "../../types";
-import { supabase } from "@/integrations/supabase/client";
-import { useCallback, useEffect, useState } from "react";
-import { useTenant } from "@/contexts/TenantContext";
 import { INTEGRATION_TYPES } from "@/lib/constants";
 import { User } from "lucide-react";
+import { hasValidationError } from "../../utils";
 
 interface ExistingCredentialSelectorProps {
   wizardState: WizardState;
   handleCredentialSelect: (credential_id: string) => void;
-  setIsLoadingCredentials: (isLoading: boolean) => void;
   isCreatingNewCredential: boolean;
+  existingCredentials: ICredential[];
 }
 
 const ExistingCredentialSelector = ({
   wizardState,
   handleCredentialSelect,
-  setIsLoadingCredentials,
   isCreatingNewCredential,
+  existingCredentials = [],
 }: ExistingCredentialSelectorProps) => {
-  const { tenantId } = useTenant();
   const { service_type, credential_id } = wizardState;
 
-  const [existingCredentials, setExistingCredentials] = useState<ICredential[]>(
-    []
-  );
-  const [initialLoad, setInitialLoad] = useState(false);
   const selectedType = INTEGRATION_TYPES.find((t) => t.id === service_type);
-  const authType = selectedType?.authType || "custom";
-  const provider = selectedType?.oauthProvider || "google";
-  // const formConfig = selectedType && INTEGRATION_FORM_CONFIGS[service_type];
-
-  const fetchCredentialsByType = useCallback(async () => {
-    if (!tenantId) return;
-
-    try {
-      const { data, error } = await supabase
-        .from("credentials")
-        .select(
-          "id, name, username, domain, created_at, scopes, type, associated_email"
-        )
-        .eq("tenant_id", tenantId)
-        .eq("type", authType)
-        .eq("provider", provider)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      setExistingCredentials(data as ICredential[]);
-
-      setIsLoadingCredentials(false);
-    } catch (error) {
-      console.error("Error fetching reusable credentials:", error);
-    }
-  }, [tenantId, authType, provider, setIsLoadingCredentials]);
-
-  useEffect(() => {
-    if (service_type && !initialLoad) {
-      setInitialLoad(true);
-      fetchCredentialsByType();
-    }
-  }, [service_type, fetchCredentialsByType, initialLoad]);
 
   if (isCreatingNewCredential) {
     return <div className="py-4"></div>;
@@ -115,13 +74,20 @@ const ExistingCredentialSelector = ({
                 })}
               </SelectContent>
             </Select>
-            {credential_id && <CredentialCard credentialId={credential_id} />}
+            {credential_id && (
+              <CredentialCard
+                credentialId={credential_id}
+                hasValidationError={hasValidationError(
+                  selectedType,
+                  existingCredentials.find((c) => c.id === credential_id)
+                )}
+              />
+            )}
+            <div className="border-t my-4"></div>
+            <h3 className="text-sm font-medium mb-2">
+              Or Create New Credentials
+            </h3>
           </div>
-
-          <div className="border-t my-4"></div>
-          <h3 className="text-sm font-medium mb-2">
-            Or Create New Credentials
-          </h3>
         </div>
       )}
     </div>

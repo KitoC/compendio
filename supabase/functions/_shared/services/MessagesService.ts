@@ -3,9 +3,9 @@
 import {
   BaseRequiredContext,
   BaseSupabaseService,
-} from "locals/services/_BaseSupabaseService";
+} from "@/services/_BaseSupabaseService";
 import type { ChatMessage } from "@/types/chat";
-import { getEnvKey } from "locals/utils/env";
+import { getEnvKey } from "@/utils/env";
 
 export type UpdateChatMessageParams = {
   message_id: string;

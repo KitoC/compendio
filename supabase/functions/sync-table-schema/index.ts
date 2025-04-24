@@ -3,10 +3,15 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import {
   withAuthenticatedContext,
   type AuthenticatedContext,
-} from "locals/middleware/withAuthenticatedContext";
-import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
-import { withCors } from "locals/middleware/withCors";
-import { ExternalServiceAiError } from "locals/error-types";
+} from "@/middleware/withAuthenticatedContext";
+import { withErrorBoundary } from "@/middleware/withErrorBoundary";
+import { withCors } from "@/middleware/withCors";
+import { ExternalServiceAiError } from "@/error-types";
+import type { Database } from "@/integrations/supabase/types";
+
+type DataTable = Database["public"]["Tables"]["data_tables"]["Row"];
+type DataField = Database["public"]["Tables"]["data_fields"]["Row"];
+
 const handler = async (req: Request, context: AuthenticatedContext) => {
   const method = req.method.toUpperCase();
   const { airtableService, supabase_AS_SUPER_ADMIN, authService } = context;
@@ -21,8 +26,30 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
     const schema = await airtableService.getBase();
     const { tables } = schema;
 
+    const { data: existingTables } = await supabase_AS_SUPER_ADMIN
+      .from("data_tables")
+      .select("*, data_fields(*)")
+      .eq("schema_id", airtableService.base_id)
+      .eq("source", "airtable");
+
+    const tablesToDelete = existingTables.filter(
+      (table: DataTable) => !tables.some((t) => t.id === table.external_id)
+    );
+
+    await supabase_AS_SUPER_ADMIN
+      .from("data_tables")
+      .delete()
+      .in(
+        "id",
+        tablesToDelete.map((t: DataTable) => t.id)
+      );
+
     for (const table of tables) {
-      const { id: external_id, name, fields, primaryFieldId } = table;
+      const { id: external_id, name, fields, primaryFieldId, views } = table;
+
+      const existingTable = existingTables.find(
+        (t: DataTable) => t.external_id === external_id
+      );
 
       const { data: tableRecord, error: tableError } =
         await supabase_AS_SUPER_ADMIN
@@ -39,6 +66,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
                 permissions: {},
                 schema_name: schema.name,
                 primary_field_id: primaryFieldId,
+                views,
               },
             ],
             { onConflict: "external_id, schema_id, source" }
@@ -52,7 +80,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
       }
 
       // TODO: type
-      const fieldRecords = fields.map((field) => ({
+      const externalFieldsToSync = fields.map((field) => ({
         table_id: tableRecord.id,
         schema: field,
         tenant_id: authService.tenantId,
@@ -63,9 +91,24 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
         permissions: {},
       }));
 
+      const fieldsToDelete = existingTable.data_fields.filter(
+        (field: DataField) =>
+          !externalFieldsToSync.some((f) => f.external_id === field.external_id)
+      );
+
+      await supabase_AS_SUPER_ADMIN
+        .from("data_fields")
+        .delete()
+        .in(
+          "id",
+          fieldsToDelete.map((f: DataField) => f.id)
+        );
+
       const { error: fieldError } = await supabase_AS_SUPER_ADMIN
         .from("data_fields")
-        .upsert(fieldRecords, { onConflict: "external_id, schema_id, source" });
+        .upsert(externalFieldsToSync, {
+          onConflict: "external_id, schema_id, source",
+        });
 
       if (fieldError) {
         console.error("Error upserting fields:", fieldError);

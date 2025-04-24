@@ -5,6 +5,7 @@ set -e
 # Config
 ENV_FILE="supabase/functions/.env"
 ENV_KEY="LOCAL_SUPABASE_FUNCTIONS_URL"
+ENV_KEY_2="LOCAL_FUNCTIONS_URL"
 SUPABASE_PORT=54321
 NGROK_LOG=".ngrok-url.log"
 
@@ -26,7 +27,7 @@ update_env_file() {
 echo "🌐 Starting ngrok tunnel..."
 rm -f "$NGROK_LOG"
 
-ngrok http $SUPABASE_PORT --log=stdout > "$NGROK_LOG" 2>&1 &
+ngrok http $SUPABASE_PORT --domain=wasp-pleasing-gnu.ngrok-free.app --log=stdout > "$NGROK_LOG" 2>&1 &
 
 NGROK_PID=$!
 
@@ -48,7 +49,7 @@ echo "✅ Tunnel is live: $TUNNEL_URL"
 
 # Inject into env
 update_env_file "$ENV_KEY" "$TUNNEL_URL"
-
+update_env_file "$ENV_KEY_2" "$BASE_URL"
 echo "📝 Updated $ENV_FILE with $ENV_KEY=$TUNNEL_URL"
 
 # Now start Supabase

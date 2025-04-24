@@ -15,17 +15,10 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-import {
-  Globe,
-  Mail,
-  Workflow,
-  Check,
-  ArrowLeft,
-  ArrowRight,
-} from "lucide-react";
+import { Globe, Mail, Workflow, Check } from "lucide-react";
 import { StepProps } from "../types";
 import clsx from "clsx";
-import { SiAirtable, SiGmail, SiMicrosoft } from "react-icons/si";
+import { SiAirtable, SiGmail, SiGoogledrive } from "react-icons/si";
 import { PiMicrosoftOutlookLogoFill } from "react-icons/pi";
 
 const getIntegrationIcon = (type: string) => {
@@ -36,6 +29,8 @@ const getIntegrationIcon = (type: string) => {
       return <Workflow className="h-6 w-6" />;
     case "gmail":
       return <SiGmail className="h-6 w-6" />;
+    case "google-drive":
+      return <SiGoogledrive className="h-6 w-6" />;
     case "outlook":
       return <PiMicrosoftOutlookLogoFill className="h-6 w-6" />;
     case "airtable":

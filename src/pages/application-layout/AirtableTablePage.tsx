@@ -1,13 +1,9 @@
-import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Page from "@/components/Page";
-import AirtableTable from "@/components/airtable-table";
 import {
   useAirtableTableSchemaQuery,
   useAirtableRecordsQuery,
 } from "@/hooks/useAirtableQuery";
-import { AirtableService } from "@/services/AirtableService";
-import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -17,28 +13,33 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Plus, RefreshCw } from "lucide-react";
 import { FormConfig } from "@/components/form-builder";
-import { AirtableRecord } from "@/components/airtable-table/types";
-import { useTenant } from "@/contexts/TenantContext";
+import { AirtableRecord } from "@/types/airtable";
 import { useCustomTables } from "@/contexts/CustomTables";
+import AirtableViews from "@/components/airtable-table";
+
+interface AirtableTablePageParams extends Record<string, string> {
+  id: string;
+}
 
 const AirtableTablePage = () => {
-  const { tenantData } = useTenant();
-  const { id: tableName, ...params } = useParams<{
-    id: string;
-  }>();
+  const { id: tableName } = useParams<AirtableTablePageParams>();
+
+  const { tables } = useCustomTables();
+
+  const table = tables.find((table) => table.name === tableName);
 
   const { data: tableSchema, isLoading: isLoadingSchema } =
-    useAirtableTableSchemaQuery(tableName);
+    useAirtableTableSchemaQuery(table?.external_id);
   const {
     records,
     isLoading: isLoadingRecords,
     refetch,
+    isRefetching,
     createRecord,
     updateRecord,
     deleteRecord,
-  } = useAirtableRecordsQuery({ tableName });
+  } = useAirtableRecordsQuery({ tableId: table?.external_id });
 
   const getFormConfig = (config: FormConfig, record: AirtableRecord | null) => {
     return config;
@@ -52,26 +53,6 @@ const AirtableTablePage = () => {
       console.error("Error creating record:", error);
     }
   };
-
-  const handleUpdate = async (record: AirtableRecord) => {
-    try {
-      await updateRecord(record.id, record.fields || {});
-      refetch();
-    } catch (error) {
-      console.error("Error updating record:", error);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteRecord(id);
-      refetch();
-    } catch (error) {
-      console.error("Error deleting record:", error);
-    }
-  };
-
-  console.log("records", records);
 
   if (isLoadingSchema) {
     return (
@@ -110,7 +91,7 @@ const AirtableTablePage = () => {
   }
 
   return (
-    <AirtableTable
+    <AirtableViews
       className="rounded-none border-none h-full"
       table={tableSchema}
       records={records || []}
@@ -123,13 +104,14 @@ const AirtableTablePage = () => {
         export: true,
       }}
       onCreate={handleCreate}
-      onUpdate={handleUpdate}
-      onDelete={handleDelete}
+      onUpdate={updateRecord}
+      onDelete={deleteRecord}
       getFormConfig={getFormConfig}
       searchable={true}
       pagination={true}
       pageSize={10}
       onRefresh={refetch}
+      isRefreshing={isRefetching}
     />
   );
 };

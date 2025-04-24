@@ -2,8 +2,8 @@
 import {
   BaseRequiredContext,
   BaseSupabaseService,
-} from "locals/services/_BaseSupabaseService";
-import { ICredential } from "locals/services/CredentialsService";
+} from "@/services/_BaseSupabaseService";
+import { ICredential } from "@/services/CredentialsService";
 
 type CreateWebhookEventArgs = {
   source: string;
@@ -51,6 +51,19 @@ class ConnectedServicesService extends BaseSupabaseService {
       .from("connected_services")
       .select("*")
       .eq("id", connected_service_id)
+      .single();
+
+    if (error) {
+      this.throwError("Error getting connected service", error, 500);
+    }
+
+    return data;
+  }
+  async getConnectedServiceBySubscriptionId(subscription_id: string) {
+    const { data, error } = await this.supabase
+      .from("connected_services")
+      .select("*")
+      .eq("subscription_id", `${subscription_id}`)
       .single();
 
     if (error) {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -19,40 +19,37 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
   Plus,
   Search,
   Download,
-  ArrowUpDown,
   SlidersHorizontal,
   Filter,
   RefreshCw,
 } from "lucide-react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { AirtableTableProps, AirtableRecord, UserPermissions } from "./types";
+import { AirtableTableProps, UserPermissions } from "./types";
+import { AirtableRecord } from "@/types/airtable";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatFieldValue } from "./utils";
-import EditModal from "./EditModal";
 import FieldFilter from "./FieldFilter";
+import { Tag } from "@/components/ui/tag";
+import {
+  GridView,
+  CalendarView,
+  GalleryView,
+  KanbanView,
+  TimelineView,
+  ViewType,
+} from "./views";
+import ViewTypeSelector from "./ViewTypeSelector";
+import { cn } from "@/lib/utils";
+import AirtableModal from "../airtable-modal";
+import pluralize from "pluralize";
 
 const defaultPermissions: UserPermissions = {
   create: true,
@@ -62,26 +59,27 @@ const defaultPermissions: UserPermissions = {
   export: true,
 };
 
-const AirtableTable = ({
-  table,
-  records,
-  idField = "id",
-  permissions: providedPermissions,
-  onRowClick,
-  onUpdate,
-  onCreate,
-  onDelete,
-  isLoading = false,
-  emptyMessage = "No records available",
-  className,
-  searchable = true,
-  pagination = true,
-  pageSize = 10,
-  getFormConfig,
-  onRefresh,
-}: AirtableTableProps) => {
+const AirtableViews = (props: AirtableTableProps) => {
+  const {
+    table,
+    records,
+    idField = "id",
+    permissions: providedPermissions,
+    onRowClick,
+    onUpdate,
+    onCreate,
+    onDelete,
+    isLoading = false,
+    emptyMessage = "No records available",
+    className,
+    searchable = true,
+    pagination = true,
+    pageSize = 10,
+    getFormConfig,
+    onRefresh,
+    isRefreshing,
+  } = props;
   const isMobile = useIsMobile();
-  const tableContainerRef = useRef<HTMLDivElement>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -92,8 +90,9 @@ const AirtableTable = ({
   );
   const [isCreating, setIsCreating] = useState(false);
   const [deleteRecordId, setDeleteRecordId] = useState<string | null>(null);
-  const [filters, setFilters] = useState<Record<string, any>>({});
+  const [filters, setFilters] = useState<Record<string, unknown>>({});
   const [filterOpen, setFilterOpen] = useState<string | null>(null);
+  const [viewType, setViewType] = useState<ViewType>("grid");
 
   const permissions: UserPermissions = {
     ...defaultPermissions,
@@ -156,8 +155,8 @@ const AirtableTable = ({
 
         const field = table.fields.find((f) => f.name === fieldName);
         if (!field) return false;
-        const recordDate = new Date(fieldValue).setHours(0, 0, 0, 0);
-        const filterDate = new Date(value).setHours(0, 0, 0, 0);
+        const recordDate = new Date(fieldValue as string).setHours(0, 0, 0, 0);
+        const filterDate = new Date(value as string).setHours(0, 0, 0, 0);
 
         switch (field.type) {
           case "checkbox":
@@ -228,10 +227,13 @@ const AirtableTable = ({
     }
   };
 
-  const handleEdit = (record: AirtableRecord) => {
-    setEditingRecord(record);
-    setIsCreating(false);
-  };
+  const handleEdit = useCallback(
+    (record: AirtableRecord) => {
+      setEditingRecord(record);
+      setIsCreating(false);
+    },
+    [setEditingRecord, setIsCreating]
+  );
 
   const handleCreate = () => {
     setEditingRecord(null);
@@ -259,7 +261,6 @@ const AirtableTable = ({
     if (deleteRecordId !== null && onDelete) {
       try {
         await onDelete(deleteRecordId);
-        toast.success("Record deleted successfully");
       } catch (error) {
         console.error("Error deleting record:", error);
         toast.error("Failed to delete record");
@@ -269,12 +270,18 @@ const AirtableTable = ({
     }
   };
 
-  const handleFilterChange = (fieldName: string, value: any) => {
+  const handleFilterChange = (fieldName: string, value: unknown) => {
     setFilters((prev) => ({
       ...prev,
       [fieldName]: value,
     }));
     setFilterOpen(null);
+  };
+
+  const handleRefresh = async () => {
+    if (onRefresh) {
+      await onRefresh();
+    }
   };
 
   const handleExport = () => {
@@ -290,7 +297,7 @@ const AirtableTable = ({
           if (!field) return "";
 
           const value = record.fields[fieldName];
-          const formatted = formatFieldValue(value, field);
+          const formatted = formatFieldValue(value, field, record);
 
           return value !== null && value !== undefined
             ? `"${String(formatted).replace(/"/g, '""')}"`
@@ -317,148 +324,141 @@ const AirtableTable = ({
     }
   };
 
-  const displayFields = useMemo(() => {
-    let fields = [...organizedFields];
-
-    if (isMobile) {
-      return fields.slice(0, 2);
-    }
-
-    return fields;
-  }, [organizedFields, isMobile]);
-
   const totalPages = Math.ceil(processedRecords.length / pageSize);
 
-  if (isLoading) {
-    return (
-      <Card className={className}>
-        <CardHeader>
-          <CardTitle>{table.name}</CardTitle>
-          {table.description && (
-            <CardDescription>{table.description}</CardDescription>
-          )}
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex justify-between">
-              <Skeleton className="h-10 w-[250px]" />
-              <Skeleton className="h-10 w-[100px]" />
-            </div>
-            <div className="rounded-md border">
-              <div className="relative w-full overflow-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      {Array(isMobile ? 2 : 5)
-                        .fill(0)
-                        .map((_, i) => (
-                          <TableHead key={i}>
-                            <Skeleton className="h-4 w-[100px]" />
-                          </TableHead>
-                        ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {Array(5)
-                      .fill(0)
-                      .map((_, i) => (
-                        <TableRow key={i}>
-                          {Array(isMobile ? 2 : 5)
-                            .fill(0)
-                            .map((_, j) => (
-                              <TableCell key={j}>
-                                <Skeleton className="h-4 w-[100px]" />
-                              </TableCell>
-                            ))}
-                        </TableRow>
-                      ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const handleRowClick = useCallback(
+    (record: AirtableRecord) => {
+      if (onRowClick) {
+        onRowClick(record);
+      } else {
+        handleEdit(record);
+      }
+    },
+    [onRowClick, handleEdit]
+  );
 
-  const renderActionsCell = (record: AirtableRecord) => {
-    return (
-      <div className="flex justify-end">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-4 w-4"
-              >
-                <circle cx="12" cy="12" r="1" />
-                <circle cx="19" cy="12" r="1" />
-                <circle cx="5" cy="12" r="1" />
-              </svg>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {permissions.update && (
-              <DropdownMenuItem onClick={() => handleEdit(record)}>
-                Edit
-              </DropdownMenuItem>
-            )}
-            {permissions.delete && (
-              <DropdownMenuItem
-                className="text-destructive"
-                onClick={() => setDeleteRecordId(record.id)}
-              >
-                Delete
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    );
+  const renderView = () => {
+    const commonProps = {
+      records: pagination ? paginatedRecords : processedRecords,
+      table,
+      isLoading,
+      onRowClick: handleRowClick,
+      emptyMessage,
+      sortField,
+      sortDirection,
+      handleSort,
+      permissions,
+      paginatedRecords,
+      handleEdit,
+      handleCreate,
+      handleDeleteConfirm,
+      handleFilterChange,
+      handleExport,
+      handleRefresh,
+      setDeleteRecordId,
+    };
+
+    switch (viewType) {
+      case "calendar":
+        return <CalendarView {...commonProps} />;
+      case "gallery":
+        return <GalleryView {...commonProps} />;
+      case "kanban":
+        return <KanbanView {...commonProps} />;
+      case "timeline":
+        return <TimelineView {...commonProps} />;
+      case "grid":
+      default:
+        return <GridView {...commonProps} />;
+    }
   };
 
   return (
     <Card className={className}>
       <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <CardTitle>{table.name}</CardTitle>
-            {table.description && (
-              <CardDescription>{table.description}</CardDescription>
-            )}
-          </div>
-          <div className="flex space-x-2">
-            {onRefresh && (
-              <Button size="sm" variant="outline" onClick={onRefresh}>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
-              </Button>
-            )}
-            {permissions.export && processedRecords.length > 0 && (
-              <Button size="sm" variant="outline" onClick={handleExport}>
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-            )}
+        <div className="flex flex-col mb-2">
+          <div className="flex space-x-2 justify-between w-full border-b border-border pb-2">
+            <div className="flex items-end gap-4">
+              <CardTitle>{table.name}</CardTitle>
 
-            {permissions.create && (
-              <Button size="sm" onClick={handleCreate}>
-                <Plus className="h-4 w-4 mr-2" />
-                New
-              </Button>
-            )}
+              <ViewTypeSelector viewType={viewType} setViewType={setViewType} />
+            </div>
+            <div className="flex space-x-2 items-end">
+              {onRefresh && (
+                <Button
+                  size="xs"
+                  variant="outline"
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                >
+                  <RefreshCw
+                    className={cn("h-3 w-3", {
+                      "animate-spin": isRefreshing,
+                    })}
+                  />
+                  Refresh
+                </Button>
+              )}
+              {permissions.export && processedRecords.length > 0 && (
+                <Button size="xs" variant="outline" onClick={handleExport}>
+                  <Download className="h-3 w-3" />
+                  Export
+                </Button>
+              )}
+
+              {permissions.create && (
+                <Button size="xs" onClick={handleCreate}>
+                  <Plus className="h-3 w-3" />
+                  New {pluralize.singular(table.name)}
+                </Button>
+              )}
+            </div>
           </div>
+          {table.description && (
+            <CardDescription>{table.description}</CardDescription>
+          )}
         </div>
       </CardHeader>
       <CardContent>
+        {/* Applied filters display */}
+        {Object.keys(filters).length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-2 sm:mt-0 mb-4">
+            {Object.entries(filters).map(([fieldName, value]) => {
+              if (value === null || value === "") return null;
+
+              const field = table.fields.find((f) => f.name === fieldName);
+
+              const displayValue =
+                typeof value === "boolean"
+                  ? value
+                    ? "Yes"
+                    : "No"
+                  : String(value);
+
+              return (
+                <Tag
+                  key={fieldName}
+                  variant="outline"
+                  onRemove={() => handleFilterChange(fieldName, null)}
+                >
+                  {field?.name || fieldName}: {displayValue}
+                </Tag>
+              );
+            })}
+
+            {Object.keys(filters).length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2"
+                onClick={() => setFilters({})}
+              >
+                Clear all
+              </Button>
+            )}
+          </div>
+        )}
+
         {searchable && (
           <div className="flex items-center gap-2 mb-4">
             <div className="relative flex-1">
@@ -519,6 +519,13 @@ const AirtableTable = ({
                                 filters[field.name] ? "default" : "outline"
                               }
                               className="h-8"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setFilters((prev) => ({
+                                  ...prev,
+                                  [field.name]: "",
+                                }));
+                              }}
                             >
                               <Filter className="h-3 w-3 mr-1" />
                               {filters[field.name] ? "Filtered" : "Filter"}
@@ -543,158 +550,9 @@ const AirtableTable = ({
           </div>
         )}
 
-        <div className="rounded-md border overflow-hidden">
-          <div
-            className="relative w-full overflow-hidden"
-            ref={tableContainerRef}
-          >
-            <div className="flex w-full">
-              <div className="sticky left-0 z-10 bg-background shadow-sm">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      {displayFields.length > 0 && (
-                        <TableHead
-                          className="cursor-pointer select-none whitespace-nowrap"
-                          onClick={() => handleSort(displayFields[0].name)}
-                        >
-                          <div className="flex items-center space-x-1">
-                            <span>{displayFields[0].name}</span>
-                            <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                        </TableHead>
-                      )}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedRecords.length > 0 ? (
-                      paginatedRecords.map((record, index) => (
-                        <TableRow
-                          key={record.id}
-                          className={`animate-fade-in transition-colors ${
-                            onRowClick ? "cursor-pointer hover:bg-muted/50" : ""
-                          }`}
-                          onClick={() => onRowClick && onRowClick(record)}
-                          style={{ animationDelay: `${index * 30}ms` }}
-                        >
-                          {displayFields.length > 0 && (
-                            <TableCell className="whitespace-nowrap align-middle">
-                              <div className="h-full flex items-center">
-                                {formatFieldValue(
-                                  record.fields[displayFields[0].name],
-                                  displayFields[0]
-                                )}
-                              </div>
-                            </TableCell>
-                          )}
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell className="h-24 text-center">
-                          {emptyMessage}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+        {renderView()}
 
-              <div className="overflow-x-auto flex-grow">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      {displayFields.slice(1).map((field) => (
-                        <TableHead
-                          key={field.id}
-                          className="cursor-pointer select-none whitespace-nowrap"
-                          onClick={() => handleSort(field.name)}
-                        >
-                          <div className="flex items-center space-x-1">
-                            <span>{field.name}</span>
-                            <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedRecords.length > 0 ? (
-                      paginatedRecords.map((record, index) => (
-                        <TableRow
-                          key={record.id}
-                          className={`animate-fade-in transition-colors ${
-                            onRowClick ? "cursor-pointer hover:bg-muted/50" : ""
-                          }`}
-                          onClick={() => onRowClick && onRowClick(record)}
-                          style={{ animationDelay: `${index * 30}ms` }}
-                        >
-                          {displayFields.slice(1).map((field) => (
-                            <TableCell
-                              key={field.id}
-                              className="whitespace-nowrap align-middle"
-                            >
-                              <div className="h-full flex items-center">
-                                {formatFieldValue(
-                                  record.fields[field.name],
-                                  field
-                                )}
-                              </div>
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell
-                          colSpan={displayFields.length - 1}
-                          className="h-24 text-center"
-                        >
-                          {emptyMessage}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {(permissions.update || permissions.delete) && (
-                <div className="sticky right-0 z-10 bg-background shadow-sm">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[80px]"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paginatedRecords.length > 0 ? (
-                        paginatedRecords.map((record, index) => (
-                          <TableRow
-                            key={record.id}
-                            className="animate-fade-in transition-colors"
-                            style={{ animationDelay: `${index * 30}ms` }}
-                          >
-                            <TableCell className="align-middle">
-                              <div className="h-full flex items-center justify-end">
-                                {renderActionsCell(record)}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell className="h-24"></TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {pagination && (
+        {pagination && viewType === "grid" && (
           <div className="flex items-center justify-between space-x-2 py-4">
             <div className="text-sm text-muted-foreground">
               Showing {(currentPage - 1) * pageSize + 1}-
@@ -724,18 +582,19 @@ const AirtableTable = ({
           </div>
         )}
 
-        <EditModal
-          isOpen={isCreating || editingRecord !== null}
+        <AirtableModal
+          providedTable={table}
+          providedRecord={editingRecord}
+          tableId={table?.external_id}
+          recordId={editingRecord?.id}
+          isCreating={isCreating}
+          getFormConfig={getFormConfig}
+          onSave={handleSave}
           onClose={() => {
             setEditingRecord(null);
             setIsCreating(false);
           }}
-          record={editingRecord}
-          table={table}
-          onSave={handleSave}
-          idField={idField}
-          isCreating={isCreating}
-          getFormConfig={getFormConfig}
+          isOpen={isCreating || editingRecord !== null}
         />
 
         <AlertDialog
@@ -763,4 +622,4 @@ const AirtableTable = ({
   );
 };
 
-export default AirtableTable;
+export default AirtableViews;

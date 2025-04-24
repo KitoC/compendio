@@ -12,6 +12,7 @@ export const getAzureClientId = () => {
 
   return "5f3cac71-f5ac-46e0-bf92-e90276a63cd7";
 };
+
 const DEFAULT_TENANT_ID = "consumers";
 
 export const getAzureOAuthUrl = (tenantId: string) => {

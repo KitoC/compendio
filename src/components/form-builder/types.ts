@@ -10,15 +10,23 @@ export type FormFieldType =
   | "checkbox"
   | "radio"
   | "date"
+  | "custom"
+  | "datetime"
+  | "multiselect"
   | "integer" // Added for custom table fields
   | "boolean" // Added for custom table fields
+  | "switch"
+  | "conditional"
   | "reference" // Added for custom table fields
   | "timestamp" // Added for custom table fields
-  | "uuid"; // Added for custom table fields
+  | "uuid" // Added for custom table fields
+  | "record-select"; // Added for custom table fields
 
 export interface FormFieldOption {
   label: string;
   value: string;
+  color?: string;
+  variant?: "airtable" | "default";
 }
 
 export interface FormFieldValidation {
@@ -31,10 +39,33 @@ export interface FormFieldValidation {
   custom?: (value: unknown) => boolean | string;
 }
 
+export interface CustomFieldComponentProps {
+  id: string;
+  name: string;
+  type: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  value: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onChange: (name: string, value: any) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  error?: string;
+  touched?: boolean;
+  formValues: Record<string, unknown>;
+  setFormValues: (values: Record<string, unknown>) => void;
+}
+
+export interface FormFieldSideEffectParams {
+  name: string;
+  value: unknown;
+  formValues: Record<string, unknown>;
+  setFormValues: (values: Record<string, unknown>) => void;
+}
+
 export interface FormField {
   id: string;
   name: string;
-  label: string;
+  label?: string;
   type: FormFieldType;
   placeholder?: string;
   defaultValue?: unknown;
@@ -42,8 +73,12 @@ export interface FormField {
   validation?: FormFieldValidation;
   disabled?: boolean;
   className?: string;
-  hidden?: boolean;
+  hidden?: boolean | ((values: Record<string, unknown>) => boolean);
   props?: Record<string, unknown>;
+  description?: string;
+  afterLabel?: React.ReactNode;
+  onChangeSideEffect?: (params: FormFieldSideEffectParams) => void;
+  CustomComponent?: React.ComponentType<CustomFieldComponentProps>;
 }
 
 export interface FormSection {
@@ -51,6 +86,8 @@ export interface FormSection {
   title?: string;
   description?: string;
   fields: FormField[];
+  className?: string;
+  divider?: boolean;
 }
 
 export interface FormConfig {
@@ -83,6 +120,8 @@ export interface FormBuilderProps {
   hideSubmitButton?: boolean;
   hideTitles?: boolean;
   footerClassname?: string;
+  submitOnChange?: boolean;
+  contentClassName?: string;
 }
 
 export interface FormFieldProps {
@@ -91,4 +130,6 @@ export interface FormFieldProps {
   onChange: (name: string, value: unknown) => void;
   error?: string;
   touched?: boolean;
+  formValues: Record<string, unknown>;
+  setFormValues: (values: Record<string, unknown>) => void;
 }

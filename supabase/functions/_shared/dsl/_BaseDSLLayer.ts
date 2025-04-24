@@ -1,5 +1,5 @@
-import { DSLError } from "locals/error-types";
-import Logger from "locals/utils/Logger";
+import { DSLError } from "@/error-types";
+import Logger from "@/utils/Logger";
 
 export class BaseDSLLayer {
   public logger: Logger;

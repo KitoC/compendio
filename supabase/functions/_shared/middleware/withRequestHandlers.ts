@@ -1,7 +1,7 @@
-import Logger from "locals/utils/Logger";
-import { RequestError } from "locals/controllers/RequestController";
-import { getEnvKey } from "locals/utils/env";
-import { CorsContext } from "locals/middleware/withCors";
+import Logger from "@/utils/Logger";
+import { RequestError } from "@/controllers/RequestController";
+import { getEnvKey } from "@/utils/env";
+import { CorsContext } from "@/middleware/withCors";
 
 export type RequestHandlerResponse = {
   body: BodyInit | ReadableStream<Uint8Array> | null;

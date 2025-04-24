@@ -1,10 +1,14 @@
 import { createContext } from "react";
 import { Database } from "@/integrations/supabase/types";
 
-export type ICustomTable = Database["public"]["Tables"]["data_tables"]["Row"];
+export type CustomTableField =
+  Database["public"]["Tables"]["data_fields"]["Row"];
 
+export type CustomTable = Database["public"]["Tables"]["data_tables"]["Row"] & {
+  fields: CustomTableField[];
+};
 export interface CustomTablesContextType {
-  tables: ICustomTable[];
+  tables: CustomTable[];
 }
 
 export const CustomTablesContext = createContext<

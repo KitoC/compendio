@@ -1,7 +1,7 @@
-import { AgentController } from "locals/controllers/AgentController";
-import { FunctionController } from "locals/controllers/FunctionController";
+import { AgentController } from "@/controllers/AgentController";
+import { FunctionController } from "@/controllers/FunctionController";
 import { getAgentController } from "@/factories/getAgentController";
-import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
+import { AuthenticatedContext } from "@/middleware/withAuthenticatedContext";
 
 type ChatSocketMessage = {
   type: string;
@@ -20,10 +20,15 @@ export class ChatSocketHandler {
   private functionAlreadyCalled = false;
   private decoder = new TextDecoder();
   private accumulated = "";
-
+  private sessionContext: string;
   constructor(context: AuthenticatedContext, socket: WebSocket) {
     this.context = context;
     this.socket = socket;
+    this.sessionContext = JSON.stringify({
+      todaysDate: new Date().toISOString(),
+      // TODO: get user timezone from sessionContext
+      timezone: "Australia/Sydney",
+    });
   }
 
   routeSocketMessage(data: ChatSocketMessage) {
@@ -114,7 +119,7 @@ export class ChatSocketHandler {
       this.context,
       new FunctionController(this.context),
       agent_id,
-      {}
+      this.sessionContext
     );
 
     const stream = await agentController.talkToAgent(conversation_id);
@@ -134,7 +139,7 @@ export class ChatSocketHandler {
       context: this.context,
       functionController: new FunctionController(this.context),
       agentId: payload.agent_id,
-      sessionContext: {},
+      sessionContext: this.sessionContext,
     });
 
     await agentController.triggerFunctionCall(payload.payload);

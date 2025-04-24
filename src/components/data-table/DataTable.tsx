@@ -1,6 +1,6 @@
 // NO_CHANGE
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -20,28 +20,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Plus,
   Search,
   SlidersHorizontal,
-  ArrowUpDown,
   Download,
+  Pencil,
+  Trash2,
 } from "lucide-react";
-import TableActions from "./TableActions";
 import Pagination from "./Pagination";
 import EditModal from "./EditModal";
-import { Column, DataTableProps, UserPermissions } from "./types";
+import { DataTableProps, UserPermissions, Column } from "./types";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import DataGrid from "../DataGrid";
+import { DataGridColumn } from "../DataGrid";
 
 // Default permissions
 const defaultPermissions: UserPermissions = {
@@ -70,6 +64,8 @@ function DataTable<T extends object>({
   emptyMessage = "No data available",
   className,
   getFormConfig,
+  actions,
+  headerItems,
 }: DataTableProps<T>) {
   const isMobile = useIsMobile();
 
@@ -175,10 +171,13 @@ function DataTable<T extends object>({
   };
 
   // Handle edit
-  const handleEdit = (item: T) => {
-    setEditingItem(item);
-    setIsCreating(false);
-  };
+  const handleEdit = useCallback(
+    (item: T) => {
+      setEditingItem(item);
+      setIsCreating(false);
+    },
+    [setEditingItem, setIsCreating]
+  );
 
   // Handle create
   const handleCreate = () => {
@@ -261,12 +260,34 @@ function DataTable<T extends object>({
   };
 
   // Filter columns based on screen size
-  const visibleColumns = useMemo(() => {
-    if (!isMobile) return columns.filter((col) => !col.hidden);
+  const visibleColumns: DataGridColumn<T>[] = useMemo(() => {
+    if (!isMobile)
+      return (columns as unknown as DataGridColumn<T>[]).filter(
+        (col) => !col.hidden
+      );
 
     // On mobile, show fewer columns
-    return columns.filter((col) => !col.hidden).slice(0, 2); // Show only the first 2 columns on mobile
+    return (columns as unknown as DataGridColumn<T>[])
+      .filter((col) => !col.hidden)
+      .slice(0, 2); // Show only the first 2 columns on mobile
   }, [columns, isMobile]);
+
+  const defaultActions = useMemo(() => {
+    return [
+      {
+        label: "Edit",
+        onClick: handleEdit,
+        hidden: !permissions.update,
+        Icon: Pencil,
+      },
+      {
+        label: "Delete",
+        onClick: ({ id }: { id: string }) => setDeleteItemId(id),
+        hidden: !permissions.delete,
+        Icon: Trash2,
+      },
+    ];
+  }, [permissions.update, permissions.delete, handleEdit]);
 
   // Render loading skeletons
   if (isLoading) {
@@ -282,36 +303,13 @@ function DataTable<T extends object>({
               <Skeleton className="h-10 w-[250px]" />
               <Skeleton className="h-10 w-[100px]" />
             </div>
-            <div className="rounded-md border">
+            <div className="rounded-md border overflow-hidden">
               <div className="relative w-full overflow-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      {Array(isMobile ? 2 : 5)
-                        .fill(0)
-                        .map((_, i) => (
-                          <TableHead key={i}>
-                            <Skeleton className="h-4 w-[100px]" />
-                          </TableHead>
-                        ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {Array(5)
-                      .fill(0)
-                      .map((_, i) => (
-                        <TableRow key={i}>
-                          {Array(isMobile ? 2 : 5)
-                            .fill(0)
-                            .map((_, j) => (
-                              <TableCell key={j}>
-                                <Skeleton className="h-4 w-[100px]" />
-                              </TableCell>
-                            ))}
-                        </TableRow>
-                      ))}
-                  </TableBody>
-                </Table>
+                <DataGrid
+                  data={sortedData}
+                  columns={visibleColumns}
+                  isLoading={isLoading}
+                />
               </div>
             </div>
           </div>
@@ -321,7 +319,7 @@ function DataTable<T extends object>({
   }
 
   return (
-    <Card className={className}>
+    <Card className={`rounded-none border-none h-full ${className}`}>
       <CardHeader>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -329,6 +327,7 @@ function DataTable<T extends object>({
             {subtitle && <CardDescription>{subtitle}</CardDescription>}
           </div>
           <div className="flex space-x-2">
+            {headerItems}
             {permissions.create && (
               <Button size="sm" onClick={handleCreate}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -365,87 +364,14 @@ function DataTable<T extends object>({
 
         <div className="rounded-md border overflow-hidden">
           <div className="relative w-full overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {visibleColumns.map((column) => (
-                    <TableHead
-                      key={column.field.toString()}
-                      className={
-                        column.sortable ? "cursor-pointer select-none" : ""
-                      }
-                      onClick={() =>
-                        column.sortable && handleSort(column.field as keyof T)
-                      }
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>{column.header}</span>
-                        {column.sortable && (
-                          <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </div>
-                    </TableHead>
-                  ))}
-                  {(permissions.update || permissions.delete) && (
-                    <TableHead className="w-[80px]"></TableHead>
-                  )}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedData.length > 0 ? (
-                  paginatedData.map((item, index) => (
-                    <TableRow
-                      key={`${item[idField]}-${index}`}
-                      className={`animate-fade-in transition-colors ${
-                        onRowClick ? "cursor-pointer hover:bg-muted/50" : ""
-                      }`}
-                      onClick={() => onRowClick && onRowClick(item)}
-                      style={{ animationDelay: `${index * 30}ms` }}
-                    >
-                      {visibleColumns.map((column) => (
-                        <TableCell
-                          key={`${item[idField]}-${column.field.toString()}`}
-                        >
-                          {column.render
-                            ? column.render(item)
-                            : item[column.field as keyof T] !== undefined &&
-                              item[column.field as keyof T] !== null
-                            ? String(item[column.field as keyof T])
-                            : "-"}
-                        </TableCell>
-                      ))}
-                      {(permissions.update || permissions.delete) && (
-                        <TableCell>
-                          <TableActions
-                            item={item}
-                            idField={idField}
-                            permissions={permissions}
-                            onEdit={permissions.update ? handleEdit : undefined}
-                            onDelete={
-                              permissions.delete
-                                ? (id) => setDeleteItemId(id)
-                                : undefined
-                            }
-                          />
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={
-                        visibleColumns.length +
-                        (permissions.update || permissions.delete ? 1 : 0)
-                      }
-                      className="h-24 text-center"
-                    >
-                      {emptyMessage}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <DataGrid
+              data={sortedData}
+              columns={visibleColumns}
+              isLoading={isLoading}
+              onRowClick={onRowClick}
+              actions={actions || defaultActions}
+              emptyMessage={emptyMessage}
+            />
           </div>
         </div>
 
@@ -465,9 +391,9 @@ function DataTable<T extends object>({
             setEditingItem(null);
             setIsCreating(false);
           }}
-          item={editingItem}
+          item={editingItem as unknown as Record<string, unknown>}
           onSave={handleSave}
-          columns={columns}
+          columns={columns as unknown as Column<Record<string, unknown>>[]}
           idField={idField}
           isCreating={isCreating}
           getFormConfig={getFormConfig}

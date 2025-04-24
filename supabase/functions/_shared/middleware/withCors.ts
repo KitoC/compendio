@@ -1,4 +1,4 @@
-import Logger from "locals/utils/Logger";
+import Logger from "@/utils/Logger";
 
 const defaultCorsHeaders: HeadersInit = {
   "Access-Control-Allow-Origin": "*",

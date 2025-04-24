@@ -22,6 +22,12 @@ interface SlidePanelProps {
   onOpenAutoFocus?: (e: Event) => void;
   headerContent?: React.ReactNode;
   headerClassName?: string;
+  bodyClassName?: string;
+  footerClassName?: string;
+  footerId?: string;
+  hideOverlay?: boolean;
+  onPointerDownOutside?: (e: Event) => void;
+  container?: HTMLElement;
 }
 
 export function SlidePanel({
@@ -36,6 +42,12 @@ export function SlidePanel({
   onOpenAutoFocus,
   headerContent,
   headerClassName,
+  bodyClassName,
+  footerClassName,
+  footerId = "slide-panel-footer-portal",
+  hideOverlay = false,
+  onPointerDownOutside,
+  container,
 }: SlidePanelProps) {
   useEffect(() => {
     // IMPORTANT: This is a workaround to prevent the Sheet from not removing the pointer events when the sheet is closed
@@ -54,12 +66,15 @@ export function SlidePanel({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
+        container={container}
         className={cn(
-          "w-full sm:max-w-md md:max-w-3xl flex flex-col p-0 h-[calc(100vh-50px)]",
+          "w-full sm:max-w-md md:max-w-3xl flex flex-col p-0 h-[calc(100vh-50px)] gap-0",
           className
         )}
         side={side}
         onOpenAutoFocus={onOpenAutoFocus}
+        hideOverlay={hideOverlay}
+        onPointerDownOutside={onPointerDownOutside}
       >
         {(title || description || headerContent) && (
           <SheetHeader className={cn("p-6 border-b", headerClassName)}>
@@ -68,9 +83,14 @@ export function SlidePanel({
             {headerContent && headerContent}
           </SheetHeader>
         )}
-        <div className="flex-1 overflow-auto p-6">{children}</div>
+        <div className={cn("flex-grow overflow-auto p-6", bodyClassName)}>
+          {children}
+        </div>
         {footer && (
-          <div className="border-t p-4 mt-auto" id="slide-panel-footer-portal">
+          <div
+            className={cn("border-t p-4 mt-auto", footerClassName)}
+            id={footerId}
+          >
             {footer}
           </div>
         )}

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -22,6 +21,7 @@ import { FieldFilterProps } from "./types";
 import { cn } from "@/lib/utils";
 
 const FieldFilter = ({ field, value, onChange }: FieldFilterProps) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [filterValue, setFilterValue] = useState<any>(value);
 
   useEffect(() => {
@@ -29,7 +29,7 @@ const FieldFilter = ({ field, value, onChange }: FieldFilterProps) => {
       setFilterValue(value);
     }
   }, [value]);
-
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleChange = (newValue: any) => {
     setFilterValue(newValue);
     onChange(newValue);
@@ -51,10 +51,7 @@ const FieldFilter = ({ field, value, onChange }: FieldFilterProps) => {
 
     case "singleSelect":
       return (
-        <Select
-          value={filterValue || ""}
-          onValueChange={handleChange}
-        >
+        <Select value={filterValue || ""} onValueChange={handleChange}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select..." />
           </SelectTrigger>
@@ -82,14 +79,18 @@ const FieldFilter = ({ field, value, onChange }: FieldFilterProps) => {
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {filterValue ? format(new Date(filterValue), "PPP") : "Pick a date"}
+              {filterValue
+                ? format(new Date(filterValue), "PPP")
+                : "Pick a date"}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0">
             <Calendar
               mode="single"
               selected={filterValue ? new Date(filterValue) : undefined}
-              onSelect={(date) => handleChange(date ? date.toISOString() : null)}
+              onSelect={(date) =>
+                handleChange(date ? date.toISOString() : null)
+              }
               initialFocus
             />
           </PopoverContent>

@@ -1,12 +1,12 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { withRequestHandlers } from "locals/middleware/withRequestHandlers";
-import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
-import { OAuthController } from "locals/controllers/OAuthController";
-import { PublicContext } from "locals/middleware/withPublicContext";
-import { ICredential } from "locals/services/CredentialsService";
-import { withPublicContext } from "locals/middleware/withPublicContext";
-import { withCors } from "locals/middleware/withCors";
+import { withRequestHandlers } from "@/middleware/withRequestHandlers";
+import { withErrorBoundary } from "@/middleware/withErrorBoundary";
+import { OAuthController } from "@/controllers/OAuthController";
+import { PublicContext } from "@/middleware/withPublicContext";
+import { ICredential } from "@/services/CredentialsService";
+import { withPublicContext } from "@/middleware/withPublicContext";
+import { withCors } from "@/middleware/withCors";
 
 const handler = async (req: Request, context: PublicContext) => {
   const { credentialId } = await req.json();

@@ -1,5 +1,5 @@
-import { ServiceError } from "locals/error-types";
-import Logger from "locals/utils/Logger";
+import { ServiceError } from "@/error-types";
+import Logger from "@/utils/Logger";
 // @ts-expect-error - Supabase client is not typed
 import { SupabaseClient } from "supabase-js";
 

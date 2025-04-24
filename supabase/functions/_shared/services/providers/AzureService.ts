@@ -1,4 +1,5 @@
-import { BaseExternalService } from "locals/services/_BaseExternalService";
+import { IEmailEvent } from "@/handlers/WebhookEventHandler";
+import { BaseExternalService } from "@/services/_BaseExternalService";
 
 const BASE_URL = "https://graph.microsoft.com";
 
@@ -37,9 +38,9 @@ export class AzureService extends BaseExternalService {
     this.accessToken = accessToken;
   }
 
-  async getEmail(messageId: string) {
+  async getEmail(emailEvent: IEmailEvent) {
     const response = await fetch(
-      `${ENDPOINTS.MESSAGES}/${messageId}?$select=subject,body,from,toRecipients,receivedDateTime,attachments,bodyPreview,conversationId`,
+      `${ENDPOINTS.MESSAGES}/${emailEvent.email_id}?$select=subject,body,from,toRecipients,receivedDateTime,attachments,bodyPreview,conversationId`,
       {
         method: "GET",
         headers: {

@@ -67,4 +67,5 @@ export type IntegrationType = {
   webhookResource?: string;
   steps?: React.ComponentType<StepProps>[];
   formConfig: FormConfig;
+  requiredScopes?: string[];
 };

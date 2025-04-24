@@ -1,4 +1,3 @@
-
 import { FormFieldProps } from "./types";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +13,12 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { Star } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { getAirtableColor } from "@/utils/airtable";
+import Multiselect, { MultiselectOption } from "@/components/ui/multiselect";
+import { CalendarInput } from "../ui/calendar-input";
+import { Switch } from "../ui/switch";
+import { useCallback } from "react";
 
 const FormField = ({
   field,
@@ -21,43 +26,73 @@ const FormField = ({
   onChange,
   error,
   touched,
+  formValues,
+  setFormValues,
 }: FormFieldProps) => {
   const {
     id,
     name,
     label,
+    description,
     type,
     placeholder,
     options,
     disabled,
     className,
     props,
+    afterLabel,
+    onChangeSideEffect,
+    CustomComponent,
   } = field;
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    let newValue: string | number | string[] = e.target.value;
+  const handleChangeSideEffect = useCallback(
+    (newFormValues: Record<string, unknown>) => {
+      onChangeSideEffect?.({
+        name,
+        value,
+        formValues: newFormValues,
+        setFormValues,
+      });
+    },
+    [onChangeSideEffect, name, value, setFormValues]
+  );
 
-    // Convert to number for number inputs
-    if (type === "number" && newValue !== "") {
-      newValue = Number(newValue);
-    }
+  const handleChange = useCallback(
+    (
+      e: React.ChangeEvent<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >
+    ) => {
+      let newValue: string | number | string[] = e.target.value;
 
-    onChange(name, newValue);
+      // Convert to number for number inputs
+      if (type === "number" && newValue !== "") {
+        newValue = Number(newValue);
+      }
 
-    // Mark field as touched
-    if (!touched) {
-      // This is handled in FormBuilder
-    }
+      onChange(name, newValue);
+      handleChangeSideEffect({ ...formValues, [name]: newValue });
 
-    // Clear error if it exists
-    if (error) {
-      // This is handled in FormBuilder
-    }
-  };
+      // Mark field as touched
+      if (!touched) {
+        // This is handled in FormBuilder
+      }
+
+      // Clear error if it exists
+      if (error) {
+        // This is handled in FormBuilder
+      }
+    },
+    [error, touched, onChange, name, type, handleChangeSideEffect, formValues]
+  );
+
+  const onFieldChange = useCallback(
+    (fieldValue: unknown) => {
+      onChange(name, fieldValue);
+      handleChangeSideEffect({ ...formValues, [name]: fieldValue });
+    },
+    [onChange, name, handleChangeSideEffect, formValues]
+  );
 
   // Format currency value for display
   const formatCurrency = (value: number | string): string => {
@@ -78,7 +113,7 @@ const FormField = ({
   const renderRating = () => {
     const maxRating = props?.maxRating || 5;
     const currentRating = Number(value) || 0;
-    
+
     return (
       <div className="flex items-center gap-1">
         {[...Array(maxRating)].map((_, i) => (
@@ -86,9 +121,11 @@ const FormField = ({
             key={i}
             className={cn(
               "h-5 w-5 cursor-pointer",
-              i < currentRating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+              i < currentRating
+                ? "fill-yellow-400 text-yellow-400"
+                : "text-gray-300"
             )}
-            onClick={() => onChange(name, i + 1)}
+            onClick={() => onFieldChange(i + 1)}
           />
         ))}
       </div>
@@ -106,7 +143,7 @@ const FormField = ({
           // Handle file uploads - simplified for now
           const files = e.target.files;
           if (files && files.length > 0) {
-            onChange(name, files);
+            onFieldChange(files);
           }
         }}
         disabled={disabled}
@@ -121,9 +158,27 @@ const FormField = ({
     if (props?.isRating) {
       return renderRating();
     }
-    
+
     if (props?.isAttachment) {
       return renderAttachmentInput();
+    }
+
+    if (CustomComponent) {
+      return (
+        <CustomComponent
+          id={id}
+          name={name}
+          type={type}
+          value={(value as string) || ""}
+          onChange={(name, value) => onFieldChange(value)}
+          placeholder={placeholder}
+          disabled={disabled}
+          error={error}
+          touched={touched}
+          formValues={formValues}
+          setFormValues={setFormValues}
+        />
+      );
     }
 
     switch (type) {
@@ -168,7 +223,7 @@ const FormField = ({
           return (
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                {props.currencySymbol || "$"}
+                {(props?.currencySymbol as string) || "$"}
               </span>
               <Input
                 id={id}
@@ -188,7 +243,7 @@ const FormField = ({
             </div>
           );
         }
-        
+
         if (props?.isPercent) {
           return (
             <div className="relative">
@@ -213,7 +268,7 @@ const FormField = ({
             </div>
           );
         }
-        
+
         // Default number input
         return (
           <Input
@@ -236,7 +291,7 @@ const FormField = ({
         return (
           <Select
             value={(value as string) || ""}
-            onValueChange={(val) => onChange(name, val)}
+            onValueChange={onFieldChange}
             disabled={disabled}
           >
             <SelectTrigger
@@ -251,11 +306,32 @@ const FormField = ({
             <SelectContent>
               {options?.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
-                  {option.label}
+                  {option.color ? (
+                    <Badge
+                      variant={option.variant}
+                      className={cn("text-xs", getAirtableColor(option.color))}
+                    >
+                      {option.label}
+                    </Badge>
+                  ) : (
+                    option.label
+                  )}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+        );
+
+      case "multiselect":
+        return (
+          <Multiselect
+            name={name}
+            disabled={disabled}
+            value={value as MultiselectOption[]}
+            onChange={onFieldChange}
+            options={options}
+            {...field.props}
+          />
         );
 
       case "checkbox":
@@ -264,7 +340,7 @@ const FormField = ({
             <Checkbox
               id={id}
               checked={Boolean(value)}
-              onCheckedChange={(checked) => onChange(name, checked)}
+              onCheckedChange={onFieldChange}
               disabled={disabled}
               className={className}
             />
@@ -277,11 +353,30 @@ const FormField = ({
           </div>
         );
 
+      case "switch":
+        return (
+          <div className="flex items-center space-x-2">
+            <Switch
+              id={id}
+              checked={Boolean(value)}
+              onCheckedChange={onFieldChange}
+              disabled={disabled}
+              className={className}
+            />
+            <Label
+              htmlFor={id}
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              {label}
+            </Label>
+          </div>
+        );
+
       case "radio":
         return (
           <RadioGroup
             value={(value as string) || ""}
-            onValueChange={(val) => onChange(name, val)}
+            onValueChange={onFieldChange}
             className={
               props?.orientation === "horizontal"
                 ? "flex items-center"
@@ -312,13 +407,30 @@ const FormField = ({
         );
 
       case "date":
+        // TODO: replace with Calendar component
         return (
           <Input
             id={id}
             name={name}
-            type="date"
+            type={"date"}
             value={(value as string) || ""}
             onChange={handleChange}
+            disabled={disabled}
+            className={cn(
+              error && touched ? "border-destructive" : "",
+              className
+            )}
+          />
+        );
+
+      case "datetime":
+        // TODO: replace with Calendar component
+        return (
+          <CalendarInput
+            id={id}
+            name={name}
+            value={(value as string) || ""}
+            onChange={onFieldChange}
             disabled={disabled}
             className={cn(
               error && touched ? "border-destructive" : "",
@@ -334,15 +446,21 @@ const FormField = ({
 
   return (
     <div className="space-y-2">
-      {type !== "checkbox" && (
-        <Label
-          htmlFor={id}
-          className={cn(error && touched ? "text-destructive" : "")}
-        >
-          {label}
-        </Label>
+      {type !== "checkbox" && type !== "switch" && label && (
+        <div className="flex items-center gap-2">
+          <Label
+            htmlFor={id}
+            className={cn(error && touched ? "text-destructive" : "")}
+          >
+            {label}
+          </Label>
+          {afterLabel && afterLabel}
+        </div>
       )}
       {renderField()}
+      {description && (
+        <p className="text-xs text-muted-foreground">{description}</p>
+      )}
       {error && touched && (
         <p className="text-xs font-medium text-destructive">{error}</p>
       )}

@@ -2,12 +2,29 @@ import { FormConfig } from "@/components/form-builder/types";
 import { ArrowLeft, ArrowRight, LogIn } from "lucide-react";
 
 // OAuth-based integrations
-export const gmailFormConfig: FormConfig = {
-  id: "gmail-config",
-  title: "Gmail OAuth Setup",
+export const googleOauthFormConfig: FormConfig = {
+  id: "google-oauth-config",
+  title: "Google OAuth Setup",
   description: "Click below to authenticate with your Google account.",
-  sections: [],
+  sections: [
+    {
+      id: "connection",
+      title: "",
+      fields: [
+        {
+          id: "name",
+          name: "name",
+          label: "Name",
+          type: "text",
+          validation: { required: true },
+        },
+      ],
+    },
+  ],
   submitButtonText: "Connect with Google",
+  initialValues: {
+    name: "Gmail",
+  },
 };
 
 export const outlookFormConfig: FormConfig = {
@@ -150,7 +167,7 @@ export const webhookFormConfig: FormConfig = {
 // Integration settings form
 export const integrationSettingsConfig: FormConfig = {
   id: "integration-settings",
-  title: "Integration Settings",
+  title: "",
   sections: [
     {
       id: "settings",
@@ -215,7 +232,7 @@ const airtableFormConfig: FormConfig = {
 
 // Map of integrations to their form configs
 export const INTEGRATION_FORM_CONFIGS: Record<string, FormConfig> = {
-  gmail: gmailFormConfig,
+  google: googleOauthFormConfig,
   outlook: outlookFormConfig,
   n8n: n8nFormConfig,
   webhook: webhookFormConfig,

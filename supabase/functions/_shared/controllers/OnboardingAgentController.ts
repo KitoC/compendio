@@ -1,19 +1,17 @@
 // NO_CHANGE
 
 import { ONBOARDING_AGENT_PROMPT } from "@/SYSTEM_PROMPTS/ONBOARDING/ONBOARDING_AGENT_PROMPT";
-import { AgentController } from "locals/controllers/AgentController";
+import { AgentController } from "@/controllers/AgentController";
 import type { IFunction } from "@/types/aiAgents";
 import { ONBOARDING_STEPS } from "@/SYSTEM_CONFIGURATIONS/ONBOARDING_STEPS";
-import { AuthenticatedContext } from "locals/middleware/withAuthenticatedContext";
+import { AuthenticatedContext } from "@/middleware/withAuthenticatedContext";
 import {
   onboarding_progress_update,
   get_email_integration_markup_schema,
 } from "@/SYSTEM_FUNCTIONS/ONBOARDING_FUNCTIONS";
 import { ONBOARDING_STEPS_AGENT_PROMPT } from "@/SYSTEM_PROMPTS/ONBOARDING/ONBOARDING_STEPS_AGENT_PROMPT";
 
-class OnboardingAgentController<
-  SessionContext extends Record<string, unknown>
-> extends AgentController<SessionContext> {
+class OnboardingAgentController extends AgentController {
   async getFunctions(): Promise<IFunction[]> {
     return [onboarding_progress_update, get_email_integration_markup_schema];
   }

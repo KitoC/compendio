@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ConnectedService, Credential } from "@/forms/types";
 import { useTenant } from "@/contexts/TenantContext";
+import Page from "@/components/Page";
 
 const IntegrationsSettings = () => {
   const { tenantId } = useTenant();
@@ -303,76 +304,78 @@ const IntegrationsSettings = () => {
   }, [tenantId, fetchAgents]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Integrations</h1>
-        <Button onClick={() => setIsWizardOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Integration
-        </Button>
+    <Page>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Integrations</h1>
+          <Button onClick={() => setIsWizardOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Integration
+          </Button>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList>
+            <TabsTrigger value="services">Services</TabsTrigger>
+            <TabsTrigger value="credentials">Credentials</TabsTrigger>
+            <TabsTrigger value="webhooks">Webhook Events</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="services" className="space-y-4 pt-4">
+            <DataTable
+              data={services}
+              columns={serviceColumns}
+              permissions={{
+                create: false,
+                read: true,
+                update: true,
+                delete: true,
+                export: false,
+              }}
+              onDelete={handleDeleteService}
+              isLoading={isLoading}
+              searchable={true}
+              pagination={true}
+              pageSize={10}
+              emptyMessage="No connected services. Add a service to get started."
+            />
+          </TabsContent>
+
+          <TabsContent value="credentials" className="space-y-4 pt-4">
+            <DataTable
+              data={credentials}
+              columns={credentialColumns}
+              permissions={{
+                create: false,
+                read: true,
+                update: false,
+                delete: true,
+                export: false,
+              }}
+              onDelete={handleDeleteCredential}
+              isLoading={isLoading}
+              searchable={true}
+              pagination={true}
+              pageSize={10}
+              emptyMessage="No credentials found."
+            />
+          </TabsContent>
+
+          <TabsContent value="webhooks" className="space-y-4 pt-4">
+            <WebhookEventsTable tenantId={tenantId || ""} />
+          </TabsContent>
+        </Tabs>
+
+        <AddIntegrationWizard
+          isOpen={isWizardOpen}
+          onClose={() => {
+            setIsWizardOpen(false);
+            fetchServices();
+            fetchCredentials();
+          }}
+        />
       </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList>
-          <TabsTrigger value="services">Services</TabsTrigger>
-          <TabsTrigger value="credentials">Credentials</TabsTrigger>
-          <TabsTrigger value="webhooks">Webhook Events</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="services" className="space-y-4 pt-4">
-          <DataTable
-            data={services}
-            columns={serviceColumns}
-            permissions={{
-              create: false,
-              read: true,
-              update: true,
-              delete: true,
-              export: false,
-            }}
-            onDelete={handleDeleteService}
-            isLoading={isLoading}
-            searchable={true}
-            pagination={true}
-            pageSize={10}
-            emptyMessage="No connected services. Add a service to get started."
-          />
-        </TabsContent>
-
-        <TabsContent value="credentials" className="space-y-4 pt-4">
-          <DataTable
-            data={credentials}
-            columns={credentialColumns}
-            permissions={{
-              create: false,
-              read: true,
-              update: false,
-              delete: true,
-              export: false,
-            }}
-            onDelete={handleDeleteCredential}
-            isLoading={isLoading}
-            searchable={true}
-            pagination={true}
-            pageSize={10}
-            emptyMessage="No credentials found."
-          />
-        </TabsContent>
-
-        <TabsContent value="webhooks" className="space-y-4 pt-4">
-          <WebhookEventsTable tenantId={tenantId || ""} />
-        </TabsContent>
-      </Tabs>
-
-      <AddIntegrationWizard
-        isOpen={isWizardOpen}
-        onClose={() => {
-          setIsWizardOpen(false);
-          fetchServices();
-          fetchCredentials();
-        }}
-      />
-    </div>
+    </Page>
   );
 };
 

@@ -1,9 +1,9 @@
-import { getEnvKey } from "locals/utils/env";
-import { PublicContext } from "locals/middleware/withPublicContext";
-import Logger from "locals/utils/Logger";
-import { ProcessQueueError } from "locals/error-types";
+import { getEnvKey } from "@/utils/env";
+import { PublicContext } from "@/middleware/withPublicContext";
+import Logger from "@/utils/Logger";
+import { ProcessQueueError } from "@/error-types";
 import { EmailReceivedHandler } from "@/queue/tasks/EmailReceivedHandler";
-import { ITaskHandler } from "locals/interfaces/ITaskHandler";
+import { ITaskHandler } from "@/interfaces/ITaskHandler";
 
 export const PROCESS_QUEUE_ACTIONS = {
   PROCESS_EMAIL_RECEIVED: "process_email_received",

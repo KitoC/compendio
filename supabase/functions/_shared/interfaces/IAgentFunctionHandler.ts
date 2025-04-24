@@ -1,4 +1,4 @@
-import { PublicContext } from "locals/middleware/withPublicContext";
+import { PublicContext } from "@/middleware/withPublicContext";
 import type { IFunction } from "@/types/aiAgents";
 
 export interface IAgentFunctionHandlerResult {

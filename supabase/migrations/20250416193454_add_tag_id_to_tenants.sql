@@ -1,0 +1,1 @@
+ALTER TABLE tenants ADD COLUMN tag_id TEXT;

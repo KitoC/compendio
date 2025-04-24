@@ -1,12 +1,12 @@
 // NO_CHANGE
 
-import { IConversation } from "locals/services/ConversationsService";
+import { IConversation } from "@/services/ConversationsService";
 import {
   DEFAULT_EMAIL_PRIORITY_SCALE,
   NORMALIZE_EMAIL_PAYLOAD_PROMPT,
 } from "@/SYSTEM_PROMPTS/EMAIL/NORMALIZE_EMAIL_PAYLOAD_PROMPT";
 import { DRAFT_EMAIL_PROMPT } from "@/SYSTEM_PROMPTS/EMAIL/DRAFT_EMAIL_PROMPT";
-import { AgentController } from "locals/controllers/AgentController";
+import { AgentController } from "@/controllers/AgentController";
 
 export type NormalizedEmailThreadMessage = {
   body: string;
@@ -48,9 +48,7 @@ export type DraftEmailResponse = {
   summary: string;
 };
 
-class EmailAgentController<
-  SessionContext extends Record<string, unknown>
-> extends AgentController<SessionContext> {
+class EmailAgentController extends AgentController {
   async getPriorityScale() {
     return DEFAULT_EMAIL_PRIORITY_SCALE;
   }
@@ -114,6 +112,8 @@ class EmailAgentController<
       emailNormalizationConfig
     );
 
+    this.logger.debug("normalizedEmailPayload -->", normalizedEmailPayload);
+
     this.logger.info("🔹 Retrieving context data");
 
     const contextData = {};
@@ -124,6 +124,8 @@ class EmailAgentController<
       normalizedEmailPayload,
       contextData
     );
+
+    this.logger.debug("draftEmail -->", draftEmail);
 
     const emailContent = {
       ...draftEmail,
@@ -166,7 +168,8 @@ class EmailAgentController<
         role: "email_agent",
         tenant_id: this.agent.tenant_id as string,
         user_id: this.agent.id,
-        connected_service_id: this.sessionContext.connected_service_id,
+        connected_service_id: JSON.parse(this.sessionContext)
+          .connected_service_id,
         metadata: {
           uuid,
           status: draftEmail.email_drafted ? "draft" : "received",

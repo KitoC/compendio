@@ -1,9 +1,17 @@
-import { PublicContext } from "locals/middleware/withPublicContext";
-import { RequestHandlerResponse } from "locals/middleware/withRequestHandlers";
-import { ConnectedService } from "locals/services/ConnectedServicesService";
-import { IWebhookProvider } from "locals/interfaces/IWebhookProvider";
-import Logger from "locals/utils/Logger";
+import { PublicContext } from "@/middleware/withPublicContext";
+import { RequestHandlerResponse } from "@/middleware/withRequestHandlers";
+import { ConnectedService } from "@/services/ConnectedServicesService";
+import { IWebhookProvider } from "@/interfaces/IWebhookProvider";
+import Logger from "@/utils/Logger";
 import type { IEmailEvent } from "../WebhookEventHandler";
+
+export interface IHandleParams {
+  url: URL;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  body: any;
+  headers: Headers;
+  context: PublicContext;
+}
 
 export class OutlookWebhookHandler {
   private logger: Logger;
@@ -19,12 +27,13 @@ export class OutlookWebhookHandler {
     this.logger = new Logger({ name: "OutlookWebhookHandler" });
   }
 
-  async handle(
-    req: Request,
-    context: PublicContext
-  ): Promise<RequestHandlerResponse> {
+  async handle({
+    url,
+    body,
+    headers,
+    context,
+  }: IHandleParams): Promise<RequestHandlerResponse> {
     // Handle validationToken (from Graph subscription validation)
-    const url = new URL(req.url);
     const validationToken = url.searchParams.get("validationToken");
 
     if (validationToken) {
@@ -35,14 +44,12 @@ export class OutlookWebhookHandler {
       };
     }
 
-    const body = await req.json();
-
     const event = body?.value?.[0];
 
     const webhookEvent = await context.webhookEventService.createWebhookEvent({
       tenant_id: this.connectedService.tenant_id,
       payload: body,
-      headers: req.headers,
+      headers,
       connected_service_id: this.connectedService.id,
       status: "received",
     });

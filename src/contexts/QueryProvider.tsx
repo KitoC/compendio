@@ -24,10 +24,12 @@ export const QueryProvider = ({ children }: QueryProviderProps) => {
       },
       mutationCache: new MutationCache({
         onError: (error, variables, context) => {
-          toast.error(
-            (context as { errMessage: string })?.errMessage ||
-              "Error in mutation"
-          );
+          const contextErrorMessage = (context as { errMessage: string })
+            ?.errMessage;
+
+          if (contextErrorMessage) {
+            toast.error(contextErrorMessage);
+          }
         },
       }),
     });

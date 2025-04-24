@@ -3,7 +3,7 @@
 import {
   BaseRequiredContext,
   BaseSupabaseService,
-} from "locals/services/_BaseSupabaseService";
+} from "@/services/_BaseSupabaseService";
 
 export interface IConversation {
   id: string;

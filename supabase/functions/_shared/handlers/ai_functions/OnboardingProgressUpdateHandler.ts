@@ -3,12 +3,12 @@
 // Handles 'process-email-received' task type
 // ============================================
 
-import { PublicContext } from "locals/middleware/withPublicContext";
+import { PublicContext } from "@/middleware/withPublicContext";
 
 import {
   IAgentFunctionHandler,
   IAgentFunctionHandlerResult,
-} from "locals/interfaces/IAgentFunctionHandler";
+} from "@/interfaces/IAgentFunctionHandler";
 import type { IFunction, IFunctionCall } from "@/types/aiAgents";
 
 export class OnboardingProgressUpdateHandler implements IAgentFunctionHandler {

@@ -1,6 +1,6 @@
 // NO_CHANGE
 
-import Logger from "locals/utils/Logger";
+import Logger from "@/utils/Logger";
 
 // CORS headers for cross-origin requests
 

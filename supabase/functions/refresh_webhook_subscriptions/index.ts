@@ -1,14 +1,14 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { withRequestHandlers } from "locals/middleware/withRequestHandlers";
-import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
-import { OAuthController } from "locals/controllers/OAuthController";
-import { WebhookController } from "locals/controllers/WebhookController";
+import { withRequestHandlers } from "@/middleware/withRequestHandlers";
+import { withErrorBoundary } from "@/middleware/withErrorBoundary";
+import { OAuthController } from "@/controllers/OAuthController";
+import { WebhookController } from "@/controllers/WebhookController";
 import {
   withPublicContext,
   PublicContext,
-} from "locals/middleware/withPublicContext";
-import { withCors } from "locals/middleware/withCors";
+} from "@/middleware/withPublicContext";
+import { withCors } from "@/middleware/withCors";
 
 const handler = async (req: Request, context: PublicContext) => {
   console.log("🔄 Refreshing webhook subscriptions");

@@ -3,15 +3,15 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import {
   RequestHandlerResponse,
   withRequestHandlers,
-} from "locals/middleware/withRequestHandlers";
-import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
+} from "@/middleware/withRequestHandlers";
+import { withErrorBoundary } from "@/middleware/withErrorBoundary";
 
 import {
   withPublicContext,
   PublicContext,
-} from "locals/middleware/withPublicContext";
-import { WebhookEventHandler } from "locals/handlers/WebhookEventHandler";
-import { withCors } from "locals/middleware/withCors";
+} from "@/middleware/withPublicContext";
+import { WebhookEventHandler } from "@/handlers/WebhookEventHandler";
+import { withCors } from "@/middleware/withCors";
 
 const handler = async (
   req: Request,

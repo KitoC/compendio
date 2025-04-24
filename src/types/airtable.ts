@@ -1,3 +1,4 @@
+import type { Database } from "@/integrations/supabase/types";
 
 export interface AirtableChoice {
   id: string;
@@ -12,48 +13,66 @@ export interface AirtableFieldOption {
   precision?: string;
   isReversed?: boolean;
   foreignTableId?: string;
+  linkedTableId?: string;
+  inverseLinkedTableId?: string;
   [key: string]: unknown;
 }
+
+export type AirtableFieldType =
+  | "aiText"
+  | "autoNumber"
+  | "multipleAttachments"
+  | "checkbox"
+  | "date"
+  | "dateTime"
+  | "email"
+  | "currency"
+  | "duration"
+  | "formula"
+  | "lastModifiedBy"
+  | "lastModifiedTime"
+  | "multipleRecordLinks"
+  | "multilineText"
+  | "multipleLookupValues"
+  | "multipleCollaborators"
+  | "multipleSelects"
+  | "number"
+  | "percent"
+  | "phoneNumber"
+  | "rating"
+  | "richText"
+  | "rollup"
+  | "singleLineText"
+  | "singleSelect"
+  | "longText"
+  | "lookup"
+  | "singleCollaborator"
+  | "createdTime"
+  | "createdBy"
+  | "button"
+  | "count"
+  | "barcode"
+  | "foreignKey"
+  | "externalSyncSource"
+  | "url"
+  | string;
 
 export interface AirtableField {
   id: string;
   name: string;
   description?: string;
-  type:
-    | "singleLineText"
-    | "longText"
-    | "attachment"
-    | "checkbox"
-    | "multipleSelects"
-    | "singleSelect"
-    | "date"
-    | "dateTime"
-    | "email"
-    | "url"
-    | "number"
-    | "percent"
-    | "currency"
-    | "duration"
-    | "rating"
-    | "phoneNumber"
-    | "formula"
-    | "rollup"
-    | "lookup"
-    | "multipleLookupValues"
-    | "createdTime"
-    | "lastModifiedTime"
-    | "createdBy"
-    | "lastModifiedBy"
-    | "button"
-    | "count"
-    | "autoNumber"
-    | "barcode"
-    | "foreignKey"
-    | string;
+  // https://airtable.com/developers/web/api/field-model
+  type: AirtableFieldType;
   options?: AirtableFieldOption;
   isComputed?: boolean;
   isPrimary?: boolean;
   isLocked?: boolean;
+}
+
+export interface AirtableView {
+  id: string;
+  name: string;
+  description?: string;
 }
 
 export interface AirtableTable {
@@ -62,6 +81,8 @@ export interface AirtableTable {
   primaryFieldId: string;
   fields: AirtableField[];
   description?: string;
+  views: AirtableView[];
+  external_id: string;
 }
 
 export interface AirtableBase {
@@ -80,6 +101,10 @@ export interface AirtableBaseListResponse {
 
 export interface AirtableRecord {
   id: string;
-  fields: Record<string, any>;
+  fields: Record<string, unknown>;
   createdTime?: string;
+  labels?: Record<string, DataTableRecordLabel[]>;
 }
+
+export type DataTableRecordLabel =
+  Database["public"]["Tables"]["data_table_record_labels"]["Row"];

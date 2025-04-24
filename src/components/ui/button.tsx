@@ -4,10 +4,9 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-const outlineAndGhost =
-  "bg-transparent hover:bg-[rgba(0,0,0,0.1)] hover:text-muted-foreground";
+const outlineAndGhost = "bg-transparent  hover:text-muted-foreground";
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-6 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -39,10 +38,12 @@ const buttonVariants = cva(
         "outline-ghost": "border border-ghost text-ghost hover:bg-ghost/10",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
+        default: "h-10 px-4 py-2 [&_svg]:size-6",
+        xs: "h-8 rounded-md px-3 !gap-1 [&_svg]:size-5",
+        sm: "h-9 rounded-md px-3 [&_svg]:size-5",
+        lg: "h-11 rounded-md px-8 [&_svg]:size-6",
+        icon: "h-10 w-10 [&_svg]:size-5",
+        "icon-only": "h-fit w-fit h-fit w-fit !p-0 hover:bg-transparent",
       },
     },
     defaultVariants: {
@@ -70,7 +71,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         {...props}
         onClick={(e) => {
-          if (type !== "submit" && e.target.tagName !== "A") {
+          if (
+            type !== "submit" &&
+            e.target instanceof HTMLElement &&
+            e.target.tagName !== "A"
+          ) {
             e.preventDefault();
           }
           onClick?.(e);

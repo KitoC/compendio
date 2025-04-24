@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   useInfiniteQuery,
   useQueryClient,
@@ -48,6 +48,11 @@ export const useInfiniteMessages = (conversationId) => {
   const limit = 20;
   const queryClient = useQueryClient();
 
+  const queryKey = useMemo(
+    () => ["messages", conversationId, limit, filter],
+    [conversationId, limit, filter]
+  );
+
   const {
     data,
     fetchNextPage,
@@ -56,11 +61,10 @@ export const useInfiniteMessages = (conversationId) => {
     isLoading,
     ...rest
   } = useInfiniteQuery({
-    queryKey: ["messages", conversationId, limit, filter],
+    queryKey,
     enabled: !!conversationId && !!currentAgent,
     initialPageParam: 0,
     queryFn: async ({ pageParam }) => {
-      console.log("filter", filter);
       const query = {
         conversation_id: conversationId,
         order: "created_at",
@@ -79,21 +83,6 @@ export const useInfiniteMessages = (conversationId) => {
       if (lastPage.length < limit) return undefined; // No more pages
       return allPages.flat().length;
     },
-    // select: (data) => ({
-    //   pages: [...data.pages].reverse(),
-    //   pageParams: [...data.pageParams].reverse(),
-    // }),
-  });
-
-  console.log({
-    conversationId,
-    currentAgent,
-    enabled: !!conversationId && !!currentAgent,
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
   });
 
   const messages = data?.pages.flat().slice().reverse() ?? [];
@@ -107,7 +96,7 @@ export const useInfiniteMessages = (conversationId) => {
       let newLength = 0;
 
       await queryClient.setQueryData(
-        ["messages", conversationId],
+        queryKey,
         (oldData: InfiniteData<ChatMessage[]>) => {
           if (!oldData) return;
 
@@ -125,13 +114,13 @@ export const useInfiniteMessages = (conversationId) => {
         }
       );
     },
-    [conversationId, queryClient]
+    [queryClient, queryKey]
   );
 
   const updateMessage = useCallback(
     (message) => {
       queryClient.setQueryData(
-        ["messages", conversationId],
+        queryKey,
         (oldData: InfiniteData<ChatMessage[]>) => {
           if (!oldData) return;
 
@@ -144,7 +133,7 @@ export const useInfiniteMessages = (conversationId) => {
         }
       );
     },
-    [conversationId, queryClient]
+    [queryClient, queryKey]
   );
 
   // Realtime updates

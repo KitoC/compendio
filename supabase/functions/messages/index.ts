@@ -1,12 +1,12 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { withRequestHandlers } from "locals/middleware/withRequestHandlers";
-import { withErrorBoundary } from "locals/middleware/withErrorBoundary";
+import { withRequestHandlers } from "@/middleware/withRequestHandlers";
+import { withErrorBoundary } from "@/middleware/withErrorBoundary";
 import {
   withAuthenticatedContext,
   AuthenticatedContext,
-} from "locals/middleware/withAuthenticatedContext";
-import { withCors } from "locals/middleware/withCors";
+} from "@/middleware/withAuthenticatedContext";
+import { withCors } from "@/middleware/withCors";
 
 const handler = async (req: Request, context: AuthenticatedContext) => {
   const { messagesService, corsHeaders } = context;
