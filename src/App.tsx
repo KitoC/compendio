@@ -39,6 +39,7 @@ import OnboardingPage from "./pages/OnboardingPage";
 import { NotificationProvider } from "./contexts/NotificationProvider";
 import { PwaInstallPrompt } from "./components/PwaInstallPrompt";
 import AirtableTablePage from "./pages/application-layout/AirtableTablePage";
+import BetaAccess from "./pages/BetaAccess";
 
 function App() {
   return (
@@ -68,6 +69,7 @@ function App() {
                       path={ROUTES.REQUEST_ACCESS}
                       element={<RequestAccess />}
                     />
+                    <Route path={ROUTES.BETA_ACCESS} element={<BetaAccess />} />
                     <Route
                       path={ROUTES.ACCESS_PENDING}
                       element={<AccessPending />}

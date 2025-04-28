@@ -31,6 +31,7 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
   const [isTenantOwner, setIsTenantOwner] = useState<boolean>(false);
   const [hasRedirected, setHasRedirected] = useState<boolean>(false);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
+  const [error, setError] = useState<Error | null>(null);
   const [hasCheckedForTenants, setHasCheckedForTenants] =
     useState<boolean>(false);
   const navigate = useNavigate();
@@ -71,41 +72,51 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
-  const createNewTenant = useCallback(async () => {
-    const config: Config = {
-      dictionaries: [["fuzzy"], colors, ["koala"], [uuidv4().split("-")[0]]],
-      separator: "-",
-      seed: Math.random().toString(36).substring(2, 15),
-    };
+  const createNewTenant = useCallback(
+    async (name?: string) => {
+      const config: Config = {
+        dictionaries: [["fuzzy"], colors, ["koala"], [uuidv4().split("-")[0]]],
+        separator: "-",
+        seed: Math.random().toString(36).substring(2, 15),
+      };
 
-    const nameFromSeed: string = uniqueNamesGenerator(config);
+      const nameFromSeed: string = uniqueNamesGenerator(config);
 
-    try {
-      const { data, error } = await supabase
-        .from("tenants")
-        .insert({
-          name: nameFromSeed,
-          workspace: nameFromSeed,
-          tenant_owner_id: user.id,
-        })
-        .select("*")
-        .single();
+      try {
+        setIsCreatingTenant(true);
+        const { data, error } = await supabase
+          .from("tenants")
+          .insert({
+            name: name || nameFromSeed,
+            workspace: name?.toLowerCase().replace(/ /g, "-") || nameFromSeed,
+            tenant_owner_id: user.id,
+          })
+          .select("*")
+          .single();
 
-      navigate(ROUTES.ONBOARDING.replace(":tenantId", data.workspace));
-      setTenantData(data);
-      setHasTenantAccess(true);
-      setIsTenantOwner(true);
-      setTenantOwnerId(user.id);
-    } catch (error) {
-      toast.error("Unable to create tenant");
-      console.error("Error in tenant lookup:", error);
-    } finally {
-      setIsLoaded(true);
-    }
-  }, [user, navigate]);
+        setTenantData(data);
+        setHasTenantAccess(true);
+        setIsTenantOwner(true);
+        setTenantOwnerId(user.id);
+
+        // TODO: Uncomment this when we have finished the onboarding flow
+        // navigate(ROUTES.ONBOARDING.replace(":tenantId", data.workspace));
+
+        navigate(ROUTES.DASHBOARD.replace(":tenantId", data.workspace));
+      } catch (error) {
+        toast.error("Unable to create tenant");
+        console.error("Error in tenant lookup:", error);
+        setError(error);
+      } finally {
+        setIsCreatingTenant(false);
+        setIsLoaded(true);
+      }
+    },
+    [user, navigate]
+  );
 
   const checkTenantAccess = useCallback(
-    async (id: string) => {
+    async (workspace: string) => {
       if (tenantData) {
         return;
       }
@@ -116,7 +127,7 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
           .from("tenant_requests")
           .select("*")
           .eq("user_id", user.id)
-          .eq("tenant_id", id)
+          .eq("workspace", workspace)
           .eq("status", "pending")
           .single();
 
@@ -177,7 +188,7 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
       const isOwner = tenant?.tenant_owner_id === user.id;
 
       if (!isOwner) {
-        const pendingRequest = await checkTenantAccess(tenant.id);
+        const pendingRequest = await checkTenantAccess(tenant.workspace);
 
         if (pendingRequest) {
           setHasPendingRequest(true);
@@ -270,8 +281,20 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
       !isCreatingTenant &&
       !location.pathname.includes("/app")
     ) {
-      setIsCreatingTenant(true);
-      createNewTenant();
+      // TODO: re-add when we have finished the onboarding flow
+      // setIsCreatingTenant(true);
+      // createNewTenant();
+
+      navigate(ROUTES.BETA_ACCESS);
+      return;
+    }
+
+    if (
+      (!hasTenantAccess || !hasPendingRequest) &&
+      !isCreatingTenant &&
+      location.pathname.includes("/app")
+    ) {
+      navigate(ROUTES.BETA_ACCESS);
       return;
     }
 
@@ -291,6 +314,7 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
     hasCheckedForTenants,
     profile,
     location,
+    hasRedirected,
   ]);
 
   useEffect(() => {
@@ -310,6 +334,10 @@ export const TenantProvider = ({ children }: { children: React.ReactNode }) => {
     hasTenantInUrl: !!urlTenantAlias,
     isTenantOwner,
     fetchAliasedTenant,
+    createNewTenant,
+    error,
+    setError,
+    isCreatingTenant,
   };
 
   if (isLoading) {

@@ -16,6 +16,7 @@ import {
 export const ROUTES = {
   INDEX: "/",
   AUTH: "/auth",
+  BETA_ACCESS: "/beta-access",
   AUTH_CALLBACK: "/auth/callback",
   APPLICATION: "/:tenantId/app",
   INTEGRATION_CALLBACK: "/:tenantId/app/integration-callback",
