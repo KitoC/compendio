@@ -71,7 +71,7 @@ export const ACTION_CARD_INFO = {
   [ACTION_TYPES.CREATE_RECORD]: getCreateOrUpdateRecordCardInfo,
   [ACTION_TYPES.UPDATE_RECORD]: getCreateOrUpdateRecordCardInfo,
   [ACTION_TYPES.CONDITIONAL]: (action) => {
-    if (action.metadata?.use_ai_prompt) {
+    if (action.metadata?.use_ai) {
       return (
         <p className="text-xs text-muted-foreground">
           {action.metadata?.ai_prompt}

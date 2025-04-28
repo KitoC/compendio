@@ -92,7 +92,13 @@ const buildNodesAndEdges = (workflow: Workflow) => {
     });
   }
 
-  return { nodes, edges };
+  const filteredEdges = edges.filter((edge) => {
+    const sourceNode = nodes.find((node) => node.id === edge.source);
+    const targetNode = nodes.find((node) => node.id === edge.target);
+    return sourceNode && targetNode;
+  });
+
+  return { nodes, edges: filteredEdges };
 };
 
 export default buildNodesAndEdges;

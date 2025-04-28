@@ -25,14 +25,22 @@ const ActionCard = ({ action }) => {
   const { tables } = useCustomTables();
 
   const removeAction = useCallback(() => {
+    const { actions } = workflow;
+    const currentActionIndex = actions.findIndex((a) => a.id === action.id);
+    const previousAction = actions[currentActionIndex - 1];
+    const nextAction = actions[currentActionIndex + 1];
+
+    const connections = workflow.metadata.connections.filter(
+      (c) => ![c.source, c.target].includes(action.id)
+    );
+
+    if (previousAction && nextAction) {
+      connections.push({ source: previousAction.id, target: nextAction.id });
+    }
+
     updateWorkflow({
       ...workflow,
-      metadata: {
-        ...workflow.metadata,
-        connections: workflow.metadata.connections.filter(
-          (c) => ![c.source, c.target].includes(action.id)
-        ),
-      },
+      metadata: { ...workflow.metadata, connections },
       actions: workflow.actions.filter((a) => a.id !== action.id),
     });
   }, [action, updateWorkflow, workflow]);
@@ -76,7 +84,9 @@ const ActionCard = ({ action }) => {
       </Card>
       <ActionModal
         isOpen={action && currentlyOpenModal === action.id}
-        onClose={() => setCurrentlyOpenModal(null)}
+        onClose={() => {
+          setCurrentlyOpenModal(null);
+        }}
         id={action.id}
       />
     </>

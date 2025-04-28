@@ -22,6 +22,10 @@ export const ACTION_VALIDATIONS = {
   [ACTION_TYPES.CREATE_RECORD]: createAndUpdateRecordValidation,
   [ACTION_TYPES.UPDATE_RECORD]: createAndUpdateRecordValidation,
   [ACTION_TYPES.CONDITIONAL]: (action) => {
+    if (action.metadata.use_ai) {
+      return !!action.metadata.ai_prompt;
+    }
+
     return every(
       action.metadata.conditions,
       (condition) =>

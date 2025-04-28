@@ -28,6 +28,10 @@ interface SlidePanelProps {
   hideOverlay?: boolean;
   onPointerDownOutside?: (e: Event) => void;
   container?: HTMLElement;
+  modal?: boolean;
+  onCloseAutoFocus?: (e: Event) => void;
+  onInteractOutside?: (e: Event) => void;
+  onEscapeKeyDown?: (e: KeyboardEvent) => void;
 }
 
 export function SlidePanel({
@@ -48,23 +52,27 @@ export function SlidePanel({
   hideOverlay = false,
   onPointerDownOutside,
   container,
+  modal = true,
+  onCloseAutoFocus,
+  onInteractOutside,
+  onEscapeKeyDown,
 }: SlidePanelProps) {
-  useEffect(() => {
-    // IMPORTANT: This is a workaround to prevent the Sheet from not removing the pointer events when the sheet is closed
-    if (open) {
-      // Pushing the change to the end of the call stack
-      const timer = setTimeout(() => {
-        document.body.style.pointerEvents = "";
-      }, 0);
+  // useEffect(() => {
+  //   // IMPORTANT: This is a workaround to prevent the Sheet from not removing the pointer events when the sheet is closed
+  //   if (open) {
+  //     // Pushing the change to the end of the call stack
+  //     const timer = setTimeout(() => {
+  //       document.body.style.pointerEvents = "";
+  //     }, 0);
 
-      return () => clearTimeout(timer);
-    } else {
-      document.body.style.pointerEvents = "auto";
-    }
-  }, [open]);
+  //     return () => clearTimeout(timer);
+  //   } else {
+  //     document.body.style.pointerEvents = "auto";
+  //   }
+  // }, [open]);
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={onOpenChange} modal={modal}>
       <SheetContent
         container={container}
         className={cn(
@@ -75,6 +83,9 @@ export function SlidePanel({
         onOpenAutoFocus={onOpenAutoFocus}
         hideOverlay={hideOverlay}
         onPointerDownOutside={onPointerDownOutside}
+        onCloseAutoFocus={onCloseAutoFocus}
+        onInteractOutside={onInteractOutside}
+        onEscapeKeyDown={onEscapeKeyDown}
       >
         {(title || description || headerContent) && (
           <SheetHeader className={cn("p-6 border-b", headerClassName)}>

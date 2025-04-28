@@ -74,6 +74,7 @@ const Multiselect = ({
         multiValue: (state) => "!dark:bg-sidebar dark:text-white",
         menu: (state) => "dark:bg-sidebar dark:text-white",
         option: (state) => "dark:bg-sidebar hover:!bg-muted dark:text-white",
+        container: () => "w-full",
       }}
       styles={{
         ...defaultStyles,

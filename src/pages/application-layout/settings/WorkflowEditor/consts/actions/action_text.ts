@@ -14,7 +14,7 @@ export const getActionText = (action, tables): { plainText: string } => {
 
   let plainText = ACTION_TEXT[action.action_type];
 
-  if (action.metadata.table && tables) {
+  if (action.metadata.table && tables && action.metadata.table) {
     const table = tables.find((table) => table.id === action.metadata.table);
 
     if (plainText === "Create Record") {
@@ -23,6 +23,7 @@ export const getActionText = (action, tables): { plainText: string } => {
         `new ${pluralize.singular(table.name)}`
       );
     }
+
     if (plainText === "Update Record") {
       plainText = plainText.replace(
         "Record",

@@ -28,10 +28,14 @@ type ResponsiveModalProps = {
   title?: string;
   description?: string;
   footerId?: string;
-  onOpenAutoFocus?: (e: Event) => void;
   hideOverlay?: boolean;
+  onOpenAutoFocus?: (e: Event) => void;
+  onCloseAutoFocus?: (e: Event) => void;
   onPointerDownOutside?: (e: Event) => void;
+  onInteractOutside?: (e: Event) => void;
+  onEscapeKeyDown?: (e: KeyboardEvent) => void;
   container?: HTMLElement;
+  modal?: boolean;
 };
 
 const ResponsiveModal = ({
@@ -55,6 +59,10 @@ const ResponsiveModal = ({
   hideOverlay = false,
   onPointerDownOutside,
   container,
+  modal = true,
+  onCloseAutoFocus,
+  onInteractOutside,
+  onEscapeKeyDown,
 }: ResponsiveModalProps) => {
   const isMobile = useIsMobile();
 
@@ -70,7 +78,14 @@ const ResponsiveModal = ({
           headerContent={header}
           side={isMobile ? "bottom" : "right"}
           open={isOpen}
-          onOpenChange={setIsOpen}
+          onOpenChange={(nextIsOpen, ...rest) => {
+            console.log("onOpenChange", nextIsOpen, rest);
+            setIsOpen(nextIsOpen);
+
+            if (!nextIsOpen) {
+              onOpenAutoFocus(new Event("focus"));
+            }
+          }}
           footer={footer || null}
           className={cn(isMobile ? "rounded-t-md" : "h-full", className)}
           headerClassName={headerClassName}
@@ -80,6 +95,10 @@ const ResponsiveModal = ({
           onOpenAutoFocus={onOpenAutoFocus}
           onPointerDownOutside={onPointerDownOutside}
           container={container}
+          modal={modal}
+          onCloseAutoFocus={onCloseAutoFocus}
+          onInteractOutside={onInteractOutside}
+          onEscapeKeyDown={onEscapeKeyDown}
         >
           {children}
         </SlidePanel>
@@ -88,7 +107,7 @@ const ResponsiveModal = ({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen} modal={modal}>
       {Trigger && (
         <DialogTrigger asChild>
           <Trigger isOpen={isOpen} setIsOpen={setIsOpen} />
@@ -102,6 +121,9 @@ const ResponsiveModal = ({
         onOpenAutoFocus={onOpenAutoFocus}
         hideOverlay={hideOverlay}
         onPointerDownOutside={onPointerDownOutside}
+        onCloseAutoFocus={onCloseAutoFocus}
+        onInteractOutside={onInteractOutside}
+        onEscapeKeyDown={onEscapeKeyDown}
       >
         {header && (
           <DialogHeader className={headerClassName}>

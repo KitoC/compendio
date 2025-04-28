@@ -458,7 +458,7 @@ const FormField = ({
           {afterLabel && afterLabel}
         </div>
       )}
-      <div className="flex items-center">
+      <div className="flex items-center w-full">
         {renderField()}
         {renderAfterInput?.(value, formValues)}
       </div>

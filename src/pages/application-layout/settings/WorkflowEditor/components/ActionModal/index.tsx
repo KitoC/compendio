@@ -57,10 +57,11 @@ const ActionModal = ({ isOpen, onClose, id }) => {
       hideOverlay
       className="sm:max-w-md md:max-w-2xl shadow-lg p-0 bg-card z-50"
       bodyClassName="p-0 px-0"
-      onPointerDownOutside={(e) => {
-        e.preventDefault();
-      }}
+      onPointerDownOutside={(e) => e.preventDefault()}
+      onCloseAutoFocus={(e) => e.preventDefault()}
+      onInteractOutside={(e) => e.preventDefault()}
       container={container}
+      modal={false}
     >
       <ActionModalContext.Provider value={{ action, workflow }}>
         {action?.metadata?.aiDescription && (

@@ -41,15 +41,15 @@ const getAirtableUpdateAndCreateActionForm = ({ tables, action, workflow }) => {
       id: "record-action-form",
       fields: [
         getTableSelect(tables),
-        {
-          id: "use_ai",
-          name: "use_ai",
-          type: "switch",
-          label: "Let AI decide",
-          description: "Tell the AI determine how to fill in the fields.",
-          defaultValue: false,
-          disabled: false,
-        },
+        // {
+        //   id: "use_ai",
+        //   name: "use_ai",
+        //   type: "switch",
+        //   label: "Let AI decide",
+        //   description: "Tell the AI determine how to fill in the fields.",
+        //   defaultValue: false,
+        //   disabled: false,
+        // },
       ],
     },
   ];
@@ -81,7 +81,7 @@ const getAirtableUpdateAndCreateActionForm = ({ tables, action, workflow }) => {
           options: [
             {
               value: `trigger_result`,
-              label: "Trigger results (each trigger provides data separately)",
+              label: "Trigger results",
             },
             ...workflow.actions
               .filter(
@@ -103,7 +103,7 @@ const getAirtableUpdateAndCreateActionForm = ({ tables, action, workflow }) => {
           id: "ai_prompt",
           name: "ai_prompt",
           type: "textarea",
-          label: "Inform the AI how to handle the data.",
+          label: "Tell the AI how to handle the data from the source.",
           description:
             "This will be used in conjunction with the source data to inform the AI how to handle the data.",
           defaultValue: "",
@@ -121,25 +121,26 @@ export const ACTION_FORM_CONFIGS: Record<string, ActionFormConfig> = {
       {
         id: "conditional-action-form",
         fields: [
-          {
-            id: "use_ai_prompt",
-            name: "use_ai_prompt",
-            type: "switch",
-            label: "Let AI decide",
-            description:
-              "Tell the AI what you want to happen and it will decide if the condition is met.",
-            defaultValue: true,
-            disabled: false,
-          },
+          // {
+          //   id: "use_ai",
+          //   name: "use_ai",
+          //   type: "switch",
+          //   label: "Let AI decide",
+          //   description:
+          //     "Tell the AI what you want to happen and it will decide if the condition is met.",
+          //   defaultValue: true,
+          //   disabled: false,
+          // },
           {
             id: "ai_prompt",
             name: "ai_prompt",
             type: "textarea",
-            label: "Describe how you want this condition to work.",
+            label:
+              "Describe how you want this condition to work and AI will handle it for you.",
             description:
               "This will be used to inform the AI how to evaluate the condition.",
             defaultValue: "",
-            hidden: (values) => !values.use_ai_prompt as boolean,
+            hidden: (values) => !values.use_ai as boolean,
           },
 
           {
@@ -149,7 +150,7 @@ export const ACTION_FORM_CONFIGS: Record<string, ActionFormConfig> = {
             label: "Conditions",
             CustomComponent: ConditionBuilder,
             defaultValue: [],
-            hidden: (values) => values.use_ai_prompt as boolean,
+            hidden: (values) => values.use_ai as boolean,
           },
         ],
       },
