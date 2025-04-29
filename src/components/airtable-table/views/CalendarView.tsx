@@ -1,19 +1,23 @@
-import { useState, useMemo } from "react";
-import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent } from "@/components/ui/card";
-import { format, isValid, parseISO, startOfMonth } from "date-fns";
-import { Badge } from "@/components/ui/badge";
+import { useState, useMemo, useCallback } from "react";
+import { Card } from "@/components/ui/card";
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import { format, parseISO, isValid } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AirtableViewProps } from "./types";
 import { formatFieldValue } from "../utils";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 const CalendarView = ({
   records,
   table,
-  isLoading,
   onRowClick,
+  onUpdate,
   emptyMessage = "No records available",
 }: AirtableViewProps) => {
-  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [currentView, setCurrentView] = useState<"month" | "week" | "day" | "agenda">("month");
+  const [selectedDateField, setSelectedDateField] = useState<string | null>(null);
 
   // Find date fields in the table schema
   const dateFields = useMemo(() => {
@@ -24,42 +28,12 @@ const CalendarView = ({
     );
   }, [table.fields]);
 
-  // Use the first date field as the default calendar field
-  const primaryDateField = useMemo(() => {
-    return dateFields.length > 0 ? dateFields[0].name : null;
-  }, [dateFields]);
-
-  // Group records by date
-  const recordsByDate = useMemo(() => {
-    if (!primaryDateField) return {};
-
-    const groupedRecords: Record<string, typeof records> = {};
-
-    records.forEach((record) => {
-      const dateValue = record.fields[primaryDateField];
-      if (!dateValue) return;
-
-      let dateStr: string | null = null;
-
-      if (typeof dateValue === "string") {
-        const parsedDate = parseISO(dateValue);
-        if (isValid(parsedDate)) {
-          dateStr = format(parsedDate, "yyyy-MM-dd");
-        }
-      } else if (dateValue instanceof Date) {
-        dateStr = format(dateValue, "yyyy-MM-dd");
-      }
-
-      if (dateStr) {
-        if (!groupedRecords[dateStr]) {
-          groupedRecords[dateStr] = [];
-        }
-        groupedRecords[dateStr].push(record);
-      }
-    });
-
-    return groupedRecords;
-  }, [records, primaryDateField]);
+  // Use the first date field as the default calendar field if not already selected
+  useMemo(() => {
+    if (dateFields.length > 0 && !selectedDateField) {
+      setSelectedDateField(dateFields[0].name);
+    }
+  }, [dateFields, selectedDateField]);
 
   // Get the primary field for record display
   const primaryField = useMemo(() => {
@@ -69,24 +43,90 @@ const CalendarView = ({
     return table.fields[0];
   }, [table]);
 
-  // Custom render function for calendar days
-  const renderDay = (day: Date) => {
-    const dateStr = format(day, "yyyy-MM-dd");
-    const dayRecords = recordsByDate[dateStr] || [];
+  // Convert Airtable records to events for react-big-calendar
+  const events = useMemo(() => {
+    if (!selectedDateField) return [];
 
-    if (dayRecords.length === 0) return null;
+    return records
+      .filter(record => record.fields[selectedDateField])
+      .map(record => {
+        const dateValue = record.fields[selectedDateField];
+        let start = null;
+        let end = null;
 
-    return (
-      <div className="absolute bottom-0 left-0 right-0 flex justify-center">
-        <Badge className="text-xs px-1" variant="secondary">
-          {dayRecords.length}
-        </Badge>
-      </div>
-    );
-  };
+        if (typeof dateValue === "string") {
+          const parsedDate = parseISO(dateValue);
+          if (isValid(parsedDate)) {
+            start = parsedDate;
+            // Default end time is 1 hour after start
+            end = new Date(parsedDate.getTime() + 60 * 60 * 1000);
+          }
+        } else if (dateValue instanceof Date) {
+          start = dateValue;
+          // Default end time is 1 hour after start
+          end = new Date(dateValue.getTime() + 60 * 60 * 1000);
+        }
+
+        // Skip records with invalid dates
+        if (!start) return null;
+
+        const title = primaryField
+          ? formatFieldValue(
+              record.fields[primaryField.name],
+              primaryField,
+              record
+            )
+          : record.id;
+
+        return {
+          id: record.id,
+          title,
+          start,
+          end,
+          allDay: false,
+          resource: record,
+        };
+      })
+      .filter(Boolean);
+  }, [records, selectedDateField, primaryField]);
+
+  // Handle event selection (clicking on an event)
+  const handleSelectEvent = useCallback((event) => {
+    onRowClick(event.resource);
+  }, [onRowClick]);
+
+  // Handle event move (drag and drop)
+  const handleEventDrop = useCallback(({ event, start, end }) => {
+    if (!onUpdate) {
+      toast.warning("You don't have permission to update records");
+      return;
+    }
+
+    // Create a new record with the updated date
+    const updatedRecord = { ...event.resource };
+    updatedRecord.fields = { ...updatedRecord.fields };
+    
+    // Format the date based on field type
+    const dateField = table.fields.find((field) => field.name === selectedDateField);
+    if (dateField?.type === "dateTime") {
+      // For dateTime fields, we need to keep the ISO format
+      updatedRecord.fields[selectedDateField] = start.toISOString();
+    } else {
+      // For date fields, we only care about the date part
+      updatedRecord.fields[selectedDateField] = format(start, "yyyy-MM-dd");
+    }
+
+    // Update the record
+    onUpdate(updatedRecord).then(() => {
+      toast.success("Event updated successfully");
+    }).catch((error) => {
+      console.error("Failed to update event:", error);
+      toast.error("Failed to update event");
+    });
+  }, [onUpdate, selectedDateField, table.fields]);
 
   // When no date fields are available
-  if (!primaryDateField) {
+  if (dateFields.length === 0) {
     return (
       <div className="p-8 text-center">
         <p className="text-muted-foreground">
@@ -96,99 +136,95 @@ const CalendarView = ({
     );
   }
 
-  // When a date is selected, show records for that date
-  const handleDayClick = (date: Date | undefined) => {
-    if (!date) return;
-
-    const dateStr = format(date, "yyyy-MM-dd");
-    const dayRecords = recordsByDate[dateStr] || [];
-
-    if (dayRecords.length === 1) {
-      // If there's only one record, go directly to it
-      onRowClick(dayRecords[0]);
-    } else if (dayRecords.length > 1) {
-      // If there are multiple records, open a modal or expand to show them
-      // For now, we'll just click the first one
-      onRowClick(dayRecords[0]);
-    }
-  };
+  // Custom event component to show more information
+  const EventComponent = ({ event }) => (
+    <div className="text-xs overflow-hidden text-ellipsis whitespace-nowrap">
+      <Badge variant="secondary" className="mr-1">
+        {event.title}
+      </Badge>
+    </div>
+  );
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="bg-white rounded-md border p-4">
-        <Calendar
-          mode="single"
-          onMonthChange={setCurrentMonth}
-          className="w-full"
-          modifiers={{
-            hasEvents: (date) => {
-              const dateStr = format(date, "yyyy-MM-dd");
-              return !!recordsByDate[dateStr];
-            },
-          }}
-          modifiersStyles={{
-            hasEvents: {
-              fontWeight: "bold",
-              backgroundColor: "rgba(59, 130, 246, 0.1)",
-            },
-          }}
-          components={{
-            Day: ({ date, ...props }) => {
-              return (
-                <div className="relative" {...props}>
-                  {date.getDate()}
-                  {renderDay(date)}
-                </div>
-              );
-            },
-          }}
-          onDayClick={handleDayClick}
-          showOutsideDays={false}
-        />
+    <Card className="p-4 h-full flex flex-col">
+      <div className="mb-4 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+        <div className="space-y-2 w-full sm:w-1/3">
+          <label className="text-sm font-medium">Date Field</label>
+          <Select
+            value={selectedDateField || ""}
+            onValueChange={setSelectedDateField}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select date field" />
+            </SelectTrigger>
+            <SelectContent>
+              {dateFields.map((field) => (
+                <SelectItem key={field.id} value={field.name}>
+                  {field.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2 w-full sm:w-1/3">
+          <label className="text-sm font-medium">Calendar View</label>
+          <Select
+            value={currentView}
+            onValueChange={(value) => setCurrentView(value as any)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select view" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="month">Month</SelectItem>
+              <SelectItem value="week">Week</SelectItem>
+              <SelectItem value="day">Day</SelectItem>
+              <SelectItem value="agenda">Agenda</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-
-      <div className="grid gap-2">
-        {currentMonth &&
-          Object.entries(recordsByDate).map(([dateStr, dayRecords]) => {
-            const recordDate = parseISO(dateStr);
-
-            // Only show events for the current month
-            if (
-              recordDate.getMonth() !== currentMonth.getMonth() ||
-              recordDate.getFullYear() !== currentMonth.getFullYear()
-            ) {
-              return null;
-            }
-
-            return (
-              <Card key={dateStr} className="overflow-hidden">
-                <div className="bg-muted px-4 py-2 font-medium">
-                  {format(recordDate, "EEEE, MMMM d, yyyy")}
-                </div>
-                <CardContent className="p-0">
-                  {dayRecords.map((record) => (
-                    <div
-                      key={record.id}
-                      className="px-4 py-3 border-b last:border-0 cursor-pointer hover:bg-muted/50"
-                      onClick={() => onRowClick(record)}
-                    >
-                      <div className="font-medium">
-                        {primaryField
-                          ? formatFieldValue(
-                              record.fields[primaryField.name],
-                              primaryField,
-                              record
-                            )
-                          : record.id}
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            );
-          })}
+      
+      <div className="flex-grow">
+        {events.length === 0 ? (
+          <div className="h-full flex items-center justify-center text-muted-foreground">
+            {emptyMessage}
+          </div>
+        ) : (
+          <Calendar
+            localizer={{
+              format: (value, format) => format(value, format),
+              formats: {
+                dateFormat: 'dd',
+                dayFormat: 'dd ddd',
+                monthHeaderFormat: 'MMMM yyyy',
+                dayHeaderFormat: 'dddd MMM dd',
+                dayRangeHeaderFormat: ({ start, end }) => `${format(start, 'MMM dd')} - ${format(end, 'MMM dd')}`,
+              },
+              startOfWeek: 0,
+            }}
+            events={events}
+            views={['month', 'week', 'day', 'agenda']}
+            step={60}
+            showMultiDayTimes
+            defaultDate={new Date()}
+            components={{
+              event: EventComponent,
+            }}
+            onSelectEvent={handleSelectEvent}
+            onEventDrop={handleEventDrop}
+            selectable
+            resizable
+            style={{ height: 'calc(100vh - 300px)', minHeight: '500px' }}
+            view={currentView}
+            onView={setCurrentView as any}
+            dragAndDropEnabled={!!onUpdate}
+            resizableAccessor={() => !!onUpdate}
+          />
+        )}
       </div>
-    </div>
+    </Card>
   );
 };
 

@@ -1,4 +1,5 @@
-import { AirtableRecord, UserPermissions } from "../types";
+
+import { AirtableRecord, UserPermissions } from "@/types/airtable";
 import { AirtableTable } from "@/types/airtable";
 
 export interface AirtableViewProps {
