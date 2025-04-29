@@ -8,7 +8,7 @@ const PercentRenderer = ({ field, value }: FieldRendererProps) => {
   }
 
   // Ensure we're working with a number
-  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  const numValue = typeof value === 'string' ? parseFloat(value) : Number(value);
   
   if (isNaN(numValue)) {
     return <span className="text-muted-foreground">-</span>;
@@ -18,13 +18,11 @@ const PercentRenderer = ({ field, value }: FieldRendererProps) => {
   const precision = field.options?.precision !== undefined ? 
     parseInt(field.options.precision as string, 10) : 2;
     
-  const formattedValue = typeof numValue === 'number' 
-    ? new Intl.NumberFormat(undefined, {
-        style: 'percent',
-        minimumFractionDigits: precision,
-        maximumFractionDigits: precision
-      }).format(numValue / 100) // Divide by 100 as percentage values are typically stored as regular numbers
-    : '-';
+  const formattedValue = new Intl.NumberFormat(undefined, {
+    style: 'percent',
+    minimumFractionDigits: precision,
+    maximumFractionDigits: precision
+  }).format(numValue / 100); // Divide by 100 as percentage values are typically stored as regular numbers
 
   return <span className="block w-full">{formattedValue}</span>;
 };

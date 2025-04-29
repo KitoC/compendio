@@ -44,7 +44,7 @@ export function PwaInstallPrompt() {
 
     // Check if the app is already installed
     const isAppInstalled = window.matchMedia('(display-mode: standalone)').matches || 
-                          window.navigator.standalone === true;
+                          (window.navigator as any).standalone === true;
     
     if (isAppInstalled) {
       setShowPrompt(false);

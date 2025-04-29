@@ -1,3 +1,4 @@
+
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatFieldValue } from "../utils";
@@ -64,9 +65,12 @@ const KanbanView = ({
     const groups: Record<string, typeof records> = {};
 
     // Initialize groups with all possible values from the field options
-    fieldOptions?.choices?.forEach((option) => {
-      groups[option.name || option.value] = [];
-    });
+    if (fieldOptions && Array.isArray(fieldOptions.choices)) {
+      fieldOptions.choices.forEach((option: any) => {
+        const optionName = option.name || option;
+        groups[optionName] = [];
+      });
+    }
 
     // Add an "Uncategorized" group
     groups["Uncategorized"] = [];
@@ -182,9 +186,10 @@ const KanbanView = ({
             let groupColor = "bg-muted";
 
             // Try to find matching option color
-            if (fieldForColor && fieldForColor.options) {
+            if (fieldForColor && fieldForColor.options && 
+                Array.isArray(fieldForColor.options.choices)) {
               const option = fieldForColor.options.choices.find(
-                (opt) => (opt.name || opt.value) === group
+                (opt: any) => (opt.name || opt) === group
               );
               if (option && option.color) {
                 groupColor = `bg-${option.color.toLowerCase()}-100`;

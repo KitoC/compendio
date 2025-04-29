@@ -1,3 +1,4 @@
+
 import { FieldRendererProps } from "./index";
 import { Tag } from "@/components/ui/tag";
 import { useState } from "react";
@@ -31,7 +32,7 @@ const MultipleRecordLinksRenderer = ({
       {labels
         .filter((item) => item?.record_id)
         .map((item, index) => {
-          return <RecordTag record={item} field={field} />;
+          return <RecordTag key={index} record={item} field={field} />;
         })}
     </div>
   );

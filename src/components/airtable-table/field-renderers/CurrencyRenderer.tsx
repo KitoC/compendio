@@ -8,7 +8,7 @@ const CurrencyRenderer = ({ field, value }: FieldRendererProps) => {
   }
 
   // Ensure we're working with a number
-  const numValue = typeof value === 'string' ? parseFloat(value) : value;
+  const numValue = typeof value === 'string' ? parseFloat(value) : Number(value);
   
   if (isNaN(numValue)) {
     return <span className="text-muted-foreground">-</span>;
@@ -18,15 +18,13 @@ const CurrencyRenderer = ({ field, value }: FieldRendererProps) => {
   const symbol = field.options?.symbol || "$";
   
   // Format as currency with 2 decimal places
-  const formattedValue = typeof numValue === 'number' 
-    ? new Intl.NumberFormat(undefined, {
-        style: 'currency',
-        currency: 'USD', // Default to USD
-        currencyDisplay: 'symbol',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      }).format(numValue)
-    : '-';
+  const formattedValue = new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency: 'USD', // Default to USD
+    currencyDisplay: 'symbol',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(numValue);
     
   // Replace the default $ with the field's symbol if different
   const displayValue = formattedValue.replace(/^\$/, symbol);
