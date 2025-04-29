@@ -6,6 +6,7 @@ import {
   ACTION_FORM_CONFIGS,
   getActionText,
   DEFAULT_ACTION_TYPE_DATA,
+  getInputOptionsForAction,
 } from "../../consts/actions";
 import { useWorkflowEditor } from "@/contexts/WorkflowEditorProvider";
 import ActionModalContext from "./ActionModalContext";
@@ -47,6 +48,12 @@ const ActionModal = ({ isOpen, onClose, id }) => {
     },
     [action, workflow, id, updateWorkflow]
   );
+
+  const default_input_data = getInputOptionsForAction({
+    workflow,
+    action,
+    tables,
+  });
 
   return (
     <ResponsiveModal
@@ -92,6 +99,9 @@ const ActionModal = ({ isOpen, onClose, id }) => {
           initialValues={{
             action_type: action?.action_type,
             ...(DEFAULT_ACTION_TYPE_DATA[action?.action_type] || {}),
+            input_data: [
+              default_input_data[default_input_data.length - 1],
+            ].filter((d) => d),
             ...((action?.metadata as object) || {}),
           }}
         />

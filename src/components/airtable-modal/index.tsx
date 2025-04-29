@@ -195,6 +195,7 @@ const AirtableModal = ({
           initialValues={initialValues}
           isSubmitting={isSubmitting}
           className="border-none rounded-none shadow-none"
+          contentClassName="px-6"
           buttonPortalId={footerId}
         />
       </ResponsiveModal>

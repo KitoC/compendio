@@ -36,7 +36,7 @@ export interface ExternalWorkflow {
 }
 
 export interface WorkflowAction {
-  id?: string;
+  id: string;
   action_type: string;
   metadata: Record<string, unknown>;
   position: string;

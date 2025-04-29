@@ -46,10 +46,11 @@ const TriggerModal = ({ isOpen, onClose, id }) => {
       hideOverlay
       className="sm:max-w-md md:max-w-xl shadow-lg p-0 bg-card"
       bodyClassName="p-0 px-0"
-      onPointerDownOutside={(e) => {
-        e.preventDefault();
-      }}
       container={container}
+      onPointerDownOutside={(e) => e.preventDefault()}
+      onCloseAutoFocus={(e) => e.preventDefault()}
+      onInteractOutside={(e) => e.preventDefault()}
+      modal={false}
     >
       {trigger && (
         <FormBuilder

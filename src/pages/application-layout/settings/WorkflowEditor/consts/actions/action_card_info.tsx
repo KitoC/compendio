@@ -23,8 +23,8 @@ const getCreateOrUpdateRecordCardInfo = (action) => {
         )}
 
         <p className="text-xs text-muted-foreground">
-          (AI will generate data from {action.metadata.source_data.length}{" "}
-          {pluralize("source", action.metadata.source_data.length)})
+          (AI will generate data from {action.metadata?.input_data?.length}{" "}
+          {pluralize("source", action.metadata?.input_data?.length)})
         </p>
       </>
     );

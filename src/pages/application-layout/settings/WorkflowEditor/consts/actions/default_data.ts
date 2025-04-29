@@ -3,7 +3,7 @@ import { ACTION_TYPES } from "./types";
 const DEFAULT_CREATE_OR_UPDATE_RECORD_DATA = {
   use_ai: true,
   ai_prompt: "",
-  source_data: [],
+  input_data: [],
   fields: [],
 };
 

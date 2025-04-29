@@ -5,7 +5,7 @@ const createAndUpdateRecordValidation = (action) => {
   const { metadata } = action;
 
   if (metadata.use_ai) {
-    return !!metadata.source_data.length;
+    return !!metadata?.input_data?.length;
   }
 
   if (!metadata.use_ai) {

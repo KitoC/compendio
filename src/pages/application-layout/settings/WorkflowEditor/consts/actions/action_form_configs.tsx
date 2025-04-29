@@ -35,6 +35,51 @@ const getTableSelect = (tables: CustomTable[]): FormField => ({
   },
 });
 
+export const getInputOptionsForAction = ({ workflow, action, tables }) => {
+  const currentActionIndex = workflow.actions
+    .sort((a, b) => a.position - b.position)
+    .findIndex((a) => a.id === action.id);
+
+  const previousActions = workflow.actions.slice(0, currentActionIndex);
+
+  const options = [
+    {
+      value: "TRIGGER",
+      label: `Trigger result: ${
+        getTriggerText(workflow.triggers[0], tables).plainText
+      }`,
+    },
+    ...previousActions.map((workflowAction) => {
+      return {
+        value: `${workflowAction.id}`,
+        label: `Action result: ${
+          getActionText(workflowAction, tables).plainText
+        }`,
+      };
+    }),
+  ];
+
+  return options.map((option, index) => ({
+    ...option,
+    label:
+      index === options.length - 1
+        ? `[previous step] ${option.label}`
+        : option.label,
+  }));
+};
+
+const getInputDataField = ({ workflow, action, tables }): FormField => {
+  const options = getInputOptionsForAction({ workflow, action, tables });
+  return {
+    id: "input_data",
+    name: "input_data",
+    type: "multiselect",
+    label: "Input data from",
+    disabled: options.length === 1,
+    options,
+  };
+};
+
 const getAirtableUpdateAndCreateActionForm = ({ tables, action, workflow }) => {
   const sections: FormSection[] = [
     {
@@ -73,32 +118,7 @@ const getAirtableUpdateAndCreateActionForm = ({ tables, action, workflow }) => {
     sections.push({
       id: "ai-context",
       fields: [
-        {
-          id: "source_data",
-          name: "source_data",
-          type: "multiselect",
-          label: "Source data from",
-          options: [
-            {
-              value: `trigger_result`,
-              label: "Trigger results",
-            },
-            ...workflow.actions
-              .filter(
-                (wAction) =>
-                  wAction.id !== action.id &&
-                  ![ACTION_TYPES.CONDITIONAL].includes(wAction.action_type)
-              )
-              .map((workflowAction) => {
-                return {
-                  value: `action_result:${workflowAction.id}`,
-                  label: `Action result: ${
-                    getActionText(workflowAction, tables).plainText
-                  }`,
-                };
-              }),
-          ],
-        },
+        getInputDataField({ action, tables, workflow }),
         {
           id: "ai_prompt",
           name: "ai_prompt",
@@ -117,7 +137,7 @@ const getAirtableUpdateAndCreateActionForm = ({ tables, action, workflow }) => {
 
 export const ACTION_FORM_CONFIGS: Record<string, ActionFormConfig> = {
   [ACTION_TYPES.CONDITIONAL]: {
-    getSections: ({ tables }) => [
+    getSections: ({ action, tables, workflow }) => [
       {
         id: "conditional-action-form",
         fields: [
@@ -131,6 +151,8 @@ export const ACTION_FORM_CONFIGS: Record<string, ActionFormConfig> = {
           //   defaultValue: true,
           //   disabled: false,
           // },
+          getInputDataField({ action, tables, workflow }),
+
           {
             id: "ai_prompt",
             name: "ai_prompt",
@@ -142,7 +164,6 @@ export const ACTION_FORM_CONFIGS: Record<string, ActionFormConfig> = {
             defaultValue: "",
             hidden: (values) => !values.use_ai as boolean,
           },
-
           {
             id: "conditions",
             name: "conditions",
