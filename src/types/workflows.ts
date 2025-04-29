@@ -1,4 +1,3 @@
-
 import { Database } from "@/integrations/supabase/types";
 
 export interface WorkflowNode {
@@ -97,42 +96,4 @@ export interface CallN8NApiParams {
   options?: {
     noJson?: boolean;
   };
-}
-
-// Add new action types for Conditional action
-export interface WorkflowCondition {
-  leftValue: { value: any } | undefined;
-  operator: string | undefined;
-  rightValue: { value: any } | undefined;
-}
-
-export interface WorkflowConditionalMetadata {
-  use_ai: boolean;
-  ai_prompt: string;
-  andOrValue: string;
-  conditions: WorkflowCondition[];
-}
-
-// Add types for create/update record actions
-export interface WorkflowRecordFieldMapping {
-  field: string;
-  value: any;
-  type?: string;
-}
-
-export interface WorkflowCreateOrUpdateRecordMetadata {
-  use_ai: boolean;
-  ai_prompt: string;
-  input_data: any[];
-  fields: WorkflowRecordFieldMapping[];
-}
-
-export interface AirtableChoice {
-  color?: string;
-  name: string;
-}
-
-export interface AirtableFieldOption {
-  choices: AirtableChoice[];
-  [key: string]: any;
 }

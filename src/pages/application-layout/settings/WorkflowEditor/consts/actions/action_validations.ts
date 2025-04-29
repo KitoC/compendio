@@ -1,13 +1,7 @@
-
 import { every } from "lodash";
 import { ACTION_TYPES } from "./types";
-import {
-  WorkflowCondition,
-  WorkflowConditionalMetadata,
-  WorkflowCreateOrUpdateRecordMetadata
-} from "@/types/workflows";
 
-const createAndUpdateRecordValidation = (action: { metadata: WorkflowCreateOrUpdateRecordMetadata }) => {
+const createAndUpdateRecordValidation = (action) => {
   const { metadata } = action;
 
   if (metadata.use_ai) {
@@ -27,14 +21,14 @@ const createAndUpdateRecordValidation = (action: { metadata: WorkflowCreateOrUpd
 export const ACTION_VALIDATIONS = {
   [ACTION_TYPES.CREATE_RECORD]: createAndUpdateRecordValidation,
   [ACTION_TYPES.UPDATE_RECORD]: createAndUpdateRecordValidation,
-  [ACTION_TYPES.CONDITIONAL]: (action: { metadata: WorkflowConditionalMetadata }) => {
+  [ACTION_TYPES.CONDITIONAL]: (action) => {
     if (action.metadata.use_ai) {
       return !!action.metadata.ai_prompt;
     }
 
     return every(
       action.metadata.conditions,
-      (condition: WorkflowCondition) =>
+      (condition) =>
         condition?.leftValue?.value &&
         condition.operator &&
         condition?.rightValue?.value

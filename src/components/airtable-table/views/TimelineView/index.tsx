@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from "react";
 import Timeline, {
   SidebarHeader,
@@ -70,6 +69,7 @@ const TimelineView = ({
   emptyMessage = "No records available",
 }: AirtableViewProps) => {
   const [timeScale, setTimeScale] = useState<TimeScale>("day");
+
   const [view, setView] = useState<ViewScale>("day");
   const [visibleTimeRange, setVisibleTimeRange] = useState(() =>
     getTimeRange("day")
@@ -79,7 +79,6 @@ const TimelineView = ({
     setTimeScale(newTimeScale);
     setVisibleTimeRange(getTimeRange(newTimeScale));
   };
-  
   // Find date fields in the table schema
   const dateFields = useMemo(() => {
     return table.fields.filter((field) =>
@@ -98,6 +97,8 @@ const TimelineView = ({
     dateFields.length > 1 ? dateFields[1].name : startDateField
   );
 
+  // State for time scale selection
+
   // State for current view range
   const today = new Date();
   const [currentViewStart, setCurrentViewStart] = useState(today);
@@ -110,44 +111,44 @@ const TimelineView = ({
     return table.fields[0];
   }, [table]);
 
-  // Simple time range function for compatibility
-  const getTimeRange = () => {
-    const now = moment(currentViewStart);
-    let startTime = now.clone();
-    let endTime = now.clone();
+  // Calculate the visible timespan based on the selected time scale
+  // const getTimeRange = () => {
+  //   const now = moment(currentViewStart);
+  //   let startTime = now.clone();
+  //   let endTime = now.clone();
 
-    switch (timeScale) {
-      case "day":
-        startTime = now.clone().startOf("day");
-        endTime = now.clone().endOf("day");
-        break;
-      case "week":
-        startTime = now.clone().startOf("week");
-        endTime = now.clone().endOf("week");
-        break;
-      case "fortnight":
-        startTime = now.clone().startOf("week");
-        endTime = now.clone().add(2, "weeks").endOf("week");
-        break;
-      case "month":
-        startTime = now.clone().startOf("month");
-        endTime = now.clone().endOf("month");
-        break;
-      case "quarter":
-        startTime = now.clone().startOf("quarter");
-        endTime = now.clone().endOf("quarter");
-        break;
-      case "year":
-        startTime = now.clone().startOf("year");
-        endTime = now.clone().endOf("year");
-        break;
-      default:
-        startTime = now.clone().startOf("week");
-        endTime = now.clone().endOf("week");
-    }
+  //   switch (timeScale) {
+  //     case "day":
+  //       startTime = now.clone().startOf("day");
+  //       endTime = now.clone().endOf("day");
+  //       break;
+  //     case "week":
+  //       startTime = now.clone().startOf("week");
+  //       endTime = now.clone().endOf("week");
+  //       break;
+  //     case "fortnight":
+  //       startTime = now.clone().startOf("week");
+  //       endTime = now.clone().add(2, "weeks").endOf("week");
+  //       break;
+  //     case "month":
+  //       startTime = now.clone().startOf("month");
+  //       endTime = now.clone().endOf("month");
+  //       break;
+  //     case "quarter":
+  //       startTime = now.clone().startOf("quarter");
+  //       endTime = now.clone().endOf("quarter");
+  //       break;
+  //     case "year":
+  //       startTime = now.clone().startOf("year");
+  //       endTime = now.clone().endOf("year");
+  //       break;
+  //     default:
+  //       startTime = now.clone().startOf("week");
+  //       endTime = now.clone().endOf("week");
+  //   }
 
-    return { startTime, endTime };
-  };
+  //   return { startTime, endTime };
+  // };
 
   const { startTime, endTime } = getTimeRange();
 
@@ -227,8 +228,8 @@ const TimelineView = ({
               record
             )
           : record.id,
-        start_time: moment(startDate).valueOf(),
-        end_time: moment(endDate).valueOf(),
+        start_time: moment(startDate),
+        end_time: moment(endDate),
         itemProps: {
           style: {
             backgroundColor: "#60a5fa",
@@ -312,8 +313,8 @@ const TimelineView = ({
     const record = item.record;
 
     // Calculate the duration of the event
-    const originalStart = moment(item.start_time);
-    const originalEnd = moment(item.end_time);
+    const originalStart = item.start_time;
+    const originalEnd = item.end_time;
     const duration = originalEnd.diff(originalStart);
 
     // Create new start and end times
@@ -487,7 +488,10 @@ const TimelineView = ({
               {view === "day" ? (
                 <DateHeader
                   unit="hour"
-                  labelFormat={(time) => time[0].format("h a")}
+                  labelFormat={([time]) => {
+                    console.log("time", time);
+                    return time.format("h a");
+                  }}
                 />
               ) : (
                 <DateHeader />
