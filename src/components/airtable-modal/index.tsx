@@ -137,7 +137,7 @@ const AirtableModal = ({
         isSlider
         bodyClassName="!p-0"
         headerClassName="shadow-md z-10"
-        footerClassName="!pb-0 shadow-md-t z-10"
+        footerClassName="!pb-0 shadow-md-top z-10"
         footerId={footerId}
         onOpenAutoFocus={(e) => {
           const activeElement = document.activeElement;

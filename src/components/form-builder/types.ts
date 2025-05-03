@@ -76,10 +76,15 @@ export interface FormField {
   hidden?: boolean | ((values: Record<string, unknown>) => boolean);
   props?: Record<string, unknown>;
   description?: string;
+  hint?: string;
   afterLabel?: React.ReactNode;
   onChangeSideEffect?: (params: FormFieldSideEffectParams) => void;
   CustomComponent?: React.ComponentType<CustomFieldComponentProps>;
   renderAfterInput?: (
+    value: unknown,
+    formValues: Record<string, unknown>
+  ) => React.ReactNode;
+  renderBelowInput?: (
     value: unknown,
     formValues: Record<string, unknown>
   ) => React.ReactNode;
@@ -92,6 +97,7 @@ export interface FormSection {
   fields: FormField[];
   className?: string;
   divider?: boolean;
+  hidden?: boolean | ((values: Record<string, unknown>) => boolean);
 }
 
 export interface FormConfig {
@@ -116,6 +122,9 @@ export interface FormConfig {
 export interface FormBuilderProps {
   config: FormConfig;
   onSubmit: (values: Record<string, unknown>) => void;
+  onFormChange?: (values: Record<string, unknown>) => void;
+  onFormChangeDebounce?: number;
+  onSubmitChangeDebounce?: number;
   initialValues?: Record<string, unknown>;
   isSubmitting?: boolean;
   className?: string;

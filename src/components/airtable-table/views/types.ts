@@ -1,4 +1,3 @@
-
 import { AirtableRecord, UserPermissions } from "@/types/airtable";
 import { AirtableTable } from "@/types/airtable";
 
@@ -21,6 +20,7 @@ export interface AirtableViewProps {
   handleExport: () => void;
   handleRefresh: () => void;
   setDeleteRecordId: (recordId: string) => void;
+  dataViewId: string;
 }
 
 export type ViewType = "grid" | "calendar" | "gallery" | "kanban" | "timeline";

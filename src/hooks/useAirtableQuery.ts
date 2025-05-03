@@ -1,14 +1,23 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  UseMutationOptions,
+} from "@tanstack/react-query";
 import { CustomTableService } from "@/services/CustomTableService";
 import { AirtableTable, AirtableRecord } from "@/types/airtable";
 import { toast } from "sonner";
 import { useParams } from "react-router-dom";
 import { useCustomTables } from "@/contexts/CustomTables";
+import { useCallback, useMemo } from "react";
+import pluralize from "pluralize";
 interface UseAirtableQueryOptions {
   baseId?: string;
   tableId?: string;
   enableRealtime?: boolean;
   recordId?: string;
+  queryString?: string;
+  isOptimistic?: boolean;
 }
 
 const QUERY_KEYS = {
@@ -48,17 +57,35 @@ const useGetCurrentPageQueryKeyFromParams = () => {
   return [QUERY_KEYS.RECORDS, table?.external_id];
 };
 
+type UseMutationConfig<T> = UseMutationOptions<
+  AirtableRecord,
+  Error,
+  Record<string, unknown> | T
+>;
+
+type MutationFnOptions<T> = {
+  optimistic?: boolean;
+};
+
+type MutationFnArgs<T> = {
+  record: AirtableRecord;
+  options?: MutationFnOptions<T>;
+};
 /**
  * Hook for creating Airtable records
  */
-export const useCreateRecord = (tableId: string) => {
+export const useCreateRecord = (
+  tableId: string,
+  options: UseMutationConfig<AirtableRecord> = {}
+) => {
   const queryClient = useQueryClient();
 
   const queryKeyFromParams = useGetCurrentPageQueryKeyFromParams();
 
   return useMutation({
-    mutationFn: async (fields: Record<string, unknown>) => {
-      const response = await CustomTableService.createRecord(tableId, fields);
+    mutationFn: async ({ record }: MutationFnArgs<AirtableRecord>) => {
+      const response = await CustomTableService.createRecord(tableId, record);
+
       if (response.error) {
         throw new Error(`Failed to create record: ${response.error.message}`);
       }
@@ -81,28 +108,26 @@ export const useCreateRecord = (tableId: string) => {
       console.error("Error creating record:", error);
       toast.error("Failed to create record");
     },
+    ...options,
   });
 };
 
 /**
  * Hook for updating Airtable records
  */
-export const useUpdateRecord = (tableId: string) => {
+export const useUpdateRecord = (
+  tableId: string,
+  options: UseMutationConfig<AirtableRecord> = {}
+) => {
   const queryClient = useQueryClient();
   const queryKeyFromParams = useGetCurrentPageQueryKeyFromParams();
 
   return useMutation({
-    mutationFn: async ({
-      id,
-      fields,
-    }: {
-      id: string;
-      fields: Record<string, unknown>;
-    }) => {
+    mutationFn: async ({ record }: MutationFnArgs<AirtableRecord>) => {
       const response = await CustomTableService.updateRecord(
         tableId,
-        id,
-        fields
+        record.id,
+        record
       );
 
       if (response.error) {
@@ -110,7 +135,8 @@ export const useUpdateRecord = (tableId: string) => {
       }
       return response.data;
     },
-    onSuccess: (record) => {
+    onSettled: (record) => {
+      console.log("onSettled", record);
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.RECORDS, tableId],
       });
@@ -131,22 +157,31 @@ export const useUpdateRecord = (tableId: string) => {
       console.error("Error updating record:", error);
       toast.error("Failed to update record");
     },
+    ...options,
   });
 };
 
 /**
  * Hook for deleting Airtable records
  */
-export const useDeleteRecord = (tableId: string) => {
+export const useDeleteRecord = (
+  tableId: string,
+  options: UseMutationConfig<string> = {}
+) => {
   const queryClient = useQueryClient();
   const queryKeyFromParams = useGetCurrentPageQueryKeyFromParams();
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      const response = await CustomTableService.deleteRecord(tableId, id);
+    mutationFn: async ({ record }: MutationFnArgs<AirtableRecord>) => {
+      const response = await CustomTableService.deleteRecord(
+        tableId,
+        record.id
+      );
+
       if (response.error) {
         throw new Error(`Failed to delete record: ${response.error.message}`);
       }
+
       return response.data;
     },
     onSuccess: () => {
@@ -166,6 +201,7 @@ export const useDeleteRecord = (tableId: string) => {
       console.error("Error deleting record:", error);
       toast.error("Failed to delete record");
     },
+    ...options,
   });
 };
 
@@ -175,15 +211,30 @@ export const useDeleteRecord = (tableId: string) => {
 export const useAirtableRecordsQuery = ({
   tableId,
   enableRealtime = false,
+  queryString,
+  isOptimistic = false,
 }: UseAirtableQueryOptions = {}) => {
+  const { tables } = useCustomTables();
+  const table = tables.find((table) => table.external_id === tableId);
+  const queryClient = useQueryClient();
+  const dataQueryKey = useMemo(
+    () => [QUERY_KEYS.RECORDS, tableId, queryString],
+    [tableId, queryString]
+  );
+
+  const tableNameSingular = pluralize.singular(table?.name);
+
   const { data: records, ...queryResults } = useQuery({
-    queryKey: [QUERY_KEYS.RECORDS, tableId],
+    queryKey: dataQueryKey,
     queryFn: async () => {
       if (!tableId) {
         throw new Error("Table name is required");
       }
 
-      const response = await CustomTableService.listRecords(tableId);
+      const response = await CustomTableService.listRecords(
+        tableId,
+        queryString
+      );
 
       if (response.error) {
         throw new Error(
@@ -196,9 +247,96 @@ export const useAirtableRecordsQuery = ({
     enabled: !!tableId,
   });
 
-  const createRecordMutation = useCreateRecord(tableId);
-  const updateRecordMutation = useUpdateRecord(tableId);
-  const deleteRecordMutation = useDeleteRecord(tableId);
+  const updateQueryData = useCallback(
+    (updater: (old: AirtableRecord[]) => AirtableRecord[]) => {
+      queryClient.setQueryData(dataQueryKey, updater);
+    },
+    [dataQueryKey, queryClient]
+  );
+
+  const addRecordToQueryData = useCallback(
+    (record: AirtableRecord) => updateQueryData((old) => [...old, record]),
+    [updateQueryData]
+  );
+
+  const updateRecordInQueryData = useCallback(
+    (record: AirtableRecord) => {
+      updateQueryData((old) =>
+        old.map((r) => (r.id === record.id ? record : r))
+      );
+    },
+    [updateQueryData]
+  );
+
+  const removeRecordFromQueryData = useCallback(
+    (id: string) =>
+      updateQueryData((old) => old.filter((record) => record.id !== id)),
+    [updateQueryData]
+  );
+
+  const updateOptimisticRecord = useCallback(
+    ({ record, options }: MutationFnArgs<AirtableRecord>) => {
+      if (!isOptimistic || !options?.optimistic) return;
+
+      toast.info(`Saving ${tableNameSingular}...`);
+
+      if (record.id && record.id !== "temp") {
+        updateRecordInQueryData(record);
+      } else {
+        addRecordToQueryData(record);
+      }
+    },
+    [
+      isOptimistic,
+      updateRecordInQueryData,
+      addRecordToQueryData,
+      tableNameSingular,
+    ]
+  );
+
+  const invalidateQuery = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: dataQueryKey });
+  }, [dataQueryKey, queryClient]);
+
+  const createRecordMutation = useCreateRecord(tableId, {
+    onMutate: updateOptimisticRecord,
+    onSettled: () => null,
+    onSuccess: (record) => {
+      toast.success(`${tableNameSingular} saved successfully`);
+
+      if (record) {
+        addRecordToQueryData(record);
+      }
+    },
+  });
+
+  const updateRecordMutation = useUpdateRecord(tableId, {
+    onMutate: updateOptimisticRecord,
+    onSettled: () => null,
+    onSuccess: (record) => {
+      toast.success(`${tableNameSingular} saved successfully`);
+
+      if (record) {
+        updateRecordInQueryData(record);
+      }
+    },
+  });
+
+  const deleteRecordMutation = useDeleteRecord(tableId, {
+    onSettled: () => null,
+    onMutate: ({ record }: MutationFnArgs<AirtableRecord>) => {
+      if (!isOptimistic) return;
+
+      toast.info(`Deleting ${tableNameSingular}...`);
+
+      removeRecordFromQueryData(record.id);
+    },
+    onSuccess: (record) => {
+      toast.success(`${tableNameSingular} deleted successfully`);
+
+      removeRecordFromQueryData(record.id);
+    },
+  });
 
   return {
     ...queryResults,
@@ -209,6 +347,8 @@ export const useAirtableRecordsQuery = ({
     createRecordMutation,
     updateRecordMutation,
     deleteRecordMutation,
+    updateOptimisticRecord,
+    invalidateQuery,
   };
 };
 

@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { Star } from "lucide-react";
+import { Star, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getAirtableColor } from "@/utils/airtable";
 import Multiselect, { MultiselectOption } from "@/components/ui/multiselect";
@@ -41,9 +41,11 @@ const FormField = ({
     className,
     props,
     afterLabel,
+    hint,
     onChangeSideEffect,
     CustomComponent,
     renderAfterInput,
+    renderBelowInput,
   } = field;
 
   const handleChangeSideEffect = useCallback(
@@ -456,12 +458,19 @@ const FormField = ({
             {label}
           </Label>
           {afterLabel && afterLabel}
+
+          {hint && (
+            <div title={hint} className="cursor-help">
+              <Info className="w-4 h-4" />
+            </div>
+          )}
         </div>
       )}
       <div className="flex items-center w-full">
         {renderField()}
         {renderAfterInput?.(value, formValues)}
       </div>
+      {renderBelowInput?.(value, formValues)}
       {description && (
         <p className="text-xs text-muted-foreground">{description}</p>
       )}

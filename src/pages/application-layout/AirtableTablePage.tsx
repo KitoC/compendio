@@ -47,7 +47,7 @@ const AirtableTablePage = () => {
 
   const handleCreate = async (record: Partial<AirtableRecord>) => {
     try {
-      await createRecord(record.fields || {});
+      await createRecord({ record: record || {} });
       refetch();
     } catch (error) {
       console.error("Error creating record:", error);
@@ -104,7 +104,7 @@ const AirtableTablePage = () => {
         export: true,
       }}
       onCreate={handleCreate}
-      onUpdate={updateRecord}
+      onUpdate={(record) => updateRecord({ record: record || {} })}
       onDelete={deleteRecord}
       getFormConfig={getFormConfig}
       searchable={true}

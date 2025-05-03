@@ -1,6 +1,6 @@
 import { SupabaseFunctionService } from "./supabaseFunctionServices";
 import { supabase } from "@/integrations/supabase/client";
-
+import { AirtableRecord } from "@/types/airtable";
 export const CustomTableService = {
   async syncSchema() {
     const response = await SupabaseFunctionService.post(
@@ -27,7 +27,7 @@ export const CustomTableService = {
     const response = await supabase
       .from("data_tables")
       .select("*, fields:data_fields(*)")
-      .eq("external_id", tableId)
+      .eq(tableId.startsWith("tbl") ? "external_id" : "id", tableId)
       .single();
 
     return response.data;
@@ -57,10 +57,10 @@ export const CustomTableService = {
     return response.json();
   },
 
-  async createRecord(table: string, fields: Record<string, unknown>) {
+  async createRecord(table: string, record: AirtableRecord) {
     const response = await SupabaseFunctionService.post(
       `table-records?table=${table}`,
-      { fields }
+      record
     );
 
     if (!response.ok) {
@@ -70,14 +70,10 @@ export const CustomTableService = {
     return response.json();
   },
 
-  async updateRecord(
-    table: string,
-    recordId: string,
-    fields: Record<string, unknown>
-  ) {
+  async updateRecord(table: string, recordId: string, record: AirtableRecord) {
     const response = await SupabaseFunctionService.patch(
       `table-records?table=${table}&recordId=${recordId}`,
-      { fields }
+      record
     );
 
     if (!response.ok) {

@@ -27,9 +27,11 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
 
   const table = searchParams.get("table");
   const recordId = searchParams.get("recordId") ?? undefined;
-  const query = req.url.includes("?")
-    ? req.url.slice(req.url.indexOf("?"))
-    : "";
+
+  searchParams.delete("table");
+  searchParams.delete("recordId");
+
+  const query = searchParams.toString();
 
   if (!table) {
     return new Response("Missing 'table' parameter", {

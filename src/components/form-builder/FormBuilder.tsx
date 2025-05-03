@@ -1,8 +1,8 @@
 // NO_CHANGE
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
-import { FormBuilderProps, FormField as FormFieldType } from "./types";
+import { FormBuilderProps } from "./types";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,7 +17,9 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useDebouncedCallback } from "use-debounce";
 import isEqual from "lodash/isEqual";
-import { usePrevious } from "@uidotdev/usehooks";
+import { Divider } from "@/components/ui/divider";
+import validateField from "./utils/validateField";
+import { validateForm } from "./utils/validateForm";
 
 const FormBuilder = ({
   config,
@@ -32,148 +34,74 @@ const FormBuilder = ({
   footerClassname,
   submitOnChange = false,
   contentClassName,
+  onFormChange = () => null,
+  onFormChangeDebounce = 50,
+  onSubmitChangeDebounce = 500,
 }: FormBuilderProps) => {
   const [values, setValues] = useState<Record<string, unknown>>(initialValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [footerEl, setFooterEl] = useState<HTMLDivElement | null>(null);
 
-  const handleChange = (name: string, value: unknown) => {
-    setValues((prev) => ({ ...prev, [name]: value }));
+  const previousValues = useRef(initialValues);
 
-    // Mark field as touched
-    if (!touched[name]) {
-      setTouched((prev) => ({ ...prev, [name]: true }));
-    }
+  const filteredSections = useMemo(
+    () =>
+      config.sections.filter((section) =>
+        typeof section.hidden === "function"
+          ? !section?.hidden(values)
+          : !section.hidden
+      ),
+    [config.sections, values]
+  );
 
-    // Clear error if it exists
-    if (errors[name]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
+  const invalidateField = useCallback(
+    (name: string, message = "Invalid field") => {
+      setErrors((prev) => ({ ...prev, [name]: message }));
+    },
+    []
+  );
 
-    // Validate field
-    validateField(name, value);
-  };
+  const handleChange = useCallback(
+    (name: string, value: unknown) => {
+      setValues((prev) => ({ ...prev, [name]: value }));
 
-  const validateField = (name: string, value: unknown) => {
-    // Find the field in the config
-    let field: FormFieldType | undefined;
-
-    for (const section of config.sections) {
-      const foundField = section.fields.find((f) => f.name === name);
-      if (foundField) {
-        field = foundField;
-        break;
+      // Mark field as touched
+      if (!touched[name]) {
+        setTouched((prev) => ({ ...prev, [name]: true }));
       }
-    }
 
-    if (!field || !field.validation) return true;
-
-    const validation = field.validation;
-    let isValid = true;
-    let errorMessage = "";
-
-    // Required validation
-    if (
-      validation.required &&
-      (value === undefined || value === null || value === "")
-    ) {
-      isValid = false;
-      errorMessage = `${field.label} is required`;
-    }
-
-    // String validations (for text, textarea, email, password)
-    else if (typeof value === "string") {
-      // Min length
-      if (validation.minLength && value.length < validation.minLength) {
-        isValid = false;
-        errorMessage = `${field.label} must be at least ${validation.minLength} characters`;
+      // Clear error if it exists
+      if (errors[name]) {
+        setErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors[name];
+          return newErrors;
+        });
       }
-      // Max length
-      else if (validation.maxLength && value.length > validation.maxLength) {
-        isValid = false;
-        errorMessage = `${field.label} must be at most ${validation.maxLength} characters`;
+
+      // Validate field
+      const isValid = validateField({ name, value, config, errors, touched });
+
+      if (!isValid) {
+        invalidateField(name);
       }
-      // Pattern
-      else if (
-        validation.pattern &&
-        !new RegExp(validation.pattern).test(value)
-      ) {
-        isValid = false;
-        errorMessage = `${field.label} is not in a valid format`;
+    },
+    [config, errors, invalidateField, setErrors, setTouched, setValues, touched]
+  );
+
+  const handleSubmit = useCallback(
+    (e?: React.FormEvent) => {
+      e?.preventDefault();
+
+      if (validateForm({ config, values, errors, touched, filteredSections })) {
+        onSubmit(values);
+      } else {
+        toast.error("Please fix the errors in the form");
       }
-    }
-
-    // Number validations
-    else if (typeof value === "number") {
-      // Min value
-      if (validation.min !== undefined && value < validation.min) {
-        isValid = false;
-        errorMessage = `${field.label} must be at least ${validation.min}`;
-      }
-      // Max value
-      else if (validation.max !== undefined && value > validation.max) {
-        isValid = false;
-        errorMessage = `${field.label} must be at most ${validation.max}`;
-      }
-    }
-
-    // Custom validation
-    if (isValid && validation.custom) {
-      const customResult = validation.custom(value);
-      if (typeof customResult === "string") {
-        isValid = false;
-        errorMessage = customResult;
-      } else if (customResult === false) {
-        isValid = false;
-        errorMessage = `${field.label} is invalid`;
-      }
-    }
-
-    // Update errors state
-    if (!isValid) {
-      setErrors((prev) => ({ ...prev, [name]: errorMessage }));
-    }
-
-    return isValid;
-  };
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    let isValid = true;
-    const newTouched: Record<string, boolean> = { ...touched };
-
-    // Validate all fields
-    config.sections.forEach((section) => {
-      section.fields.forEach((field) => {
-        newTouched[field.name] = true;
-
-        if (!validateField(field.name, values[field.name])) {
-          isValid = false;
-          newErrors[field.name] =
-            errors[field.name] || `${field.label} is invalid`;
-        }
-      });
-    });
-
-    setTouched(newTouched);
-    setErrors(newErrors);
-    return isValid;
-  };
-
-  const handleSubmit = (e?: React.FormEvent) => {
-    e?.preventDefault();
-
-    if (validateForm()) {
-      onSubmit(values);
-    } else {
-      toast.error("Please fix the errors in the form");
-    }
-  };
+    },
+    [onSubmit, values, errors, touched, filteredSections, config]
+  );
 
   const handleReset = () => {
     setValues(initialValues);
@@ -192,16 +120,39 @@ const FormBuilder = ({
     }, 0);
   }, [values, buttonPortalId]);
 
-  const debouncedHandleSubmit = useDebouncedCallback(handleSubmit, 500, {
-    leading: false,
-  });
-  const previousValue = usePrevious(values);
+  const debouncedHandleSubmit = useDebouncedCallback(
+    handleSubmit,
+    onSubmitChangeDebounce,
+    { leading: false }
+  );
+  const debouncedHandleFormChange = useDebouncedCallback(
+    onFormChange,
+    onFormChangeDebounce,
+    { leading: false }
+  );
 
   useEffect(() => {
-    if (submitOnChange && previousValue && !isEqual(values, previousValue)) {
+    if (
+      submitOnChange &&
+      previousValues.current &&
+      !isEqual(values, previousValues.current)
+    ) {
       debouncedHandleSubmit();
+      previousValues.current = values;
     }
-  }, [values, debouncedHandleSubmit, submitOnChange, previousValue]);
+  }, [values, debouncedHandleSubmit, submitOnChange]);
+
+  useEffect(() => {
+    if (
+      onFormChange &&
+      previousValues.current &&
+      !isEqual(values, previousValues.current)
+    ) {
+      debouncedHandleFormChange(values);
+
+      previousValues.current = values;
+    }
+  }, [values, debouncedHandleFormChange, onFormChange]);
 
   const footer = (
     <CardFooter className={`flex justify-between ${footerClassname}`}>
@@ -267,7 +218,7 @@ const FormBuilder = ({
             contentClassName
           )}
         >
-          {config.sections.map((section) => (
+          {filteredSections.map((section, index) => (
             <>
               <div
                 key={section.id}
@@ -307,6 +258,9 @@ const FormBuilder = ({
                     ))}
                 </div>
               </div>
+              {section.divider && index !== filteredSections.length - 1 && (
+                <Divider />
+              )}
             </>
           ))}
         </CardContent>

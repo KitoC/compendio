@@ -47,9 +47,12 @@ import {
   ViewType,
 } from "./views";
 import ViewTypeSelector from "./ViewTypeSelector";
+import { DEFAULT_VIEW } from "./consts";
 import { cn } from "@/lib/utils";
 import AirtableModal from "../airtable-modal";
 import pluralize from "pluralize";
+import { IDataView } from "@/services/DataViewsService";
+import { DataViewProvider } from "@/contexts/DataViewProvider";
 
 const defaultPermissions: UserPermissions = {
   create: true,
@@ -92,7 +95,7 @@ const AirtableViews = (props: AirtableTableProps) => {
   const [deleteRecordId, setDeleteRecordId] = useState<string | null>(null);
   const [filters, setFilters] = useState<Record<string, unknown>>({});
   const [filterOpen, setFilterOpen] = useState<string | null>(null);
-  const [viewType, setViewType] = useState<ViewType>("grid");
+  const [dataView, setViewType] = useState<IDataView>(DEFAULT_VIEW);
 
   const permissions: UserPermissions = {
     ...defaultPermissions,
@@ -356,9 +359,10 @@ const AirtableViews = (props: AirtableTableProps) => {
       handleExport,
       handleRefresh,
       setDeleteRecordId,
+      dataViewId: dataView.id,
     };
 
-    switch (viewType) {
+    switch (dataView.view_type) {
       case "calendar":
         return <CalendarView {...commonProps} />;
       case "gallery":
@@ -374,14 +378,18 @@ const AirtableViews = (props: AirtableTableProps) => {
   };
 
   return (
-    <Card className={className}>
+    <Card className={`${className} flex flex-col`}>
       <CardHeader>
         <div className="flex flex-col mb-2">
           <div className="flex space-x-2 justify-between w-full border-b border-border pb-2">
             <div className="flex items-end gap-4">
               <CardTitle>{table.name}</CardTitle>
 
-              <ViewTypeSelector viewType={viewType} setViewType={setViewType} />
+              <ViewTypeSelector
+                currentDataView={dataView}
+                setViewType={setViewType}
+                tableId={table.external_id}
+              />
             </div>
             <div className="flex space-x-2 items-end">
               {onRefresh && (
@@ -419,7 +427,7 @@ const AirtableViews = (props: AirtableTableProps) => {
           )}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-grow overflow-auto flex flex-col">
         {/* Applied filters display */}
         {Object.keys(filters).length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2 sm:mt-0 mb-4">
@@ -459,7 +467,7 @@ const AirtableViews = (props: AirtableTableProps) => {
           </div>
         )}
 
-        {searchable && (
+        {searchable && dataView.view_type === "grid" && (
           <div className="flex items-center gap-2 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -550,9 +558,11 @@ const AirtableViews = (props: AirtableTableProps) => {
           </div>
         )}
 
-        {renderView()}
+        <DataViewProvider dataViewId={dataView.id} tableId={table.external_id}>
+          <div className="flex-grow overflow-auto">{renderView()}</div>
+        </DataViewProvider>
 
-        {pagination && viewType === "grid" && (
+        {pagination && dataView.view_type === "grid" && (
           <div className="flex items-center justify-between space-x-2 py-4">
             <div className="text-sm text-muted-foreground">
               Showing {(currentPage - 1) * pageSize + 1}-
