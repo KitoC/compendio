@@ -3,7 +3,8 @@ import { customTableToFormConfig } from "../../utils";
 import { useCalendarContext } from "./CalendarContext";
 import { useSystemSettings } from "@/contexts/SystemSettingsProvider";
 import { useDataViewContext } from "@/contexts/DataViewProvider";
-import { useCallback, useState } from "react";
+import { useState } from "react";
+import { CustomTableRecord } from "@/types/customTable";
 
 const EventForm = () => {
   const { handleSave } = useDataViewContext();
@@ -19,18 +20,6 @@ const EventForm = () => {
     systemSettings
   );
 
-  const onFormChange = useCallback(
-    (values: Record<string, unknown>) => {
-      const editedSelectedEvent = {
-        ...selectedEvent,
-        fields: values,
-      };
-
-      setSelectedEvent(editedSelectedEvent);
-    },
-    [selectedEvent, setSelectedEvent]
-  );
-
   return (
     <div
       onClick={(e) => e.stopPropagation()}
@@ -41,15 +30,10 @@ const EventForm = () => {
         contentClassName="px-4"
         config={{ ...defaultConfig }}
         initialValues={selectedEvent}
-        onFormChange={onFormChange}
+        onFormChange={setSelectedEvent}
         isSubmitting={isSubmitting}
-        onSubmit={async (values) => {
+        onSubmit={async (editedSelectedEvent: CustomTableRecord) => {
           try {
-            const editedSelectedEvent = {
-              ...selectedEvent,
-              fields: values,
-            };
-
             setIsSubmitting(true);
 
             await handleSave(editedSelectedEvent, { optimistic: false });

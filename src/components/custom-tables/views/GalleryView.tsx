@@ -53,7 +53,7 @@ const GalleryView = ({
         // Try to get an attachment to use as cover image
         let coverImage = null;
         if (attachmentField) {
-          const attachments = record.fields[attachmentField.name];
+          const attachments = record[attachmentField.name];
           if (Array.isArray(attachments) && attachments.length > 0) {
             const firstAttachment = attachments[0];
             if (
@@ -91,7 +91,7 @@ const GalleryView = ({
               {primaryField && (
                 <h3 className="font-medium text-lg truncate">
                   {formatFieldValue(
-                    record.fields[primaryField.name],
+                    record[primaryField.name],
                     primaryField,
                     record
                   )}
@@ -100,7 +100,7 @@ const GalleryView = ({
 
               <div className="mt-2 space-y-1">
                 {detailFields.map((field) => {
-                  const value = record.fields[field.name];
+                  const value = record[field.name];
                   if (value === undefined || value === null) return null;
 
                   return (

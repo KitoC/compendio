@@ -137,13 +137,12 @@ export const useUpdateRecord = (
       return response.data;
     },
     onSettled: (record) => {
-      console.log("onSettled", record);
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.RECORDS, tableId],
       });
 
       queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.RECORD, tableId, record.id],
+        queryKey: [QUERY_KEYS.RECORD, tableId, record._id],
       });
 
       if (queryKeyFromParams) {
@@ -262,16 +261,16 @@ export const useCustomRecordsQuery = ({
 
   const updateRecordInQueryData = useCallback(
     (record: CustomTableRecord) => {
-      updateQueryData((old) =>
-        old.map((r) => (r.id === record.id ? record : r))
-      );
+      updateQueryData((old) => {
+        return old.map((r) => (r._id === record._id ? record : r));
+      });
     },
     [updateQueryData]
   );
 
   const removeRecordFromQueryData = useCallback(
     (id: string) =>
-      updateQueryData((old) => old.filter((record) => record.id !== id)),
+      updateQueryData((old) => old.filter((record) => record._id !== id)),
     [updateQueryData]
   );
 
@@ -281,7 +280,7 @@ export const useCustomRecordsQuery = ({
 
       toast.info(`Saving ${tableNameSingular}...`);
 
-      if (record.id && record.id !== "temp") {
+      if (record._id && record._id !== "temp") {
         updateRecordInQueryData(record);
       } else {
         addRecordToQueryData(record);

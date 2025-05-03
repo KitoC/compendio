@@ -9,7 +9,6 @@ import ResetPassword from "./pages/ResetPassword";
 import RequestAccess from "./pages/RequestAccess";
 import AccessPending from "./pages/AccessPending";
 import Dashboard from "./pages/application-layout/Dashboard";
-import CustomTableData from "./pages/application-layout/CustomTableData";
 import AgentChat from "./pages/application-layout/AgentChat";
 import { ROUTES } from "./lib/constants";
 import AgentDetail from "./pages/application-layout/settings/AgentDetail";

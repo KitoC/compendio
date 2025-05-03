@@ -176,8 +176,9 @@ export class AirtableService extends BaseExternalService {
       const json = await response.json();
       this.throwError("Failed to create record", json, response.status);
     }
+    const json = await response.json();
 
-    return response.json();
+    return this.normalizeRecord(json);
   }
 
   async updateRecord(
@@ -203,8 +204,9 @@ export class AirtableService extends BaseExternalService {
       const json = await response.json();
       this.throwError("Failed to update record", json, response.status);
     }
+    const json = await response.json();
 
-    return response.json();
+    return this.normalizeRecord(json);
   }
 
   async deleteRecord(table: CustomTableSchema, recordId: string) {

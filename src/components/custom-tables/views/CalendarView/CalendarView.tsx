@@ -19,8 +19,8 @@ const DragAndDropCalendar = withDragAndDrop(Calendar);
 const localizer = dayjsLocalizer(dayjs);
 
 const getStartAndEndTime = (record, startTimeField, endTimeField) => {
-  const startDateValue = record.fields[startTimeField];
-  const endDateValue = record.fields[endTimeField];
+  const startDateValue = record[startTimeField];
+  const endDateValue = record[endTimeField];
 
   const start = dayjs(startDateValue).toDate();
   const end = dayjs(endDateValue).toDate();
@@ -53,7 +53,7 @@ const CalendarView = ({
     return groupBy
       ? uniqBy(
           data.map((record) => {
-            let value = record.fields[groupBy.name] as string | string[];
+            let value = record[groupBy.name] as string | string[];
 
             if (Array.isArray(value)) {
               value = value[0];
@@ -101,10 +101,10 @@ const CalendarView = ({
 
     if (selectedEvent) {
       records =
-        selectedEvent?.id === TEMP_RECORD_ID
+        selectedEvent?._id === TEMP_RECORD_ID
           ? [...data, selectedEvent]
           : data.map((record) => {
-              if (record.id === selectedEvent.id) {
+              if (record._id === selectedEvent._id) {
                 return selectedEvent;
               }
               return record;
@@ -121,23 +121,23 @@ const CalendarView = ({
 
         const { eventLabelField } = dataView.config;
 
-        let title = primaryField ? record.fields[primaryField.name] : record.id;
+        let title = primaryField ? record[primaryField.name] : record._id;
 
         if (eventLabelField) {
           title = eventLabelField
-            .map((field) => record.fields[field.label])
+            .map((field) => record[field.label])
             .filter(Boolean)
             .join(" ");
         }
 
         return {
-          id: record.id,
+          id: record._id,
           title: title || "(no title)",
           start,
           end,
           allDay: !startTimeField && !endTimeField,
           resource: record,
-          resourceId: record.fields[groupBy?.name],
+          resourceId: record[groupBy?.name],
         };
       })
       .filter(Boolean);
@@ -176,9 +176,10 @@ const CalendarView = ({
 
   const updateRecordDateRange = useCallback(
     (event, start, end) => {
-      const updatedRecord = { ...event.resource };
-      updatedRecord.fields = {
-        ...updatedRecord.fields,
+      let updatedRecord = { ...event.resource };
+
+      updatedRecord = {
+        ...updatedRecord,
         ...getFormattedDates(start, end),
       };
 
@@ -215,11 +216,9 @@ const CalendarView = ({
       } else {
         setDraggingEvent(null);
         setSelectedEvent({
-          id: TEMP_RECORD_ID,
-          fields: {
-            [startTimeField.name]: start.toISOString(),
-            [endTimeField.name]: end.toISOString(),
-          },
+          _id: TEMP_RECORD_ID,
+          [startTimeField.name]: start.toISOString(),
+          [endTimeField.name]: end.toISOString(),
         });
       }
     },

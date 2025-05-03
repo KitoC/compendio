@@ -78,7 +78,7 @@ const KanbanView = ({
 
     // Categorize records
     records.forEach((record) => {
-      const value = record.fields[selectedField];
+      const value = record[selectedField];
 
       if (value === undefined || value === null || value === "") {
         groups["Uncategorized"].push(record);
@@ -257,7 +257,7 @@ const KanbanView = ({
                                     )
                                     .slice(0, 2)
                                     .map((field) => {
-                                      const value = record.fields[field.name];
+                                      const value = record[field.name];
                                       if (value === undefined || value === null)
                                         return null;
 

@@ -16,7 +16,7 @@ export const handleExport = (
   //       const values = fieldNames.map((fieldName) => {
   //         const field = table.fields.find((f) => f.name === fieldName);
   //         if (!field) return "";
-  //         const value = record.fields[fieldName];
+  //         const value = record[fieldName];
   //         const formatted = formatFieldValue(value, field, record);
   //         return value !== null && value !== undefined
   //           ? `"${String(formatted).replace(/"/g, '""')}"`

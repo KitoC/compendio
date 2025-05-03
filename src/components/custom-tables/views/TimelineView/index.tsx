@@ -164,7 +164,7 @@ const TimelineView = ({
 
     // Process each record
     records.forEach((record, index) => {
-      const startDateValue = record.fields[startDateField];
+      const startDateValue = record[startDateField];
       if (startDateValue === undefined || startDateValue === null) return;
 
       let startDate: Date | null = null;
@@ -182,7 +182,7 @@ const TimelineView = ({
 
       let endDate = startDate;
       if (endDateField && endDateField !== startDateField) {
-        const endDateValue = record.fields[endDateField];
+        const endDateValue = record[endDateField];
         if (typeof endDateValue === "string") {
           const parsedEndDate = parseISO(endDateValue);
           if (isValid(parsedEndDate)) {
@@ -208,11 +208,7 @@ const TimelineView = ({
         const group = {
           id: record.id,
           title: primaryField
-            ? formatFieldValue(
-                record.fields[primaryField.name],
-                primaryField,
-                record
-              )
+            ? formatFieldValue(record[primaryField.name], primaryField, record)
             : record.id,
           record,
         };
@@ -224,11 +220,7 @@ const TimelineView = ({
         id: `${record.id}-item`,
         group: record.id,
         title: primaryField
-          ? formatFieldValue(
-              record.fields[primaryField.name],
-              primaryField,
-              record
-            )
+          ? formatFieldValue(record[primaryField.name], primaryField, record)
           : record.id,
         start_time: moment(startDate),
         end_time: moment(endDate),
@@ -327,7 +319,7 @@ const TimelineView = ({
     const updatedRecord = {
       ...record,
       fields: {
-        ...record.fields,
+        ...record,
         [startDateField as string]: newStartTime.toISOString(),
         ...(endDateField && endDateField !== startDateField
           ? {
@@ -357,18 +349,18 @@ const TimelineView = ({
     if (!item) return;
 
     const record = item.record;
-    const updatedRecord = { ...record };
+    let updatedRecord = { ...record };
 
     if (edge === "left") {
       // Update start date
-      updatedRecord.fields = {
-        ...updatedRecord.fields,
+      updatedRecord = {
+        ...updatedRecord,
         [startDateField as string]: moment(time).toISOString(),
       };
     } else {
       // Update end date
-      updatedRecord.fields = {
-        ...updatedRecord.fields,
+      updatedRecord = {
+        ...updatedRecord,
         [endDateField]: moment(time).toISOString(),
       };
     }

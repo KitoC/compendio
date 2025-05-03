@@ -12,7 +12,13 @@ const EventComponent = ({ event }) => {
     useCalendarContext();
 
   return (
-    <Popover open={selectedEvent?.id === event.id && !draggingEvent}>
+    <Popover
+      open={
+        selectedEvent &&
+        selectedEvent?._id === event.resource._id &&
+        !draggingEvent
+      }
+    >
       <PopoverTrigger asChild>
         <div
           className="text-xs overflow-hidden text-ellipsis whitespace-nowrap"
