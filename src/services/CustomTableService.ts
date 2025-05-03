@@ -1,6 +1,7 @@
 import { SupabaseFunctionService } from "./supabaseFunctionServices";
 import { supabase } from "@/integrations/supabase/client";
 import { AirtableRecord } from "@/types/airtable";
+
 export const CustomTableService = {
   async syncSchema() {
     const response = await SupabaseFunctionService.post(
@@ -34,8 +35,10 @@ export const CustomTableService = {
   },
 
   async listRecords(table: string, queryString = "") {
+    console.log("queryString", queryString);
+
     const response = await SupabaseFunctionService.get(
-      `table-records?table=${table}${queryString}`
+      `table-records?table=${table}${queryString ? `&${queryString}` : ""}`
     );
 
     if (!response.ok) {

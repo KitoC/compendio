@@ -1,4 +1,4 @@
-import GridView from "./GridView";
+import GridView from "./GridView/GridView";
 import CalendarView from "./CalendarView";
 import GalleryView from "./GalleryView";
 import KanbanView from "./KanbanView";

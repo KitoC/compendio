@@ -3,25 +3,9 @@ import { AirtableField, AirtableTable, AirtableRecord } from "@/types/airtable";
 
 export interface AirtableTableProps {
   table: AirtableTable;
-  records: AirtableRecord[];
-  idField?: string;
-  permissions?: Partial<UserPermissions>;
-  onRowClick?: (item: AirtableRecord) => void;
-  onUpdate?: (item: AirtableRecord) => Promise<void>;
-  onCreate?: (item: Partial<AirtableRecord>) => Promise<void>;
-  onDelete?: (id: string) => Promise<void>;
-  isLoading?: boolean;
+  permissions: UserPermissions;
   emptyMessage?: string;
   className?: string;
-  searchable?: boolean;
-  pagination?: boolean;
-  pageSize?: number;
-  getFormConfig?: (
-    config: FormConfig,
-    record: AirtableRecord | null
-  ) => FormConfig;
-  onRefresh?: () => void;
-  isRefreshing?: boolean;
 }
 
 export interface UserPermissions {

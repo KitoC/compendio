@@ -1,9 +1,6 @@
 import { useParams } from "react-router-dom";
 import Page from "@/components/Page";
-import {
-  useAirtableTableSchemaQuery,
-  useAirtableRecordsQuery,
-} from "@/hooks/useAirtableQuery";
+import { useAirtableTableSchemaQuery } from "@/hooks/useAirtableQuery";
 import {
   Card,
   CardContent,
@@ -13,8 +10,6 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { FormConfig } from "@/components/form-builder";
-import { AirtableRecord } from "@/types/airtable";
 import { useCustomTables } from "@/contexts/CustomTables";
 import AirtableViews from "@/components/airtable-table";
 
@@ -31,42 +26,18 @@ const AirtableTablePage = () => {
 
   const { data: tableSchema, isLoading: isLoadingSchema } =
     useAirtableTableSchemaQuery(table?.external_id);
-  const {
-    records,
-    isLoading: isLoadingRecords,
-    refetch,
-    isRefetching,
-    createRecord,
-    updateRecord,
-    deleteRecord,
-  } = useAirtableRecordsQuery({ tableId: table?.external_id });
-
-  const getFormConfig = (config: FormConfig, record: AirtableRecord | null) => {
-    return config;
-  };
-
-  const handleCreate = async (record: Partial<AirtableRecord>) => {
-    try {
-      await createRecord({ record: record || {} });
-      refetch();
-    } catch (error) {
-      console.error("Error creating record:", error);
-    }
-  };
 
   if (isLoadingSchema) {
     return (
-      <Page>
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-8 w-1/3" />
-            <Skeleton className="h-4 w-1/4" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-[400px] w-full" />
-          </CardContent>
-        </Card>
-      </Page>
+      <div className="flex flex-col h-full p-8 gap-6">
+        <div className="flex items-center justify-between gap-2 border-b border-border pb-4">
+          <Skeleton className="h-8 w-1/3 border border-border" />
+          <Skeleton className="h-8 w-1/4 border border-border" />
+        </div>
+        <div className="flex-grow border border-border rounded-md">
+          <Skeleton className="h-full w-full" />
+        </div>
+      </div>
     );
   }
 
@@ -75,9 +46,10 @@ const AirtableTablePage = () => {
       <Page>
         <Card>
           <CardHeader>
-            <CardTitle>Table Not Found</CardTitle>
+            <CardTitle>Resource Not Found</CardTitle>
             <CardDescription>
-              The requested table "{tableName}" could not be found in this base.
+              The requested Resource "{tableName}" could not be found in this
+              base.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -94,8 +66,6 @@ const AirtableTablePage = () => {
     <AirtableViews
       className="rounded-none border-none h-full"
       table={tableSchema}
-      records={records || []}
-      isLoading={isLoadingRecords}
       permissions={{
         create: true,
         read: true,
@@ -103,15 +73,6 @@ const AirtableTablePage = () => {
         delete: true,
         export: true,
       }}
-      onCreate={handleCreate}
-      onUpdate={(record) => updateRecord({ record: record || {} })}
-      onDelete={deleteRecord}
-      getFormConfig={getFormConfig}
-      searchable={true}
-      pagination={true}
-      pageSize={10}
-      onRefresh={refetch}
-      isRefreshing={isRefetching}
     />
   );
 };

@@ -9,7 +9,7 @@ const ENDPOINTS = {
   GET_BASE_SCHEMA: (baseId: string) =>
     `${BASE_URL}/meta/bases/${baseId}/tables`,
   LIST_RECORDS: (baseId: string, tableName: string, queryString = "") =>
-    `${BASE_URL}/${baseId}/${tableName}${queryString}`,
+    `${BASE_URL}/${baseId}/${tableName}${queryString ? `?${queryString}` : ""}`,
   RETRIEVE_RECORD: (baseId: string, tableName: string, recordId: string) =>
     `${BASE_URL}/${baseId}/${tableName}/${recordId}`,
   CREATE_RECORD: (baseId: string, tableName: string) =>
@@ -91,7 +91,10 @@ export class AirtableService extends BaseExternalService {
       this.throwError("Failed to list records", json, response.status);
     }
 
-    return response.json();
+    const json = await response.json();
+    console.log("queryString -->", queryString);
+    console.log("json -->", json);
+    return json;
   }
 
   async retrieveRecord(tableName: string, recordId: string) {

@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import DataViewContext from "./DataViewContext";
+import DataViewContext, { Pagination } from "./DataViewContext";
 import { useDataViewQuery } from "@/hooks/useDataViewsQuery";
 import {
   useAirtableRecordsQuery,
@@ -8,6 +8,16 @@ import {
 import Loader from "@/components/ui/loader";
 import AirtableModal from "@/components/airtable-modal";
 import { AirtableRecord } from "@/types/airtable";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type DataViewProviderProps = {
   children: React.ReactNode;
@@ -22,9 +32,16 @@ const DataViewProvider = ({
   dataViewId,
   tableId: tableIdFromProps,
 }: DataViewProviderProps) => {
-  const [queryString, setQueryString] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<Pagination>({
+    offset: null,
+    pageSize: 100,
+  });
+  const [query, setQuery] = useState<string>("");
   const [isCreating, setIsCreating] = useState(false);
   const [editingRecord, setEditingRecord] = useState<AirtableRecord | null>(
+    null
+  );
+  const [recordToDelete, setRecordToDelete] = useState<AirtableRecord | null>(
     null
   );
 
@@ -35,6 +52,12 @@ const DataViewProvider = ({
 
   const { data: table } = useAirtableTableSchemaQuery(tableId);
 
+  const queryString = useMemo(() => {
+    return `${
+      pagination.offset ? `offset=${pagination.offset}` : ""
+    }&pageSize=${pagination.pageSize}${query ? `&${query}` : ""}`;
+  }, [pagination.offset, pagination.pageSize, query]);
+
   const {
     records,
     isFetching: isFetchingData,
@@ -43,6 +66,8 @@ const DataViewProvider = ({
     updateRecord,
     deleteRecord,
     invalidateQuery,
+    refetch,
+    isRefetching,
   } = useAirtableRecordsQuery({ tableId, queryString, isOptimistic: true });
 
   const handleSave = useCallback(
@@ -61,22 +86,36 @@ const DataViewProvider = ({
     [isCreating, createRecord, updateRecord]
   );
 
+  const handleDeleteConfirm = useCallback(() => {
+    if (recordToDelete) {
+      deleteRecord({ record: recordToDelete });
+    }
+  }, [recordToDelete, deleteRecord]);
+
   const onEdit = useCallback((record: AirtableRecord) => {
     setEditingRecord(record);
     setIsCreating(false);
   }, []);
 
-  const onCreate = useCallback((record: AirtableRecord | null) => {
+  const onCreate = useCallback((record?: AirtableRecord | null) => {
     setEditingRecord(record);
     setIsCreating(true);
+
+    console.log("onCreate ->", record);
   }, []);
+
+  const onRefetch = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   const value = useMemo(() => {
     return {
       dataView,
-      queryString,
-      setQueryString,
-      data: records,
+      query,
+      setQuery,
+      pagination,
+      setPagination,
+      data: records || [],
       isFetchingData,
       isLoadingData,
       createRecord,
@@ -86,11 +125,18 @@ const DataViewProvider = ({
       onCreate,
       editingRecord,
       handleSave,
+      recordToDelete,
+      setRecordToDelete,
+      table,
+      onRefetch,
+      isRefetching,
     };
   }, [
     dataView,
-    queryString,
-    setQueryString,
+    query,
+    setQuery,
+    pagination,
+    setPagination,
     records,
     isFetchingData,
     isLoadingData,
@@ -101,6 +147,11 @@ const DataViewProvider = ({
     onCreate,
     editingRecord,
     handleSave,
+    recordToDelete,
+    setRecordToDelete,
+    table,
+    onRefetch,
+    isRefetching,
   ]);
 
   return (
@@ -127,6 +178,26 @@ const DataViewProvider = ({
             }}
             isOpen={isCreating || editingRecord !== null}
           />
+          <AlertDialog
+            open={recordToDelete !== null}
+            onOpenChange={(open) => !open && setRecordToDelete(null)}
+          >
+            <AlertDialogContent className="animate-fade-in">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete
+                  this record.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteConfirm}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </>
       )}
     </DataViewContext.Provider>

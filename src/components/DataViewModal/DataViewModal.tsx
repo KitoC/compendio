@@ -37,7 +37,7 @@ const DataViewModal = ({
     useAirtableTableSchemaQuery(tableId as string);
   const { records: [exampleRecord] = [] } = useAirtableRecordsQuery({
     tableId: tableId as string,
-    queryString: "?pageSize=1",
+    queryString: "pageSize=1",
   });
 
   const { dataView, isFetching: isLoadingDataView } = useDataViewQuery(

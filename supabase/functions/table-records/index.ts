@@ -23,6 +23,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
     supabase_AS_SUPER_ADMIN,
   } = context;
   const { searchParams } = new URL(req.url);
+  console.log("searchParams --> ", searchParams);
   const method = req.method.toUpperCase();
 
   const table = searchParams.get("table");
@@ -48,11 +49,12 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
 
           return Response.json({ data }, { headers: corsHeaders });
         } else {
-          const { records: data } = await airtableService.listRecords(
+          const { records: data, ...rest } = await airtableService.listRecords(
             table,
             query
           );
 
+          console.log("rest", rest);
           const recordFieldMap: Record<string, string> = {};
           const fieldRecordMap: Record<
             string,
