@@ -2,12 +2,12 @@ import { useCallback, useMemo, useState } from "react";
 import DataViewContext, { Pagination } from "./DataViewContext";
 import { useDataViewQuery } from "@/hooks/useDataViewsQuery";
 import {
-  useAirtableRecordsQuery,
-  useAirtableTableSchemaQuery,
-} from "@/hooks/useAirtableQuery";
+  useCustomRecordsQuery,
+  useCustomTableSchemaQuery,
+} from "@/hooks/useCustomTableQuery";
 import Loader from "@/components/ui/loader";
-import AirtableModal from "@/components/airtable-modal";
-import { AirtableRecord } from "@/types/airtable";
+import CustomTableModal from "@/components/custom-tables/CustomTableModal";
+import { CustomTableRecord } from "@/types/customTable";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,19 +38,18 @@ const DataViewProvider = ({
   });
   const [query, setQuery] = useState<string>("");
   const [isCreating, setIsCreating] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<AirtableRecord | null>(
+  const [editingRecord, setEditingRecord] = useState<CustomTableRecord | null>(
     null
   );
-  const [recordToDelete, setRecordToDelete] = useState<AirtableRecord | null>(
-    null
-  );
+  const [recordToDelete, setRecordToDelete] =
+    useState<CustomTableRecord | null>(null);
 
   const { dataView, isFetching: isFetchingDataView } =
     useDataViewQuery(dataViewId);
 
   const tableId = tableIdFromProps || dataView?.external_table_id;
 
-  const { data: table } = useAirtableTableSchemaQuery(tableId);
+  const { data: table } = useCustomTableSchemaQuery(tableId);
 
   const queryString = useMemo(() => {
     return `${
@@ -68,12 +67,12 @@ const DataViewProvider = ({
     invalidateQuery,
     refetch,
     isRefetching,
-  } = useAirtableRecordsQuery({ tableId, queryString, isOptimistic: true });
+  } = useCustomRecordsQuery({ tableId, queryString, isOptimistic: true });
 
   const handleSave = useCallback(
-    async (record: AirtableRecord, options?: { optimistic?: boolean }) => {
+    async (record: CustomTableRecord, options?: { optimistic?: boolean }) => {
       try {
-        if (isCreating || !record.id || record.id === TEMP_RECORD_ID) {
+        if (isCreating || !record._id || record._id === TEMP_RECORD_ID) {
           await createRecord({ record, options });
         } else {
           await updateRecord({ record, options });
@@ -92,12 +91,12 @@ const DataViewProvider = ({
     }
   }, [recordToDelete, deleteRecord]);
 
-  const onEdit = useCallback((record: AirtableRecord) => {
+  const onEdit = useCallback((record: CustomTableRecord) => {
     setEditingRecord(record);
     setIsCreating(false);
   }, []);
 
-  const onCreate = useCallback((record?: AirtableRecord | null) => {
+  const onCreate = useCallback((record?: CustomTableRecord | null) => {
     setEditingRecord(record);
     setIsCreating(true);
 
@@ -163,11 +162,11 @@ const DataViewProvider = ({
       ) : (
         <>
           {children}{" "}
-          <AirtableModal
+          <CustomTableModal
             providedTable={table}
             providedRecord={editingRecord}
             tableId={table?.external_id}
-            recordId={editingRecord?.id}
+            recordId={editingRecord?._id}
             isCreating={isCreating}
             // getFormConfig={getFormConfig}
             onSave={handleSave}

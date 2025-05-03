@@ -1,6 +1,6 @@
 import { SupabaseFunctionService } from "./supabaseFunctionServices";
 import { supabase } from "@/integrations/supabase/client";
-import { AirtableRecord } from "@/types/airtable";
+import type { CustomTableRecord } from "@/types/customTable";
 
 export const CustomTableService = {
   async syncSchema() {
@@ -60,7 +60,7 @@ export const CustomTableService = {
     return response.json();
   },
 
-  async createRecord(table: string, record: AirtableRecord) {
+  async createRecord(table: string, record: CustomTableRecord) {
     const response = await SupabaseFunctionService.post(
       `table-records?table=${table}`,
       record
@@ -73,7 +73,11 @@ export const CustomTableService = {
     return response.json();
   },
 
-  async updateRecord(table: string, recordId: string, record: AirtableRecord) {
+  async updateRecord(
+    table: string,
+    recordId: string,
+    record: CustomTableRecord
+  ) {
     const response = await SupabaseFunctionService.patch(
       `table-records?table=${table}&recordId=${recordId}`,
       record

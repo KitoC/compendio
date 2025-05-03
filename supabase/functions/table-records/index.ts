@@ -8,12 +8,6 @@ import {
 } from "@/middleware/withAuthenticatedContext";
 import { withErrorBoundary } from "@/middleware/withErrorBoundary";
 import { withCors } from "@/middleware/withCors";
-import type { Database } from "@/integrations/supabase/types";
-import type { AirtableRecord, AirtableField } from "@/types/airtable";
-
-type DataField = Database["public"]["Tables"]["data_fields"]["Row"];
-type DataTableRecordLabel =
-  Database["public"]["Tables"]["data_table_record_labels"]["Row"];
 
 const handler = async (req: Request, context: AuthenticatedContext) => {
   const {
@@ -23,23 +17,28 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
     supabase_AS_SUPER_ADMIN,
   } = context;
   const { searchParams } = new URL(req.url);
-  console.log("searchParams --> ", searchParams);
+
   const method = req.method.toUpperCase();
 
-  const table = searchParams.get("table");
-  const recordId = searchParams.get("recordId") ?? undefined;
+  const tableId = searchParams.get("table");
+  const recordId =
+    (searchParams.get("recordId") || searchParams.get("id")) ?? undefined;
 
   searchParams.delete("table");
   searchParams.delete("recordId");
 
   const query = searchParams.toString();
 
-  if (!table) {
+  if (!tableId) {
     return new Response("Missing 'table' parameter", {
       status: 400,
       headers: corsHeaders,
     });
   }
+
+  const table = await dataTablesService.getTableSchema({
+    external_id: tableId,
+  });
 
   try {
     switch (method) {
@@ -54,85 +53,19 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
             query
           );
 
-          console.log("rest", rest);
-          const recordFieldMap: Record<string, string> = {};
-          const fieldRecordMap: Record<
-            string,
-            Record<string, string | string[]>
-          > = {};
-
-          data.forEach((record: AirtableRecord) => {
-            fieldRecordMap[record.id] = {};
-
-            Object.entries(record.fields).forEach(([key, field]) => {
-              if (typeof field === "string" && field.startsWith("rec")) {
-                recordFieldMap[field] = key;
-                fieldRecordMap[record.id][key] = field;
-              }
-
-              if (Array.isArray(field)) {
-                field.forEach((item) => {
-                  if (typeof item === "string" && item.startsWith("rec")) {
-                    recordFieldMap[item] = key;
-                    fieldRecordMap[record.id][key] = fieldRecordMap[record.id][
-                      key
-                    ]
-                      ? [...fieldRecordMap[record.id][key], item]
-                      : [item];
-                  }
-                });
-              }
-            });
-          });
-
-          const { data: labels } = await supabase_AS_SUPER_ADMIN
-            .from("data_table_record_labels")
-            .select("*")
-            .in("record_id", Object.keys(recordFieldMap));
-
-          data.map((record: AirtableRecord) => {
-            const fieldRecordMapping = fieldRecordMap[record.id];
-
-            record.labels = {};
-
-            Object.entries(fieldRecordMapping).forEach(([key, field]) => {
-              if (!record.labels) {
-                record.labels = {};
-              }
-
-              if (typeof field === "string") {
-                record.labels[key] = labels.find(
-                  (label: DataTableRecordLabel) => label.record_id === field
-                );
-              }
-
-              if (Array.isArray(field)) {
-                record.labels[key] = field.map((item: string) => {
-                  const label = labels.find(
-                    (label: DataTableRecordLabel) => label.record_id === item
-                  );
-
-                  return label;
-                });
-              }
-            });
-
-            return { ...record };
-          });
-
           return Response.json({ data }, { headers: corsHeaders });
         }
 
       case "POST": {
         const body = await req.json();
-        const data = await airtableService.createRecord(table, body.fields);
+        const data = await airtableService.createRecord(table, body);
 
-        await dataTablesService.upsertLabel({
-          record: data,
-          base_id: airtableService.base_id,
-          table,
-          tenant_id: context.authService.tenantId as string,
-        });
+        // await dataTablesService.upsertLabel({
+        //   record: data,
+        //   base_id: airtableService.base_id,
+        //   table,
+        //   tenant_id: context.authService.tenantId as string,
+        // });
 
         return Response.json({ data }, { status: 201, headers: corsHeaders });
       }
@@ -145,10 +78,11 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
           });
         }
         const body = await req.json();
+
         const cleanedBody = await dataTablesService.prepareRecordForUpsert({
           body,
-          base_id: airtableService.base_id,
-          table,
+          source: table.source,
+          external_table_id: table.external_id,
         });
 
         const data = await airtableService.updateRecord(
@@ -157,12 +91,12 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
           cleanedBody
         );
 
-        await dataTablesService.upsertLabel({
-          record: data,
-          base_id: airtableService.base_id,
-          table,
-          tenant_id: context.authService.tenantId as string,
-        });
+        // await dataTablesService.upsertLabel({
+        //   record: data,
+        //   base_id: airtableService.base_id,
+        //   table,
+        //   tenant_id: context.authService.tenantId as string,
+        // });
 
         return Response.json({ data }, { headers: corsHeaders });
       }

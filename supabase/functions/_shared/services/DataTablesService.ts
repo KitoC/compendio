@@ -1,18 +1,18 @@
 // NO_CHANGE
 
-import type { AirtableField, AirtableRecord } from "@/types/airtable";
 import {
   BaseRequiredContext,
   BaseSupabaseService,
 } from "@/services/_BaseSupabaseService";
 import type { Database } from "@/integrations/supabase/types";
 import { READONLY_FIELDS_AIRTABLE } from "@/consts";
+import type { CustomTableField, CustomTableRecord } from "@/types/customTable";
 
 type DataField = Database["public"]["Tables"]["data_fields"]["Row"];
 type DataTable = Database["public"]["Tables"]["data_tables"]["Row"];
 type DataTableSchema = DataTable & {
   data_fields: (DataField & {
-    schema: AirtableField;
+    schema: CustomTableField;
   })[];
 };
 
@@ -36,13 +36,12 @@ class DataTablesService extends BaseSupabaseService {
     return tableSchemas;
   }
 
-  async getTableSchema({ base_id, table }: { base_id: string; table: string }) {
+  async getTableSchema({ external_id }: { external_id: string }) {
     const { data: tableSchema } = await this.supabase_AS_SUPER_ADMIN
       .from("data_tables")
       .select("*, data_fields(*)")
-      .eq("schema_id", base_id)
       .eq("source", "airtable")
-      .eq("external_id", table)
+      .eq("external_id", external_id)
       .single();
 
     return tableSchema;
@@ -54,12 +53,12 @@ class DataTablesService extends BaseSupabaseService {
     record,
     tenant_id,
   }: {
-    record: AirtableRecord;
+    record: CustomTableRecord;
     base_id: string;
     table: string;
     tenant_id: string;
   }) {
-    const tableSchema = await this.getTableSchema({ base_id, table });
+    const tableSchema = await this.getTableSchema({ external_id: table });
 
     const primaryFieldName = tableSchema.data_fields.find(
       (field: DataField) => field.external_id === tableSchema.primary_field_id
@@ -70,7 +69,7 @@ class DataTablesService extends BaseSupabaseService {
       data_table_id: tableSchema.id,
       external_table_id: table,
       record_id: record.id,
-      label: record.fields[labelFieldName || primaryFieldName],
+      label: record[labelFieldName || primaryFieldName],
       tenant_id: tenant_id,
     };
 
@@ -107,29 +106,34 @@ class DataTablesService extends BaseSupabaseService {
 
   async prepareRecordForUpsert({
     body,
-    base_id,
-    table,
+    source,
+    external_table_id,
   }: {
-    body: { fields: Record<string, unknown> };
-    base_id: string;
-    table: string;
-  }) {
+    body: CustomTableRecord;
+    source: string;
+    external_table_id: string;
+  }): Promise<CustomTableRecord> {
     const tableSchema = await this.getTableSchema({
-      base_id: base_id,
-      table,
+      external_id: external_table_id,
     });
 
-    const cleanedBody: Record<string, unknown> = {};
+    const SOURCE_READONLY_FIELDS: Record<string, string[]> = {
+      airtable: READONLY_FIELDS_AIRTABLE,
+    };
 
-    const readOnlyFields: AirtableField[] = tableSchema.data_fields
+    const cleanedBody: CustomTableRecord = {
+      _id: body._id,
+    };
+
+    const readOnlyFields: CustomTableField[] = tableSchema.data_fields
       .filter((field: DataField) =>
-        READONLY_FIELDS_AIRTABLE.includes(
-          (field.schema as unknown as AirtableField)?.type
+        SOURCE_READONLY_FIELDS[source].includes(
+          (field.schema as unknown as CustomTableField)?.type
         )
       )
       .map((field: DataField) => field.schema);
 
-    Object.entries(body.fields).forEach(([key, value]) => {
+    Object.entries(body).forEach(([key, value]) => {
       if (!readOnlyFields.some((field) => field?.name === key)) {
         cleanedBody[key] = value;
       }

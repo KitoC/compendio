@@ -1,8 +1,8 @@
 import { useContext } from "react";
 import { useActionModalContext } from "../ActionModalContext";
 import { CustomTablesContext } from "@/contexts/CustomTables/CustomTablesContext";
-import { airtableFieldToFormField } from "@/components/airtable-table/utils";
-import { AirtableField } from "@/types/airtable";
+import { customTableFieldToFormField } from "@/components/custom-tables/utils";
+import { CustomTableField } from "@/types/customTable";
 import FormField from "@/components/form-builder/FormField";
 import {
   DropdownMenu,
@@ -43,7 +43,7 @@ const FieldMapper = ({ value: values, onChange, name, ...rest }) => {
   const table = tables.find((table) => table.id === action.metadata.table);
 
   const fields = table.fields.map((field) =>
-    airtableFieldToFormField(field.schema as unknown as AirtableField)
+    customTableFieldToFormField(field.schema as unknown as CustomTableField)
   );
 
   const onFieldChange = (fieldValue: FieldMapperField) => {

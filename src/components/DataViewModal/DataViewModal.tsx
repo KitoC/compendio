@@ -1,11 +1,11 @@
 import ResponsiveModal from "@/components/ui/responsive-modal";
 import FormBuilder from "@/components/form-builder/FormBuilder";
-import { DATA_VIEW_TYPES } from "../airtable-table/consts";
+import { DATA_VIEW_TYPES } from "../custom-tables/consts";
 import { FormConfig } from "@/components/form-builder/types";
 import {
-  useAirtableRecordsQuery,
-  useAirtableTableSchemaQuery,
-} from "@/hooks/useAirtableQuery";
+  useCustomRecordsQuery,
+  useCustomTableSchemaQuery,
+} from "@/hooks/useCustomTableQuery";
 import { Loader2 } from "lucide-react";
 import { useMemo } from "react";
 import DateFieldSelector from "./DateFieldSelector";
@@ -34,8 +34,8 @@ const DataViewModal = ({
 }) => {
   const { tenantId } = useTenant();
   const { data: tableSchema, isLoading: isLoadingSchema } =
-    useAirtableTableSchemaQuery(tableId as string);
-  const { records: [exampleRecord] = [] } = useAirtableRecordsQuery({
+    useCustomTableSchemaQuery(tableId as string);
+  const { records: [exampleRecord] = [] } = useCustomRecordsQuery({
     tableId: tableId as string,
     queryString: "pageSize=1",
   });

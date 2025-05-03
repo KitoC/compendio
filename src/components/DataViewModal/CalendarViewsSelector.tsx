@@ -1,4 +1,3 @@
-import { AirtableField } from "@/types/airtable";
 import { CustomFieldComponentProps } from "../form-builder/types";
 import { Views } from "react-big-calendar";
 import { DateFieldValue } from "./DateFieldSelector";
@@ -12,9 +11,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-
+import { CustomTableField } from "@/types/customTable";
 interface CalendarViewsSelectorProps extends CustomFieldComponentProps {
-  dateFields: AirtableField[];
+  dateFields: CustomTableField[];
 }
 
 const TIME_ONLY_VIEWS = [Views.MONTH, Views.WEEK, Views.WORK_WEEK, Views.DAY];

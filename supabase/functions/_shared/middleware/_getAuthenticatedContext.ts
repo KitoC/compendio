@@ -5,6 +5,7 @@ import { AuthService } from "@/services/AuthService";
 import Logger from "@/utils/Logger";
 import { getSharedServices } from "@/middleware/_getSharedServices";
 import { AirtableService } from "@/services/providers/AirtableService";
+import { BaserowService } from "@/services/providers/BaserowService";
 const logger = new Logger({ name: "AuthenticatedContext" });
 
 export const getAuthenticatedContext = async (
@@ -49,6 +50,7 @@ export const getAuthenticatedContext = async (
 
   logger.debug("tenantWorkspace", tenantWorkspace.data);
   const airtableService = new AirtableService(tenantWorkspace.data.base_id);
+  const baserowService = new BaserowService(tenantWorkspace.data.base_id);
 
   return {
     ...supabaseContext,
@@ -57,5 +59,6 @@ export const getAuthenticatedContext = async (
     tenant_id: tenantId,
     ...getSharedServices(supabaseContext),
     airtableService,
+    baserowService,
   };
 };

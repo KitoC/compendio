@@ -9,8 +9,13 @@ import { withErrorBoundary } from "@/middleware/withErrorBoundary";
 import { withCors } from "@/middleware/withCors";
 
 const handler = async (req: Request, context: AuthenticatedContext) => {
+  const { baserowService } = context;
+
+  console.log("baserowService -->", baserowService);
+  const tables = await baserowService.getSchema();
+
   return {
-    body: JSON.stringify({ success: true }),
+    body: JSON.stringify({ success: true, tables }),
     headers: { "Content-Type": "application/json" },
     status: 200,
   };

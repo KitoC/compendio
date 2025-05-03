@@ -38,7 +38,7 @@ import { VoiceProvider } from "./contexts/VoiceProvider";
 import OnboardingPage from "./pages/OnboardingPage";
 import { NotificationProvider } from "./contexts/NotificationProvider";
 import { PwaInstallPrompt } from "./components/PwaInstallPrompt";
-import AirtableTablePage from "./pages/application-layout/AirtableTablePage";
+import CustomTablePage from "./pages/application-layout/CustomTablePage";
 import BetaAccess from "./pages/BetaAccess";
 
 function App() {
@@ -86,7 +86,7 @@ function App() {
                       />
                       <Route
                         path={ROUTES.CUSTOM_TABLE_DATA}
-                        element={<AirtableTablePage />}
+                        element={<CustomTablePage />}
                       />
                       <Route path={ROUTES.AGENT_CHAT} element={<AgentChat />} />
 

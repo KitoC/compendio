@@ -1,4 +1,5 @@
-import type { AirtableBase } from "@/types/airtable";
+import type { AirtableBase, AirtableRecord } from "@/types/airtable";
+import type { CustomTableRecord, CustomTableSchema } from "@/types/customTable";
 import { BaseExternalService } from "@/services/_BaseExternalService";
 import { getEnvKey } from "@/utils/env";
 
@@ -49,6 +50,54 @@ export class AirtableService extends BaseExternalService {
     return response.json();
   }
 
+  normalizeRecord(record: AirtableRecord): CustomTableRecord {
+    return {
+      _id: record.id,
+      _createdTime: record.createdTime,
+      ...Object.fromEntries(
+        Object.entries(record.fields).map(([key, value]) => {
+          if (
+            Array.isArray(value) &&
+            value?.length &&
+            typeof value[0] === "string" &&
+            value[0].startsWith("rec")
+          ) {
+            return [
+              key.replace(/^_/, ""),
+              value.map((id) => {
+                return { id, value: id };
+              }),
+            ];
+          }
+
+          return [key.replace(/^_/, ""), value];
+        })
+      ),
+    };
+  }
+
+  denormalizeRecord(record: CustomTableRecord): Omit<AirtableRecord, "id"> {
+    const { _id, _createdTime, ...rest } = record;
+
+    return {
+      // id: record._id,
+      // createdTime: record._createdTime,
+      fields: Object.fromEntries(
+        Object.entries(rest).map(([key, value]) => {
+          if (
+            Array.isArray(value) &&
+            value.length &&
+            typeof value[0] === "object" &&
+            "id" in value[0]
+          ) {
+            return [key, value.map((item) => item.id)];
+          }
+          return [key, value];
+        })
+      ),
+    };
+  }
+
   async getBase(): Promise<AirtableBase> {
     this.logger.debug(
       "Getting base schema for workspace",
@@ -77,9 +126,9 @@ export class AirtableService extends BaseExternalService {
     return { name: base.name, ...json };
   }
 
-  async listRecords(tableName: string, queryString = "") {
+  async listRecords(table: CustomTableSchema, queryString = "") {
     const response = await fetch(
-      ENDPOINTS.LIST_RECORDS(this.base_id, tableName, queryString),
+      ENDPOINTS.LIST_RECORDS(this.base_id, table.external_id, queryString),
       {
         headers: this.headers,
         method: "GET",
@@ -92,14 +141,13 @@ export class AirtableService extends BaseExternalService {
     }
 
     const json = await response.json();
-    console.log("queryString -->", queryString);
-    console.log("json -->", json);
-    return json;
+
+    return { ...json, records: json.records.map(this.normalizeRecord) };
   }
 
-  async retrieveRecord(tableName: string, recordId: string) {
+  async retrieveRecord(table: CustomTableSchema, recordId: string) {
     const response = await fetch(
-      ENDPOINTS.RETRIEVE_RECORD(this.base_id, tableName, recordId),
+      ENDPOINTS.RETRIEVE_RECORD(this.base_id, table.external_id, recordId),
       {
         headers: this.headers,
         method: "GET",
@@ -111,16 +159,16 @@ export class AirtableService extends BaseExternalService {
       this.throwError("Failed to retrieve record", json, response.status);
     }
 
-    return json;
+    return this.normalizeRecord(json);
   }
 
-  async createRecord(tableName: string, fields: object) {
+  async createRecord(table: CustomTableSchema, record: CustomTableRecord) {
     const response = await fetch(
-      ENDPOINTS.CREATE_RECORD(this.base_id, tableName),
+      ENDPOINTS.CREATE_RECORD(this.base_id, table.external_id),
       {
         headers: this.headers,
         method: "POST",
-        body: JSON.stringify({ fields }),
+        body: JSON.stringify(this.denormalizeRecord(record)),
       }
     );
 
@@ -132,15 +180,24 @@ export class AirtableService extends BaseExternalService {
     return response.json();
   }
 
-  async updateRecord(tableName: string, recordId: string, fields: object) {
-    const response = await fetch(
-      ENDPOINTS.UPDATE_RECORD(this.base_id, tableName, recordId),
-      {
-        headers: this.headers,
-        method: "PATCH",
-        body: JSON.stringify({ fields }),
-      }
+  async updateRecord(
+    table: CustomTableSchema,
+    recordId: string,
+    record: CustomTableRecord
+  ) {
+    const payload = this.denormalizeRecord(record);
+
+    const path = ENDPOINTS.UPDATE_RECORD(
+      this.base_id,
+      table.external_id,
+      recordId
     );
+
+    const response = await fetch(path, {
+      headers: this.headers,
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
 
     if (!response.ok) {
       const json = await response.json();
@@ -150,9 +207,9 @@ export class AirtableService extends BaseExternalService {
     return response.json();
   }
 
-  async deleteRecord(tableName: string, recordId: string) {
+  async deleteRecord(table: CustomTableSchema, recordId: string) {
     const response = await fetch(
-      ENDPOINTS.DELETE_RECORD(this.base_id, tableName, recordId),
+      ENDPOINTS.DELETE_RECORD(this.base_id, table.external_id, recordId),
       {
         headers: this.headers,
         method: "DELETE",

@@ -22,7 +22,7 @@ const useGetCurrentPageQueryKeyFromParams = () => {
 };
 
 /**
- * Hook for deleting Airtable records
+ * Hook for deleting Workflows records
  */
 export const useDeleteWorkflow = () => {
   const queryClient = useQueryClient();

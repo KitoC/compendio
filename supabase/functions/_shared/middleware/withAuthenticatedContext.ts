@@ -6,6 +6,7 @@ import { CorsContext } from "@/middleware/withCors";
 import { getAuthenticatedContext } from "@/middleware/_getAuthenticatedContext";
 import type { User } from "@/types/user";
 import { AirtableService } from "@/services/providers/AirtableService";
+import { BaserowService } from "@/services/providers/BaserowService";
 
 export interface AuthenticatedContext extends SharedServices {
   supabase: SupabaseClient;
@@ -14,6 +15,7 @@ export interface AuthenticatedContext extends SharedServices {
   tenant_id?: string | null;
   user: User;
   airtableService: AirtableService;
+  baserowService: BaserowService;
 }
 
 export type AuthenticatedContextChildHandler = (

@@ -60,3 +60,6 @@ verify_jwt = false
 
 [functions.wss-functions]
 verify_jwt = false
+
+# [edge_runtime]
+# enabled = true

@@ -1,8 +1,8 @@
-import { AirtableRecord, AirtableTable } from "@/types/airtable";
+import { CustomTableSchema } from "@/types/customTable";
 import { createContext, useContext, Dispatch, SetStateAction } from "react";
 import { UseMutateAsyncFunction } from "@tanstack/react-query";
 import { IDataView } from "@/services/DataViewsService";
-
+import type { CustomTableRecord } from "@/types/customTable";
 type MutationFunction = UseMutateAsyncFunction<
   unknown,
   Error,
@@ -18,7 +18,7 @@ export type Pagination = {
 type DataViewContextType = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   dataView: (IDataView & { config: any }) | null;
-  data: AirtableRecord[];
+  data: CustomTableRecord[];
   query: string | null;
   setQuery: Dispatch<SetStateAction<string>>;
   pagination: Pagination;
@@ -28,16 +28,16 @@ type DataViewContextType = {
   createRecord: MutationFunction;
   updateRecord: MutationFunction;
   deleteRecord: MutationFunction;
-  onEdit: (record: AirtableRecord) => void;
-  onCreate: (record?: Partial<AirtableRecord>) => void;
-  editingRecord: AirtableRecord | null;
+  onEdit: (record: CustomTableRecord) => void;
+  onCreate: (record?: Partial<CustomTableRecord>) => void;
+  editingRecord: CustomTableRecord | null;
   handleSave: (
-    record: AirtableRecord,
+    record: CustomTableRecord,
     options?: { optimistic?: boolean }
   ) => Promise<void>;
-  recordToDelete: AirtableRecord | null;
-  setRecordToDelete: (record: AirtableRecord | null) => void;
-  table: AirtableTable;
+  recordToDelete: CustomTableRecord | null;
+  setRecordToDelete: (record: CustomTableRecord | null) => void;
+  table: CustomTableSchema;
   onRefetch: () => void;
   isRefetching: boolean;
 };
