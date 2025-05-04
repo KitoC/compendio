@@ -1,5 +1,13 @@
-import type { AirtableBase, AirtableRecord } from "@/types/airtable";
-import type { CustomTableRecord, CustomTableSchema } from "@/types/customTable";
+import type {
+  AirtableBase,
+  AirtableRecord,
+  AirtableTable,
+} from "@/types/airtable";
+import type {
+  CustomBaseSchema,
+  CustomTableRecord,
+  CustomTableSchema,
+} from "@/types/customTable";
 import { BaseExternalService } from "@/services/_BaseExternalService";
 import { getEnvKey } from "@/utils/env";
 
@@ -82,6 +90,7 @@ export class AirtableService extends BaseExternalService {
     return {
       // id: record._id,
       // createdTime: record._createdTime,
+
       fields: Object.fromEntries(
         Object.entries(rest).map(([key, value]) => {
           if (
@@ -98,7 +107,50 @@ export class AirtableService extends BaseExternalService {
     };
   }
 
-  async getBase(): Promise<AirtableBase> {
+  normalizeTableSchema(
+    table: AirtableTable,
+    base: AirtableBase,
+    tenant_id: string
+  ): CustomTableSchema {
+    return {
+      name: table.name,
+      display_name: table.name,
+      external_id: table.id,
+      source: "airtable",
+      schema_id: this.base_id,
+      tenant_id,
+      permissions: {},
+      schema_name: base.name,
+      primary_field_id: table.primaryFieldId,
+      fields: table.fields.map((field) => ({
+        id: field.id,
+        name: field.name,
+        description: field.description,
+        type: field?.type,
+        sub_type: field?.options?.result?.type,
+        is_computed: field?.isComputed,
+        is_primary: field?.isPrimary,
+        is_readonly: field?.isLocked,
+        is_multiple: !field?.options?.prefersSingleRecordLink,
+        attr_key: field?.name,
+        inverse_linked_table_id: field?.options?.linkedTableId,
+        inverse_linked_field_id: field?.options?.inverseLinkedTableId,
+        original_provider_field: field,
+        precision:
+          field?.options?.precision ||
+          field?.options?.result?.options?.precision,
+        max_value: field?.options?.max,
+        color: field?.options?.color,
+        icon: field?.options?.icon,
+        date_format: field?.options?.dateFormat?.name,
+        time_format: field?.options?.timeFormat?.name?.replace("hour", ""),
+        options: field?.options?.choices || [],
+        symbol: field?.options?.symbol,
+      })),
+    };
+  }
+
+  async getBase(tenant_id: string): Promise<CustomBaseSchema> {
     this.logger.debug(
       "Getting base schema for workspace",
       ENDPOINTS.GET_BASE_SCHEMA(this.base_id)
@@ -123,7 +175,13 @@ export class AirtableService extends BaseExternalService {
 
     const json = await response.json();
 
-    return { name: base.name, ...json };
+    return {
+      name: base.name,
+      ...json,
+      tables: json.tables.map((table: AirtableTable) =>
+        this.normalizeTableSchema(table, base, tenant_id)
+      ),
+    };
   }
 
   async listRecords(table: CustomTableSchema, queryString = "") {

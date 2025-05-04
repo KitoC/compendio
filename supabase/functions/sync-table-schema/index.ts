@@ -7,10 +7,11 @@ import {
 import { withErrorBoundary } from "@/middleware/withErrorBoundary";
 import { withCors } from "@/middleware/withCors";
 import { ExternalServiceAiError } from "@/error-types";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database, Json } from "@/integrations/supabase/types";
 
 type DataTable = Database["public"]["Tables"]["data_tables"]["Row"];
 type DataField = Database["public"]["Tables"]["data_fields"]["Row"];
+type DataFieldInsert = Database["public"]["Tables"]["data_fields"]["Insert"];
 
 const handler = async (req: Request, context: AuthenticatedContext) => {
   const method = req.method.toUpperCase();
@@ -22,8 +23,14 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
     });
   }
 
+  if (!authService.tenantId) {
+    return new Response("Tenant ID is required", {
+      status: 400,
+    });
+  }
+
   try {
-    const schema = await airtableService.getBase();
+    const schema = await airtableService.getBase(authService.tenantId);
     const { tables } = schema;
 
     const { data: existingTables } = await supabase_AS_SUPER_ADMIN
@@ -44,33 +51,32 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
         tablesToDelete.map((t: DataTable) => t.id)
       );
 
+    const upsertFields = async (externalFieldsToSync: DataFieldInsert[]) => {
+      const { error: fieldError } = await supabase_AS_SUPER_ADMIN
+        .from("data_fields")
+        .upsert(externalFieldsToSync, {
+          onConflict: "external_id, schema_id, source",
+        });
+
+      if (fieldError) {
+        console.error("Error upserting fields:", fieldError);
+      }
+    };
+
     for (const table of tables) {
-      const { id: external_id, name, fields, primaryFieldId, views } = table;
+      const { id: external_id, fields } = table;
 
       const existingTable = existingTables.find(
         (t: DataTable) => t.external_id === external_id
       );
 
+      const { fields: fieldsOmitted, ...tableWithoutFields } = table;
       const { data: tableRecord, error: tableError } =
         await supabase_AS_SUPER_ADMIN
           .from("data_tables")
-          .upsert(
-            [
-              {
-                name,
-                display_name: name,
-                external_id,
-                source: "airtable",
-                schema_id: airtableService.base_id,
-                tenant_id: authService.tenantId,
-                permissions: {},
-                schema_name: schema.name,
-                primary_field_id: primaryFieldId,
-                views,
-              },
-            ],
-            { onConflict: "external_id, schema_id, source" }
-          )
+          .upsert([tableWithoutFields], {
+            onConflict: "external_id, schema_id, source",
+          })
           .select()
           .single();
 
@@ -80,10 +86,10 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
       }
 
       // TODO: type
-      const externalFieldsToSync = fields.map((field) => ({
+      const externalFieldsToSync: DataFieldInsert[] = fields.map((field) => ({
         table_id: tableRecord.id,
-        schema: field,
-        tenant_id: authService.tenantId,
+        schema: field as unknown as Json,
+        tenant_id: authService.tenantId as string,
         external_id: field.id,
         source: "airtable",
         schema_id: airtableService.base_id,
@@ -107,14 +113,11 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
             fieldsToDelete.map((f: DataField) => f.id)
           );
 
-        const { error: fieldError } = await supabase_AS_SUPER_ADMIN
-          .from("data_fields")
-          .upsert(externalFieldsToSync, {
-            onConflict: "external_id, schema_id, source",
-          });
-        if (fieldError) {
-          console.error("Error upserting fields:", fieldError);
-        }
+        console.log("externalFieldsToSync", externalFieldsToSync);
+
+        await upsertFields(externalFieldsToSync);
+      } else {
+        await upsertFields(externalFieldsToSync);
       }
     }
 

@@ -15,8 +15,8 @@ const NumberRenderer = ({ field, value }: FieldRendererProps) => {
 
   // Handle decimal points based on options
   const precision =
-    field.options?.precision !== undefined
-      ? parseInt(field.options.precision as string, 10)
+    field?.precision !== undefined
+      ? parseInt(field.precision as string, 10)
       : 0;
 
   const formattedNumber =

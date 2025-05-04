@@ -40,12 +40,12 @@ const CustomTableEntityField = ({
 
   // TODO: Derive this from actual data.
   const { data: labels } = useQuery({
-    queryKey: ["labels", field.options?.linkedTableId],
+    queryKey: ["labels", field.inverse_linked_table_id],
     queryFn: async () => {
       const { data } = await supabase
         .from("data_table_record_labels")
         .select("*")
-        .eq("external_table_id", field.options?.linkedTableId);
+        .eq("external_table_id", field.inverse_linked_table_id);
 
       return data;
     },

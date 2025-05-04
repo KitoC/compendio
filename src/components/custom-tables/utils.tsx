@@ -74,21 +74,21 @@ export const customTableFieldToFormField = (
     label: field.name,
     type: fieldType,
     placeholder: `Enter ${field.name}`,
-    disabled: field.isLocked || field.isComputed,
+    disabled: field.is_locked || field.is_computed,
   };
 
   // Add validation
   formField.validation = {
-    required: field.isPrimary, // Make primary fields required
+    required: field.is_primary, // Make primary fields required
   };
 
   // Add options for select fields
-  if (field.type === "singleSelect" && field.options?.choices) {
-    formField.options = field.options.choices.map(
-      (choice): FormFieldOption => ({
-        label: choice.name,
-        value: choice.name,
-        color: choice.color,
+  if (field.type === "singleSelect" && field.options) {
+    formField.options = field.options.map(
+      (option): FormFieldOption => ({
+        label: option.name,
+        value: option.name,
+        color: option.color,
         variant: "airtable",
       })
     );
@@ -99,7 +99,7 @@ export const customTableFieldToFormField = (
     formField.props = {
       ...(formField.props || {}),
       isCurrency: true,
-      currencySymbol: field.options?.symbol || "$",
+      currencySymbol: field.symbol || "$",
     };
   } else if (field.type === "percent" && fieldType === "number") {
     formField.props = {
@@ -110,7 +110,7 @@ export const customTableFieldToFormField = (
     formField.props = {
       ...(formField.props || {}),
       isRating: true,
-      maxRating: field.options?.max || 5,
+      maxRating: field.max_value || 5,
     };
   } else if (
     (field.type === "multipleAttachments" || field.type === "attachment") &&
@@ -144,8 +144,8 @@ export const customTableToFormConfig = (
   const fields = table.fields
     .filter(
       (field) =>
-        !field.isComputed &&
-        !field.isLocked &&
+        !field.is_computed &&
+        !field.is_locked &&
         !(systemSettings.consts.READONLY_FIELDS_AIRTABLE as string[]).includes(
           field.type
         )
@@ -154,7 +154,7 @@ export const customTableToFormConfig = (
 
   const singularTableName = pluralize.singular(table.name);
   const primaryField = table.fields.find(
-    (field) => field.id === table.primaryFieldId
+    (field) => field.id === table.primary_field_id
   );
 
   const name = record?.[primaryField?.name];

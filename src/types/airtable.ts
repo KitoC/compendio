@@ -15,6 +15,16 @@ export interface AirtableFieldOption {
   foreignTableId?: string;
   linkedTableId?: string;
   inverseLinkedTableId?: string;
+  symbol?: string;
+  max?: number;
+  color?: string;
+  icon?: string;
+  result?: {
+    type: string;
+    options?: {
+      precision?: string;
+    };
+  };
   [key: string]: unknown;
 }
 

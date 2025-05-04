@@ -14,27 +14,11 @@ const DateRenderer = ({ field, value }: FieldRendererProps) => {
       field.type === "lastModifiedTime";
 
     // Use date format from field options if available
-    let dateFormat = "MMM d, yyyy";
+    const dateFormat = "MMM d, yyyy";
     let timeFormat = "h:mm a";
 
-    if (field.options?.dateFormat) {
-      // Map Airtable date formats to date-fns formats
-      const airtableToDatFnsFormatMap: Record<string, string> = {
-        l: "MM/dd/yyyy", // local format
-        LL: "MMMM d, yyyy", // friendly format
-        "M/D/YYYY": "MM/dd/yyyy", // US format
-        "D/M/YYYY": "dd/MM/yyyy", // European format
-        "YYYY-MM-DD": "yyyy-MM-dd", // ISO format
-      };
-
-      const formatString = field.options.dateFormat.format;
-      dateFormat = formatString
-        ? airtableToDatFnsFormatMap[formatString] || formatString
-        : dateFormat;
-    }
-
-    if (field.options?.timeFormat) {
-      timeFormat = field.options.timeFormat.format || timeFormat;
+    if (field.time_format) {
+      timeFormat = field.time_format === "12" ? "h:mm a" : "HH:mm";
     }
 
     const formattedDate = format(dateValue, dateFormat);

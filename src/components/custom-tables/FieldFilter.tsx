@@ -57,9 +57,9 @@ const FieldFilter = ({ field, value, onChange }: FieldFilterProps) => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="">All</SelectItem>
-            {field.options?.choices?.map((choice) => (
-              <SelectItem key={choice.id} value={choice.id}>
-                {choice.name}
+            {field.options?.map((option) => (
+              <SelectItem key={option.id} value={option.id}>
+                {option.name}
               </SelectItem>
             ))}
           </SelectContent>

@@ -24,9 +24,9 @@ const RecordTag = ({
   onDialogClose?: () => void;
   modalId?: string;
 }) => {
-  const { linkedTableId } = field.options;
+  const { inverse_linked_table_id } = field;
 
-  const update = useUpdateRecord(linkedTableId as string);
+  const update = useUpdateRecord(inverse_linked_table_id as string);
 
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -64,7 +64,7 @@ const RecordTag = ({
         {children || record.value}
       </Tag>
       <CustomTableModal
-        tableId={linkedTableId as string}
+        tableId={inverse_linked_table_id as string}
         recordId={selectedItem}
         isOpen={!!selectedItem}
         onClose={() => setSelectedItem(null)}

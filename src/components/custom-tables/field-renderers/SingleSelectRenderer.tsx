@@ -6,7 +6,7 @@ const SingleSelectRenderer = ({ field, value }: FieldRendererProps) => {
   if (!value) return <span className="text-sm text-muted-foreground">-</span>;
 
   // Find the choice by ID
-  const choice = field.options?.choices?.find((c) => c.name === value);
+  const choice = field.options?.find((c) => c.name === value);
 
   if (!choice) {
     return <span className="text-sm">{String(value)}</span>;

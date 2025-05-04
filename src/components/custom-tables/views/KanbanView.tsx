@@ -57,7 +57,7 @@ const KanbanView = ({
 
     if (!field || !field.options) return [];
 
-    return field.select_options;
+    return field.options;
   }, [selectedField, table.fields]);
 
   // Group records by the selected field

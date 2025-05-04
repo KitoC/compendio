@@ -2,9 +2,7 @@ import React from "react";
 import { FieldRendererProps } from "./index";
 
 const RollupRenderer = ({ field, value }: FieldRendererProps) => {
-  const { type } = (field?.options?.result as { type: string }) || {
-    type: "singleLineText",
-  };
+  const type = field.sub_type || "singleLineText";
 
   if (value === null || value === undefined) {
     return <span className="text-muted-foreground">-</span>;
@@ -30,8 +28,8 @@ const RollupRenderer = ({ field, value }: FieldRendererProps) => {
         : (value as { specialValue: number }).specialValue;
     // Format with precision if specified in options
     const precision =
-      field.options?.precision !== undefined
-        ? parseInt(field.options.precision as string, 10)
+      field?.precision !== undefined
+        ? parseInt(field.precision as string, 10)
         : 2;
 
     return <span className="block w-full">{v?.toFixed?.(precision) || v}</span>;
