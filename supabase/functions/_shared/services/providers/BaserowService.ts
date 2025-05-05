@@ -1,17 +1,28 @@
 import { BaseExternalService } from "@/services/_BaseExternalService";
 import { getEnvKey } from "@/utils/env";
+import type { ICustomTableSource } from "@/interfaces/ICustomTableSource";
+import type {
+  CustomBaseSchema,
+  CustomTableRecord,
+  CustomTableSchema,
+} from "@/types/customTable";
+import type { BaserowBase, BaserowTable } from "@/types/baserow";
 
 const BASE_URL = "https://api.baserow.io";
 
 const ENDPOINTS = {
   AUTH: `${BASE_URL}/api/user/token-auth/`,
+  APPLICATION: (baseId: string) => `${BASE_URL}/api/applications/${baseId}/`,
   DATABASE: (dbId: string) =>
     `${BASE_URL}/api/database/tables/database/${dbId}/`,
   TABLE_FIELDS: (tableId: string) =>
     `${BASE_URL}/api/database/fields/table/${tableId}/`,
 };
 
-export class BaserowService extends BaseExternalService {
+export class BaserowService
+  extends BaseExternalService
+  implements ICustomTableSource
+{
   private accessToken: string | null;
   private headers: Record<string, string>;
 
@@ -46,29 +57,135 @@ export class BaserowService extends BaseExternalService {
     };
   }
 
-  async getSchema() {
+  normalizeTableSchema(
+    table: BaserowTable,
+    tenant_id: string
+  ): CustomTableSchema {
+    return {
+      name: table.name,
+      display_name: table.name,
+      external_id: table.id,
+      source: "baserow",
+      schema_id: this.base_id,
+      tenant_id: tenant_id,
+      permissions: {},
+      schema_name: table.name,
+      primary_field_id: table.fields
+        .find((field) => field.primary)
+        ?.id?.toString() as string,
+      fields: table.fields.map((field) => ({
+        id: field.id,
+        name: field.name,
+        description: field.description,
+        type: field?.type,
+        sub_type: field?.formula_type,
+        is_computed: field?.type === "formula",
+        is_primary: field?.primary,
+        is_readonly: field?.read_only,
+        is_multiple: field?.link_row_multiple_relationships,
+        attr_key: field?.name,
+        inverse_linked_table_id: field?.link_row_table_id,
+        inverse_linked_field_id: field?.link_row_related_field_id,
+        original_provider_field: field,
+        precision: field?.number_decimal_places,
+        max_value: field?.number_max,
+        color: field?.color,
+        icon: field?.style,
+        date_format: field?.date_format,
+        time_format: field?.date_time_format,
+        options:
+          field?.select_options?.map((option) => ({
+            value: option.id,
+            label: option.value,
+            color: option.color,
+          })) || [],
+        symbol: field?.number_prefix,
+      })),
+    };
+  }
+
+  async getBase(tenant_id: string): Promise<CustomBaseSchema> {
     const headers = await this.getAuthHeaders();
+    const endpoint = ENDPOINTS.APPLICATION(this.base_id);
 
-    const tablesResponse = await fetch(ENDPOINTS.DATABASE("219296"), {
-      headers,
-    });
+    const baseResponse = await fetch(endpoint, { headers });
 
-    const tables = await tablesResponse.json();
+    const { name, tables, ...rest } = await baseResponse.json();
 
-    const fields = await Promise.all(
-      tables.map(async (table: any) => {
-        const fieldsResponse = await fetch(ENDPOINTS.TABLE_FIELDS(table.id), {
-          headers,
-        });
+    const tablesWithFields = await Promise.all(
+      tables.map(async (table: BaserowTable) => {
+        let fields = [];
+        let retries = 0;
+        const maxRetries = 3;
+        const retryDelay = 1000; // 1 second
 
-        const fields = await fieldsResponse.json();
+        while (retries < maxRetries) {
+          try {
+            const fieldsResponse = await fetch(
+              ENDPOINTS.TABLE_FIELDS(table.id),
+              {
+                headers,
+              }
+            );
 
-        console.log("fieldsResponse -->", fields);
+            if (!fieldsResponse.ok) {
+              throw new Error(
+                `Failed to fetch fields: ${fieldsResponse.status}`
+              );
+            }
 
-        return { fields, ...table };
+            fields = await fieldsResponse.json();
+            break; // Success, exit the retry loop
+          } catch (error) {
+            retries++;
+            console.error(
+              `Error fetching fields for table ${table.id}, attempt ${retries}/${maxRetries}:`,
+              error
+            );
+
+            if (retries >= maxRetries) {
+              console.error(`Max retries reached for table ${table.id}`);
+            } else {
+              // Wait before retrying
+              await new Promise((resolve) =>
+                setTimeout(resolve, retryDelay * retries)
+              );
+            }
+          }
+        }
+
+        return { ...table, fields };
       })
     );
 
-    return fields;
+    const normalizedTables = tablesWithFields.map((table) =>
+      this.normalizeTableSchema(table, tenant_id)
+    );
+
+    return { id: this.base_id, name, tables: normalizedTables };
+  }
+
+  async listRecords(table: CustomTableSchema) {
+    return [];
+  }
+
+  async retrieveRecord(table: CustomTableSchema, recordId: string) {
+    return null;
+  }
+
+  async createRecord(table: CustomTableSchema, record: CustomTableRecord) {
+    return null;
+  }
+
+  async updateRecord(
+    table: CustomTableSchema,
+    recordId: string,
+    record: CustomTableRecord
+  ) {
+    return null;
+  }
+
+  async deleteRecord(table: CustomTableSchema, recordId: string) {
+    return null;
   }
 }

@@ -15,7 +15,12 @@ type DataFieldInsert = Database["public"]["Tables"]["data_fields"]["Insert"];
 
 const handler = async (req: Request, context: AuthenticatedContext) => {
   const method = req.method.toUpperCase();
-  const { airtableService, supabase_AS_SUPER_ADMIN, authService } = context;
+  const {
+    supabase_AS_SUPER_ADMIN,
+    authService,
+    tenantWorkspace,
+    customTableService,
+  } = context;
 
   if (method !== "POST") {
     return new Response("Method not allowed", {
@@ -30,17 +35,18 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
   }
 
   try {
-    const schema = await airtableService.getBase(authService.tenantId);
+    const schema = await customTableService.getBase(authService.tenantId);
     const { tables } = schema;
 
     const { data: existingTables } = await supabase_AS_SUPER_ADMIN
       .from("data_tables")
       .select("*, data_fields(*)")
-      .eq("schema_id", airtableService.base_id)
-      .eq("source", "airtable");
+      .eq("schema_id", customTableService.base_id)
+      .eq("source", tenantWorkspace.source);
 
     const tablesToDelete = existingTables.filter(
-      (table: DataTable) => !tables.some((t) => t.id === table.external_id)
+      (table: DataTable) =>
+        !tables.some((t) => t.external_id === table.external_id)
     );
 
     await supabase_AS_SUPER_ADMIN
@@ -92,7 +98,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
         tenant_id: authService.tenantId as string,
         external_id: field.id,
         source: "airtable",
-        schema_id: airtableService.base_id,
+        schema_id: customTableService.base_id,
         schema_name: schema.name,
         permissions: {},
       }));

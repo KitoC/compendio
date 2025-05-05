@@ -6,15 +6,14 @@ import {
 } from "@/services/_BaseSupabaseService";
 import type { Database } from "@/integrations/supabase/types";
 import { READONLY_FIELDS_AIRTABLE } from "@/consts";
-import type { CustomTableField, CustomTableRecord } from "@/types/customTable";
+import type {
+  CustomTableField,
+  CustomTableRecord,
+  CustomTableSchema,
+} from "@/types/customTable";
 
 type DataField = Database["public"]["Tables"]["data_fields"]["Row"];
 type DataTable = Database["public"]["Tables"]["data_tables"]["Row"];
-type DataTableSchema = DataTable & {
-  data_fields: (DataField & {
-    schema: CustomTableField;
-  })[];
-};
 
 class DataTablesService extends BaseSupabaseService {
   constructor(public context: BaseRequiredContext) {
@@ -26,14 +25,17 @@ class DataTablesService extends BaseSupabaseService {
     base_id,
   }: {
     base_id: string;
-  }): Promise<DataTableSchema[]> {
+  }): Promise<CustomTableSchema[]> {
     const { data: tableSchemas } = await this.supabase_AS_SUPER_ADMIN
       .from("data_tables")
-      .select("*, data_fields(*)")
+      .select("*, fields:data_fields(*)")
       .eq("schema_id", base_id)
       .eq("source", "airtable");
 
-    return tableSchemas;
+    return tableSchemas.map((table: DataTable & { fields: DataField[] }) => ({
+      ...table,
+      fields: table.fields.map((field) => field.schema),
+    }));
   }
 
   async getTableSchema({ external_id }: { external_id: string }) {

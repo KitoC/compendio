@@ -44,7 +44,7 @@ const MultiSelectRenderer = ({ field, value }: FieldRendererProps) => {
     <div className="flex flex-wrap gap-1 max-w-[200px]">
       {value.map((id: string, index: number) => {
         // Find the choice by ID
-        const choice = field.options?.find((c) => c.id === id);
+        const choice = field.options?.find((c) => c.value === id);
 
         if (!choice) {
           return (
@@ -64,7 +64,7 @@ const MultiSelectRenderer = ({ field, value }: FieldRendererProps) => {
             key={`${id}-${index}`}
             className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colorClass}`}
           >
-            {choice.name}
+            {choice.label}
           </span>
         );
       })}

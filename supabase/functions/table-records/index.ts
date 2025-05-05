@@ -10,12 +10,7 @@ import { withErrorBoundary } from "@/middleware/withErrorBoundary";
 import { withCors } from "@/middleware/withCors";
 
 const handler = async (req: Request, context: AuthenticatedContext) => {
-  const {
-    airtableService,
-    dataTablesService,
-    corsHeaders,
-    supabase_AS_SUPER_ADMIN,
-  } = context;
+  const { customTableService, dataTablesService, corsHeaders } = context;
   const { searchParams } = new URL(req.url);
 
   const method = req.method.toUpperCase();
@@ -44,25 +39,23 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
     switch (method) {
       case "GET":
         if (recordId) {
-          const data = await airtableService.retrieveRecord(table, recordId);
+          const data = await customTableService.retrieveRecord(table, recordId);
 
           return Response.json({ data }, { headers: corsHeaders });
         } else {
-          const { records: data, ...rest } = await airtableService.listRecords(
-            table,
-            query
-          );
+          const { records: data, ...rest } =
+            await customTableService.listRecords(table, query);
 
           return Response.json({ data }, { headers: corsHeaders });
         }
 
       case "POST": {
         const body = await req.json();
-        const data = await airtableService.createRecord(table, body);
+        const data = await customTableService.createRecord(table, body);
 
         // await dataTablesService.upsertLabel({
         //   record: data,
-        //   base_id: airtableService.base_id,
+        //   base_id: customTableService.base_id,
         //   table,
         //   tenant_id: context.authService.tenantId as string,
         // });
@@ -85,7 +78,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
           external_table_id: table.external_id,
         });
 
-        const data = await airtableService.updateRecord(
+        const data = await customTableService.updateRecord(
           table,
           recordId,
           cleanedBody
@@ -93,7 +86,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
 
         // await dataTablesService.upsertLabel({
         //   record: data,
-        //   base_id: airtableService.base_id,
+        //   base_id: customTableService.base_id,
         //   table,
         //   tenant_id: context.authService.tenantId as string,
         // });
@@ -108,7 +101,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
             headers: corsHeaders,
           });
         }
-        const data = await airtableService.deleteRecord(table, recordId);
+        const data = await customTableService.deleteRecord(table, recordId);
 
         await dataTablesService.deleteLabel({
           table,

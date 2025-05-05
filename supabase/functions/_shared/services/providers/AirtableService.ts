@@ -10,6 +10,7 @@ import type {
 } from "@/types/customTable";
 import { BaseExternalService } from "@/services/_BaseExternalService";
 import { getEnvKey } from "@/utils/env";
+import { ICustomTableSource } from "@/interfaces/ICustomTableSource";
 
 const BASE_URL = "https://api.airtable.com/v0";
 
@@ -34,7 +35,10 @@ const ENDPOINTS = {
     `${BASE_URL}/meta/bases/${baseId}/tables/${tableId}`,
 };
 
-export class AirtableService extends BaseExternalService {
+export class AirtableService
+  extends BaseExternalService
+  implements ICustomTableSource
+{
   private accessToken: string | null;
 
   constructor(public base_id: string) {
@@ -144,8 +148,14 @@ export class AirtableService extends BaseExternalService {
         icon: field?.options?.icon,
         date_format: field?.options?.dateFormat?.name,
         time_format: field?.options?.timeFormat?.name?.replace("hour", ""),
-        options: field?.options?.choices || [],
+        options:
+          field?.options?.choices?.map((choice) => ({
+            value: choice.id,
+            label: choice.name,
+            color: choice.color,
+          })) || [],
         symbol: field?.options?.symbol,
+        primary_key: table.primaryFieldId === field.id,
       })),
     };
   }
@@ -187,10 +197,7 @@ export class AirtableService extends BaseExternalService {
   async listRecords(table: CustomTableSchema, queryString = "") {
     const response = await fetch(
       ENDPOINTS.LIST_RECORDS(this.base_id, table.external_id, queryString),
-      {
-        headers: this.headers,
-        method: "GET",
-      }
+      { headers: this.headers, method: "GET" }
     );
 
     if (!response.ok) {
@@ -206,10 +213,7 @@ export class AirtableService extends BaseExternalService {
   async retrieveRecord(table: CustomTableSchema, recordId: string) {
     const response = await fetch(
       ENDPOINTS.RETRIEVE_RECORD(this.base_id, table.external_id, recordId),
-      {
-        headers: this.headers,
-        method: "GET",
-      }
+      { headers: this.headers, method: "GET" }
     );
     const json = await response.json();
 
@@ -279,56 +283,6 @@ export class AirtableService extends BaseExternalService {
     if (!response.ok) {
       const json = await response.json();
       this.throwError("Failed to delete record", json, response.status);
-    }
-
-    return response.json();
-  }
-
-  async createTable(schema: object) {
-    const response = await fetch(ENDPOINTS.CREATE_TABLE(this.base_id), {
-      headers: this.headers,
-      method: "POST",
-      body: JSON.stringify(schema),
-    });
-
-    if (!response.ok) {
-      const json = await response.json();
-      this.throwError("Failed to create table", json, response.status);
-    }
-
-    return response.json();
-  }
-
-  async updateTable(tableId: string, updates: object) {
-    const response = await fetch(
-      ENDPOINTS.UPDATE_TABLE(this.base_id, tableId),
-      {
-        headers: this.headers,
-        method: "PATCH",
-        body: JSON.stringify(updates),
-      }
-    );
-
-    if (!response.ok) {
-      const json = await response.json();
-      this.throwError("Failed to update table", json, response.status);
-    }
-
-    return response.json();
-  }
-
-  async deleteTable(tableId: string) {
-    const response = await fetch(
-      ENDPOINTS.DELETE_TABLE(this.base_id, tableId),
-      {
-        headers: this.headers,
-        method: "DELETE",
-      }
-    );
-
-    if (!response.ok) {
-      const json = await response.json();
-      this.throwError("Failed to delete table", json, response.status);
     }
 
     return response.json();

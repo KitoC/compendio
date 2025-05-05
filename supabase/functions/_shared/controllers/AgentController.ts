@@ -16,7 +16,7 @@ import Logger from "@/utils/Logger";
 import { UpdateChatMessageParams } from "@/services/MessagesService";
 import { RECORD_FUNCTIONS } from "@/SYSTEM_FUNCTIONS/RECORD_FUNCTIONS";
 import { GET_RECORDS_PROMPT } from "@/SYSTEM_PROMPTS/GET_RECORDS_PROMPT";
-
+import type { CustomTableSchema } from "@/types/customTable";
 interface AgentControllerFactoryArgs {
   context: AuthenticatedContext;
   functionController: FunctionController;
@@ -100,8 +100,8 @@ class AgentController extends BaseController {
     return functionIds;
   }
 
-  async getTableSchemas() {
-    const base_id = this.context.airtableService.base_id;
+  async getTableSchemas(): Promise<CustomTableSchema[]> {
+    const base_id = this.context.customTableService.base_id;
 
     const tableSchemas = await this.context.dataTablesService.getTableSchemas({
       base_id,
@@ -115,14 +115,14 @@ class AgentController extends BaseController {
 
     const tablesPrompt = tableSchemas
       .map((table) => {
-        return `#### ${table.name}\n${table.data_fields
+        return `#### ${table.name}\n${table.fields
           .map((field) => {
-            const options = field.schema?.options?.choices
-              ?.map((choice) => choice.name)
+            const options = field?.options
+              ?.map((option) => option.label)
               .join("|");
-            const fieldType = field.schema?.type;
+            const fieldType = field?.type;
 
-            return `- ${field.schema.name} type[${fieldType}] ${
+            return `- ${field.name} type[${fieldType}] ${
               options ? `options[${options}]` : ""
             }`;
           })

@@ -86,8 +86,8 @@ export const customTableFieldToFormField = (
   if (field.type === "singleSelect" && field.options) {
     formField.options = field.options.map(
       (option): FormFieldOption => ({
-        label: option.name,
-        value: option.name,
+        label: option.label,
+        value: option.value,
         color: option.color,
         variant: "airtable",
       })

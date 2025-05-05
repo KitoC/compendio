@@ -6,6 +6,7 @@ import Logger from "@/utils/Logger";
 import { getSharedServices } from "@/middleware/_getSharedServices";
 import { AirtableService } from "@/services/providers/AirtableService";
 import { BaserowService } from "@/services/providers/BaserowService";
+import { CustomTableService } from "@/services/CustomTableService";
 const logger = new Logger({ name: "AuthenticatedContext" });
 
 export const getAuthenticatedContext = async (
@@ -42,15 +43,17 @@ export const getAuthenticatedContext = async (
   logger.debug("currentUser", user?.user?.id);
   logger.debug("tenantId", tenantId);
 
-  const tenantWorkspace = await supabase_AS_SUPER_ADMIN
+  const { data: tenantWorkspace } = await supabase_AS_SUPER_ADMIN
     .from("tenants")
     .select("*")
     .eq("id", tenantId)
     .single();
 
-  logger.debug("tenantWorkspace", tenantWorkspace.data);
-  const airtableService = new AirtableService(tenantWorkspace.data.base_id);
-  const baserowService = new BaserowService(tenantWorkspace.data.base_id);
+  logger.debug("tenantWorkspace", tenantWorkspace);
+
+  const airtableService = new AirtableService(tenantWorkspace.base_id);
+  const baserowService = new BaserowService(tenantWorkspace.base_id);
+  const customTableService = new CustomTableService(tenantWorkspace);
 
   return {
     ...supabaseContext,
@@ -59,6 +62,8 @@ export const getAuthenticatedContext = async (
     tenant_id: tenantId,
     ...getSharedServices(supabaseContext),
     airtableService,
+    tenantWorkspace,
     baserowService,
+    customTableService,
   };
 };

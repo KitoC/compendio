@@ -10,7 +10,7 @@ export interface AirtableFieldOption {
   choices?: AirtableChoice[];
   dateFormat?: { name: string; format: string };
   timeFormat?: { name: string; format: string };
-  precision?: string;
+  precision?: number;
   isReversed?: boolean;
   foreignTableId?: string;
   linkedTableId?: string;
@@ -22,7 +22,7 @@ export interface AirtableFieldOption {
   result?: {
     type: string;
     options?: {
-      precision?: string;
+      precision?: number;
     };
   };
   [key: string]: unknown;

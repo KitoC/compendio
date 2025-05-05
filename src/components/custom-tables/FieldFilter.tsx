@@ -58,8 +58,8 @@ const FieldFilter = ({ field, value, onChange }: FieldFilterProps) => {
           <SelectContent>
             <SelectItem value="">All</SelectItem>
             {field.options?.map((option) => (
-              <SelectItem key={option.id} value={option.id}>
-                {option.name}
+              <SelectItem key={option.value} value={option.value.toString()}>
+                {option.label}
               </SelectItem>
             ))}
           </SelectContent>

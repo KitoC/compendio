@@ -1,4 +1,4 @@
-import { AirtableFieldOption, AirtableFieldType } from "./airtable";
+import { AirtableFieldType } from "./airtable";
 
 export interface CustomTableRecord {
   _id: string;
@@ -7,13 +7,13 @@ export interface CustomTableRecord {
 }
 
 export interface SelectOption {
-  id: string;
-  name: string;
+  value: string | number;
+  label: string;
   color?: string;
 }
 
 export interface CustomTableField {
-  id: string;
+  id: string | number;
   name: string;
   description?: string;
   // https://airtable.com/developers/web/api/field-model
@@ -25,8 +25,8 @@ export interface CustomTableField {
   is_primary?: boolean;
   is_locked?: boolean;
   attr_key?: string;
-  inverse_linked_table_id?: string;
-  inverse_linked_field_id?: string;
+  inverse_linked_table_id?: string | number;
+  inverse_linked_field_id?: string | number;
   is_multiple?: boolean;
   original_provider_field: unknown;
   max_value?: number;
@@ -34,8 +34,9 @@ export interface CustomTableField {
   icon?: string;
   date_format?: string;
   time_format?: string;
-  precision?: string;
+  precision?: number;
   symbol?: string;
+  primary_key?: boolean;
 }
 
 export interface CustomTableFieldSchema {

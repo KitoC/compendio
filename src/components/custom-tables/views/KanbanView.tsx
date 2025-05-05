@@ -43,8 +43,8 @@ const KanbanView = ({
 
   // Get the primary field for the table
   const primaryField = useMemo(() => {
-    if (table && table.primaryFieldId) {
-      return table.fields.find((field) => field.id === table.primaryFieldId);
+    if (table && table.primary_field_id) {
+      return table.fields.find((field) => field.id === table.primary_field_id);
     }
     return table.fields[0];
   }, [table]);
@@ -70,7 +70,7 @@ const KanbanView = ({
 
     // Initialize groups with all possible values from the field options
     fieldOptions?.forEach((option) => {
-      groups[option.name || option.id] = [];
+      groups[option.label || option.value] = [];
     });
 
     // Add an "Uncategorized" group
@@ -188,8 +188,8 @@ const KanbanView = ({
 
             // Try to find matching option color
             if (fieldForColor && fieldForColor.options) {
-              const option = fieldForColor.options.choices.find(
-                (opt) => (opt.name || opt.id) === group
+              const option = fieldForColor.options.find(
+                (opt) => (opt.label || opt.value) === group
               );
               if (option && option.color) {
                 groupColor = `bg-${option.color.toLowerCase()}-100`;

@@ -7,6 +7,9 @@ import { getAuthenticatedContext } from "@/middleware/_getAuthenticatedContext";
 import type { User } from "@/types/user";
 import { AirtableService } from "@/services/providers/AirtableService";
 import { BaserowService } from "@/services/providers/BaserowService";
+import type { Database } from "@/integrations/supabase/types";
+import { CustomTableService } from "@/services/CustomTableService";
+type TenantWorkspace = Database["public"]["Tables"]["tenants"]["Row"];
 
 export interface AuthenticatedContext extends SharedServices {
   supabase: SupabaseClient;
@@ -16,6 +19,8 @@ export interface AuthenticatedContext extends SharedServices {
   user: User;
   airtableService: AirtableService;
   baserowService: BaserowService;
+  tenantWorkspace: TenantWorkspace;
+  customTableService: CustomTableService;
 }
 
 export type AuthenticatedContextChildHandler = (
