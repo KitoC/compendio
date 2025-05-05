@@ -1,6 +1,6 @@
 import { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
-
+import { isUUID } from "@/utils/idHelpers";
 export type IDataView = Database["public"]["Tables"]["data_views"]["Row"];
 export type DataViewCreate =
   Database["public"]["Tables"]["data_views"]["Insert"];
@@ -14,10 +14,7 @@ export const DataViewsService = {
     const { data, error } = await supabase
       .from(DATA_VIEWS_TABLE_NAME)
       .select("*")
-      .eq(
-        table_id.startsWith("tbl") ? "external_table_id" : "data_table_id",
-        table_id
-      );
+      .eq(isUUID(table_id) ? "data_table_id" : "external_table_id", table_id);
 
     if (error) {
       throw new Error("Failed to fetch workflows");

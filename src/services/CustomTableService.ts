@@ -1,6 +1,7 @@
 import { SupabaseFunctionService } from "./supabaseFunctionServices";
 import { supabase } from "@/integrations/supabase/client";
 import type { CustomTableRecord } from "@/types/customTable";
+import { isUUID } from "@/utils/idHelpers";
 
 export const CustomTableService = {
   async syncSchema() {
@@ -25,10 +26,11 @@ export const CustomTableService = {
   },
 
   async getTableSchema(tableId: string) {
+    console.log("tableId", tableId);
     const response = await supabase
       .from("data_tables")
       .select("*, fields:data_fields(*)")
-      .eq(tableId.startsWith("tbl") ? "external_id" : "id", tableId)
+      .eq(isUUID(tableId) ? "id" : "external_id", tableId)
       .single();
 
     return response.data;
