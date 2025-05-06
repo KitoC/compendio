@@ -23,14 +23,16 @@ class DataTablesService extends BaseSupabaseService {
 
   async getTableSchemas({
     base_id,
+    source,
   }: {
     base_id: string;
+    source: string;
   }): Promise<CustomTableSchema[]> {
     const { data: tableSchemas } = await this.supabase_AS_SUPER_ADMIN
       .from("data_tables")
       .select("*, fields:data_fields(*)")
       .eq("schema_id", base_id)
-      .eq("source", "airtable");
+      .eq("source", source);
 
     return tableSchemas.map((table: DataTable & { fields: DataField[] }) => ({
       ...table,
@@ -38,15 +40,28 @@ class DataTablesService extends BaseSupabaseService {
     }));
   }
 
-  async getTableSchema({ external_id }: { external_id: string }) {
-    const { data: tableSchema } = await this.supabase_AS_SUPER_ADMIN
+  async getTableSchema({
+    external_id,
+    source,
+  }: {
+    external_id: string;
+    source: string;
+  }) {
+    const { data: tableSchema, error } = await this.supabase_AS_SUPER_ADMIN
       .from("data_tables")
-      .select("*, data_fields(*)")
-      .eq("source", "airtable")
+      .select("*, fields:data_fields(*)")
+      .eq("source", source)
       .eq("external_id", external_id)
       .single();
 
-    return tableSchema;
+    if (error) {
+      console.error("error", error);
+    }
+
+    return {
+      ...tableSchema,
+      fields: tableSchema.fields.map((field: DataField) => field.schema),
+    };
   }
 
   async upsertLabel({
@@ -57,10 +72,13 @@ class DataTablesService extends BaseSupabaseService {
   }: {
     record: CustomTableRecord;
     base_id: string;
-    table: string;
+    table: CustomTableSchema;
     tenant_id: string;
   }) {
-    const tableSchema = await this.getTableSchema({ external_id: table });
+    const tableSchema = await this.getTableSchema({
+      external_id: table.external_id,
+      source: table.source,
+    });
 
     const primaryFieldName = tableSchema.data_fields.find(
       (field: DataField) => field.external_id === tableSchema.primary_field_id
@@ -92,13 +110,13 @@ class DataTablesService extends BaseSupabaseService {
     table,
     record_id,
   }: {
-    table: string;
+    table: CustomTableSchema;
     record_id: string;
   }) {
     const labelError = await this.supabase_AS_SUPER_ADMIN
       .from("data_table_record_labels")
       .delete()
-      .eq("external_table_id", table)
+      .eq("external_table_id", table.external_id)
       .eq("record_id", record_id);
 
     if (labelError) {
@@ -117,6 +135,7 @@ class DataTablesService extends BaseSupabaseService {
   }): Promise<CustomTableRecord> {
     const tableSchema = await this.getTableSchema({
       external_id: external_table_id,
+      source,
     });
 
     const SOURCE_READONLY_FIELDS: Record<string, string[]> = {

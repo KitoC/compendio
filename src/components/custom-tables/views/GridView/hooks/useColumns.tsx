@@ -15,7 +15,11 @@ const useColumns = (table: CustomTableSchema, permissions: UserPermissions) => {
     let fields = table.fields.filter(
       (f) => !["createdBy", "lastModifiedBy"].includes(f.type)
     );
-    const primary = table.fields.find((f) => f.id === table.primaryFieldId);
+
+    const primary = table.fields.find(
+      (f) => f.id?.toString() === table.primary_field_id
+    );
+
     if (primary) {
       fields = [primary, ...fields.filter((f) => f.id !== primary.id)];
     }
@@ -27,7 +31,7 @@ const useColumns = (table: CustomTableSchema, permissions: UserPermissions) => {
 
     return [
       columnHelper.accessor((row) => row[displayFields[0].name], {
-        id: displayFields[0].id,
+        id: displayFields[0].id?.toString(),
         header: () => displayFields[0].name,
         cell: (info) => (
           <div className="h-full flex items-center">
@@ -41,7 +45,7 @@ const useColumns = (table: CustomTableSchema, permissions: UserPermissions) => {
       }),
       ...displayFields.slice(1).map((field) =>
         columnHelper.accessor((row) => row[field.name], {
-          id: field.id,
+          id: field.id?.toString(),
           header: () => field.name,
           cell: (info) => (
             <div className="h-full flex items-center">

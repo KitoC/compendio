@@ -105,6 +105,7 @@ class AgentController extends BaseController {
 
     const tableSchemas = await this.context.dataTablesService.getTableSchemas({
       base_id,
+      source: this.context.customTableService.source,
     });
 
     return tableSchemas;

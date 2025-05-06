@@ -65,7 +65,8 @@ export class AirtableService
   normalizeRecord(record: AirtableRecord): CustomTableRecord {
     return {
       _id: record.id,
-      _createdTime: record.createdTime,
+      created_at: record.createdTime,
+      updated_at: record.updatedTime,
       ...Object.fromEntries(
         Object.entries(record.fields).map(([key, value]) => {
           if (
@@ -154,7 +155,7 @@ export class AirtableService
             label: choice.name,
             color: choice.color,
           })) || [],
-        symbol: field?.options?.symbol,
+        prefix: field?.options?.symbol,
         primary_key: table.primaryFieldId === field.id,
       })),
     };
@@ -207,7 +208,10 @@ export class AirtableService
 
     const json = await response.json();
 
-    return { ...json, records: json.records.map(this.normalizeRecord) };
+    return {
+      ...json,
+      data: json.records.map(this.normalizeRecord),
+    };
   }
 
   async retrieveRecord(table: CustomTableSchema, recordId: string) {

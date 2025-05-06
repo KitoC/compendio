@@ -6,7 +6,7 @@ import type {
   CustomTableRecord,
   CustomTableSchema,
 } from "@/types/customTable";
-import type { BaserowBase, BaserowTable } from "@/types/baserow";
+import type { BaserowBase, BaserowTable, BaserowRow } from "@/types/baserow";
 
 const BASE_URL = "https://api.baserow.io";
 
@@ -17,6 +17,8 @@ const ENDPOINTS = {
     `${BASE_URL}/api/database/tables/database/${dbId}/`,
   TABLE_FIELDS: (tableId: string) =>
     `${BASE_URL}/api/database/fields/table/${tableId}/`,
+  TABLE_ROWS: (tableId: string) =>
+    `${BASE_URL}/api/database/rows/table/${tableId}/`,
 };
 
 export class BaserowService
@@ -28,9 +30,9 @@ export class BaserowService
 
   constructor(public base_id: string) {
     super();
-    this.accessToken = getEnvKey("AIR_TABLE_ACCESS_TOKEN");
+    this.accessToken = getEnvKey("BASEROW_TOKEN");
     this.headers = {
-      Authorization: `Bearer ${this.accessToken}`,
+      Authorization: `Token ${this.accessToken}`,
       "Content-Type": "application/json",
     };
   }
@@ -54,6 +56,21 @@ export class BaserowService
     return {
       Authorization: `JWT ${json.token}`,
       "Content-Type": "application/json",
+    };
+  }
+
+  normalizeRecord(
+    record: Record<string, unknown | unknown[]>,
+    table: CustomTableSchema
+  ): CustomTableRecord {
+    const fields = table.fields.reduce((_fields, field) => {
+      return { ..._fields, [field.name]: record[`field_${field.id}`] };
+    }, {});
+    return {
+      _id: record.id as string,
+      _created_at: record.created_at as string | undefined,
+      _updated_at: record.updated_at as string | undefined,
+      ...fields,
     };
   }
 
@@ -99,7 +116,8 @@ export class BaserowService
             label: option.value,
             color: option.color,
           })) || [],
-        symbol: field?.number_prefix,
+        prefix: field?.number_prefix,
+        suffix: field?.number_suffix,
       })),
     };
   }
@@ -166,7 +184,24 @@ export class BaserowService
   }
 
   async listRecords(table: CustomTableSchema) {
-    return [];
+    const rows = await fetch(ENDPOINTS.TABLE_ROWS(table.external_id), {
+      headers: this.headers,
+    });
+
+    if (!rows.ok) {
+      throw new Error(`Failed to fetch rows: ${rows.status}`);
+    }
+
+    const rowsData = await rows.json();
+
+    return {
+      data: rowsData.results.map((record: Record<string, unknown>) =>
+        this.normalizeRecord(record, table)
+      ),
+      total: rowsData.count,
+      next: rowsData.next,
+      previous: rowsData.previous,
+    };
   }
 
   async retrieveRecord(table: CustomTableSchema, recordId: string) {

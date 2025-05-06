@@ -26,7 +26,6 @@ export const CustomTableService = {
   },
 
   async getTableSchema(tableId: string) {
-    console.log("tableId", tableId);
     const response = await supabase
       .from("data_tables")
       .select("*, fields:data_fields(*)")
@@ -37,8 +36,6 @@ export const CustomTableService = {
   },
 
   async listRecords(table: string, queryString = "") {
-    console.log("queryString", queryString);
-
     const response = await SupabaseFunctionService.get(
       `table-records?table=${table}${queryString ? `&${queryString}` : ""}`
     );

@@ -28,11 +28,15 @@ const RollupRenderer = ({ field, value }: FieldRendererProps) => {
         : (value as { specialValue: number }).specialValue;
     // Format with precision if specified in options
     const precision =
-      field?.precision !== undefined
-        ? parseInt(field.precision as string, 10)
-        : 2;
+      field?.precision !== undefined ? Number(field.precision) : 2;
 
-    return <span className="block w-full">{v?.toFixed?.(precision) || v}</span>;
+    return (
+      <span className="block w-full">
+        {field?.prefix}
+        {Number(value)?.toFixed?.(precision) || v}
+        {field?.suffix}
+      </span>
+    );
   }
 
   // For string values

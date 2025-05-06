@@ -1,26 +1,17 @@
-import React from "react";
 import { FieldRendererProps } from "./index";
 import { getAirtableColor } from "@/utils/airtable";
+import { SelectOption } from "@/types/customTable";
 
-const SingleSelectRenderer = ({ field, value }: FieldRendererProps) => {
+const SingleSelectRenderer = ({ value }: FieldRendererProps<SelectOption>) => {
   if (!value) return <span className="text-sm text-muted-foreground">-</span>;
-
-  // Find the choice by ID
-  const choice = field.options?.find((c) => c.value === value);
-
-  if (!choice) {
-    return <span className="text-sm">{String(value)}</span>;
-  }
-
-  // Default colors if not provided
 
   return (
     <span
       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getAirtableColor(
-        choice.color
+        value.color
       )}`}
     >
-      {choice.label}
+      {value.value}
     </span>
   );
 };

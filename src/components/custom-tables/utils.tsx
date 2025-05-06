@@ -99,7 +99,7 @@ export const customTableFieldToFormField = (
     formField.props = {
       ...(formField.props || {}),
       isCurrency: true,
-      currencySymbol: field.symbol || "$",
+      currencySymbol: field.prefix || "$",
     };
   } else if (field.type === "percent" && fieldType === "number") {
     formField.props = {

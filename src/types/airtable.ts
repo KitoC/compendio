@@ -65,7 +65,7 @@ export type AirtableFieldType =
   | "foreignKey"
   | "externalSyncSource"
   | "url"
-  | string;
+  | "attachment";
 
 export interface AirtableField {
   id: string;
@@ -113,6 +113,7 @@ export interface AirtableRecord {
   id: string;
   fields: Record<string, unknown>;
   createdTime?: string;
+  updatedTime?: string;
   labels?: Record<string, DataTableRecordLabel[]>;
 }
 

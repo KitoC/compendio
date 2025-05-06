@@ -10,7 +10,12 @@ import { withErrorBoundary } from "@/middleware/withErrorBoundary";
 import { withCors } from "@/middleware/withCors";
 
 const handler = async (req: Request, context: AuthenticatedContext) => {
-  const { customTableService, dataTablesService, corsHeaders } = context;
+  const {
+    customTableService,
+    dataTablesService,
+    corsHeaders,
+    tenantWorkspace,
+  } = context;
   const { searchParams } = new URL(req.url);
 
   const method = req.method.toUpperCase();
@@ -33,6 +38,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
 
   const table = await dataTablesService.getTableSchema({
     external_id: tableId,
+    source: tenantWorkspace.source,
   });
 
   try {
@@ -43,10 +49,9 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
 
           return Response.json({ data }, { headers: corsHeaders });
         } else {
-          const { records: data, ...rest } =
-            await customTableService.listRecords(table, query);
+          const response = await customTableService.listRecords(table, query);
 
-          return Response.json({ data }, { headers: corsHeaders });
+          return Response.json(response, { headers: corsHeaders });
         }
 
       case "POST": {

@@ -1,8 +1,10 @@
 import { AirtableFieldType } from "./airtable";
+import { BaserowFieldType } from "./baserow";
 
 export interface CustomTableRecord {
   _id: string;
-  _createdTime?: string;
+  _created_at?: string;
+  _updated_at?: string;
   [key: string]: unknown;
 }
 
@@ -17,7 +19,7 @@ export interface CustomTableField {
   name: string;
   description?: string;
   // https://airtable.com/developers/web/api/field-model
-  type: AirtableFieldType;
+  type: AirtableFieldType | BaserowFieldType;
   sub_type?: string;
   // options?: AirtableFieldOption;
   options: SelectOption[];
@@ -35,7 +37,8 @@ export interface CustomTableField {
   date_format?: string;
   time_format?: string;
   precision?: number;
-  symbol?: string;
+  prefix?: string;
+  suffix?: string;
   primary_key?: boolean;
 }
 

@@ -15,14 +15,18 @@ const NumberRenderer = ({ field, value }: FieldRendererProps) => {
 
   // Handle decimal points based on options
   const precision =
-    field?.precision !== undefined
-      ? parseInt(field.precision as string, 10)
-      : 0;
+    field?.precision !== undefined ? Number(field.precision) : 0;
 
   const formattedNumber =
     typeof numValue === "number" ? numValue.toFixed(precision) : "-";
 
-  return <span className="block w-full">{formattedNumber}</span>;
+  return (
+    <span className="block w-full">
+      {field?.prefix}
+      {formattedNumber}
+      {field?.suffix}
+    </span>
+  );
 };
 
 export default NumberRenderer;

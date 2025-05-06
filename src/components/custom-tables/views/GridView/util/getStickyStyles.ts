@@ -12,7 +12,7 @@ const getStickyStyles = (
   displayFields: CustomTableField[],
   isHeader: boolean
 ) => {
-  const isFirst = colId === displayFields[0]?.id;
+  const isFirst = colId?.toString() === displayFields[0]?.id?.toString();
   const isActions = colId === "actions";
   let styles = "";
 

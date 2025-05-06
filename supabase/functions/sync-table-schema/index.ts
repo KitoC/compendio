@@ -96,7 +96,7 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
         table_id: tableRecord.id,
         schema: field as unknown as Json,
         tenant_id: authService.tenantId as string,
-        external_id: field.id,
+        external_id: field.id as string,
         source: "airtable",
         schema_id: customTableService.base_id,
         schema_name: schema.name,
@@ -118,8 +118,6 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
             "id",
             fieldsToDelete.map((f: DataField) => f.id)
           );
-
-        console.log("externalFieldsToSync", externalFieldsToSync);
 
         await upsertFields(externalFieldsToSync);
       } else {

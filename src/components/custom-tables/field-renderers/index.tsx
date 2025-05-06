@@ -1,5 +1,5 @@
 import React from "react";
-import { CustomTableField } from "@/types/customTable";
+import { CustomTableField, SelectOption } from "@/types/customTable";
 import type { CustomTableRecord } from "@/types/customTable";
 import CheckboxRenderer from "./CheckboxRenderer";
 import DateRenderer from "./DateRenderer";
@@ -19,9 +19,9 @@ import DefaultRenderer from "./DefaultRenderer";
 import MultipleRecordLinksRenderer from "./MultipleRecordLinksRenderer";
 import RollupRenderer from "./RollupRenderer";
 
-export interface FieldRendererProps {
+export interface FieldRendererProps<V = unknown> {
   field: CustomTableField;
-  value: unknown;
+  value: V;
   record?: CustomTableRecord;
 }
 
@@ -39,18 +39,27 @@ export const getFieldRenderer = (
 
   switch (field.type) {
     case "checkbox":
+    case "boolean":
       return <CheckboxRenderer field={field} value={value} />;
     case "date":
     case "dateTime":
     case "createdTime":
+    case "created_on":
+    case "last_modified":
     case "lastModifiedTime":
       return <DateRenderer field={field} value={value} />;
     case "multipleSelects":
+    case "multiple_select":
       return <MultiSelectRenderer field={field} value={value} />;
     case "singleSelect":
-      return <SingleSelectRenderer field={field} value={value} />;
+    case "single_select":
+      return (
+        <SingleSelectRenderer field={field} value={value as SelectOption} />
+      );
     case "singleLineText":
+    case "text":
     case "longText":
+    case "long_text":
     case "autoNumber":
     case "count":
     case "formula":
@@ -64,6 +73,7 @@ export const getFieldRenderer = (
       return <NumberRenderer field={field} value={value} />;
     case "url":
       return <UrlRenderer field={field} value={value} />;
+    case "file":
     case "multipleAttachments":
     case "attachment":
       return <AttachmentRenderer field={field} value={value} />;
@@ -75,9 +85,11 @@ export const getFieldRenderer = (
       return <CurrencyRenderer field={field} value={value} />;
     case "percent":
       return <PercentRenderer field={field} value={value} />;
+    case "phone_number":
     case "phoneNumber":
       return <PhoneRenderer field={field} value={value} />;
     case "multipleRecordLinks":
+    case "link_row":
       return (
         <MultipleRecordLinksRenderer
           field={field}

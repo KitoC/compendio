@@ -8,8 +8,9 @@ interface Attachment {
   filename: string;
   size?: number;
   type?: string;
+  mime_type?: string;
   thumbnails?: {
-    small?: { url: string };
+    small?: { url: string; height: number; width: number };
     large?: { url: string };
   };
 }
@@ -23,21 +24,22 @@ const AttachmentRenderer = ({ field, value }: FieldRendererProps) => {
 
   // Get the appropriate icon based on file type
   const getFileIcon = (attachment: Attachment) => {
-    const type = attachment.type?.toLowerCase() || "";
+    const type = (attachment.type || attachment.mime_type)?.toLowerCase() || "";
 
     if (type.includes("image")) {
+      const thumbnail = attachment?.thumbnails?.small;
       return (
         <img
           className="content flex-none"
           draggable="false"
           style={{
-            width: "38px",
-            height: "25px",
-            maxHeight: "25px",
+            width: `${thumbnail.width || 38}px`,
+            height: `${thumbnail.height || 25}px`,
+            maxHeight: `${thumbnail.height || 25}px`,
             marginLeft: "0",
             marginTop: "0",
           }}
-          src={attachment.url}
+          src={thumbnail?.url || attachment.url}
           alt={attachment.filename}
         />
       );
@@ -72,7 +74,7 @@ const AttachmentRenderer = ({ field, value }: FieldRendererProps) => {
           href={attachment.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+          className="flex flex-col items-center gap-1.5 text-xs text-primary hover:underline "
         >
           {getFileIcon(attachment)}
           {!attachment.type?.includes("image") && (
