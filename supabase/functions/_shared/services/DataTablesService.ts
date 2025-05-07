@@ -140,13 +140,14 @@ class DataTablesService extends BaseSupabaseService {
 
     const SOURCE_READONLY_FIELDS: Record<string, string[]> = {
       airtable: READONLY_FIELDS_AIRTABLE,
+      baserow: [],
     };
 
     const cleanedBody: CustomTableRecord = {
       _id: body._id,
     };
 
-    const readOnlyFields: CustomTableField[] = tableSchema.data_fields
+    const readOnlyFields: CustomTableField[] = tableSchema.fields
       .filter((field: DataField) =>
         SOURCE_READONLY_FIELDS[source].includes(
           (field.schema as unknown as CustomTableField)?.type

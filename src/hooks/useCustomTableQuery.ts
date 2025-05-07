@@ -215,7 +215,7 @@ export const useCustomRecordsQuery = ({
   isOptimistic = false,
 }: UseCustomTableQueryOptions = {}) => {
   const { tables } = useCustomTables();
-  const table = tables.find((table) => table.external_id === tableId);
+  const table = tables.find((table) => table.external_id == tableId);
   const queryClient = useQueryClient();
   const dataQueryKey = useMemo(
     () => [QUERY_KEYS.RECORDS, tableId, queryString],
@@ -245,6 +245,7 @@ export const useCustomRecordsQuery = ({
       return response.data as CustomTableRecord[];
     },
     enabled: !!tableId,
+    placeholderData: [],
   });
 
   const updateQueryData = useCallback(

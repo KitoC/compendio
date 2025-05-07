@@ -1,4 +1,4 @@
-import { UserSettingsContext } from "./UserSettingsContext";
+import { UserSettingsContext, TimeSettings } from "./UserSettingsContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
 import { useState, useEffect } from "react";
@@ -9,6 +9,12 @@ const UserSettingsProvider = ({ children }: { children: React.ReactNode }) => {
   const { tenantId } = useTenant();
   const [theme, setTheme] = useState<string>("system");
   const [isLoading, setIsLoading] = useState(true);
+
+  const [timeSettings, setTimeSettings] = useState<TimeSettings>({
+    timeZone: "Australia/Sydney",
+    timeFormat: "12h",
+    dateFormat: "D MMM, YYYY",
+  });
 
   useEffect(() => {
     const fetchUserConfig = async () => {
@@ -43,7 +49,9 @@ const UserSettingsProvider = ({ children }: { children: React.ReactNode }) => {
   }, [user, tenantId]);
 
   return (
-    <UserSettingsContext.Provider value={{ theme, setTheme, isLoading }}>
+    <UserSettingsContext.Provider
+      value={{ theme, setTheme, isLoading, timeSettings, setTimeSettings }}
+    >
       {children}
     </UserSettingsContext.Provider>
   );

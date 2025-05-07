@@ -18,7 +18,8 @@ import { getAirtableColor } from "@/utils/airtable";
 import Multiselect, { MultiselectOption } from "@/components/ui/multiselect";
 import { CalendarInput } from "../ui/calendar-input";
 import { Switch } from "../ui/switch";
-import { useCallback } from "react";
+import { HTMLInputTypeAttribute, useCallback } from "react";
+import { SelectOption } from "@/types/customTable";
 
 const FormField = ({
   field,
@@ -30,7 +31,6 @@ const FormField = ({
   setFormValues,
 }: FormFieldProps) => {
   const {
-    id,
     name,
     label,
     description,
@@ -48,6 +48,8 @@ const FormField = ({
     renderBelowInput,
   } = field;
 
+  const id = field.id as string;
+  let optionValue: SelectOption | undefined;
   const handleChangeSideEffect = useCallback(
     (newFormValues: Record<string, unknown>) => {
       onChangeSideEffect?.({
@@ -192,7 +194,7 @@ const FormField = ({
           <Input
             id={id}
             name={name}
-            type={type}
+            type={(props?.type as HTMLInputTypeAttribute) || type}
             value={(value as string) || ""}
             onChange={handleChange}
             placeholder={placeholder}
@@ -291,6 +293,8 @@ const FormField = ({
         );
 
       case "select":
+        optionValue = options?.find((option) => option.value === value);
+
         return (
           <Select
             value={(value as string) || ""}
@@ -304,11 +308,25 @@ const FormField = ({
                 className
               )}
             >
-              <SelectValue placeholder={placeholder || `Select ${label}`} />
+              <SelectValue placeholder={placeholder || `Select ${label}`}>
+                {optionValue ? (
+                  <Badge
+                    variant={"outline"}
+                    className={cn(
+                      "text-xs",
+                      getAirtableColor(optionValue?.color)
+                    )}
+                  >
+                    {optionValue?.label}
+                  </Badge>
+                ) : (
+                  value.toString()
+                )}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {options?.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
+                <SelectItem key={option.value} value={option.value.toString()}>
                   {option.color ? (
                     <Badge
                       variant={option.variant}
@@ -332,7 +350,7 @@ const FormField = ({
             disabled={disabled}
             value={value as MultiselectOption[]}
             onChange={onFieldChange}
-            options={options}
+            options={options as MultiselectOption[]}
             {...field.props}
           />
         );
@@ -395,7 +413,7 @@ const FormField = ({
             {options?.map((option) => (
               <div key={option.value} className="flex items-center space-x-2">
                 <RadioGroupItem
-                  value={option.value}
+                  value={option.value.toString()}
                   id={`${id}-${option.value}`}
                 />
                 <label

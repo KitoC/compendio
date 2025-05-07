@@ -6,8 +6,8 @@ import type {
   CustomTableRecord,
   CustomTableSchema,
 } from "@/types/customTable";
-import type { BaserowBase, BaserowTable, BaserowRow } from "@/types/baserow";
-
+import type { BaserowTable, BaserowSelectOption } from "@/types/baserow";
+import type { SelectOption } from "@/types/customTable";
 const BASE_URL = "https://api.baserow.io";
 
 const ENDPOINTS = {
@@ -17,8 +17,12 @@ const ENDPOINTS = {
     `${BASE_URL}/api/database/tables/database/${dbId}/`,
   TABLE_FIELDS: (tableId: string) =>
     `${BASE_URL}/api/database/fields/table/${tableId}/`,
-  TABLE_ROWS: (tableId: string) =>
-    `${BASE_URL}/api/database/rows/table/${tableId}/`,
+  TABLE_ROWS: (tableId: string, queryParams?: string) =>
+    `${BASE_URL}/api/database/rows/table/${tableId}/?user_field_names=true${
+      queryParams ? `&${queryParams}` : ""
+    }`,
+  TABLE_ROW: (tableId: string, rowId: string, queryParams?: string) =>
+    `${BASE_URL}/api/database/rows/table/${tableId}/${rowId}/?user_field_names=true`,
 };
 
 export class BaserowService
@@ -63,15 +67,77 @@ export class BaserowService
     record: Record<string, unknown | unknown[]>,
     table: CustomTableSchema
   ): CustomTableRecord {
-    const fields = table.fields.reduce((_fields, field) => {
-      return { ..._fields, [field.name]: record[`field_${field.id}`] };
-    }, {});
-    return {
-      _id: record.id as string,
+    const normalizedRecord: CustomTableRecord = {
+      _id: (record.id as number).toString(),
       _created_at: record.created_at as string | undefined,
       _updated_at: record.updated_at as string | undefined,
-      ...fields,
+      ...record,
     };
+
+    const caseToInternalOptions = (value: BaserowSelectOption) => {
+      return {
+        value: value.id.toString(),
+        label: value.value,
+        data: value,
+      };
+    };
+
+    table.fields.forEach((field) => {
+      const fieldValue = normalizedRecord[field.name];
+
+      switch (field.type) {
+        case "single_select":
+          normalizedRecord[field.name] = (
+            fieldValue as BaserowSelectOption
+          )?.id?.toString();
+          break;
+
+        case "multiple_select":
+        case "link_row":
+          normalizedRecord[field.name] = (
+            fieldValue as BaserowSelectOption[]
+          )?.map(caseToInternalOptions);
+          break;
+
+        default:
+          normalizedRecord[field.name] = record[field.name];
+      }
+    });
+
+    return normalizedRecord;
+  }
+
+  denormalizeRecord(
+    record: CustomTableRecord,
+    table: CustomTableSchema
+  ): Record<string, unknown | unknown[]> {
+    const denormalizedRecord = { ...record };
+
+    table.fields.forEach((field) => {
+      const fieldValue = record[field.name];
+
+      if (field.is_readonly) {
+        delete denormalizedRecord[field.name];
+      }
+
+      switch (field.type) {
+        case "single_select":
+          denormalizedRecord[field.name] = Number(fieldValue);
+          break;
+
+        case "link_row":
+        case "multiple_select":
+          denormalizedRecord[field.name] = (fieldValue as SelectOption[])?.map(
+            (option) => Number(option.value)
+          );
+          break;
+
+        default:
+          break;
+      }
+    });
+
+    return denormalizedRecord;
   }
 
   normalizeTableSchema(
@@ -91,7 +157,7 @@ export class BaserowService
         .find((field) => field.primary)
         ?.id?.toString() as string,
       fields: table.fields.map((field) => ({
-        id: field.id,
+        id: field.id.toString(),
         name: field.name,
         description: field.description,
         type: field?.type,
@@ -101,8 +167,8 @@ export class BaserowService
         is_readonly: field?.read_only,
         is_multiple: field?.link_row_multiple_relationships,
         attr_key: field?.name,
-        inverse_linked_table_id: field?.link_row_table_id,
-        inverse_linked_field_id: field?.link_row_related_field_id,
+        inverse_linked_table_id: field?.link_row_table_id?.toString(),
+        inverse_linked_field_id: field?.link_row_related_field_id?.toString(),
         original_provider_field: field,
         precision: field?.number_decimal_places,
         max_value: field?.number_max,
@@ -110,9 +176,10 @@ export class BaserowService
         icon: field?.style,
         date_format: field?.date_format,
         time_format: field?.date_time_format,
+        date_include_time: field?.date_include_time,
         options:
           field?.select_options?.map((option) => ({
-            value: option.id,
+            value: option.id?.toString(),
             label: option.value,
             color: option.color,
           })) || [],
@@ -134,8 +201,8 @@ export class BaserowService
       tables.map(async (table: BaserowTable) => {
         let fields = [];
         let retries = 0;
-        const maxRetries = 3;
-        const retryDelay = 1000; // 1 second
+        const maxRetries = 5;
+        const retryDelay = 5000; // 5 second
 
         while (retries < maxRetries) {
           try {
@@ -189,7 +256,9 @@ export class BaserowService
     });
 
     if (!rows.ok) {
-      throw new Error(`Failed to fetch rows: ${rows.status}`);
+      const errorData = await rows.json();
+
+      this.throwError(errorData.detail, errorData);
     }
 
     const rowsData = await rows.json();
@@ -205,11 +274,40 @@ export class BaserowService
   }
 
   async retrieveRecord(table: CustomTableSchema, recordId: string) {
-    return null;
+    const { headers } = this;
+    const row = await fetch(ENDPOINTS.TABLE_ROW(table.external_id, recordId), {
+      headers,
+    });
+
+    if (!row.ok) {
+      const errorData = await row.json();
+
+      this.throwError(errorData.detail, errorData);
+    }
+
+    const rowData = await row.json();
+
+    return this.normalizeRecord(rowData, table);
   }
 
   async createRecord(table: CustomTableSchema, record: CustomTableRecord) {
-    return null;
+    const { headers } = this;
+
+    const response = await fetch(ENDPOINTS.TABLE_ROWS(table.external_id), {
+      headers,
+      method: "POST",
+      body: JSON.stringify(this.denormalizeRecord(record, table)),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+
+      this.throwError(errorData.detail, errorData);
+    }
+
+    const rowData = await response.json();
+
+    return this.normalizeRecord(rowData, table);
   }
 
   async updateRecord(
@@ -217,10 +315,40 @@ export class BaserowService
     recordId: string,
     record: CustomTableRecord
   ) {
-    return null;
+    const { headers } = this;
+
+    const response = await fetch(
+      ENDPOINTS.TABLE_ROW(table.external_id, recordId),
+      {
+        headers,
+        method: "PATCH",
+        body: JSON.stringify(this.denormalizeRecord(record, table)),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+
+      this.throwError(errorData.detail, errorData);
+    }
+
+    const rowData = await response.json();
+
+    return this.normalizeRecord(rowData, table);
   }
 
   async deleteRecord(table: CustomTableSchema, recordId: string) {
-    return null;
+    const { headers } = this;
+
+    const response = await fetch(
+      ENDPOINTS.TABLE_ROW(table.external_id, recordId),
+      { headers, method: "DELETE" }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+
+      this.throwError(errorData.detail, errorData);
+    }
   }
 }

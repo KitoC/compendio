@@ -22,7 +22,11 @@ export const CustomTableService = {
       .from("data_tables")
       .select("*, fields:data_fields(*)");
 
-    return response.data;
+    return response.data.map((table) => ({
+      ...table,
+      primaryFieldId: table.primary_field_id,
+      fields: table.fields.map((field) => field.schema),
+    }));
   },
 
   async getTableSchema(tableId: string) {

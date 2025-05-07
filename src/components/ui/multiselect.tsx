@@ -70,21 +70,36 @@ interface MultiselectProps extends Props<MultiselectOption> {
   sortable?: boolean;
 }
 
-const defaultComponents = {
-  MultiValueContainer: ({ children }) => (
+const MultiValueContainer = ({ children, ...props }) => {
+  return (
     <Badge
       variant="outline"
       className="mr-1 bg-sidebar dark:bg-sidebar dark:[&>*]:!text-white"
     >
-      <SortHandle />
       {children}
     </Badge>
-  ),
+  );
+};
+
+const defaultComponents = {
+  MultiValueContainer,
   DropdownIndicator: () => (
     <div className="flex items-center justify-center p-2">
       <ChevronDown className="w-4 h-4" />
     </div>
   ),
+};
+
+const sortableComponents = {
+  ...defaultComponents,
+  MultiValueContainer: ({ children, ...props }) => {
+    return (
+      <MultiValueContainer {...props}>
+        <SortHandle />
+        {children}
+      </MultiValueContainer>
+    );
+  },
 };
 
 const defaultStyles = {
@@ -107,6 +122,9 @@ const Multiselect = ({
   components,
   styles,
   sortable,
+  onInputChange,
+  inputValue,
+  isLoading,
 }: MultiselectProps) => {
   const onSortEnd: SortEndHandler = useCallback(
     ({ oldIndex, newIndex }) => {
@@ -127,6 +145,31 @@ const Multiselect = ({
     };
   }, []);
 
+  const sharedProps = useMemo(() => {
+    return {
+      isLoading,
+      onInputChange,
+      inputValue,
+      isClearable,
+      isDisabled: disabled,
+      options,
+      value,
+      onChange,
+      isMulti: true,
+      classNames,
+    };
+  }, [
+    isLoading,
+    onInputChange,
+    inputValue,
+    isClearable,
+    disabled,
+    options,
+    value,
+    onChange,
+    classNames,
+  ]);
+
   if (sortable) {
     return (
       <SortableSelect
@@ -139,34 +182,24 @@ const Multiselect = ({
         // small fix for https://github.com/clauderic/react-sortable-hoc/pull/352:
         getHelperDimensions={({ node }) => node.getBoundingClientRect()}
         // react-select props:
-        isMulti
-        options={options}
-        value={value}
-        onChange={onChange}
         components={{
-          ...defaultComponents,
+          ...sortableComponents,
           ...components,
           // @ts-expect-error We're failing to provide a required index prop to SortableElement
           MultiValue: SortableMultiValue,
         }}
-        classNames={classNames}
         closeMenuOnSelect={false}
+        {...sharedProps}
       />
     );
   }
 
   return (
     <Select
-      value={value}
-      isMulti
       name={name}
-      isDisabled={disabled}
-      options={options}
-      onChange={onChange}
       isClearable={isClearable}
       classNamePrefix="select"
       menuPlacement="auto"
-      classNames={classNames}
       styles={{
         ...defaultStyles,
         ...styles,
@@ -175,6 +208,7 @@ const Multiselect = ({
         ...defaultComponents,
         ...components,
       }}
+      {...sharedProps}
     />
   );
 };

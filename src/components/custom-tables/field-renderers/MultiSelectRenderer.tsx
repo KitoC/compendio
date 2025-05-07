@@ -1,5 +1,6 @@
 import React from "react";
 import { FieldRendererProps } from "./index";
+import { SelectOption } from "@/types/customTable";
 
 const MultiSelectRenderer = ({ field, value }: FieldRendererProps) => {
   if (!value || !Array.isArray(value) || value.length === 0) {
@@ -42,9 +43,12 @@ const MultiSelectRenderer = ({ field, value }: FieldRendererProps) => {
 
   return (
     <div className="flex flex-wrap gap-1 max-w-[200px]">
-      {value.map((id: string, index: number) => {
+      {value.map((option: string | SelectOption, index: number) => {
         // Find the choice by ID
-        const choice = field.options?.find((c) => c.value === id);
+        const choice = field.options?.find(
+          (c) => c.value === (option as SelectOption)?.value || option
+        );
+        const id = (option as SelectOption)?.value || (option as string);
 
         if (!choice) {
           return (

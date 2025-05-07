@@ -16,7 +16,7 @@ import PercentRenderer from "./PercentRenderer";
 import PhoneRenderer from "./PhoneRenderer";
 import MultipleLookupRenderer from "./MultipleLookupRenderer";
 import DefaultRenderer from "./DefaultRenderer";
-import MultipleRecordLinksRenderer from "./MultipleRecordLinksRenderer";
+import EntityRenderer from "./EntityRenderer";
 import RollupRenderer from "./RollupRenderer";
 
 export interface FieldRendererProps<V = unknown> {
@@ -54,7 +54,7 @@ export const getFieldRenderer = (
     case "singleSelect":
     case "single_select":
       return (
-        <SingleSelectRenderer field={field} value={value as SelectOption} />
+        <SingleSelectRenderer field={field} value={value as string | number} />
       );
     case "singleLineText":
     case "text":
@@ -90,13 +90,7 @@ export const getFieldRenderer = (
       return <PhoneRenderer field={field} value={value} />;
     case "multipleRecordLinks":
     case "link_row":
-      return (
-        <MultipleRecordLinksRenderer
-          field={field}
-          value={value}
-          record={record}
-        />
-      );
+      return <EntityRenderer field={field} value={value} record={record} />;
     case "rollup":
       return <RollupRenderer field={field} value={value} />;
     default:

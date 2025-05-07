@@ -1,11 +1,4 @@
 import { FieldRendererProps } from "./index";
-import { Tag } from "@/components/ui/tag";
-import { useState } from "react";
-import { Loader2, Table2 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import CustomTableModal from "@/components/custom-tables/CustomTableModal";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import RecordTag from "../RecordTag";
 
 // TODO: re-implement this

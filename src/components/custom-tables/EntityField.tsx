@@ -1,16 +1,16 @@
-import { CustomTableField } from "@/types/customTable";
+import { CustomTableField, SelectOption } from "@/types/customTable";
 import { CustomFieldComponentProps } from "../form-builder/types";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import Multiselect from "../ui/multiselect";
+import Multiselect, { MultiselectOption } from "../ui/multiselect";
 import RecordTag from "./RecordTag";
 import { components } from "react-select";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useCustomRecordsQuery } from "@/hooks/useCustomTableQuery";
+import { useCustomTables } from "@/contexts/CustomTables";
 
 interface CustomTableEntityFieldProps extends CustomFieldComponentProps {
   field: CustomTableField;
-  value: { id: string; value: string }[];
-  onChange: (name: string, value: string[]) => void;
+  value: SelectOption[];
+  onChange: (name: string, value: SelectOption[]) => void;
 }
 
 const MultiValue = (props) => {
@@ -37,63 +37,70 @@ const CustomTableEntityField = ({
   name,
 }: CustomTableEntityFieldProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const { tables } = useCustomTables();
+  const inverseTable = tables.find(
+    (table) => table.external_id == field.inverse_linked_table_id
+  );
+  const inversePrimaryField = inverseTable?.fields.find(
+    (field) => field.is_primary
+  );
 
   // TODO: Derive this from actual data.
-  const { data: labels } = useQuery({
-    queryKey: ["labels", field.inverse_linked_table_id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("data_table_record_labels")
-        .select("*")
-        .eq("external_table_id", field.inverse_linked_table_id);
-
-      return data;
-    },
+  const { records, isLoading, isFetching } = useCustomRecordsQuery({
+    tableId: field.inverse_linked_table_id as string,
+    queryString: `${inputValue ? `search=${inputValue}` : ""}`,
   });
 
-  const _value = value
-    ? value.map((v) => {
-        return {
-          value: v.id,
-          label: v.value,
-          data: v,
-        };
-      })
-    : [];
+  const options: SelectOption[] = useMemo(() => {
+    return records?.map((record) => ({
+      value: record._id,
+      label: record[inversePrimaryField?.name || "_id"] as string,
+      data: record,
+    }));
+  }, [records, inversePrimaryField]);
+
+  const handleChange = useCallback(
+    (value: SelectOption[]) => onChange(name, value),
+    [name, onChange]
+  );
+
+  const handleInputChange = useCallback(
+    (value: string) => setInputValue(value),
+    []
+  );
+
+  const components = useMemo(() => {
+    return {
+      MultiValue,
+      MultiValueLabel: ({ children }) => children,
+      MultiValueContainer: ({ children, data, ...props }) => {
+        return (
+          <RecordTag
+            modalId={`${name}-modal`}
+            className="mr-1"
+            record={data.data}
+            field={field}
+          >
+            {children}
+          </RecordTag>
+        );
+      },
+    };
+  }, [name, field]);
 
   return (
     <>
       <Multiselect
-        disabled={dialogOpen}
+        isLoading={isLoading || isFetching}
+        disabled={dialogOpen || isLoading}
         name={name}
-        value={_value}
-        onChange={(value) => {
-          onChange(
-            name,
-            value?.map((v) => v.value as string)
-          );
-        }}
-        options={labels?.map((label) => ({
-          value: label.id,
-          label: label.value,
-          data: label,
-        }))}
-        components={{
-          MultiValue,
-          MultiValueLabel: ({ children }) => children,
-          MultiValueContainer: ({ children, data, ...props }) => {
-            return (
-              <RecordTag
-                modalId={`${name}-modal`}
-                className="mr-1"
-                record={data.data}
-                field={field}
-              >
-                {children}
-              </RecordTag>
-            );
-          },
-        }}
+        value={value || []}
+        onChange={handleChange}
+        options={options}
+        components={components}
+        onInputChange={handleInputChange}
+        inputValue={inputValue}
       />
       <div id={`${name}-modal`} />
     </>

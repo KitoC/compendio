@@ -149,6 +149,7 @@ export class AirtableService
         icon: field?.options?.icon,
         date_format: field?.options?.dateFormat?.name,
         time_format: field?.options?.timeFormat?.name?.replace("hour", ""),
+        date_include_time: !!field?.options?.timeFormat,
         options:
           field?.options?.choices?.map((choice) => ({
             value: choice.id,

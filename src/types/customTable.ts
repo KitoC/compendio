@@ -5,17 +5,17 @@ export interface CustomTableRecord {
   _id: string;
   _created_at?: string;
   _updated_at?: string;
-  [key: string]: unknown;
+  [key: string]: unknown | unknown[];
 }
 
 export interface SelectOption {
-  value: string | number;
+  value: string;
   label: string;
   color?: string;
 }
 
 export interface CustomTableField {
-  id: string | number;
+  id: string;
   name: string;
   description?: string;
   // https://airtable.com/developers/web/api/field-model
@@ -26,15 +26,17 @@ export interface CustomTableField {
   is_computed?: boolean;
   is_primary?: boolean;
   is_locked?: boolean;
+  is_readonly?: boolean;
   attr_key?: string;
-  inverse_linked_table_id?: string | number;
-  inverse_linked_field_id?: string | number;
+  inverse_linked_table_id?: string;
+  inverse_linked_field_id?: string;
   is_multiple?: boolean;
   original_provider_field: unknown;
   max_value?: number;
   color?: string;
   icon?: string;
   date_format?: string;
+  date_include_time?: boolean;
   time_format?: string;
   precision?: number;
   prefix?: string;

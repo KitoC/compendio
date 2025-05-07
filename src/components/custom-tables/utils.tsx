@@ -13,13 +13,20 @@ import type {
   CustomTableRecord,
   CustomTableSchema,
 } from "@/types/customTable";
+import { TimeSettings } from "@/contexts/UserSettingsProvider/UserSettingsContext";
+import dayjs from "dayjs";
 /**
  * Maps CustomTable field types to FormBuilder field types
  */
 export const mapCustomTableTypeToFormFieldType = (
   field: CustomTableField
 ): FormFieldType => {
+  if (field.date_include_time) {
+    return "datetime";
+  }
+
   switch (field.type) {
+    case "text":
     case "singleLineText":
     case "autoNumber":
     case "barcode":
@@ -29,11 +36,13 @@ export const mapCustomTableTypeToFormFieldType = (
     case "count":
       return "text";
     case "longText":
+    case "long_text":
       return "textarea";
     case "number":
     case "duration":
     case "rating":
       return "number";
+    case "boolean":
     case "checkbox":
       return "checkbox";
     case "date":
@@ -41,16 +50,22 @@ export const mapCustomTableTypeToFormFieldType = (
     case "dateTime":
       return "datetime";
     case "createdTime":
+    case "last_modified":
+    case "created_on":
     case "lastModifiedTime":
       return "date";
     case "email":
       return "email";
+    case "single_select":
     case "singleSelect":
       return "select";
-    case "multipleSelects": // Using multiselect for both types
+    case "multiple_select":
+    case "multipleSelects":
+      return "multiselect";
     case "url":
       return "text"; // Use text with URL validation
     case "phoneNumber":
+    case "phone_number":
       return "text"; // Use text with phone validation
     case "currency":
     case "percent":
@@ -83,7 +98,15 @@ export const customTableFieldToFormField = (
   };
 
   // Add options for select fields
-  if (field.type === "singleSelect" && field.options) {
+  if (
+    [
+      "singleSelect",
+      "single_select",
+      "multiselect",
+      "multiple_select",
+    ].includes(field.type) &&
+    field.options
+  ) {
     formField.options = field.options.map(
       (option): FormFieldOption => ({
         label: option.label,
@@ -94,6 +117,15 @@ export const customTableFieldToFormField = (
     );
   }
 
+  if (
+    ["phoneNumber", "phone_number"].includes(field.type) &&
+    fieldType === "text"
+  ) {
+    formField.props = {
+      ...(formField.props || {}),
+      type: "tel",
+    };
+  }
   // Add custom props for specific field types
   if (field.type === "currency" && fieldType === "number") {
     formField.props = {
@@ -113,7 +145,7 @@ export const customTableFieldToFormField = (
       maxRating: field.max_value || 5,
     };
   } else if (
-    (field.type === "multipleAttachments" || field.type === "attachment") &&
+    ["multipleAttachments", "attachment", "file"].includes(field.type) &&
     fieldType === "text"
   ) {
     formField.props = {
@@ -122,7 +154,7 @@ export const customTableFieldToFormField = (
     };
   }
 
-  if (field.type === "multipleRecordLinks") {
+  if (["multipleRecordLinks", "link_row"].includes(field.type)) {
     formField.CustomComponent = (props) => (
       <CustomTableEntityField {...props} value={props.value} field={field} />
     );
@@ -146,6 +178,7 @@ export const customTableToFormConfig = (
       (field) =>
         !field.is_computed &&
         !field.is_locked &&
+        !field.is_readonly &&
         !(systemSettings.consts.READONLY_FIELDS_AIRTABLE as string[]).includes(
           field.type
         )
@@ -208,4 +241,34 @@ export const formatFieldValue = (
   record: CustomTableRecord
 ): React.ReactNode => {
   return getFieldRenderer(field, value, record);
+};
+
+export const formatValue = (
+  value: unknown,
+  field: CustomTableField,
+  timeSettings: TimeSettings
+): React.ReactNode => {
+  if (field.date_format && field.date_include_time) {
+    const timeStr = dayjs(value as string)
+      .tz(timeSettings.timeZone)
+      .format(timeSettings.timeFormat === "12h" ? "h:mm a" : "HH:mm");
+
+    const dateStr = dayjs(value as string)
+      .tz(timeSettings.timeZone)
+      .format(timeSettings.dateFormat);
+
+    return (
+      <span className="text-sm" title={`${dateStr} ${timeStr}`}>
+        {dateStr} <span className="text-muted-foreground">{timeStr}</span>
+      </span>
+    );
+  }
+
+  if (field.date_format && !field.date_include_time) {
+    return dayjs(value as string)
+      .tz(timeSettings.timeZone)
+      .format(timeSettings.dateFormat);
+  }
+
+  return <>{value as string | number}</>;
 };

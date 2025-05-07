@@ -1,15 +1,20 @@
 import { useEffect, useState } from "react";
 import type { CustomTableRecord, CustomTableSchema } from "@/types/customTable";
 import FormBuilder, { FormConfig } from "@/components/form-builder";
-import { customTableToFormConfig } from "@/components/custom-tables/utils";
+import {
+  customTableToFormConfig,
+  formatValue,
+} from "@/components/custom-tables/utils";
 import ResponsiveModal from "@/components/ui/responsive-modal";
 import {
   useCustomRecordQuery,
   useCustomTableSchemaQuery,
 } from "@/hooks/useCustomTableQuery";
 import { Alert } from "../ui/alert";
-import { Bot } from "lucide-react";
+import { Bot, Check, X } from "lucide-react";
 import { useSystemSettings } from "@/contexts/SystemSettingsProvider";
+import { Badge } from "../ui/badge";
+import { useUserSettings } from "@/contexts/UserSettingsProvider";
 
 export interface CustomTableModalProps {
   tableId: string;
@@ -41,6 +46,7 @@ const CustomTableModal = ({
   onLoadingChange,
 }: CustomTableModalProps) => {
   const systemSettings = useSystemSettings();
+  const { timeSettings } = useUserSettings();
   const isProvided = !!providedTable && !!providedRecord;
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -66,9 +72,7 @@ const CustomTableModal = ({
     (field) => field.type === "aiText"
   );
 
-  const lookupItems = tableSchema.fields.filter(
-    (field) => field.type === "multipleLookupValues"
-  );
+  const readonlyItems = tableSchema.fields.filter((field) => field.is_readonly);
 
   // Generate form config from table schema
   const defaultConfig = customTableToFormConfig(
@@ -83,6 +87,7 @@ const CustomTableModal = ({
 
   const handleSubmit = async (values: CustomTableRecord) => {
     setIsSubmitting(true);
+
     try {
       await onSave(values);
 
@@ -155,19 +160,56 @@ const CustomTableModal = ({
             </Alert>
           </div>
         )}
-        {lookupItems.length > 0 && (
+        {readonlyItems.length > 0 && (
           <div className="p-6 pb-0 bg-card flex flex-col gap-2">
             <p className="text-muted-foreground font-bold text-xs">
               Calculated fields
             </p>
-            {lookupItems.map((item) => {
-              const value = record?.fields?.[item?.name] as string;
+            {readonlyItems.map((item) => {
+              const value = record?.[item?.name] as string;
+              const formattedValue = formatValue(value, item, timeSettings);
+
               return (
-                <div key={item.id} className="gap-1">
+                <div key={item.id} className="gap-2">
                   <p className="text-muted-foreground font-bold text-sm">
                     {item.name}
                   </p>
-                  <p className="text-sm">{value || "-"}</p>
+
+                  <div className="flex flex-col gap-1">
+                    {Array.isArray(value) ? (
+                      value.map((v) => (
+                        <Badge
+                          className="text-xs w-fit"
+                          key={v.value}
+                          variant="outline"
+                        >
+                          {v.label || v.value}
+                        </Badge>
+                      ))
+                    ) : typeof value === "boolean" ? (
+                      value ? (
+                        <Badge
+                          className="text-xs w-fit"
+                          variant="outline-success"
+                        >
+                          <Check className="w-4 h-4 text-green-500" />
+                        </Badge>
+                      ) : (
+                        <Badge
+                          className="text-xs w-fit"
+                          variant="outline-error"
+                        >
+                          <X className="w-4 h-4 text-red-500" />
+                        </Badge>
+                      )
+                    ) : (
+                      <Badge className="text-xs w-fit" variant="outline">
+                        {item.prefix}
+                        {formattedValue || "-"}
+                        {item.suffix}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               );
             })}

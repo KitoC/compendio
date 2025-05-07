@@ -1,4 +1,4 @@
-import { CustomTableField } from "@/types/customTable";
+import { CustomTableField, SelectOption } from "@/types/customTable";
 import { Tag } from "../ui/tag";
 import { Loader2 } from "lucide-react";
 import { Table2 } from "lucide-react";
@@ -16,7 +16,7 @@ const RecordTag = ({
   onDialogClose,
   modalId,
 }: {
-  record: { id: string; value: string };
+  record: SelectOption;
   className?: string;
   children?: React.ReactNode;
   field: CustomTableField;
@@ -49,7 +49,7 @@ const RecordTag = ({
           e.preventDefault();
           e.stopPropagation();
 
-          setSelectedItem(record.id);
+          setSelectedItem(record.value);
         }}
         onMouseDown={(e) => {
           e.preventDefault();
@@ -61,7 +61,7 @@ const RecordTag = ({
         ) : (
           <Table2 className="mr-1 w-3 h-3 rounded-full" />
         )}
-        {children || record.value}
+        {children || record.label}
       </Tag>
       <CustomTableModal
         tableId={inverse_linked_table_id as string}
