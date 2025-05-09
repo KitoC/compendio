@@ -5,7 +5,7 @@ import {
   getSortedRowModel,
   flexRender,
 } from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { CustomTableViewProps } from "../types";
 import {
   Table,
@@ -19,14 +19,22 @@ import getStickyStyles from "./util/getStickyStyles";
 import GridViewLoadingSkeleton from "./GridViewLoadingSkeleton";
 import useColumns from "./hooks/useColumns";
 import { useDataViewContext } from "@/contexts/DataViewProvider";
+import { Button } from "@/components/ui/button";
 
 const GridView = ({
   table,
   emptyMessage = "No records available",
   permissions,
 }: CustomTableViewProps) => {
-  const { data, isLoadingData, onEdit, pagination, setPagination } =
-    useDataViewContext();
+  const {
+    data,
+    isLoadingData,
+    onEdit,
+    pagination,
+    setPagination,
+    total,
+    isFetchingData,
+  } = useDataViewContext();
 
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const ROW_HEIGHT = "50px";
@@ -131,41 +139,46 @@ const GridView = ({
           </TableBody>
         </Table>
 
-        {/* <div className="flex items-center justify-between space-x-2 py-4">
+        <div className="flex items-center justify-end space-x-2 py-4 px-4 bg-background">
           <div className="text-sm text-muted-foreground">
-            Showing {(pagination.offset - 1) * pagination.pageSize + 1}-
-            {Math.min(pagination.offset * pagination.pageSize, data.length)} of{" "}
-            {data.length}
+            {(pagination.page - 1) * pagination.pageSize + 1}-
+            {Math.min(pagination.page * pagination.pageSize, total)} of {total}
           </div>
           <div className="flex items-center space-x-2">
             <Button
-              variant="outline"
               size="sm"
+              variant="outline"
               onClick={() =>
                 setPagination((prev) => ({
                   ...prev,
-                  offset: Math.max(prev.offset - 1, 1),
+                  page: prev.page - 1,
                 }))
               }
-              disabled={pagination.offset === 1}
+              disabled={pagination.page === 1}
             >
-              Previous
+              <ChevronLeft className="w-4 h-4" />
             </Button>
             <Button
-              variant="outline"
               size="sm"
+              variant="outline"
               onClick={() =>
                 setPagination((prev) => ({
                   ...prev,
-                  offset: Math.min(prev.offset + 1, 0),
+                  page: prev.page + 1,
                 }))
               }
-              // disabled={pagination.offset === totalPages}
+              disabled={
+                isFetchingData || pagination.page * pagination.pageSize >= total
+              }
             >
-              Next
+              {isFetchingData ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
             </Button>
           </div>
-        </div> */}
+        </div>
       </div>
     </>
   );

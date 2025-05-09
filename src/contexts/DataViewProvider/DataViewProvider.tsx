@@ -33,11 +33,12 @@ const DataViewProvider = ({
   tableId: tableIdFromProps,
 }: DataViewProviderProps) => {
   const [pagination, setPagination] = useState<Pagination>({
-    offset: null,
-    pageSize: 100,
+    page: 1,
+    pageSize: 25,
   });
   const [query, setQuery] = useState<string>("");
   const [isCreating, setIsCreating] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [editingRecord, setEditingRecord] = useState<CustomTableRecord | null>(
     null
   );
@@ -52,10 +53,22 @@ const DataViewProvider = ({
   const { data: table } = useCustomTableSchemaQuery(tableId);
 
   const queryString = useMemo(() => {
-    return `${
-      pagination.offset ? `offset=${pagination.offset}` : ""
-    }&pageSize=${pagination.pageSize}${query ? `&${query}` : ""}`;
-  }, [pagination.offset, pagination.pageSize, query]);
+    let string = "";
+
+    if (pagination.page) {
+      string += `page=${pagination.page}`;
+    }
+
+    if (pagination.pageSize) {
+      string += `&pageSize=${pagination.pageSize}`;
+    }
+
+    if (query) {
+      string += `&${query}`;
+    }
+
+    return string;
+  }, [pagination.page, pagination.pageSize, query]);
 
   const {
     records,
@@ -67,7 +80,12 @@ const DataViewProvider = ({
     invalidateQuery,
     refetch,
     isRefetching,
-  } = useCustomRecordsQuery({ tableId, queryString, isOptimistic: true });
+    total,
+  } = useCustomRecordsQuery({
+    tableId,
+    queryString,
+    isOptimistic: true,
+  });
 
   const handleSave = useCallback(
     async (record: CustomTableRecord, options?: { optimistic?: boolean }) => {
@@ -99,12 +117,12 @@ const DataViewProvider = ({
   const onCreate = useCallback((record?: CustomTableRecord | null) => {
     setEditingRecord(record);
     setIsCreating(true);
-
-    console.log("onCreate ->", record);
   }, []);
 
-  const onRefetch = useCallback(() => {
-    refetch();
+  const onRefetch = useCallback(async () => {
+    setIsRefreshing(true);
+    await refetch();
+    setIsRefreshing(false);
   }, [refetch]);
 
   const value = useMemo(() => {
@@ -129,6 +147,8 @@ const DataViewProvider = ({
       table,
       onRefetch,
       isRefetching,
+      isRefreshing,
+      total,
     };
   }, [
     dataView,
@@ -151,6 +171,8 @@ const DataViewProvider = ({
     table,
     onRefetch,
     isRefetching,
+    isRefreshing,
+    total,
   ]);
 
   return (

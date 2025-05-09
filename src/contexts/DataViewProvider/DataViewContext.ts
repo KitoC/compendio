@@ -11,7 +11,7 @@ type MutationFunction = UseMutateAsyncFunction<
 >;
 
 export type Pagination = {
-  offset: string | null;
+  page: number | null;
   pageSize: number;
 };
 
@@ -40,6 +40,8 @@ type DataViewContextType = {
   table: CustomTableSchema;
   onRefetch: () => void;
   isRefetching: boolean;
+  total: number;
+  isRefreshing: boolean;
 };
 
 const defaultMutationFunction = async () => {};
@@ -49,7 +51,7 @@ const DataViewContext = createContext<DataViewContextType>({
   data: [],
   query: null,
   setQuery: () => {},
-  pagination: { offset: null, pageSize: 10 },
+  pagination: { page: 1, pageSize: 10 },
   setPagination: () => {},
   isFetchingData: false,
   isLoadingData: false,
@@ -65,6 +67,8 @@ const DataViewContext = createContext<DataViewContextType>({
   table: null,
   onRefetch: () => {},
   isRefetching: false,
+  total: 0,
+  isRefreshing: false,
 });
 
 export const useDataViewContext = () => {

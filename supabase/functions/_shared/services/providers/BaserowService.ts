@@ -250,8 +250,19 @@ export class BaserowService
     return { id: this.base_id, name, tables: normalizedTables };
   }
 
-  async listRecords(table: CustomTableSchema) {
-    const rows = await fetch(ENDPOINTS.TABLE_ROWS(table.external_id), {
+  normalizeQueryString(queryString: string) {
+    return queryString.replace(/pageSize/, "size");
+  }
+
+  async listRecords(table: CustomTableSchema, queryString = "") {
+    const endpoint = ENDPOINTS.TABLE_ROWS(
+      table.external_id,
+      this.normalizeQueryString(queryString)
+    );
+
+    this.logger.debug(`Fetching records from ${endpoint}`);
+
+    const rows = await fetch(endpoint, {
       headers: this.headers,
     });
 

@@ -17,7 +17,7 @@ interface DataViewHeaderProps {
 }
 
 const DataViewHeader = ({ setDataView, permissions }: DataViewHeaderProps) => {
-  const { table, dataView, onRefetch, isRefetching, onCreate } =
+  const { table, dataView, onRefetch, isRefreshing, onCreate } =
     useDataViewContext();
 
   return (
@@ -38,11 +38,11 @@ const DataViewHeader = ({ setDataView, permissions }: DataViewHeaderProps) => {
               size="xs"
               variant="outline"
               onClick={onRefetch}
-              disabled={isRefetching}
+              disabled={isRefreshing}
             >
               <RefreshCw
                 className={cn("h-3 w-3", {
-                  "animate-spin": isRefetching,
+                  "animate-spin": isRefreshing,
                 })}
               />
               Refresh

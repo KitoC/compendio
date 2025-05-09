@@ -8,6 +8,13 @@ export interface CustomTableRecord {
   [key: string]: unknown | unknown[];
 }
 
+export interface CustomTableRecordResponse {
+  data: CustomTableRecord[];
+  total: number;
+  next: string;
+  previous: string;
+}
+
 export interface SelectOption {
   value: string;
   label: string;

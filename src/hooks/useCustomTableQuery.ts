@@ -3,9 +3,14 @@ import {
   useMutation,
   useQueryClient,
   UseMutationOptions,
+  keepPreviousData,
 } from "@tanstack/react-query";
 import { CustomTableService } from "@/services/CustomTableService";
-import type { CustomTableRecord, CustomTableSchema } from "@/types/customTable";
+import type {
+  CustomTableRecord,
+  CustomTableRecordResponse,
+  CustomTableSchema,
+} from "@/types/customTable";
 import { toast } from "sonner";
 import { useParams } from "react-router-dom";
 import { useCustomTables } from "@/contexts/CustomTables";
@@ -224,7 +229,11 @@ export const useCustomRecordsQuery = ({
 
   const tableNameSingular = pluralize.singular(table?.name);
 
-  const { data: records = [], ...queryResults } = useQuery({
+  const {
+    data: { data: records = [], total } = { data: [], total: 0 },
+    ...queryResults
+  } = useQuery({
+    placeholderData: keepPreviousData,
     queryKey: dataQueryKey,
     queryFn: async () => {
       if (!tableId) {
@@ -242,9 +251,10 @@ export const useCustomRecordsQuery = ({
         );
       }
 
-      return response.data as CustomTableRecord[];
+      return response as CustomTableRecordResponse;
     },
     enabled: !!tableId,
+    // keepPreviousData: true,
   });
 
   const updateQueryData = useCallback(
@@ -351,6 +361,7 @@ export const useCustomRecordsQuery = ({
     deleteRecordMutation,
     updateOptimisticRecord,
     invalidateQuery,
+    total,
   };
 };
 
