@@ -1,11 +1,42 @@
 import { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { isUUID } from "@/utils/idHelpers";
-export type IDataView = Database["public"]["Tables"]["data_views"]["Row"];
+import { SelectOption } from "@/types/customTable";
+
+export type IDataViewRow = Database["public"]["Tables"]["data_views"]["Row"];
 export type DataViewCreate =
   Database["public"]["Tables"]["data_views"]["Insert"];
 export type DataViewUpdate =
   Database["public"]["Tables"]["data_views"]["Update"];
+
+export enum ViewType {
+  Grid = "grid",
+  Calendar = "calendar",
+  Gallery = "gallery",
+  Kanban = "kanban",
+  Timeline = "timeline",
+}
+
+export type DataView = IDataViewRow & {
+  view_type: ViewType;
+  config: {
+    dateFields: {
+      startDate: string;
+      endDate: string;
+    };
+    fields: string[];
+    groupByField: string;
+    sortByField: string;
+    sortDirection: "asc" | "desc";
+    eventLabelField: SelectOption[];
+    calendarViews: {
+      [key: string]: {
+        label: string;
+        value: string;
+      };
+    };
+  };
+};
 
 export const DATA_VIEWS_TABLE_NAME = "data_views";
 

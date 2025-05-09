@@ -1,4 +1,4 @@
-import { IDataView } from "@/services/DataViewsService";
+import { DataView } from "@/services/DataViewsService";
 import {
   CustomTableField,
   CustomTableRecord,
@@ -17,7 +17,7 @@ interface CalendarEvent {
 }
 
 export type CalendarContextType = {
-  dataView: IDataView;
+  dataView: DataView;
   draggingEvent: { event: CalendarEvent } | null;
   setSelectedEvent: (event: CustomTableRecord) => void;
   selectedEvent: CustomTableRecord | null;

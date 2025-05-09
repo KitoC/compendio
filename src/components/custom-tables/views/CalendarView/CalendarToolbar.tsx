@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Navigate, Views } from "react-big-calendar";
 import dayjs from "dayjs";
-import { ChevronLeft, ChevronRight, Settings } from "lucide-react";
+import { ChevronLeft, ChevronRight, Settings, Loader2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import DataViewModal from "@/components/DataViewModal";
 import { useState } from "react";
+import { useDataViewContext } from "@/contexts/DataViewProvider/DataViewContext";
 
 const getDateLabel = (view, date) => {
   const format = "MMM D";
@@ -49,6 +50,7 @@ const getDateLabel = (view, date) => {
 
 const CalendarToolbar = (props) => {
   const [open, setOpen] = useState(false);
+  const { isLoadingData, isFetchingData } = useDataViewContext();
 
   return (
     <div className="flex items-center justify-between mb-2">
@@ -74,17 +76,16 @@ const CalendarToolbar = (props) => {
         </div>
         <p className="text-lg font-medium">
           {getDateLabel(props.view, props.date)}
-          {/* {props.view === Views.AGENDA && (
-            <span className="text-sm text-muted-foreground">
-              agenda for next {props.length} days
-            </span>
-          )} */}
         </p>
       </div>
 
       <div></div>
 
       <div className="flex items-center gap-2">
+        {(isLoadingData || isFetchingData) && (
+          <Loader2 className="w-12 h-12 animate-spin mr-2 text-muted-foreground" />
+        )}
+
         <Select value={props.view} onValueChange={props.onView}>
           <SelectTrigger className="capitalize">
             <SelectValue placeholder="Select a view" />

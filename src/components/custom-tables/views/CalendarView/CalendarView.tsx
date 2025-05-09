@@ -79,16 +79,16 @@ const CalendarView = ({
   }, [table.fields]);
 
   const startTimeField = dateFields.find(
-    (f) => f.id === dataView?.config?.dateFields.startDate
+    (f) => f.id === dataView?.config?.dateFields?.startDate
   );
   const endTimeField = dateFields.find(
-    (f) => f.id === dataView?.config?.dateFields.endDate
+    (f) => f.id === dataView?.config?.dateFields?.endDate
   );
 
   // Get the primary field for record display
   const primaryField = useMemo(() => {
-    if (table && table.primaryFieldId) {
-      return table.fields.find((field) => field.id === table.primaryFieldId);
+    if (table && table.primary_field_id) {
+      return table.fields.find((field) => field.id === table.primary_field_id);
     }
     return table.fields[0];
   }, [table]);
@@ -240,13 +240,13 @@ const CalendarView = ({
     };
   }, [dataViewId, table.external_id, length]);
 
-  if (isLoadingData) {
-    return (
-      <div className="p-8 flex justify-center items-center">
-        <Loader />
-      </div>
-    );
-  }
+  // if (isLoadingData) {
+  //   return (
+  //     <div className="p-8 flex justify-center items-center">
+  //       <Loader />
+  //     </div>
+  //   );
+  // }
 
   // When no date fields are available
   if (dateFields.length === 0) {
@@ -272,34 +272,28 @@ const CalendarView = ({
     >
       <div className="h-full flex flex-col">
         <div className="flex-grow overflow-hidden">
-          {events.length === 0 ? (
-            <div className="h-full flex items-center justify-center text-muted-foreground">
-              {emptyMessage}
-            </div>
-          ) : (
-            <div className="h-full ">
-              <DragAndDropCalendar
-                selectable
-                components={components}
-                defaultView={dataView?.config?.calendarViews?.defaultView}
-                events={events}
-                localizer={localizer}
-                resources={resources}
-                resourceIdAccessor="resourceId"
-                resourceTitleAccessor="resourceTitle"
-                onSelectSlot={onSelectSlot}
-                onEventDrop={handleEventDrop}
-                onEventResize={handleEventResize}
-                step={30}
-                length={length}
-                views={dataView?.config?.calendarViews?.views}
-                resourceGroupingLayout={true}
-                resizable
-                onDragStart={(event) => setDraggingEvent(event)}
-                onSelectEvent={() => setDraggingEvent(null)}
-              />
-            </div>
-          )}
+          <div className="h-full ">
+            <DragAndDropCalendar
+              selectable
+              components={components}
+              defaultView={dataView?.config?.calendarViews?.defaultView}
+              events={events}
+              localizer={localizer}
+              resources={resources}
+              resourceIdAccessor="resourceId"
+              resourceTitleAccessor="resourceTitle"
+              onSelectSlot={onSelectSlot}
+              onEventDrop={handleEventDrop}
+              onEventResize={handleEventResize}
+              step={30}
+              length={length}
+              views={dataView?.config?.calendarViews?.views}
+              resourceGroupingLayout={true}
+              resizable
+              onDragStart={(event) => setDraggingEvent(event)}
+              onSelectEvent={() => setDraggingEvent(null)}
+            />
+          </div>
         </div>
       </div>
     </CalendarContext.Provider>

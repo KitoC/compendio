@@ -8,11 +8,11 @@ import { Plus } from "lucide-react";
 import { RefreshCw } from "lucide-react";
 import { UserPermissions } from "./types";
 import { cn } from "@/lib/utils";
-import { IDataView } from "@/services/DataViewsService";
+import { DataView } from "@/services/DataViewsService";
 import pluralize from "pluralize";
 
 interface DataViewHeaderProps {
-  setDataView: (dataView: IDataView) => void;
+  setDataView: (dataView: DataView) => void;
   permissions: UserPermissions;
 }
 

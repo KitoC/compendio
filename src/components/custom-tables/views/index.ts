@@ -3,22 +3,23 @@ import CalendarView from "./CalendarView";
 import GalleryView from "./GalleryView";
 import KanbanView from "./KanbanView";
 import TimelineView from "./TimelineView";
-import { ViewType, TimeScale } from "./types";
+import { TimeScale } from "./types";
+import { ViewType } from "@/services/DataViewsService";
 
 export { GridView, CalendarView, GalleryView, KanbanView, TimelineView };
 export type { ViewType, TimeScale };
 
 export const getViewIcon = (viewType: ViewType): string => {
   switch (viewType) {
-    case "grid":
+    case ViewType.Grid:
       return "Grid";
-    case "calendar":
+    case ViewType.Calendar:
       return "Calendar";
-    case "gallery":
+    case ViewType.Gallery:
       return "LayoutGrid";
-    case "kanban":
+    case ViewType.Kanban:
       return "Kanban";
-    case "timeline":
+    case ViewType.Timeline:
       return "GanttChart";
     default:
       return "Table";

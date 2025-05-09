@@ -18,6 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ViewType } from "@/services/DataViewsService";
 
 type DataViewProviderProps = {
   children: React.ReactNode;
@@ -55,12 +56,14 @@ const DataViewProvider = ({
   const queryString = useMemo(() => {
     let string = "";
 
-    if (pagination.page) {
-      string += `page=${pagination.page}`;
-    }
+    if ([ViewType.Grid].includes(dataView.view_type)) {
+      if (pagination.page) {
+        string += `page=${pagination.page}`;
+      }
 
-    if (pagination.pageSize) {
-      string += `&pageSize=${pagination.pageSize}`;
+      if (pagination.pageSize) {
+        string += `&pageSize=${pagination.pageSize}`;
+      }
     }
 
     if (query) {
@@ -68,7 +71,7 @@ const DataViewProvider = ({
     }
 
     return string;
-  }, [pagination.page, pagination.pageSize, query]);
+  }, [pagination.page, pagination.pageSize, query, dataView]);
 
   const {
     records,
@@ -85,6 +88,7 @@ const DataViewProvider = ({
     tableId,
     queryString,
     isOptimistic: true,
+    dataViewId,
   });
 
   const handleSave = useCallback(

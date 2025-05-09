@@ -1,8 +1,9 @@
 import { CustomTableSchema } from "@/types/customTable";
 import { createContext, useContext, Dispatch, SetStateAction } from "react";
 import { UseMutateAsyncFunction } from "@tanstack/react-query";
-import { IDataView } from "@/services/DataViewsService";
+import { DataView } from "@/services/DataViewsService";
 import type { CustomTableRecord } from "@/types/customTable";
+
 type MutationFunction = UseMutateAsyncFunction<
   unknown,
   Error,
@@ -16,8 +17,7 @@ export type Pagination = {
 };
 
 type DataViewContextType = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dataView: (IDataView & { config: any }) | null;
+  dataView: DataView | null;
   data: CustomTableRecord[];
   query: string | null;
   setQuery: Dispatch<SetStateAction<string>>;

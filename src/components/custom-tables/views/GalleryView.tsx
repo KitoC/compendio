@@ -11,8 +11,8 @@ const GalleryView = ({
   const { data: records, isLoadingData, onEdit } = useDataViewContext();
   // Find the primary field for the table
   const primaryField = useMemo(() => {
-    if (table && table.primaryFieldId) {
-      return table.fields.find((field) => field.id === table.primaryFieldId);
+    if (table && table.primary_field_id) {
+      return table.fields.find((field) => field.id === table.primary_field_id);
     }
     return table.fields[0];
   }, [table]);

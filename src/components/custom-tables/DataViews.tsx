@@ -10,7 +10,7 @@ import {
   TimelineView,
 } from "./views";
 import { DEFAULT_VIEW } from "./consts";
-import { IDataView } from "@/services/DataViewsService";
+import { DataView, ViewType } from "@/services/DataViewsService";
 import { DataViewProvider } from "@/contexts/DataViewProvider";
 import DataViewHeader from "./DataViewHeader";
 
@@ -30,7 +30,7 @@ const CustomTableViews = (props: CustomTableProps) => {
     className,
   } = props;
 
-  const [dataView, setDataView] = useState<IDataView>(DEFAULT_VIEW);
+  const [dataView, setDataView] = useState<DataView>(DEFAULT_VIEW);
 
   const permissions: UserPermissions = useMemo(() => {
     return {
@@ -48,15 +48,15 @@ const CustomTableViews = (props: CustomTableProps) => {
     };
 
     switch (dataView.view_type) {
-      case "calendar":
+      case ViewType.Calendar:
         return <CalendarView {...commonProps} />;
-      case "gallery":
+      case ViewType.Gallery:
         return <GalleryView {...commonProps} />;
-      case "kanban":
+      case ViewType.Kanban:
         return <KanbanView {...commonProps} />;
-      case "timeline":
+      case ViewType.Timeline:
         return <TimelineView {...commonProps} />;
-      case "grid":
+      case ViewType.Grid:
       default:
         return <GridView {...commonProps} />;
     }

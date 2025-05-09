@@ -14,7 +14,7 @@ import type {
 import { toast } from "sonner";
 import { useParams } from "react-router-dom";
 import { useCustomTables } from "@/contexts/CustomTables";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useEffect } from "react";
 import pluralize from "pluralize";
 
 interface UseCustomTableQueryOptions {
@@ -24,6 +24,7 @@ interface UseCustomTableQueryOptions {
   recordId?: string;
   queryString?: string;
   isOptimistic?: boolean;
+  dataViewId?: string;
 }
 
 const QUERY_KEYS = {
@@ -218,13 +219,14 @@ export const useCustomRecordsQuery = ({
   enableRealtime = false,
   queryString,
   isOptimistic = false,
+  dataViewId,
 }: UseCustomTableQueryOptions = {}) => {
   const { tables } = useCustomTables();
   const table = tables.find((table) => table.external_id == tableId);
   const queryClient = useQueryClient();
   const dataQueryKey = useMemo(
-    () => [QUERY_KEYS.RECORDS, tableId, queryString],
-    [tableId, queryString]
+    () => [QUERY_KEYS.RECORDS, tableId, queryString, dataViewId],
+    [tableId, queryString, dataViewId]
   );
 
   const tableNameSingular = pluralize.singular(table?.name);
@@ -233,7 +235,13 @@ export const useCustomRecordsQuery = ({
     data: { data: records = [], total } = { data: [], total: 0 },
     ...queryResults
   } = useQuery({
-    placeholderData: keepPreviousData,
+    placeholderData: (previousData, previousQuery) => {
+      if (previousQuery?.queryKey?.[3] === dataViewId) {
+        return previousData;
+      }
+
+      return undefined;
+    },
     queryKey: dataQueryKey,
     queryFn: async () => {
       if (!tableId) {

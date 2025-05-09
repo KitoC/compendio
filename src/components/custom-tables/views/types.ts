@@ -8,8 +8,6 @@ export interface CustomTableViewProps {
   dataViewId: string;
 }
 
-export type ViewType = "grid" | "calendar" | "gallery" | "kanban" | "timeline";
-
 export type TimeScale =
   | "day"
   | "week"
