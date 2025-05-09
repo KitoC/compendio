@@ -58,13 +58,6 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
         const body = await req.json();
         const data = await customTableService.createRecord(table, body);
 
-        // await dataTablesService.upsertLabel({
-        //   record: data,
-        //   base_id: customTableService.base_id,
-        //   table,
-        //   tenant_id: context.authService.tenantId as string,
-        // });
-
         return Response.json({ data }, { status: 201, headers: corsHeaders });
       }
 
@@ -89,13 +82,6 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
           cleanedBody
         );
 
-        // await dataTablesService.upsertLabel({
-        //   record: data,
-        //   base_id: customTableService.base_id,
-        //   table,
-        //   tenant_id: context.authService.tenantId as string,
-        // });
-
         return Response.json({ data }, { headers: corsHeaders });
       }
 
@@ -107,11 +93,6 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
           });
         }
         const data = await customTableService.deleteRecord(table, recordId);
-
-        await dataTablesService.deleteLabel({
-          table,
-          record_id: recordId,
-        });
 
         return Response.json({ data }, { headers: corsHeaders });
       }

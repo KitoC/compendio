@@ -24,7 +24,7 @@ export type FormFieldType =
 
 export interface FormFieldOption {
   label: string;
-  value: string | number;
+  value: string;
   color?: string;
   variant?: "airtable" | "default";
 }

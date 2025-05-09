@@ -42,6 +42,7 @@ const FormBuilder = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [footerEl, setFooterEl] = useState<HTMLDivElement | null>(null);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const previousValues = useRef(initialValues);
 
@@ -94,9 +95,20 @@ const FormBuilder = ({
     (e?: React.FormEvent) => {
       e?.preventDefault();
 
-      if (validateForm({ config, values, errors, touched, filteredSections })) {
+      const { isValid, invalidFields } = validateForm({
+        config,
+        values,
+        errors,
+        touched,
+        filteredSections,
+      });
+
+      setSubmitAttempted(true);
+
+      if (isValid) {
         onSubmit(values);
       } else {
+        setErrors(invalidFields);
         toast.error("Please fix the errors in the form");
       }
     },
@@ -251,7 +263,7 @@ const FormBuilder = ({
                         value={values[field.name] ?? field.defaultValue ?? ""}
                         onChange={handleChange}
                         error={errors[field.name]}
-                        touched={touched[field.name]}
+                        touched={touched[field.name] || submitAttempted}
                         formValues={values}
                         setFormValues={setValues}
                       />

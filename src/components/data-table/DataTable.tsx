@@ -208,9 +208,9 @@ function DataTable<T extends object>({
     if (deleteItemId !== null && onDelete) {
       try {
         await onDelete(deleteItemId);
+
         toast.success("Item deleted successfully");
       } catch (error) {
-        console.error("Error deleting item:", error);
         toast.error("Failed to delete item");
       } finally {
         setDeleteItemId(null);

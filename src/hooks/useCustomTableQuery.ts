@@ -224,7 +224,7 @@ export const useCustomRecordsQuery = ({
 
   const tableNameSingular = pluralize.singular(table?.name);
 
-  const { data: records, ...queryResults } = useQuery({
+  const { data: records = [], ...queryResults } = useQuery({
     queryKey: dataQueryKey,
     queryFn: async () => {
       if (!tableId) {
@@ -245,7 +245,6 @@ export const useCustomRecordsQuery = ({
       return response.data as CustomTableRecord[];
     },
     enabled: !!tableId,
-    placeholderData: [],
   });
 
   const updateQueryData = useCallback(
@@ -335,7 +334,9 @@ export const useCustomRecordsQuery = ({
     onSuccess: (record) => {
       toast.success(`${tableNameSingular} deleted successfully`);
 
-      removeRecordFromQueryData(record._id);
+      if (record) {
+        removeRecordFromQueryData(record._id);
+      }
     },
   });
 

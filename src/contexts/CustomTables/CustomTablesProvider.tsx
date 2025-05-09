@@ -53,7 +53,7 @@ export const CustomTablesProvider: React.FC<{
 
   const value = useMemo(
     () => ({
-      tables: tables?.sort((a, b) => a.name.localeCompare(b.name)),
+      tables: tables?.sort((a, b) => a.name.localeCompare(b.name)) || [],
     }),
     [tables]
   );

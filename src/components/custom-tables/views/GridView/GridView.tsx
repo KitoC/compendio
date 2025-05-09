@@ -19,7 +19,6 @@ import getStickyStyles from "./util/getStickyStyles";
 import GridViewLoadingSkeleton from "./GridViewLoadingSkeleton";
 import useColumns from "./hooks/useColumns";
 import { useDataViewContext } from "@/contexts/DataViewProvider";
-import { Button } from "@/components/ui/button";
 
 const GridView = ({
   table,

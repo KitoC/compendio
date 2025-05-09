@@ -79,12 +79,9 @@ const AttachmentRenderer = ({ field, value }: FieldRendererProps) => {
           {getFileIcon(attachment)}
           {!attachment.type?.includes("image") && (
             <>
-              <span className="truncate max-w-[150px]">
-                {attachment.filename}
-              </span>
-              {attachment.size && (
-                <span className="text-muted-foreground">
-                  ({formatFileSize(attachment.size)})
+              {attachment.filename && (
+                <span className="truncate max-w-[150px]">
+                  {attachment.filename}
                 </span>
               )}
             </>

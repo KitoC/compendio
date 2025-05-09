@@ -26,7 +26,7 @@ const validateField = ({
     }
   }
 
-  if (!field || !field.validation) return true;
+  if (!field || !field.validation) return { isValid: true, errorMessage: "" };
 
   const validation = field.validation;
   let isValid = true;
@@ -94,7 +94,7 @@ const validateField = ({
   //     setErrors((prev) => ({ ...prev, [name]: errorMessage }));
   //   }
 
-  return isValid;
+  return { isValid, errorMessage };
 };
 
 export default validateField;

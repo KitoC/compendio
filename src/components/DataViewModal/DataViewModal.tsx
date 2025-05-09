@@ -63,7 +63,7 @@ const DataViewModal = ({
     );
 
     const primaryField = tableSchema.fields.find(
-      (field) => field.id === tableSchema.primaryFieldId
+      (field) => field.id === tableSchema.primary_field_id
     );
 
     return {
@@ -137,7 +137,7 @@ const DataViewModal = ({
               hint: "Select the field that will be used to label the events",
               defaultValue: [
                 {
-                  value: tableSchema.primaryFieldId,
+                  value: tableSchema.primary_field_id,
                   label: primaryField?.name,
                 },
               ],
@@ -156,11 +156,7 @@ const DataViewModal = ({
                     <span className="text-sm text-muted-foreground">
                       Example label:
                     </span>
-                    <p>
-                      {value
-                        .map((v) => exampleRecord?.fields[v.label])
-                        .join(" ")}
-                    </p>
+                    <p>{value.map((v) => exampleRecord[v.label]).join(" ")}</p>
                   </div>
                 );
               },

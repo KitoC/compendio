@@ -1,20 +1,17 @@
 import { useEffect, useState } from "react";
 import type { CustomTableRecord, CustomTableSchema } from "@/types/customTable";
 import FormBuilder, { FormConfig } from "@/components/form-builder";
-import {
-  customTableToFormConfig,
-  formatValue,
-} from "@/components/custom-tables/utils";
+import { customTableToFormConfig } from "@/components/custom-tables/utils";
 import ResponsiveModal from "@/components/ui/responsive-modal";
 import {
   useCustomRecordQuery,
   useCustomTableSchemaQuery,
 } from "@/hooks/useCustomTableQuery";
-import { Alert } from "../ui/alert";
-import { Bot, Check, X } from "lucide-react";
+import { Alert } from "@/components/ui/alert";
+import { Bot } from "lucide-react";
 import { useSystemSettings } from "@/contexts/SystemSettingsProvider";
-import { Badge } from "../ui/badge";
 import { useUserSettings } from "@/contexts/UserSettingsProvider";
+import ReadonlyFields from "./ReadonlyFields";
 
 export interface CustomTableModalProps {
   tableId: string;
@@ -104,7 +101,7 @@ const CustomTableModal = ({
   const aiTextItemValues = aiTextItems
     .map((item) => {
       const { value } =
-        (record?.fields?.[item?.name] as {
+        (record?.[item?.name] as {
           value: string;
         }) || {};
 
@@ -160,61 +157,7 @@ const CustomTableModal = ({
             </Alert>
           </div>
         )}
-        {readonlyItems.length > 0 && (
-          <div className="p-6 pb-0 bg-card flex flex-col gap-2">
-            <p className="text-muted-foreground font-bold text-xs">
-              Calculated fields
-            </p>
-            {readonlyItems.map((item) => {
-              const value = record?.[item?.name] as string;
-              const formattedValue = formatValue(value, item, timeSettings);
-
-              return (
-                <div key={item.id} className="gap-2">
-                  <p className="text-muted-foreground font-bold text-sm">
-                    {item.name}
-                  </p>
-
-                  <div className="flex flex-col gap-1">
-                    {Array.isArray(value) ? (
-                      value.map((v) => (
-                        <Badge
-                          className="text-xs w-fit"
-                          key={v.value}
-                          variant="outline"
-                        >
-                          {v.label || v.value}
-                        </Badge>
-                      ))
-                    ) : typeof value === "boolean" ? (
-                      value ? (
-                        <Badge
-                          className="text-xs w-fit"
-                          variant="outline-success"
-                        >
-                          <Check className="w-4 h-4 text-green-500" />
-                        </Badge>
-                      ) : (
-                        <Badge
-                          className="text-xs w-fit"
-                          variant="outline-error"
-                        >
-                          <X className="w-4 h-4 text-red-500" />
-                        </Badge>
-                      )
-                    ) : (
-                      <Badge className="text-xs w-fit" variant="outline">
-                        {item.prefix}
-                        {formattedValue || "-"}
-                        {item.suffix}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        <ReadonlyFields readonlyItems={readonlyItems} record={record} />
         <FormBuilder
           hideTitles={true}
           config={formConfig}

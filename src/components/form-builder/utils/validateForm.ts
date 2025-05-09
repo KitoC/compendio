@@ -25,7 +25,7 @@ export const validateForm = ({
     section.fields.forEach((field) => {
       newTouched[field.name] = true;
 
-      const isValidField = validateField({
+      const { isValid: isValidField, errorMessage } = validateField({
         name: field.name,
         value: values[field.name],
         config,
@@ -35,8 +35,7 @@ export const validateForm = ({
 
       if (!isValidField) {
         isValid = false;
-        invalidFields[field.name] =
-          errors[field.name] || `${field.label} is invalid`;
+        invalidFields[field.name] = errorMessage;
       }
     });
   });

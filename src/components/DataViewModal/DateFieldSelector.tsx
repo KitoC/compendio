@@ -1,8 +1,4 @@
-import {
-  CustomFieldComponentProps,
-  FormFieldOption,
-} from "@/components/form-builder/types";
-import { AirtableField } from "@/types/airtable";
+import { CustomFieldComponentProps } from "@/components/form-builder/types";
 import {
   Select,
   SelectContent,
@@ -12,21 +8,21 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useCallback, useEffect } from "react";
-
+import { CustomTableField, SelectOption } from "@/types/customTable";
 export interface DateFieldValue {
   startDate: string;
   endDate: string;
 }
 
 interface DateFieldSelectorProps extends CustomFieldComponentProps {
-  dateFields: AirtableField[];
+  dateFields: CustomTableField[];
   value: DateFieldValue;
 }
 
 interface SelectorProps {
   onChange: (value: string) => void;
   value: string;
-  options: FormFieldOption[];
+  options: SelectOption[];
   placeholder: string;
   label: string;
 }
