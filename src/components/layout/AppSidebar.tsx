@@ -63,7 +63,7 @@ const SidebarItem = (item: SidebarItemOrGroup) => {
             !isDashboard && location.pathname?.includes(to);
 
           return clsx(
-            "pr-2 pl-3 w-full flex items-center gap-2 min-h-fit rounded hover:grey-200 dark:hover:bg-gray-700",
+            "pr-2 pl-3 w-full flex items-center gap-2 min-h-fit rounded hover:bg-slate-300 dark:hover:bg-gray-700",
             (isActive || isRelativeActive) && "bg-muted",
             isMobile ? "py-3" : "py-1"
           );
@@ -129,14 +129,23 @@ const AppSidebar = () => {
       })),
     },
     {
-      icon: <Table2 className="h-4 w-4" />,
-      label: "Resources",
+      // icon: <Table2 className="h-4 w-4" />,
+      // label: "Resources",
       hidden: tables.length === 0,
-      children: tables.map((table) => ({
-        label: table.name,
-        url: ROUTES.CUSTOM_TABLE_DATA.replace(":id", table.name),
-        onClick: onNavItemClick,
-      })),
+      children: [
+        // {
+        //   icon: <LayoutDashboard className="h-4 w-4" />,
+        //   label: "Dashboard",
+        //   url: ROUTES.DASHBOARD,
+        //   onClick: onNavItemClick,
+        // },
+        ...tables.map((table) => ({
+          label: table.name,
+          url: ROUTES.CUSTOM_TABLE_DATA.replace(":id", table.name),
+          onClick: onNavItemClick,
+          icon: <Table2 className="h-4 w-4" />,
+        })),
+      ],
     },
   ];
 
@@ -251,7 +260,7 @@ const AppSidebar = () => {
 
           {section.children?.length ? (
             <SidebarGroup>
-              {section.children?.length && (
+              {section.children?.length && section.label && (
                 <div className="flex items-center px-2 gap-2">
                   {section.icon && section.icon}
                   <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
