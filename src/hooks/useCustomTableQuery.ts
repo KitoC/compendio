@@ -25,6 +25,7 @@ interface UseCustomTableQueryOptions {
   queryString?: string;
   isOptimistic?: boolean;
   dataViewId?: string;
+  enabled?: boolean;
 }
 
 const QUERY_KEYS = {
@@ -220,6 +221,7 @@ export const useCustomRecordsQuery = ({
   queryString,
   isOptimistic = false,
   dataViewId,
+  enabled = true,
 }: UseCustomTableQueryOptions = {}) => {
   const { tables } = useCustomTables();
   const table = tables.find((table) => table.external_id == tableId);
@@ -261,7 +263,7 @@ export const useCustomRecordsQuery = ({
 
       return response as CustomTableRecordResponse;
     },
-    enabled: !!tableId,
+    enabled: !!tableId && enabled,
     // keepPreviousData: true,
   });
 
@@ -360,6 +362,7 @@ export const useCustomRecordsQuery = ({
 
   return {
     ...queryResults,
+    isLoading: !queryResults.isPlaceholderData && queryResults.isFetching,
     records,
     createRecord: createRecordMutation.mutateAsync,
     updateRecord: updateRecordMutation.mutateAsync,

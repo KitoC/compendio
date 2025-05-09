@@ -16,10 +16,26 @@ export type Pagination = {
   pageSize: number;
 };
 
+export enum FilterType {
+  DATE_AFTER = "date_after",
+  DATE_BEFORE = "date_before",
+}
+
+export enum FilterOperator {
+  AND = "AND",
+  OR = "OR",
+}
+
+export type Filter = {
+  filter_type: FilterOperator;
+  filters: { field: string; type: FilterType; value: string }[];
+};
+
 export type Query = {
   page: number;
   pageSize: number;
   search: string;
+  filter?: Filter;
 };
 
 type DataViewContextType = {

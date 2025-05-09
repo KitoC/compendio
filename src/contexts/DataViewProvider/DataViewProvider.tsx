@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import DataViewContext, { Pagination } from "./DataViewContext";
+import DataViewContext, { Pagination, Query } from "./DataViewContext";
 import { useDataViewQuery } from "@/hooks/useDataViewsQuery";
 import {
   useCustomRecordsQuery,
@@ -18,8 +18,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ViewType } from "@/services/DataViewsService";
+import { IDataView, ViewType } from "@/services/DataViewsService";
 import useDataViewQueryBuilder from "./useDataViewQueryBuilder";
+
 type DataViewProviderProps = {
   children: React.ReactNode;
   dataViewId: string;
@@ -27,6 +28,18 @@ type DataViewProviderProps = {
 };
 
 export const TEMP_RECORD_ID = "temp";
+
+const isDataViewEnabled = (dataView: IDataView, query: Query) => {
+  if (!dataView) {
+    return false;
+  }
+
+  if (dataView.view_type === ViewType.Calendar) {
+    return query.filter?.filters.length > 0;
+  }
+
+  return true;
+};
 
 const DataViewProvider = ({
   children,
@@ -66,6 +79,7 @@ const DataViewProvider = ({
     queryString,
     isOptimistic: true,
     dataViewId,
+    enabled: isDataViewEnabled(dataView, query),
   });
 
   const handleSave = useCallback(

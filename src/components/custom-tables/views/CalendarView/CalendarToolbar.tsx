@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Navigate, Views } from "react-big-calendar";
 import dayjs from "dayjs";
-import { ChevronLeft, ChevronRight, Settings, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Settings } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -10,8 +10,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import DataViewModal from "@/components/DataViewModal";
-import { useState } from "react";
-import { useDataViewContext } from "@/contexts/DataViewProvider/DataViewContext";
+import { useEffect, useMemo, useState } from "react";
+import {
+  FilterOperator,
+  FilterType,
+  useDataViewContext,
+} from "@/contexts/DataViewProvider/DataViewContext";
+import Loader from "@/components/ui/loader";
 
 const getDateLabel = (view, date) => {
   const format = "MMM D";
@@ -48,9 +53,69 @@ const getDateLabel = (view, date) => {
   }
 };
 
+const getDateQuery = (view, date) => {
+  switch (view) {
+    case Views.MONTH:
+      return {
+        from: dayjs(date).add(-1, "month").startOf("month"),
+        to: dayjs(date).add(1, "month").endOf("month"),
+      };
+    case Views.WEEK:
+      return {
+        from: dayjs(date).add(-1, "week").startOf("week"),
+        to: dayjs(date).add(1, "week").endOf("week"),
+      };
+    case Views.WORK_WEEK:
+      return {
+        from: dayjs(date).add(-1, "week").day(1).startOf("day"),
+        to: dayjs(date).add(1, "week").day(5).endOf("day"),
+      };
+    case Views.DAY:
+      return { from: dayjs(date), to: dayjs(date) };
+    case Views.AGENDA:
+      return {
+        from: dayjs(date).add(-1, "day").startOf("day"),
+        to: dayjs(date).add(7, "day").endOf("day"),
+      };
+    default:
+      return {
+        from: dayjs(date).add(-1, "day").startOf("day"),
+        to: dayjs(date).add(1, "day").endOf("day"),
+      };
+  }
+};
+
 const CalendarToolbar = (props) => {
   const [open, setOpen] = useState(false);
-  const { isLoadingData, isFetchingData } = useDataViewContext();
+  const { isLoadingData, isFetchingData, dataView, setQuery } =
+    useDataViewContext();
+
+  const { from, to } = useMemo(() => {
+    const query = getDateQuery(props.view, props.date);
+
+    return {
+      from: query.from.toISOString(),
+      to: query.to.toISOString(),
+    };
+  }, [props.view, props.date]);
+
+  const { startDate, endDate } = useMemo(() => {
+    return {
+      startDate: dataView?.config.dateFields.startDate,
+      endDate: dataView?.config.dateFields.endDate,
+    };
+  }, [dataView]);
+
+  useEffect(() => {
+    const filter = {
+      filter_type: FilterOperator.AND,
+      filters: [
+        { field: startDate, type: FilterType.DATE_AFTER, value: from },
+        { field: endDate, type: FilterType.DATE_BEFORE, value: to },
+      ],
+    };
+    setQuery((prev) => ({ ...prev, filter }));
+  }, [from, to, startDate, endDate, setQuery]);
 
   return (
     <div className="flex items-center justify-between mb-2">
@@ -78,14 +143,18 @@ const CalendarToolbar = (props) => {
           {getDateLabel(props.view, props.date)}
         </p>
       </div>
+      <div className="mr-auto ml-8">
+        {(isLoadingData || isFetchingData) && (
+          <div className="flex items-center gap-2">
+            <Loader className="w-8 h-8 text-muted-foreground" />
+            <p className="text-muted-foreground">Loading events...</p>
+          </div>
+        )}
+      </div>
 
       <div></div>
 
       <div className="flex items-center gap-2">
-        {(isLoadingData || isFetchingData) && (
-          <Loader2 className="w-12 h-12 animate-spin mr-2 text-muted-foreground" />
-        )}
-
         <Select value={props.view} onValueChange={props.onView}>
           <SelectTrigger className="capitalize">
             <SelectValue placeholder="Select a view" />

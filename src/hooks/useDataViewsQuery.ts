@@ -49,7 +49,6 @@ export const useDataViewQuery = (id: string) => {
     queryKey: [QUERY_KEYS.TABLE_NAME, id],
 
     queryFn: async () => DataViewsService.getById(id),
-    placeholderData: [],
     enabled: !!id && id !== "default",
   });
 

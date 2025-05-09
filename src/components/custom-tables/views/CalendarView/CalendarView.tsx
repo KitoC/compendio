@@ -35,9 +35,9 @@ const CalendarView = ({
 }: CustomTableViewProps) => {
   const {
     dataView,
-    isLoadingData,
     updateRecord,
     data = [],
+    isLoadingData,
   } = useDataViewContext();
 
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -272,7 +272,12 @@ const CalendarView = ({
     >
       <div className="h-full flex flex-col">
         <div className="flex-grow overflow-hidden">
-          <div className="h-full p-1">
+          <div className="h-full p-1 relative rounded-md overflow-hidden">
+            {isLoadingData && (
+              <div className="absolute inset-0 flex items-center justify-center z-40 bg-background/75 animate-fade-in">
+                <Loader className="w-4 h-4" />
+              </div>
+            )}
             <DragAndDropCalendar
               selectable
               components={components}

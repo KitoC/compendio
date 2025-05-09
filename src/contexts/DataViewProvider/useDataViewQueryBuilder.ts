@@ -1,18 +1,13 @@
 import { useMemo, useState } from "react";
 import { ViewType } from "@/services/DataViewsService";
 import { IDataView } from "@/services/DataViewsService";
-import { Pagination } from "./DataViewContext";
+import { Query } from "./DataViewContext";
 import { useDebounce } from "use-debounce";
-export type Query = {
-  page: number;
-  pageSize: number;
-  search: string;
-};
 
 const useDataViewQueryBuilder = (dataView: IDataView) => {
   const [query, setQuery] = useState<Query>({
     page: 1,
-    pageSize: 1,
+    pageSize: 25,
     search: "",
   });
   const [debouncedQuery] = useDebounce(query, 500);
@@ -20,7 +15,7 @@ const useDataViewQueryBuilder = (dataView: IDataView) => {
   const queryString = useMemo(() => {
     let string = "";
 
-    if ([ViewType.Grid].includes(dataView.view_type)) {
+    if ([ViewType.Grid].includes(dataView?.view_type)) {
       if (debouncedQuery.page) {
         string += `page=${debouncedQuery.page}`;
       }
@@ -32,6 +27,10 @@ const useDataViewQueryBuilder = (dataView: IDataView) => {
 
     if (debouncedQuery.search) {
       string += `&search=${debouncedQuery.search}`;
+    }
+
+    if (debouncedQuery.filter) {
+      string += `&filter=${JSON.stringify(debouncedQuery.filter)}`;
     }
 
     return string;
