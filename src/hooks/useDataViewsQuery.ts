@@ -3,9 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   DataViewsService,
   DATA_VIEWS_TABLE_NAME,
-  IDataView,
   DataViewCreate,
   DataViewUpdate,
+  IDataView,
 } from "@/services/DataViewsService";
 
 const QUERY_KEYS = {
@@ -16,11 +16,11 @@ const QUERY_KEYS = {
  * Hook to fetch data views
  */
 export const useDataViewsQuery = (tableId: string) => {
-  const { data: dataViews, ...queryResults } = useQuery({
+  const { data: dataViews = [], ...queryResults } = useQuery({
     queryKey: [QUERY_KEYS.TABLE_NAME, tableId],
 
     queryFn: async () => DataViewsService.getDataViewsByTableId(tableId),
-    placeholderData: [],
+    // placeholderData: [],
   });
 
   return {
@@ -29,7 +29,7 @@ export const useDataViewsQuery = (tableId: string) => {
   };
 };
 
-export const DEFAULT_VIEW: IDataView = {
+export const DEFAULT_VIEW: DataViewCreate = {
   id: "default",
   label: "List view",
   view_type: "grid",

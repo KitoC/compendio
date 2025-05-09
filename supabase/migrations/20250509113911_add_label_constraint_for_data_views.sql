@@ -1,0 +1,1 @@
+ALTER TABLE data_views ADD CONSTRAINT data_views_unique_label UNIQUE (label, tenant_id);

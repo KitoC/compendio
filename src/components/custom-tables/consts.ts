@@ -1,10 +1,10 @@
-import { IDataView } from "@/services/DataViewsService";
+import { IDataView, ViewType } from "@/services/DataViewsService";
 import { CalendarIcon, Table } from "lucide-react";
 
 export const DEFAULT_VIEW: IDataView = {
   id: "default",
   label: "List view",
-  view_type: "grid",
+  view_type: ViewType.Grid,
   config: {},
   created_at: new Date().toISOString(),
   deleted_at: null,

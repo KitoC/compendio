@@ -30,6 +30,7 @@ export const ROUTES = {
   APP: "/app",
   AGENT_CHAT: "/:tenantId/app/assistant-chat/:id",
   CUSTOM_TABLE_DATA: "/:tenantId/app/ct/:id",
+  CUSTOM_TABLE_DATA_VIEW: "view/:dataViewId",
   SETTINGS: "/:tenantId/app/settings",
   SETTINGS_APPEARANCE: "/:tenantId/app/settings/appearance",
   SETTINGS_AGENTS: "/:tenantId/app/settings/agents",

@@ -48,16 +48,23 @@ interface SidebarItemOrGroup {
 const SidebarItem = (item: SidebarItemOrGroup) => {
   const { urlTenantAlias } = useTenant();
   const isMobile = useIsMobile();
+  const location = useLocation();
+  const to = item.url?.replace(":tenantId", urlTenantAlias);
+  const isDashboard =
+    to === ROUTES.DASHBOARD.replace(":tenantId", urlTenantAlias);
 
   return (
     <SidebarMenuItem key={item.label}>
       <NavLink
-        to={item.url?.replace(":tenantId", urlTenantAlias)}
+        to={to}
         end
         className={({ isActive, isPending }) => {
+          const isRelativeActive =
+            !isDashboard && location.pathname?.includes(to);
+
           return clsx(
             "pr-2 pl-3 w-full flex items-center gap-2 min-h-fit rounded hover:grey-200 dark:hover:bg-gray-700",
-            isActive && "bg-muted",
+            (isActive || isRelativeActive) && "bg-muted",
             isMobile ? "py-3" : "py-1"
           );
         }}

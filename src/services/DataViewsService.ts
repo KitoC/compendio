@@ -17,19 +17,19 @@ export enum ViewType {
   Timeline = "timeline",
 }
 
-export type DataView = IDataViewRow & {
+export type IDataView = IDataViewRow & {
   view_type: ViewType;
   config: {
-    dateFields: {
+    dateFields?: {
       startDate: string;
       endDate: string;
     };
-    fields: string[];
-    groupByField: string;
-    sortByField: string;
-    sortDirection: "asc" | "desc";
-    eventLabelField: SelectOption[];
-    calendarViews: {
+    fields?: string[];
+    groupByField?: string;
+    sortByField?: string;
+    sortDirection?: "asc" | "desc";
+    eventLabelField?: SelectOption[];
+    calendarViews?: {
       [key: string]: {
         label: string;
         value: string;

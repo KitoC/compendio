@@ -86,7 +86,12 @@ function App() {
                       <Route
                         path={ROUTES.CUSTOM_TABLE_DATA}
                         element={<CustomTablePage />}
-                      />
+                      >
+                        <Route
+                          path={ROUTES.CUSTOM_TABLE_DATA_VIEW}
+                          element={<CustomTablePage />}
+                        />
+                      </Route>
                       <Route path={ROUTES.AGENT_CHAT} element={<AgentChat />} />
 
                       {/* Settings Routes */}

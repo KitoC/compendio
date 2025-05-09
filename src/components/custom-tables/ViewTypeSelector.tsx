@@ -17,7 +17,9 @@ import { DEFAULT_VIEW } from "./consts";
 import { IDataView } from "@/services/DataViewsService";
 import { useState } from "react";
 import DataViewModal from "@/components/DataViewModal";
-import { Button } from "../ui/button";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/lib/constants";
+import { kebabCase } from "lodash";
 
 interface ViewTypeSelectorProps {
   tableId: string;
@@ -44,8 +46,7 @@ const ViewTypeSelector = ({
 }: ViewTypeSelectorProps) => {
   const { dataViews } = useDataViewsQuery(tableId);
   const [open, setOpen] = useState(false);
-
-  const [dataViewId, setDataViewId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const dataViewsWithDefault = [DEFAULT_VIEW, ...dataViews];
   const { mutateAsync: deleteDataView } = useDeleteDataViewMutation(tableId);
@@ -56,9 +57,22 @@ const ViewTypeSelector = ({
         value={currentDataView.id}
         onValueChange={(value) => {
           if (value !== "new") {
-            setViewType(
-              dataViewsWithDefault.find((view) => view.id === value)!
-            );
+            const viewType = dataViewsWithDefault.find(
+              (view) => view.id === value
+            )!;
+
+            setViewType(viewType);
+
+            if (value !== DEFAULT_VIEW.id) {
+              navigate(
+                ROUTES.CUSTOM_TABLE_DATA_VIEW.replace(
+                  ":dataViewId",
+                  kebabCase(viewType.label)
+                )
+              );
+            } else {
+              navigate("");
+            }
           }
         }}
       >
@@ -80,6 +94,7 @@ const ViewTypeSelector = ({
                           onClick: async () => {
                             await deleteDataView(type.id);
                             setViewType(DEFAULT_VIEW);
+                            navigate("");
                           },
                           className: "text-red-500",
                         },
@@ -109,8 +124,6 @@ const ViewTypeSelector = ({
         open={open}
         setOpen={setOpen}
         tableId={tableId}
-        dataViewId={dataViewId}
-        key={dataViewId}
         onSuccess={(newView) => {
           setOpen(false);
           setViewType(newView);
