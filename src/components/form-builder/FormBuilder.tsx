@@ -20,7 +20,7 @@ import isEqual from "lodash/isEqual";
 import { Divider } from "@/components/ui/divider";
 import validateField from "./utils/validateField";
 import { validateForm } from "./utils/validateForm";
-
+import { isEmpty } from "lodash";
 const FormBuilder = ({
   config,
   onSubmit,
@@ -196,7 +196,7 @@ const FormBuilder = ({
 
         {!hideSubmitButton && (
           <Button
-            disabled={isSubmitting}
+            disabled={isSubmitting || !isEmpty(errors)}
             className={!config.showReset ? "ml-auto" : ""}
             onClick={handleSubmit}
           >
@@ -266,6 +266,9 @@ const FormBuilder = ({
                         touched={touched[field.name] || submitAttempted}
                         formValues={values}
                         setFormValues={setValues}
+                        setError={(name, error) =>
+                          setErrors((prev) => ({ ...prev, [name]: error }))
+                        }
                       />
                     ))}
                 </div>

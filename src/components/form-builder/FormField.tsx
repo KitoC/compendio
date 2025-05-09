@@ -29,6 +29,7 @@ const FormField = ({
   touched,
   formValues,
   setFormValues,
+  setError,
 }: FormFieldProps) => {
   const {
     name,
@@ -46,6 +47,7 @@ const FormField = ({
     CustomComponent,
     renderAfterInput,
     renderBelowInput,
+    validationAsyncOnBlur,
   } = field;
 
   const id = field.id as string;
@@ -97,6 +99,19 @@ const FormField = ({
       handleChangeSideEffect({ ...formValues, [name]: fieldValue });
     },
     [onChange, name, handleChangeSideEffect, formValues]
+  );
+
+  const onFieldBlur = useCallback(
+    async (fieldValue: unknown) => {
+      if (validationAsyncOnBlur) {
+        const { isValid, error } = await validationAsyncOnBlur(fieldValue);
+
+        if (!isValid) {
+          setError(name, error || "Invalid value");
+        }
+      }
+    },
+    [validationAsyncOnBlur, name, setError]
   );
 
   // Format currency value for display
@@ -199,6 +214,7 @@ const FormField = ({
             onChange={handleChange}
             placeholder={placeholder}
             disabled={disabled}
+            onBlur={() => onFieldBlur(value)}
             className={cn(
               error && touched ? "border-destructive" : "",
               className

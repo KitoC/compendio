@@ -71,6 +71,9 @@ export interface FormField {
   defaultValue?: unknown;
   options?: FormFieldOption[];
   validation?: FormFieldValidation;
+  validationAsyncOnBlur?: (
+    value: unknown
+  ) => Promise<{ isValid: boolean; error?: string }>;
   disabled?: boolean;
   className?: string;
   hidden?: boolean | ((values: Record<string, unknown>) => boolean);
@@ -145,4 +148,5 @@ export interface FormFieldProps {
   touched?: boolean;
   formValues: Record<string, unknown>;
   setFormValues: (values: Record<string, unknown>) => void;
+  setError: (name: string, error: string) => void;
 }

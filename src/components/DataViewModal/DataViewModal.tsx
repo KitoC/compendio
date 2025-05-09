@@ -15,9 +15,11 @@ import {
   useCreateOrUpdateDataViewMutation,
   useDataViewQuery,
 } from "@/hooks/useDataViewsQuery";
-import { IDataView } from "@/services/DataViewsService";
+import { DATA_VIEWS_TABLE_NAME, IDataView } from "@/services/DataViewsService";
 import { Json } from "@/integrations/supabase/types";
 import { useTenant } from "@/contexts/TenantContext";
+import { Input } from "../ui/input";
+import { supabase } from "@/integrations/supabase/client";
 
 const DataViewModal = ({
   open,
@@ -55,6 +57,7 @@ const DataViewModal = ({
         field.type
       )
     );
+
     const groupableFields = tableSchema.fields.filter(
       (field) =>
         !["date", "dateTime", "createdTime", "lastModifiedTime"].includes(
@@ -88,8 +91,24 @@ const DataViewModal = ({
               label: "Name",
               name: "label",
               placeholder: "My custom view",
-              validation: {
-                required: true,
+              validationAsyncOnBlur: async (value) => {
+                const { data, error } = await supabase
+                  .from(DATA_VIEWS_TABLE_NAME)
+                  .select("*")
+                  .eq("label", value)
+                  .eq("tenant_id", tenantId);
+
+                if (error) {
+                  return {
+                    isValid: false,
+                    error: "Error checking if label is unique",
+                  };
+                }
+
+                return {
+                  isValid: data.length === 0,
+                  error: "Name must be unique",
+                };
               },
             },
           ],
@@ -210,30 +229,32 @@ const DataViewModal = ({
           <Loader2 className="w-4 h-4 animate-spin" />
         </div>
       ) : (
-        <FormBuilder
-          config={formConfig}
-          className="border-none rounded-none shadow-none h-full relative"
-          contentClassName="px-6 pt-6 "
-          footerClassname="absolute bottom-0 left-0 right-0 shadow-md-top z-10"
-          onSubmit={({ label, view_type, ...config }) => {
-            createOrUpdateDataView({
-              id: dataView?.id,
-              tenant_id: tenantId,
-              data_table_id: tableSchema.id,
-              external_table_id: tableSchema.external_id,
-              label: label as string,
-              config: config as Json,
-              view_type: view_type as string,
-            });
-          }}
-          isSubmitting={isSubmitting}
-          onCancel={() => setOpen(false)}
-          initialValues={{
-            view_type: "grid",
-            ...(dataView || {}),
-            ...dataView?.config,
-          }}
-        />
+        <>
+          <FormBuilder
+            config={formConfig}
+            className="border-none rounded-none shadow-none h-full relative"
+            contentClassName="px-6 pt-6 "
+            footerClassname="absolute bottom-0 left-0 right-0 shadow-md-top z-10"
+            onSubmit={({ label, view_type, ...config }) => {
+              createOrUpdateDataView({
+                id: dataView?.id,
+                tenant_id: tenantId,
+                data_table_id: tableSchema.id,
+                external_table_id: tableSchema.external_id,
+                label: label as string,
+                config: config as Json,
+                view_type: view_type as string,
+              });
+            }}
+            isSubmitting={isSubmitting}
+            onCancel={() => setOpen(false)}
+            initialValues={{
+              view_type: "grid",
+              ...(dataView || {}),
+              ...dataView?.config,
+            }}
+          />
+        </>
       )}
     </ResponsiveModal>
   );
