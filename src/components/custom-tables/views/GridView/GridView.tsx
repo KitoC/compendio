@@ -5,7 +5,13 @@ import {
   getSortedRowModel,
   flexRender,
 } from "@tanstack/react-table";
-import { ArrowUpDown, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ArrowUpDown,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+} from "lucide-react";
 import { CustomTableViewProps } from "../types";
 import {
   Table,
@@ -20,6 +26,8 @@ import GridViewLoadingSkeleton from "./GridViewLoadingSkeleton";
 import useColumns from "./hooks/useColumns";
 import { useDataViewContext } from "@/contexts/DataViewProvider";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import Loader from "@/components/ui/loader";
 
 const GridView = ({
   table,
@@ -30,10 +38,10 @@ const GridView = ({
     data,
     isLoadingData,
     onEdit,
-    pagination,
-    setPagination,
+    query,
     total,
     isFetchingData,
+    setQuery,
   } = useDataViewContext();
 
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -59,11 +67,34 @@ const GridView = ({
   }
 
   return (
-    <>
+    <div className="flex flex-col gap-2 max-h-full p-1">
+      <div className="flex items-center justify-end w-1/3 relative">
+        <Input
+          icon={<Search className="w-4 h-4" />}
+          placeholder="Search"
+          className="w-full"
+          value={query.search}
+          onChange={(e) => {
+            setQuery((prev) => ({
+              ...prev,
+              search: e.target.value,
+            }));
+          }}
+        />
+        {isFetchingData && (
+          <Loader2 className="mr-3 w-4 h-4 animate-spin absolute right-0" />
+        )}
+      </div>
+
       <div
         className="relative w-full rounded-md border overflow-hidden h-full bg-muted"
         ref={tableContainerRef}
       >
+        {isFetchingData && (
+          <div className="absolute inset-0 flex items-center justify-center z-40 bg-background/75 animate-fade-in">
+            <Loader className="w-4 h-4" />
+          </div>
+        )}
         <Table className="border-b border-border bg-white">
           <TableHeader className="[&_tr]:border-b-transparent">
             {tableInstance.getHeaderGroups().map((headerGroup) => (
@@ -138,49 +169,47 @@ const GridView = ({
             )}
           </TableBody>
         </Table>
+      </div>
 
-        <div className="flex items-center justify-end space-x-2 py-4 px-4 bg-background">
-          <div className="text-sm text-muted-foreground">
-            {(pagination.page - 1) * pagination.pageSize + 1}-
-            {Math.min(pagination.page * pagination.pageSize, total)} of {total}
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() =>
-                setPagination((prev) => ({
-                  ...prev,
-                  page: prev.page - 1,
-                }))
-              }
-              disabled={pagination.page === 1}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() =>
-                setPagination((prev) => ({
-                  ...prev,
-                  page: prev.page + 1,
-                }))
-              }
-              disabled={
-                isFetchingData || pagination.page * pagination.pageSize >= total
-              }
-            >
-              {isFetchingData ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <ChevronRight className="w-4 h-4" />
-              )}
-            </Button>
-          </div>
+      <div className="flex items-center justify-end space-x-2 py-2 px-4 bg-background border border-border rounded-md">
+        <div className="text-sm text-muted-foreground">
+          {(query.page - 1) * query.pageSize + 1}-
+          {Math.min(query.page * query.pageSize, total)} of {total}
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() =>
+              setQuery((prev) => ({
+                ...prev,
+                page: prev.page - 1,
+              }))
+            }
+            disabled={query.page === 1}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() =>
+              setQuery((prev) => ({
+                ...prev,
+                page: prev.page + 1,
+              }))
+            }
+            disabled={isFetchingData || query.page * query.pageSize >= total}
+          >
+            {isFetchingData ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <ChevronRight className="w-4 h-4" />
+            )}
+          </Button>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

@@ -1,0 +1,1 @@
+ALTER TABLE data_views ADD COLUMN is_default BOOLEAN DEFAULT FALSE;

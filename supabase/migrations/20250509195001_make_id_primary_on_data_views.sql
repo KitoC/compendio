@@ -1,0 +1,1 @@
+ALTER TABLE data_views ADD PRIMARY KEY (id);

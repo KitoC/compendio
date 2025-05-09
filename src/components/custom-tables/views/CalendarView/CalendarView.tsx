@@ -272,7 +272,7 @@ const CalendarView = ({
     >
       <div className="h-full flex flex-col">
         <div className="flex-grow overflow-hidden">
-          <div className="h-full ">
+          <div className="h-full p-1">
             <DragAndDropCalendar
               selectable
               components={components}

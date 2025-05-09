@@ -1,7 +1,7 @@
 import { CustomTableSchema } from "@/types/customTable";
 import { createContext, useContext, Dispatch, SetStateAction } from "react";
 import { UseMutateAsyncFunction } from "@tanstack/react-query";
-import { DataView } from "@/services/DataViewsService";
+import { IDataView } from "@/services/DataViewsService";
 import type { CustomTableRecord } from "@/types/customTable";
 
 type MutationFunction = UseMutateAsyncFunction<
@@ -16,13 +16,17 @@ export type Pagination = {
   pageSize: number;
 };
 
+export type Query = {
+  page: number;
+  pageSize: number;
+  search: string;
+};
+
 type DataViewContextType = {
-  dataView: DataView | null;
+  dataView: IDataView | null;
   data: CustomTableRecord[];
-  query: string | null;
-  setQuery: Dispatch<SetStateAction<string>>;
-  pagination: Pagination;
-  setPagination: Dispatch<SetStateAction<Pagination>>;
+  query: Query;
+  setQuery: Dispatch<SetStateAction<Query>>;
   isFetchingData: boolean;
   isLoadingData: boolean;
   createRecord: MutationFunction;
@@ -49,10 +53,8 @@ const defaultMutationFunction = async () => {};
 const DataViewContext = createContext<DataViewContextType>({
   dataView: null,
   data: [],
-  query: null,
+  query: { page: 1, pageSize: 25, search: "" },
   setQuery: () => {},
-  pagination: { page: 1, pageSize: 10 },
-  setPagination: () => {},
   isFetchingData: false,
   isLoadingData: false,
   createRecord: defaultMutationFunction,

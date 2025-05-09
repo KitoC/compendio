@@ -17,6 +17,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useDataViewsQuery } from "@/hooks/useDataViewsQuery";
 import { Skeleton } from "../ui/skeleton";
 import { kebabCase } from "lodash";
+
 const defaultPermissions: UserPermissions = {
   create: true,
   read: true,
@@ -42,6 +43,9 @@ const CustomTableViews = (props: CustomTableProps) => {
   useEffect(() => {
     if (isLoading) return;
 
+    const defaultView =
+      dataViews.find((view) => view.is_default) || DEFAULT_VIEW;
+
     if (dataViewId) {
       const dataView = dataViews.find(
         (view) => kebabCase(view.label) === dataViewId
@@ -51,10 +55,10 @@ const CustomTableViews = (props: CustomTableProps) => {
         setDataView(dataView);
       } else {
         navigate("");
-        setDataView(DEFAULT_VIEW);
+        setDataView(defaultView);
       }
     } else {
-      setDataView(DEFAULT_VIEW);
+      setDataView(defaultView);
     }
   }, [dataViewId, dataViews, isLoading, navigate]);
 

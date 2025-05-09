@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ViewType } from "@/services/DataViewsService";
-
+import useDataViewQueryBuilder from "./useDataViewQueryBuilder";
 type DataViewProviderProps = {
   children: React.ReactNode;
   dataViewId: string;
@@ -33,11 +33,6 @@ const DataViewProvider = ({
   dataViewId,
   tableId: tableIdFromProps,
 }: DataViewProviderProps) => {
-  const [pagination, setPagination] = useState<Pagination>({
-    page: 1,
-    pageSize: 25,
-  });
-  const [query, setQuery] = useState<string>("");
   const [isCreating, setIsCreating] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [editingRecord, setEditingRecord] = useState<CustomTableRecord | null>(
@@ -49,29 +44,11 @@ const DataViewProvider = ({
   const { dataView, isFetching: isFetchingDataView } =
     useDataViewQuery(dataViewId);
 
+  const { query, setQuery, queryString } = useDataViewQueryBuilder(dataView);
+
   const tableId = tableIdFromProps || dataView?.external_table_id;
 
   const { data: table } = useCustomTableSchemaQuery(tableId);
-
-  const queryString = useMemo(() => {
-    let string = "";
-
-    if ([ViewType.Grid].includes(dataView.view_type)) {
-      if (pagination.page) {
-        string += `page=${pagination.page}`;
-      }
-
-      if (pagination.pageSize) {
-        string += `&pageSize=${pagination.pageSize}`;
-      }
-    }
-
-    if (query) {
-      string += `&${query}`;
-    }
-
-    return string;
-  }, [pagination.page, pagination.pageSize, query, dataView]);
 
   const {
     records,
@@ -134,8 +111,6 @@ const DataViewProvider = ({
       dataView,
       query,
       setQuery,
-      pagination,
-      setPagination,
       data: records || [],
       isFetchingData,
       isLoadingData,
@@ -158,8 +133,6 @@ const DataViewProvider = ({
     dataView,
     query,
     setQuery,
-    pagination,
-    setPagination,
     records,
     isFetchingData,
     isLoadingData,

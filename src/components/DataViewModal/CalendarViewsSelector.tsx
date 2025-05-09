@@ -16,9 +16,6 @@ interface CalendarViewsSelectorProps extends CustomFieldComponentProps {
   dateFields: CustomTableField[];
 }
 
-const TIME_ONLY_VIEWS = [Views.MONTH, Views.WEEK, Views.WORK_WEEK, Views.DAY];
-const DATE_ONLY_VIEWS = [Views.MONTH, Views.AGENDA];
-
 const CalendarViewsSelector = ({
   onChange,
   value,
@@ -35,7 +32,7 @@ const CalendarViewsSelector = ({
   const endDateField = dateFields.find((field) => field.id === endDate);
 
   const hasStartAndEndTime =
-    startDateField?.options?.timeFormat && endDateField?.options?.timeFormat;
+    startDateField?.date_include_time && endDateField?.date_include_time;
 
   const views = useMemo(() => {
     return hasStartAndEndTime
