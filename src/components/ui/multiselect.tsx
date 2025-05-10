@@ -125,6 +125,7 @@ const Multiselect = ({
   onInputChange,
   inputValue,
   isLoading,
+  menuPortalTarget,
 }: MultiselectProps) => {
   const onSortEnd: SortEndHandler = useCallback(
     ({ oldIndex, newIndex }) => {
@@ -139,7 +140,7 @@ const Multiselect = ({
       control: (state) =>
         "bg-background dark:bg-background border border-input !rounded-md overflow-hidden",
       multiValue: (state) => "!dark:bg-sidebar dark:text-white",
-      menu: (state) => "dark:bg-sidebar dark:text-white",
+      menu: (state) => "dark:bg-sidebar dark:text-white pointer-events-auto",
       option: (state) => "dark:bg-sidebar hover:!bg-muted dark:text-white",
       container: () => "w-full",
     };
@@ -157,6 +158,7 @@ const Multiselect = ({
       onChange,
       isMulti: true,
       classNames,
+      menuPortalTarget,
     };
   }, [
     isLoading,
@@ -168,6 +170,7 @@ const Multiselect = ({
     value,
     onChange,
     classNames,
+    menuPortalTarget,
   ]);
 
   if (sortable) {
@@ -181,6 +184,7 @@ const Multiselect = ({
         distance={4}
         // small fix for https://github.com/clauderic/react-sortable-hoc/pull/352:
         getHelperDimensions={({ node }) => node.getBoundingClientRect()}
+        menuPortalTarget={document.body}
         // react-select props:
         components={{
           ...sortableComponents,
@@ -190,12 +194,14 @@ const Multiselect = ({
         }}
         closeMenuOnSelect={false}
         {...sharedProps}
+        menuIsOpen={true}
       />
     );
   }
 
   return (
     <Select
+      menuPortalTarget={document.body}
       name={name}
       isClearable={isClearable}
       classNamePrefix="select"

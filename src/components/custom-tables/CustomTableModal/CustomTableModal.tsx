@@ -124,8 +124,8 @@ const CustomTableModal = ({
         setIsOpen={onClose}
         isSlider
         bodyClassName="!p-0"
-        headerClassName="shadow-md z-10"
-        footerClassName="shadow-md-top z-10"
+        headerClassName="shadow-sm z-10"
+        footerClassName="shadow-sm-top z-10"
         footerId={footerId}
         footer={<div></div>}
         onOpenAutoFocus={(e) => {

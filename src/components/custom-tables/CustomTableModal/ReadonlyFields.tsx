@@ -37,7 +37,7 @@ const ReadonlyFields = ({ readonlyItems, record }: ReadonlyFieldsProps) => {
   }
 
   return (
-    <div className="p-6 pb-0 bg-card flex flex-col gap-2">
+    <div className="p-6 pb-2 bg-card flex flex-col gap-2">
       <p className="text-muted-foreground font-bold text-xs">
         Calculated fields
       </p>

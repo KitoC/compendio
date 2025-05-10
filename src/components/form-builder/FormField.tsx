@@ -18,7 +18,12 @@ import { getCustomTableColor } from "@/utils/customTableHelpers";
 import Multiselect, { MultiselectOption } from "@/components/ui/multiselect";
 import { CalendarInput } from "../ui/calendar-input";
 import { Switch } from "../ui/switch";
-import { HTMLInputTypeAttribute, useCallback } from "react";
+import {
+  HTMLInputTypeAttribute,
+  useCallback,
+  useState,
+  useEffect,
+} from "react";
 import { SelectOption } from "@/types/customTable";
 
 const FormField = ({
@@ -30,6 +35,7 @@ const FormField = ({
   formValues,
   setFormValues,
   setError,
+  menuPortalId,
 }: FormFieldProps) => {
   const {
     name,
@@ -49,6 +55,10 @@ const FormField = ({
     renderBelowInput,
     validationAsyncOnBlur,
   } = field;
+
+  const [menuPortalTarget, setMenuPortalTarget] = useState<HTMLElement | null>(
+    null
+  );
 
   const id = field.id as string;
   let optionValue: SelectOption | undefined;
@@ -172,6 +182,12 @@ const FormField = ({
       />
     );
   };
+
+  useEffect(() => {
+    setTimeout(() => {
+      setMenuPortalTarget(document.getElementById(menuPortalId || ""));
+    }, 100);
+  }, []);
 
   const renderField = () => {
     // Handle special Airtable field types with custom rendering
@@ -330,7 +346,7 @@ const FormField = ({
                     variant={"outline"}
                     className={cn(
                       "text-xs",
-                      getCustomTableColor(optionValue?.color)
+                      getCustomTableColor(optionValue?.color).theme
                     )}
                   >
                     {optionValue?.label}
@@ -348,7 +364,7 @@ const FormField = ({
                       variant={option.variant}
                       className={cn(
                         "text-xs",
-                        getCustomTableColor(option.color)
+                        getCustomTableColor(option.color).theme
                       )}
                     >
                       {option.label}
@@ -371,6 +387,7 @@ const FormField = ({
             onChange={onFieldChange}
             options={options as MultiselectOption[]}
             {...field.props}
+            menuPortalTarget={menuPortalTarget}
           />
         );
 

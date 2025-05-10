@@ -33,9 +33,11 @@ const KanbanColumn = ({
   return (
     <div key={group} className="flex-shrink-0 w-80">
       <Card>
-        <CardHeader className={`${groupColor} py-3 rounded-t-md`}>
+        <CardHeader className={`py-3 rounded-t-md`}>
           <div className="flex justify-between items-center">
-            <CardTitle className="text-md font-medium">{group}</CardTitle>
+            <Badge variant="outline" className={groupColor.theme}>
+              {group}
+            </Badge>
             <Badge variant="outline">{groupRecords.length}</Badge>
           </div>
         </CardHeader>
@@ -57,6 +59,7 @@ const KanbanColumn = ({
                   primaryField={primaryField}
                   groupByField={groupByField}
                   table={table}
+                  group={group}
                 />
               ))}
               {provided.placeholder}

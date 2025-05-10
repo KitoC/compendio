@@ -17,6 +17,7 @@ interface KanbanCardProps {
   primaryField: CustomTableField;
   groupByField: CustomTableField;
   table: CustomTableSchema;
+  group: string;
 }
 
 const KanbanCard = ({
@@ -26,13 +27,12 @@ const KanbanCard = ({
   primaryField,
   groupByField,
   table,
+  group,
 }: KanbanCardProps) => {
   const { dataView } = useDataViewContext();
   const { visibleAttributes = [] } = dataView?.config || {};
 
-  const fieldOption = groupByField?.options?.find(
-    (o) => o.label === groupByField.name
-  );
+  const fieldOption = groupByField?.options?.find((o) => o.label === group);
 
   const groupColor = getCustomTableColor(fieldOption?.color || "gray");
 
@@ -42,7 +42,7 @@ const KanbanCard = ({
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
-          className={`p-3 mb-2 bg-background border rounded-md cursor-move hover:shadow-sm transition-shadow relative ${
+          className={`p-3 mb-2 bg-background border border-l-4 ${`border-l-${groupColor.bgColor}`} rounded-md cursor-move hover:shadow-sm transition-shadow relative ${
             snapshot.isDragging ? "shadow-md" : ""
           }`}
           onClick={() => onEdit(record)}

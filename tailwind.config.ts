@@ -9,6 +9,24 @@ export default {
     "./src/**/*.{ts,tsx}",
   ],
   prefix: "",
+  safelist: [
+    {
+      pattern:
+        /bg-(amber|emerald|red|blue|green|yellow|purple|orange|brown|gray|pink)-([0-9]{1,2})/,
+    },
+    {
+      pattern:
+        /border-(amber|emerald|red|blue|green|yellow|purple|orange|brown|gray|pink)-([0-9]{1,2})/,
+    },
+    {
+      pattern:
+        /text-(amber|emerald|red|blue|green|yellow|purple|orange|brown|gray|pink)-([0-9]{1,2})/,
+    },
+    {
+      pattern:
+        /border-(l|r|t|b|x|y)-(amber|emerald|red|blue|green|yellow|purple|orange|brown|gray|pink)-([0-9]{1,2})/,
+    },
+  ],
   theme: {
     container: {
       center: true,

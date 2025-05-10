@@ -212,11 +212,19 @@ const FormBuilder = ({
     </CardFooter>
   );
 
+  const menuPortalId = useMemo(() => {
+    return `${config.id}-menu-portal`;
+  }, [config.id]);
+
   return (
     <Card className={cn("w-full h-full", className)}>
+      <div
+        id={menuPortalId}
+        className="fixed inset-0 pointer-events-none z-50"
+      ></div>
       <form
         onSubmit={handleSubmit}
-        className="h-full flex flex-col overflow-y-auto"
+        className="h-full flex flex-col overflow-y-auto pointer-events-auto"
       >
         {(config.title || config.description) && !hideTitles && (
           <CardHeader>
@@ -264,6 +272,7 @@ const FormBuilder = ({
                       <FormField
                         key={field.id}
                         field={field}
+                        menuPortalId={menuPortalId}
                         value={values[field.name] ?? field.defaultValue ?? ""}
                         onChange={handleChange}
                         error={errors[field.name]}
