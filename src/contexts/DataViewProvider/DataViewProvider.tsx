@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import DataViewContext, { Pagination, Query } from "./DataViewContext";
-import { useDataViewQuery } from "@/hooks/useDataViewsQuery";
+import { useDataViewQuery } from "@/hooks/DataViews";
 import {
   useCustomRecordsQuery,
   useCustomTableSchemaQuery,

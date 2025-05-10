@@ -11,7 +11,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   useCreateOrUpdateDataViewMutation,
   useDeleteDataViewMutation,
-} from "@/hooks/useDataViewsQuery";
+} from "@/hooks/DataViews";
 import { IDataView } from "@/services/DataViewsService";
 import { useCallback, useMemo, useState } from "react";
 import DataViewModal from "@/components/DataViewModal";

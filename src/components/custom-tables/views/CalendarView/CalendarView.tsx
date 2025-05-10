@@ -13,7 +13,7 @@ import { useDataViewContext } from "@/contexts/DataViewProvider";
 import EventComponent from "./Event";
 import { TEMP_RECORD_ID } from "@/contexts/DataViewProvider/DataViewProvider";
 import { CalendarContext } from "./CalendarContext";
-
+import { SelectOption } from "@/types/customTable";
 const DragAndDropCalendar = withDragAndDrop(Calendar);
 
 const localizer = dayjsLocalizer(dayjs);
@@ -43,6 +43,9 @@ const CalendarView = ({
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [draggingEvent, setDraggingEvent] = useState(null);
 
+  const NOT_ASSIGNED_RESOURCE_ID = "NOT_ASSIGNED";
+  const NOT_ASSIGNED_RESOURCE_TITLE = "Not Assigned";
+
   const length = 7;
 
   const groupBy = table.fields.find(
@@ -51,21 +54,38 @@ const CalendarView = ({
 
   const resources = useMemo(() => {
     return groupBy
-      ? uniqBy(
-          data.map((record) => {
-            let value = record[groupBy.name] as string | string[];
+      ? [
+          ...uniqBy(
+            data
+              .map((record) => {
+                const value = record[groupBy.name] as
+                  | SelectOption
+                  | SelectOption[];
 
-            if (Array.isArray(value)) {
-              value = value[0];
-            }
+                if (Array.isArray(value)) {
+                  return value.map((v) => ({
+                    resourceTitle: v.label?.trim(),
+                    resourceId: v.value?.trim(),
+                    data: v,
+                  }));
+                }
 
-            return {
-              resourceTitle: value?.trim() || "Not Assigned",
-              resourceId: value?.trim() || "Not Assigned",
-            };
-          }),
-          "resourceTitle"
-        )
+                const { label, value: resourceId } = value || {};
+
+                return {
+                  resourceTitle: label?.trim(),
+                  resourceId: resourceId?.trim(),
+                  data: value,
+                };
+              })
+              .flat(),
+            "resourceTitle"
+          ),
+          {
+            resourceTitle: NOT_ASSIGNED_RESOURCE_TITLE,
+            resourceId: NOT_ASSIGNED_RESOURCE_ID,
+          },
+        ]
       : null;
   }, [data, groupBy]);
 
@@ -130,6 +150,31 @@ const CalendarView = ({
             .join(" ");
         }
 
+        const resourceField = record[groupBy?.name] as
+          | SelectOption
+          | SelectOption[];
+        const isArray = Array.isArray(resourceField);
+        const eventFields = {
+          id: record._id,
+          title: title || "(no title)",
+          start,
+          end,
+          allDay: !startTimeField && !endTimeField,
+          resource: record,
+        };
+
+        if (isArray && resourceField.length) {
+          return resourceField.map((v) => ({
+            ...eventFields,
+            resourceId: v.value,
+          }));
+        } else if (isArray && !resourceField.length) {
+          return {
+            ...eventFields,
+            resourceId: NOT_ASSIGNED_RESOURCE_ID,
+          };
+        }
+
         return {
           id: record._id,
           title: title || "(no title)",
@@ -137,9 +182,11 @@ const CalendarView = ({
           end,
           allDay: !startTimeField && !endTimeField,
           resource: record,
-          resourceId: record[groupBy?.name],
+          resourceId:
+            (resourceField as SelectOption)?.value || NOT_ASSIGNED_RESOURCE_ID,
         };
       })
+      .flat()
       .filter(Boolean);
   }, [
     data,
@@ -210,19 +257,26 @@ const CalendarView = ({
   );
 
   const onSelectSlot = useCallback(
-    ({ start, end, ...rest }) => {
+    ({ start, end, resourceId, ...rest }) => {
+      const resource = resources.find((r) => r.resourceId === resourceId);
+
       if (selectedEvent) {
         setSelectedEvent(null);
       } else {
         setDraggingEvent(null);
-        setSelectedEvent({
+        const newEvent = {
           _id: TEMP_RECORD_ID,
           [startTimeField.name]: start.toISOString(),
           [endTimeField.name]: end.toISOString(),
-        });
+        };
+
+        if (resource?.data) {
+          newEvent[groupBy?.name] = [resource.data];
+        }
+        setSelectedEvent(newEvent);
       }
     },
-    [startTimeField, endTimeField, selectedEvent]
+    [startTimeField, endTimeField, selectedEvent, groupBy, resources]
   );
 
   const components = useMemo(() => {
@@ -272,32 +326,41 @@ const CalendarView = ({
     >
       <div className="h-full flex flex-col">
         <div className="flex-grow overflow-hidden">
-          <div className="h-full p-1 relative rounded-md overflow-hidden">
-            {isLoadingData && (
-              <div className="absolute inset-0 flex items-center justify-center z-40 bg-background/75 animate-fade-in">
-                <Loader className="w-4 h-4" />
+          <div className="flex h-full">
+            {/* <div className="w-1/4">
+              <div className="h-full p-1 relative rounded-md overflow-hidden flex-grow">
+                <div className="h-full p-1 relative rounded-md overflow-hidden flex-grow">
+                  <div className="h-full p-1 relative rounded-md overflow-hidden flex-grow"></div>
+                </div>
               </div>
-            )}
-            <DragAndDropCalendar
-              selectable
-              components={components}
-              defaultView={dataView?.config?.calendarViews?.defaultView}
-              events={events}
-              localizer={localizer}
-              resources={resources}
-              resourceIdAccessor="resourceId"
-              resourceTitleAccessor="resourceTitle"
-              onSelectSlot={onSelectSlot}
-              onEventDrop={handleEventDrop}
-              onEventResize={handleEventResize}
-              step={30}
-              length={length}
-              views={dataView?.config?.calendarViews?.views}
-              resourceGroupingLayout={true}
-              resizable
-              onDragStart={(event) => setDraggingEvent(event)}
-              onSelectEvent={() => setDraggingEvent(null)}
-            />
+            </div> */}
+            <div className="h-full p-1 relative rounded-md overflow-hidden flex-grow">
+              {isLoadingData && (
+                <div className="absolute inset-0 flex items-center justify-center z-40 bg-background/75 animate-fade-in">
+                  <Loader className="w-4 h-4" />
+                </div>
+              )}
+              <DragAndDropCalendar
+                selectable
+                components={components}
+                defaultView={dataView?.config?.calendarViews?.defaultView}
+                events={events}
+                localizer={localizer}
+                resources={resources}
+                resourceIdAccessor="resourceId"
+                resourceTitleAccessor="resourceTitle"
+                onSelectSlot={onSelectSlot}
+                onEventDrop={handleEventDrop}
+                onEventResize={handleEventResize}
+                step={30}
+                length={length}
+                views={dataView?.config?.calendarViews?.views}
+                resourceGroupingLayout={true}
+                resizable
+                onDragStart={(event) => setDraggingEvent(event)}
+                onSelectEvent={() => setDraggingEvent(null)}
+              />
+            </div>
           </div>
         </div>
       </div>

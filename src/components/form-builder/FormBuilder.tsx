@@ -168,7 +168,7 @@ const FormBuilder = ({
   }, [values, debouncedHandleFormChange, onFormChange]);
 
   const footer = (
-    <CardFooter className={`flex justify-between ${footerClassname}`}>
+    <CardFooter className={`flex justify-between mt-auto ${footerClassname}`}>
       {config.showReset && (
         <Button
           type="button"
@@ -213,8 +213,11 @@ const FormBuilder = ({
   );
 
   return (
-    <Card className={cn("w-full", className)}>
-      <form onSubmit={handleSubmit}>
+    <Card className={cn("w-full h-full", className)}>
+      <form
+        onSubmit={handleSubmit}
+        className="h-full flex flex-col overflow-y-auto"
+      >
         {(config.title || config.description) && !hideTitles && (
           <CardHeader>
             {config.title && <CardTitle>{config.title}</CardTitle>}
@@ -226,7 +229,7 @@ const FormBuilder = ({
 
         <CardContent
           className={cn(
-            "space-y-6",
+            "space-y-6 flex-grow",
             hideTitles && "pt-6 px-0",
             contentClassName
           )}

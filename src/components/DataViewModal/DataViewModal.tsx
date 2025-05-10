@@ -14,7 +14,7 @@ import { MultiselectOption } from "../ui/multiselect";
 import {
   useCreateOrUpdateDataViewMutation,
   useDataViewQuery,
-} from "@/hooks/useDataViewsQuery";
+} from "@/hooks/DataViews";
 import {
   DATA_VIEWS_TABLE_NAME,
   IDataView,
@@ -168,6 +168,23 @@ const DataViewModal = ({
             divider: true,
             fields: [
               {
+                id: "preloadTable",
+                label: "Preload table",
+                name: "preloadTable",
+                type: "select",
+                hint: "Table that",
+                validation: {
+                  required: true,
+                },
+                options: tables.map((table) => ({
+                  label: table.name,
+                  value: table.external_id,
+                })),
+                CustomComponent: (fieldProps) => (
+                  <DateFieldSelector {...fieldProps} dateFields={dateFields} />
+                ),
+              },
+              {
                 id: "dateFields",
                 label: "Date field",
                 name: "dateFields",
@@ -251,6 +268,7 @@ const DataViewModal = ({
 
     return config;
   }, [tableSchema, exampleRecord, tenantId, tables]);
+  const footerId = `data-view-modal-footer-${dataViewId}`;
 
   return (
     <ResponsiveModal
@@ -262,6 +280,8 @@ const DataViewModal = ({
       isSlider
       bodyClassName="!p-0"
       headerClassName="shadow-md z-10"
+      footerId={footerId}
+      footer={<div></div>}
     >
       {isLoadingDataView ? (
         <div className="flex justify-center items-center h-full">
@@ -271,9 +291,9 @@ const DataViewModal = ({
         <>
           <FormBuilder
             config={formConfig}
-            className="border-none rounded-none shadow-none h-full relative"
-            contentClassName="px-6 pt-6 "
-            footerClassname="absolute bottom-0 left-0 right-0 shadow-md-top z-10"
+            className="border-none rounded-none shadow-none"
+            contentClassName="px-6 pt-6"
+            footerClassname="!pb-0 shadow-md-top z-10"
             onSubmit={({ label, view_type, ...config }) => {
               createOrUpdateDataView({
                 id: dataView?.id,
@@ -294,6 +314,7 @@ const DataViewModal = ({
             }}
             isSubmitting={isSubmitting}
             onCancel={() => setOpen(false)}
+            buttonPortalId={footerId}
             initialValues={{
               view_type: "grid",
               ...(dataView || {}),

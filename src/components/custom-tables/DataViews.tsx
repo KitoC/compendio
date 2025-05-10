@@ -14,7 +14,7 @@ import { IDataView, ViewType } from "@/services/DataViewsService";
 import { DataViewProvider } from "@/contexts/DataViewProvider";
 import DataViewHeader from "./DataViewHeader";
 import { useNavigate, useParams } from "react-router-dom";
-import { useDataViewsQuery } from "@/hooks/useDataViewsQuery";
+import { useDataViewsQuery } from "@/hooks/DataViews";
 import { Skeleton } from "../ui/skeleton";
 import { kebabCase } from "lodash";
 

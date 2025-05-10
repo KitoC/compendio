@@ -12,7 +12,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   useDataViewsQuery,
   useDeleteDataViewMutation,
-} from "@/hooks/useDataViewsQuery";
+} from "@/hooks/DataViews";
 import { DEFAULT_VIEW } from "./consts";
 import { IDataView } from "@/services/DataViewsService";
 import { useState } from "react";
@@ -49,7 +49,7 @@ const ViewTypeSelector = ({
   const navigate = useNavigate();
 
   const dataViewsWithDefault = [DEFAULT_VIEW, ...dataViews];
-  const { mutateAsync: deleteDataView } = useDeleteDataViewMutation(tableId);
+  const { mutateAsync: deleteDataView } = useDeleteDataViewMutation();
 
   return (
     <div className="flex gap-2 -mb-2">

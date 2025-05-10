@@ -54,8 +54,8 @@ const DataNavigationPage = () => {
   }
 
   return (
-    <div className="flex flex-col h-full p-8 gap-6">
-      <div className="flex flex-col mb-2">
+    <div className="flex flex-col h-full p-8 gap-6 bg-card">
+      <div className="flex flex-col mb-2 ">
         <div className="flex space-x-2 justify-between w-full border-b border-border pb-2">
           <div className="flex items-end gap-4">
             <h1>{dataNavigationItem.name}</h1>

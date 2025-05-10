@@ -125,8 +125,9 @@ const CustomTableModal = ({
         isSlider
         bodyClassName="!p-0"
         headerClassName="shadow-md z-10"
-        footerClassName="!pb-0 shadow-md-top z-10"
+        footerClassName="shadow-md-top z-10"
         footerId={footerId}
+        footer={<div></div>}
         onOpenAutoFocus={(e) => {
           const activeElement = document.activeElement;
 
@@ -167,6 +168,7 @@ const CustomTableModal = ({
           isSubmitting={isSubmitting}
           className="border-none rounded-none shadow-none"
           contentClassName="px-6"
+          footerClassname="!pb-0 shadow-md-top z-10"
           buttonPortalId={footerId}
         />
       </ResponsiveModal>
