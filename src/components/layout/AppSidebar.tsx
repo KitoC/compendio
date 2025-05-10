@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { DynamicIcon, IconName } from "lucide-react/dynamic";
+
 import {
   ArrowLeft,
   LogOut,
@@ -35,7 +37,7 @@ import { useNotifications } from "@/contexts/NotificationProvider";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { IAiAgent } from "@/types/aiAgents";
-
+import { useDataNavigationItemsQuery } from "@/hooks/DataNavigationItems";
 interface SidebarItemOrGroup {
   label: string;
   url?: string;
@@ -88,6 +90,7 @@ const AppSidebar = () => {
   const { user, profile, signOut } = useAuth();
   const { aiAgents } = useAiAgents();
   const { tables = [] } = useCustomTables();
+  const { data: dataNavigationItems } = useDataNavigationItemsQuery();
   const { toggleSidebar } = useSidebar();
   const [showSettingsSidebar, setShowSettingsSidebar] = useState(false);
   const location = useLocation();
@@ -128,25 +131,16 @@ const AppSidebar = () => {
         onClick: onNavItemClick,
       })),
     },
-    {
-      // icon: <Table2 className="h-4 w-4" />,
-      // label: "Resources",
-      hidden: tables.length === 0,
-      children: [
-        // {
-        //   icon: <LayoutDashboard className="h-4 w-4" />,
-        //   label: "Dashboard",
-        //   url: ROUTES.DASHBOARD,
-        //   onClick: onNavItemClick,
-        // },
-        ...tables.map((table) => ({
-          label: table.name,
-          url: ROUTES.CUSTOM_TABLE_DATA.replace(":id", table.name),
-          onClick: onNavItemClick,
-          icon: <Table2 className="h-4 w-4" />,
-        })),
-      ],
-    },
+    ...dataNavigationItems.map((navItem) => ({
+      label: navItem.name,
+      url: ROUTES.DATA_NAVIGATION.replace(":dataNavigationPath", navItem.path),
+      onClick: onNavItemClick,
+      icon: navItem.icon ? (
+        <DynamicIcon name={navItem.icon} className="h-4 w-4" />
+      ) : (
+        <Table2 className="h-4 w-4" />
+      ),
+    })),
   ];
 
   // Define footer items for main navigation

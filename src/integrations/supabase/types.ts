@@ -893,6 +893,9 @@ export type Database = {
           data_table_id: string | null;
           id: string;
           tenant_id: string;
+          data_navigation_item_id: string | null;
+          is_default: boolean | null;
+          alias: string | null;
         };
         Insert: {
           config?: Json | null;
@@ -904,6 +907,9 @@ export type Database = {
           data_table_id?: string | null;
           id?: string;
           tenant_id: string;
+          data_navigation_item_id?: string | null;
+          is_default?: boolean | null;
+          alias?: string | null;
         };
         Update: {
           config?: Json | null;
@@ -915,6 +921,9 @@ export type Database = {
           data_table_id?: string | null;
           id?: string;
           tenant_id: string;
+          data_navigation_item_id?: string | null;
+          is_default?: boolean | null;
+          alias?: string | null;
         };
       };
       documents: {

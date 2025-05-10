@@ -231,7 +231,10 @@ export const useCustomRecordsQuery = ({
     [tableId, queryString, dataViewId]
   );
 
-  const tableNameSingular = pluralize.singular(table?.name);
+  let tableNameSingular = "Loading table name...";
+  if (table) {
+    tableNameSingular = pluralize.singular(table?.name);
+  }
 
   const {
     data: { data: records = [], total } = { data: [], total: 0 },
@@ -268,21 +271,33 @@ export const useCustomRecordsQuery = ({
   });
 
   const updateQueryData = useCallback(
-    (updater: (old: CustomTableRecord[]) => CustomTableRecord[]) => {
+    (
+      updater: (old: CustomTableRecordResponse) => CustomTableRecordResponse
+    ) => {
       queryClient.setQueryData(dataQueryKey, updater);
     },
     [dataQueryKey, queryClient]
   );
 
   const addRecordToQueryData = useCallback(
-    (record: CustomTableRecord) => updateQueryData((old) => [...old, record]),
+    (record: CustomTableRecord) =>
+      updateQueryData((old) => {
+        return {
+          ...old,
+          data: [...old.data, record],
+          total: old.total + 1,
+        };
+      }),
     [updateQueryData]
   );
 
   const updateRecordInQueryData = useCallback(
     (record: CustomTableRecord) => {
       updateQueryData((old) => {
-        return old.map((r) => (r._id === record._id ? record : r));
+        return {
+          ...old,
+          data: old.data.map((r) => (r._id === record._id ? record : r)),
+        };
       });
     },
     [updateQueryData]
@@ -290,7 +305,13 @@ export const useCustomRecordsQuery = ({
 
   const removeRecordFromQueryData = useCallback(
     (id: string) =>
-      updateQueryData((old) => old.filter((record) => record._id !== id)),
+      updateQueryData((old) => {
+        return {
+          ...old,
+          data: old.data.filter((record) => record._id !== id),
+          total: old.total - 1,
+        };
+      }),
     [updateQueryData]
   );
 

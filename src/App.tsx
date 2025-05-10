@@ -1,6 +1,5 @@
 import { Routes, Route, BrowserRouter, Navigate } from "react-router-dom";
 import { QueryProvider } from "./contexts/QueryProvider";
-import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
@@ -30,15 +29,15 @@ import { AuthProvider } from "./hooks/useAuth";
 import ApplicationLayout from "./pages/ApplicationLayout";
 import LandingPage from "./pages/LandingPage";
 import { TenantProvider } from "./contexts/TenantContext";
-import { UserSettingsProvider } from "./contexts/UserSettingsProvider";
 import { SocketProvider } from "./contexts/SocketProvider";
 import { TTSProvider } from "./contexts/TTSProvider";
 import { VoiceProvider } from "./contexts/VoiceProvider";
 import OnboardingPage from "./pages/OnboardingPage";
 import { NotificationProvider } from "./contexts/NotificationProvider";
 import { PwaInstallPrompt } from "./components/PwaInstallPrompt";
-import CustomTablePage from "./pages/application-layout/CustomTablePage";
 import BetaAccess from "./pages/BetaAccess";
+import DataNavigationPage from "./pages/application-layout/DataNavigationPage";
+import DataNavigationViewPage from "./pages/application-layout/DataNavigationViewPage";
 
 function App() {
   return (
@@ -83,7 +82,7 @@ function App() {
                         path={ROUTES.ONBOARDING}
                         element={<OnboardingPage />}
                       />
-                      <Route
+                      {/* <Route
                         path={ROUTES.CUSTOM_TABLE_DATA}
                         element={<CustomTablePage />}
                       >
@@ -91,7 +90,19 @@ function App() {
                           path={ROUTES.CUSTOM_TABLE_DATA_VIEW}
                           element={<CustomTablePage />}
                         />
+                      </Route> */}
+
+                      <Route
+                        path={ROUTES.DATA_NAVIGATION}
+                        element={<DataNavigationPage />}
+                      >
+                        <Route path={""} element={<DataNavigationViewPage />} />
+                        <Route
+                          path={ROUTES.DATA_NAVIGATION_VIEW}
+                          element={<DataNavigationViewPage />}
+                        />
                       </Route>
+
                       <Route path={ROUTES.AGENT_CHAT} element={<AgentChat />} />
 
                       {/* Settings Routes */}

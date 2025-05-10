@@ -61,7 +61,8 @@ const DataViewProvider = ({
 
   const tableId = tableIdFromProps || dataView?.external_table_id;
 
-  const { data: table } = useCustomTableSchemaQuery(tableId);
+  const { data: table, isLoading: isLoadingTable } =
+    useCustomTableSchemaQuery(tableId);
 
   const {
     records,
@@ -168,7 +169,7 @@ const DataViewProvider = ({
 
   return (
     <DataViewContext.Provider value={value}>
-      {isFetchingDataView ? (
+      {isFetchingDataView || isLoadingTable ? (
         <div className="flex justify-center items-center h-full">
           <Loader />
         </div>

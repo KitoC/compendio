@@ -30,7 +30,6 @@ import { Input } from "@/components/ui/input";
 import Loader from "@/components/ui/loader";
 
 const GridView = ({
-  table,
   emptyMessage = "No records available",
   permissions,
 }: CustomTableViewProps) => {
@@ -42,6 +41,7 @@ const GridView = ({
     total,
     isFetchingData,
     setQuery,
+    table,
   } = useDataViewContext();
 
   const tableContainerRef = useRef<HTMLDivElement>(null);

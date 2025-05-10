@@ -1,0 +1,2 @@
+CREATE POLICY "System & Tenant owners CRUD" ON "public"."data_navigation_items" USING (("public"."is_tenant_owner"("tenant_id") OR "public"."is_system_admin"())) WITH CHECK (("public"."is_tenant_owner"("tenant_id") OR "public"."is_system_admin"()));
+ALTER TABLE "public"."data_navigation_items" ENABLE ROW LEVEL SECURITY;

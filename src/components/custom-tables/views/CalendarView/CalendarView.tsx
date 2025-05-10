@@ -29,7 +29,6 @@ const getStartAndEndTime = (record, startTimeField, endTimeField) => {
 };
 
 const CalendarView = ({
-  table,
   emptyMessage = "No records available",
   dataViewId,
 }: CustomTableViewProps) => {
@@ -38,6 +37,7 @@ const CalendarView = ({
     updateRecord,
     data = [],
     isLoadingData,
+    table,
   } = useDataViewContext();
 
   const [selectedEvent, setSelectedEvent] = useState(null);

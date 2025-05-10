@@ -19,8 +19,8 @@ const MultipleRecordLinksRenderer = ({
         e.stopPropagation();
       }}
     >
-      {value.map((item, index) => {
-        return <RecordTag record={item} field={field} />;
+      {value.map((item) => {
+        return <RecordTag key={item.value} record={item} field={field} />;
       })}
     </div>
   );

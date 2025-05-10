@@ -27,7 +27,7 @@ const DataViewHeader = ({ setDataView, permissions }: DataViewHeaderProps) => {
           <CardTitle>{table.name}</CardTitle>
 
           <ViewTypeSelector
-            currentDataView={dataView}
+            currentDataViewId={dataView?.id}
             setViewType={setDataView}
             tableId={table.external_id}
           />

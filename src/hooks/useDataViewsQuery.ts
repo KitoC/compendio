@@ -7,6 +7,8 @@ import {
   DataViewUpdate,
   IDataView,
 } from "@/services/DataViewsService";
+import { DATA_NAVIGATION_ITEM_VIEWS_QUERY_KEY } from "./DataViews/useDataNavigationItemViewsQuery";
+import { toast } from "sonner";
 
 const QUERY_KEYS = {
   TABLE_NAME: DATA_VIEWS_TABLE_NAME,
@@ -65,29 +67,63 @@ export const useDataViewQuery = (id: string) => {
   };
 };
 
+const TEMP_VIEW_ID = "temp";
+
 /**
  * Hook to create or update data view
  */
-export const useCreateOrUpdateDataViewMutation = (
-  tableId: string,
-  onSuccess?: (dataView: IDataView) => void
-) => {
+export const useCreateOrUpdateDataViewMutation = ({
+  onSuccess,
+  onMutate,
+}: {
+  onSuccess?: (dataView: IDataView) => void;
+  onMutate?: (dataView: IDataView) => void;
+} = {}) => {
   const queryClient = useQueryClient();
 
+  const updateNavigationItemViewsQueryData = (
+    dataView: IDataView,
+    updater: (old: IDataView[]) => IDataView[]
+  ) => {
+    queryClient.setQueryData<IDataView[]>(
+      [DATA_NAVIGATION_ITEM_VIEWS_QUERY_KEY, dataView.data_navigation_item_id],
+      updater
+    );
+  };
+
   return useMutation({
-    mutationFn: async (dataView: DataViewCreate | DataViewUpdate) => {
+    mutationFn: async (dataView: IDataView) => {
       if (dataView.id) {
         return DataViewsService.update(dataView);
       } else {
         return DataViewsService.create(dataView);
       }
     },
-    onSuccess: async (dataView: IDataView) => {
-      await queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.TABLE_NAME, tableId],
+    onMutate: async (dataView: IDataView) => {
+      updateNavigationItemViewsQueryData(dataView, (old: IDataView[]) => {
+        if (dataView.id) {
+          return old.map((view) =>
+            view.id === dataView.id ? (dataView as IDataView) : view
+          );
+        }
+
+        return [...old, { ...dataView, id: TEMP_VIEW_ID } as IDataView];
       });
-      await queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.TABLE_NAME, dataView.id],
+
+      onMutate?.(dataView);
+    },
+    onError: (error, dataView) => {
+      updateNavigationItemViewsQueryData(dataView, (old: IDataView[]) => {
+        return old.filter((view) => view.id !== TEMP_VIEW_ID);
+      });
+    },
+    onSuccess: async (dataView: IDataView) => {
+      updateNavigationItemViewsQueryData(dataView, (old: IDataView[]) => {
+        if (!dataView.id) {
+          return old.map((view) =>
+            view.id === TEMP_VIEW_ID ? (dataView as IDataView) : view
+          );
+        }
       });
 
       onSuccess?.(dataView);
@@ -95,15 +131,30 @@ export const useCreateOrUpdateDataViewMutation = (
   });
 };
 
-export const useDeleteDataViewMutation = (tableId: string) => {
+export const useDeleteDataViewMutation = () => {
   const queryClient = useQueryClient();
 
+  const updateNavigationItemViewsQueryData = (
+    dataView: IDataView,
+    updater: (old: IDataView[]) => IDataView[]
+  ) => {
+    queryClient.setQueryData<IDataView[]>(
+      [DATA_NAVIGATION_ITEM_VIEWS_QUERY_KEY, dataView.data_navigation_item_id],
+      updater
+    );
+  };
+
   return useMutation({
-    mutationFn: async (id: string) => DataViewsService.delete(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEYS.TABLE_NAME, tableId],
+    mutationFn: DataViewsService.delete,
+    onMutate: async (dataView: IDataView) => {
+      toast.info("Deleting view...");
+
+      updateNavigationItemViewsQueryData(dataView, (old: IDataView[]) => {
+        return old.filter((view) => view.id !== dataView.id);
       });
+    },
+    onSuccess: () => {
+      toast.success("View deleted successfully");
     },
   });
 };

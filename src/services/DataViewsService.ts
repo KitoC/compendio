@@ -53,11 +53,23 @@ export const DataViewsService = {
 
     return data;
   },
+  async getByDataNavigationItemId(data_navigation_item_id: string) {
+    const { data, error } = await supabase
+      .from(DATA_VIEWS_TABLE_NAME)
+      .select("*")
+      .eq("data_navigation_item_id", data_navigation_item_id);
+
+    if (error) {
+      throw new Error("Failed to fetch data view");
+    }
+
+    return data;
+  },
   async getById(id: string) {
     const { data, error } = await supabase
       .from(DATA_VIEWS_TABLE_NAME)
       .select("*")
-      .eq("id", id)
+      .eq(isUUID(id) ? "id" : "alias", id)
       .single();
 
     if (error) {
@@ -94,10 +106,14 @@ export const DataViewsService = {
 
     return data;
   },
-  async delete(id: string) {
+  async delete(dataView: IDataView) {
     const { error } = await supabase
       .from(DATA_VIEWS_TABLE_NAME)
       .delete()
-      .eq("id", id);
+      .eq("id", dataView.id);
+
+    if (error) {
+      throw new Error("Failed to delete data view");
+    }
   },
 };

@@ -23,7 +23,7 @@ import { kebabCase } from "lodash";
 
 interface ViewTypeSelectorProps {
   tableId: string;
-  currentDataView: IDataView;
+  currentDataViewId: string;
   setViewType: (dataView: IDataView) => void;
 }
 
@@ -40,7 +40,7 @@ const TRIGGER_CLASS =
 const ICON_CLASS = "h-4 w-4";
 
 const ViewTypeSelector = ({
-  currentDataView,
+  currentDataViewId,
   setViewType,
   tableId,
 }: ViewTypeSelectorProps) => {
@@ -54,7 +54,7 @@ const ViewTypeSelector = ({
   return (
     <div className="flex gap-2 -mb-2">
       <Tabs
-        value={currentDataView.id}
+        value={currentDataViewId}
         onValueChange={(value) => {
           if (value !== "new") {
             const viewType = dataViewsWithDefault.find(
@@ -65,7 +65,7 @@ const ViewTypeSelector = ({
 
             if (value !== DEFAULT_VIEW.id) {
               navigate(
-                ROUTES.CUSTOM_TABLE_DATA_VIEW.replace(
+                ROUTES.DATA_NAVIGATION_VIEW.replace(
                   ":dataViewId",
                   kebabCase(viewType.label)
                 )
@@ -92,7 +92,7 @@ const ViewTypeSelector = ({
                           Icon: Trash,
                           label: "Delete view",
                           onClick: async () => {
-                            await deleteDataView(type.id);
+                            await deleteDataView(type);
                             setViewType(DEFAULT_VIEW);
                             navigate("");
                           },

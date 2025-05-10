@@ -43,43 +43,45 @@ const TabsTrigger = React.forwardRef<
   }
 >(({ className, actions, children, ...props }, ref) => (
   <div className="flex items-center h-fit">
-    <TabsPrimitive.Trigger
-      ref={ref}
-      className={cn(
-        TRIGGER_CLASS,
-        className,
-        "group data-[state=inactive]:group-data-[state=inactive]"
-      )}
-      {...props}
-    >
-      <span className="px-3 py-1.5 flex items-center gap-2">{children}</span>
-      {actions && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              className={cn(
-                "p-0 bg-transparent hover:bg-transparent px-2 border-l rounded-l-none text-muted-foreground group-data-[state=inactive]:hidden"
-              )}
-              size="sm"
-              role="button"
-            >
-              <ChevronDown className="w-4 h-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            {actions.map((action) => (
-              <DropdownMenuItem
-                key={action.label}
-                onClick={action.onClick}
-                className={action.className}
+    <TabsPrimitive.Trigger ref={ref} asChild {...props}>
+      <div
+        className={cn(
+          TRIGGER_CLASS,
+          className,
+          "group data-[state=inactive]:group-data-[state=inactive]"
+        )}
+      >
+        <span role="button" className="px-3 py-1.5 flex items-center gap-2">
+          {children}
+        </span>
+        {actions && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                className={cn(
+                  "p-0 bg-transparent hover:bg-transparent px-2 border-l rounded-l-none text-muted-foreground group-data-[state=inactive]:hidden"
+                )}
+                size="sm"
+                role="button"
               >
-                {action.Icon && <action.Icon className="w-4 h-4 mr-2" />}
-                {action.label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {actions.map((action) => (
+                <DropdownMenuItem
+                  key={action.label}
+                  onClick={action.onClick}
+                  className={action.className}
+                >
+                  {action.Icon && <action.Icon className="w-4 h-4 mr-2" />}
+                  {action.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
     </TabsPrimitive.Trigger>
   </div>
 ));

@@ -144,7 +144,7 @@ const CalendarToolbar = (props) => {
         </p>
       </div>
       <div className="mr-auto ml-8">
-        {(isLoadingData || isFetchingData) && (
+        {!isLoadingData && isFetchingData && (
           <div className="flex items-center gap-2">
             <Loader className="w-8 h-8 text-muted-foreground" />
             <p className="text-muted-foreground">Loading events...</p>
