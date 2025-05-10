@@ -44,7 +44,10 @@ const RecordTag = ({
     <>
       <Tag
         variant="outline"
-        className={cn("whitespace-nowrap", className)}
+        className={cn(
+          "whitespace-nowrap cursor-pointer hover:bg-sidebar",
+          className
+        )}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();

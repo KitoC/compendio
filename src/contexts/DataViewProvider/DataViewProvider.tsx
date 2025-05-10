@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import DataViewContext, { Pagination, Query } from "./DataViewContext";
 import { useDataViewQuery } from "@/hooks/DataViews";
 import {
@@ -20,6 +20,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { IDataView, ViewType } from "@/services/DataViewsService";
 import useDataViewQueryBuilder from "./useDataViewQueryBuilder";
+import DataViewModal from "@/components/DataViewModal";
+import { createPortal } from "react-dom";
+import { Button } from "@/components/ui/button";
+import { Settings } from "lucide-react";
 
 type DataViewProviderProps = {
   children: React.ReactNode;
@@ -46,11 +50,14 @@ const DataViewProvider = ({
   dataViewId,
   tableId: tableIdFromProps,
 }: DataViewProviderProps) => {
+  const [isEditingDataView, setIsEditingDataView] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [editingRecord, setEditingRecord] = useState<CustomTableRecord | null>(
     null
   );
+  const [dataNavigationPageActionsEl, setDataNavigationPageActionsEl] =
+    useState<HTMLDivElement | null>(null);
   const [recordToDelete, setRecordToDelete] =
     useState<CustomTableRecord | null>(null);
 
@@ -87,9 +94,9 @@ const DataViewProvider = ({
     async (record: CustomTableRecord, options?: { optimistic?: boolean }) => {
       try {
         if (isCreating || !record._id || record._id === TEMP_RECORD_ID) {
-          await createRecord({ record, options });
+          createRecord({ record, options: { optimistic: true } });
         } else {
-          await updateRecord({ record, options });
+          updateRecord({ record, options: { optimistic: true } });
         }
       } catch (error) {
         console.error("Error saving record:", error);
@@ -121,6 +128,21 @@ const DataViewProvider = ({
     setIsRefreshing(false);
   }, [refetch]);
 
+  const onEditDataView = useCallback(() => {
+    setIsEditingDataView(true);
+  }, []);
+
+  useEffect(() => {
+    if (dataNavigationPageActionsEl) return;
+
+    setTimeout(() => {
+      const el = document.getElementById("data-navigation-page-actions");
+      if (el) {
+        setDataNavigationPageActionsEl(el as HTMLDivElement);
+      }
+    }, 0);
+  }, [dataNavigationPageActionsEl]);
+
   const value = useMemo(() => {
     return {
       dataView,
@@ -143,6 +165,7 @@ const DataViewProvider = ({
       isRefetching,
       isRefreshing,
       total,
+      onEditDataView,
     };
   }, [
     dataView,
@@ -165,6 +188,7 @@ const DataViewProvider = ({
     isRefetching,
     isRefreshing,
     total,
+    onEditDataView,
   ]);
 
   return (
@@ -175,6 +199,19 @@ const DataViewProvider = ({
         </div>
       ) : (
         <>
+          {dataNavigationPageActionsEl &&
+            createPortal(
+              <div id="data-navigation-page-actions">
+                <Button
+                  size="icon-only"
+                  variant="ghost"
+                  onClick={onEditDataView}
+                >
+                  <Settings />
+                </Button>
+              </div>,
+              dataNavigationPageActionsEl
+            )}
           {children}{" "}
           <CustomTableModal
             providedTable={table}
@@ -190,6 +227,14 @@ const DataViewProvider = ({
               invalidateQuery();
             }}
             isOpen={isCreating || editingRecord !== null}
+          />
+          <DataViewModal
+            open={isEditingDataView}
+            setOpen={setIsEditingDataView}
+            tableId={table.id}
+            dataViewId={dataView.id}
+            key={dataView.id}
+            onSuccess={() => setIsEditingDataView(false)}
           />
           <AlertDialog
             open={recordToDelete !== null}

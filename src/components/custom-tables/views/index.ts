@@ -1,7 +1,7 @@
 import GridView from "./GridView/GridView";
 import CalendarView from "./CalendarView";
 import GalleryView from "./GalleryView";
-import KanbanView from "./KanbanView";
+import KanbanView from "./KanbanView/KanbanView";
 import TimelineView from "./TimelineView";
 import { TimeScale } from "./types";
 import { ViewType } from "@/services/DataViewsService";

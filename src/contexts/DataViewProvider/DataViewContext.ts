@@ -62,6 +62,7 @@ type DataViewContextType = {
   isRefetching: boolean;
   total: number;
   isRefreshing: boolean;
+  onEditDataView: () => void;
 };
 
 const defaultMutationFunction = async () => {};
@@ -87,6 +88,7 @@ const DataViewContext = createContext<DataViewContextType>({
   isRefetching: false,
   total: 0,
   isRefreshing: false,
+  onEditDataView: () => {},
 });
 
 export const useDataViewContext = () => {

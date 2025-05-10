@@ -316,8 +316,10 @@ export const useCustomRecordsQuery = ({
   );
 
   const updateOptimisticRecord = useCallback(
-    ({ record, options }: MutationFnArgs<CustomTableRecord>) => {
+    async ({ record, options }: MutationFnArgs<CustomTableRecord>) => {
       if (!isOptimistic || !options?.optimistic) return;
+
+      await queryClient.cancelQueries({ queryKey: dataQueryKey });
 
       toast.info(`Saving ${tableNameSingular}...`);
 
@@ -332,6 +334,8 @@ export const useCustomRecordsQuery = ({
       updateRecordInQueryData,
       addRecordToQueryData,
       tableNameSingular,
+      queryClient,
+      dataQueryKey,
     ]
   );
 
@@ -357,9 +361,9 @@ export const useCustomRecordsQuery = ({
     onSuccess: (record) => {
       toast.success(`${tableNameSingular} saved successfully`);
 
-      if (record) {
-        updateRecordInQueryData(record);
-      }
+      // if (record) {
+      //   updateRecordInQueryData(record);
+      // }
     },
   });
 

@@ -1,5 +1,4 @@
 import { IDataView, ViewType } from "@/services/DataViewsService";
-import { CalendarIcon, Table } from "lucide-react";
 
 export const DEFAULT_VIEW: IDataView = {
   id: "default",
@@ -11,22 +10,25 @@ export const DEFAULT_VIEW: IDataView = {
   external_table_id: null,
   data_table_id: null,
   tenant_id: null,
+  data_navigation_item_id: null,
+  is_default: true,
+  alias: null,
 };
 
 export const DATA_VIEW_TYPES = [
   {
-    id: "grid",
+    id: ViewType.Grid,
     label: "Grid",
-    value: "grid",
+    value: ViewType.Grid,
   },
   {
-    id: "calendar",
+    id: ViewType.Calendar,
     label: "Calendar",
-    value: "calendar",
+    value: ViewType.Calendar,
   },
   {
-    id: "kanban",
+    id: ViewType.Kanban,
     label: "Kanban",
-    value: "kanban",
+    value: ViewType.Kanban,
   },
 ];

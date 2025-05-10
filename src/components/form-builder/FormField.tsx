@@ -14,7 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Star, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { getAirtableColor } from "@/utils/airtable";
+import { getCustomTableColor } from "@/utils/customTableHelpers";
 import Multiselect, { MultiselectOption } from "@/components/ui/multiselect";
 import { CalendarInput } from "../ui/calendar-input";
 import { Switch } from "../ui/switch";
@@ -330,7 +330,7 @@ const FormField = ({
                     variant={"outline"}
                     className={cn(
                       "text-xs",
-                      getAirtableColor(optionValue?.color)
+                      getCustomTableColor(optionValue?.color)
                     )}
                   >
                     {optionValue?.label}
@@ -346,7 +346,10 @@ const FormField = ({
                   {option.color ? (
                     <Badge
                       variant={option.variant}
-                      className={cn("text-xs", getAirtableColor(option.color))}
+                      className={cn(
+                        "text-xs",
+                        getCustomTableColor(option.color)
+                      )}
                     >
                       {option.label}
                     </Badge>

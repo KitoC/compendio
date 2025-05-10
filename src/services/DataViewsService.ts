@@ -29,6 +29,7 @@ export type IDataView = IDataViewRow & {
     sortByField?: string;
     sortDirection?: "asc" | "desc";
     eventLabelField?: SelectOption[];
+    visibleAttributes?: SelectOption[];
     calendarViews?: {
       [key: string]: {
         label: string;

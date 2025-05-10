@@ -1,5 +1,5 @@
 import { FieldRendererProps } from "./index";
-import { getAirtableColor } from "@/utils/airtable";
+import { getCustomTableColor } from "@/utils/customTableHelpers";
 
 const SingleSelectRenderer = ({
   value,
@@ -11,7 +11,7 @@ const SingleSelectRenderer = ({
 
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getAirtableColor(
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCustomTableColor(
         option.color
       )}`}
     >

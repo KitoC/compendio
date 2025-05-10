@@ -86,8 +86,7 @@ const getDateQuery = (view, date) => {
 };
 
 const CalendarToolbar = (props) => {
-  const [open, setOpen] = useState(false);
-  const { isLoadingData, isFetchingData, dataView, setQuery } =
+  const { isLoadingData, isFetchingData, dataView, setQuery, onEditDataView } =
     useDataViewContext();
 
   const { from, to } = useMemo(() => {
@@ -167,19 +166,6 @@ const CalendarToolbar = (props) => {
             ))}
           </SelectContent>
         </Select>
-
-        <Button size="icon-only" variant="ghost" onClick={() => setOpen(true)}>
-          <Settings />
-        </Button>
-
-        <DataViewModal
-          open={open}
-          setOpen={setOpen}
-          tableId={props.tableId}
-          dataViewId={props.dataViewId}
-          key={props.dataViewId}
-          onSuccess={() => setOpen(false)}
-        />
       </div>
     </div>
   );
