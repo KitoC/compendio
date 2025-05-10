@@ -91,6 +91,15 @@ export const useCreateOrUpdateDataViewMutation = ({
     );
   };
 
+  const updateDataViewQueryData = (dataView: IDataView) => {
+    if (dataView.id) {
+      queryClient.setQueryData<IDataView>(
+        [QUERY_KEYS.TABLE_NAME, dataView.id],
+        dataView
+      );
+    }
+  };
+
   return useMutation({
     mutationFn: async (dataView: IDataView) => {
       if (dataView.id) {
@@ -109,6 +118,8 @@ export const useCreateOrUpdateDataViewMutation = ({
 
         return [...old, { ...dataView, id: TEMP_VIEW_ID } as IDataView];
       });
+
+      updateDataViewQueryData(dataView);
 
       onMutate?.(dataView);
     },

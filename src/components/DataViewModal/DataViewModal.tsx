@@ -283,7 +283,8 @@ const DataViewModal = ({
                 label: label as string,
                 config: config as Json,
                 view_type: view_type as ViewType,
-                data_navigation_item_id: dataNavigationItemId,
+                data_navigation_item_id:
+                  dataNavigationItemId || dataView?.data_navigation_item_id,
                 is_default: isDefault,
                 alias: kebabCase(label as string),
               } as IDataView);
