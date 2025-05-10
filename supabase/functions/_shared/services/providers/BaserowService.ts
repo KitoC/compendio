@@ -71,6 +71,7 @@ export class BaserowService
       _id: (record.id as number).toString(),
       _created_at: record.created_at as string | undefined,
       _updated_at: record.updated_at as string | undefined,
+      _order: record.order as number | undefined,
       ...record,
     };
 
@@ -164,6 +165,7 @@ export class BaserowService
         sub_type: field?.formula_type,
         is_computed: field?.type === "formula",
         is_primary: field?.primary,
+        is_hidden: field?.name.startsWith("_"),
         is_readonly: field?.read_only,
         is_multiple: field?.link_row_multiple_relationships,
         attr_key: field?.name,

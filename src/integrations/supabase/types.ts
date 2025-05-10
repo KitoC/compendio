@@ -896,6 +896,7 @@ export type Database = {
           data_navigation_item_id: string | null;
           is_default: boolean | null;
           alias: string | null;
+          order: number | null;
         };
         Insert: {
           config?: Json | null;
@@ -910,6 +911,7 @@ export type Database = {
           data_navigation_item_id?: string | null;
           is_default?: boolean | null;
           alias?: string | null;
+          order?: number | null;
         };
         Update: {
           config?: Json | null;
@@ -924,6 +926,7 @@ export type Database = {
           data_navigation_item_id?: string | null;
           is_default?: boolean | null;
           alias?: string | null;
+          order?: number | null;
         };
       };
       documents: {

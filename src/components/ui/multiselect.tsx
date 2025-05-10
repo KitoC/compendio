@@ -194,7 +194,6 @@ const Multiselect = ({
         }}
         closeMenuOnSelect={false}
         {...sharedProps}
-        menuIsOpen={true}
       />
     );
   }

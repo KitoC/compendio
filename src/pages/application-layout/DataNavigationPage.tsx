@@ -91,6 +91,7 @@ const DataNavigationPage = () => {
             dataNavigationItemId={dataNavigationItem?.id}
             open={open}
             setOpen={setOpen}
+            order={dataViews.length}
             onSuccess={(newView) => {
               setOpen(false);
 

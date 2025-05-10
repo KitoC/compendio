@@ -37,7 +37,7 @@ const KanbanCard = ({
   const groupColor = getCustomTableColor(fieldOption?.color || "gray");
 
   return (
-    <Draggable key={record._id} draggableId={record._id} index={index}>
+    <Draggable key={record.ID} draggableId={record.ID} index={index}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}

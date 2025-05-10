@@ -88,7 +88,7 @@ const ResponsiveModal = ({
           }}
           footer={footer || null}
           className={cn(isMobile ? "rounded-t-md" : "h-full", className)}
-          headerClassName={headerClassName}
+          headerClassName={cn(headerClassName, "shadow-sm z-10")}
           bodyClassName={bodyClassName}
           footerClassName={footerClassName}
           footerId={footerId}

@@ -2,11 +2,9 @@ import { useMemo } from "react";
 
 import { CustomTableViewProps } from "../types";
 
-import { Settings } from "lucide-react";
 import { DragDropContext, DropResult } from "react-beautiful-dnd";
 import { useDataViewContext } from "@/contexts/DataViewProvider";
 import KanbanColumn from "./KanbanColumn";
-import { Button } from "@/components/ui/button";
 
 const KanbanView = ({
   emptyMessage = "No records available",
@@ -18,6 +16,7 @@ const KanbanView = ({
     table,
     dataView,
     onEditDataView,
+    isLoadingData,
   } = useDataViewContext();
 
   const groupByField = table.fields.find(
@@ -142,6 +141,7 @@ const KanbanView = ({
             groupByField={groupByField}
             primaryField={primaryField}
             onEdit={onEdit}
+            isLoading={isLoadingData}
           />
           {Object.entries(rest).map(([group, groupRecords]) => {
             return (
@@ -153,6 +153,7 @@ const KanbanView = ({
                 groupByField={groupByField}
                 primaryField={primaryField}
                 onEdit={onEdit}
+                isLoading={isLoadingData}
               />
             );
           })}

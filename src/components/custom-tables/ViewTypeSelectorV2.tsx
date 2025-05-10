@@ -82,7 +82,7 @@ const ViewTypeSelectorV2 = ({
 
   const dataViewTabs = useMemo(() => {
     return dataViews
-      .sort((a, b) => (b.is_default ? 1 : -1))
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
       .map((view) => {
         const Icon = VIEW_TYPE_ICONS[view.view_type];
 
@@ -165,6 +165,7 @@ const ViewTypeSelectorV2 = ({
         setOpen={setOpen}
         onSuccess={onCreateView}
         isDefault={dataViews.length === 0}
+        order={dataViews.length}
       />
     </div>
   );

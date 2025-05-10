@@ -12,8 +12,9 @@ const useColumns = (table: CustomTableSchema, permissions: UserPermissions) => {
 
   const displayFields = useMemo(() => {
     if (!table || !table.fields) return [];
+
     let fields = table.fields.filter(
-      (f) => !["createdBy", "lastModifiedBy"].includes(f.type)
+      (f) => !["createdBy", "lastModifiedBy"].includes(f.type) && !f.is_hidden
     );
 
     const primary = table.fields.find(

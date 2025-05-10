@@ -1,0 +1,1 @@
+ALTER TABLE "public"."data_views" ADD COLUMN "order" INTEGER;

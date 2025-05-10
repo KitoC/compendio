@@ -69,7 +69,9 @@ const CustomTableModal = ({
     (field) => field.type === "aiText"
   );
 
-  const readonlyItems = tableSchema.fields.filter((field) => field.is_readonly);
+  const readonlyItems = tableSchema.fields.filter(
+    (field) => field.is_readonly && !field.is_hidden
+  );
 
   // Generate form config from table schema
   const defaultConfig = customTableToFormConfig(
@@ -124,7 +126,6 @@ const CustomTableModal = ({
         setIsOpen={onClose}
         isSlider
         bodyClassName="!p-0"
-        headerClassName="shadow-sm z-10"
         footerClassName="shadow-sm-top z-10"
         footerId={footerId}
         footer={<div></div>}

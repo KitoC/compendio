@@ -33,6 +33,7 @@ export interface CustomTableField {
   is_computed?: boolean;
   is_primary?: boolean;
   is_locked?: boolean;
+  is_hidden?: boolean;
   is_readonly?: boolean;
   attr_key?: string;
   inverse_linked_table_id?: string;

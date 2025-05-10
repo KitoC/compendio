@@ -36,6 +36,7 @@ const DataViewModal = ({
   onSuccess,
   dataNavigationItemId,
   isDefault,
+  order,
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
@@ -44,6 +45,7 @@ const DataViewModal = ({
   onSuccess: (dataView: IDataView) => void;
   dataNavigationItemId?: string;
   isDefault?: boolean;
+  order?: number;
 }) => {
   const [internalTableId, setInternalTableId] = useState<string | undefined>(
     tableId
@@ -179,7 +181,6 @@ const DataViewModal = ({
       }
       isSlider
       bodyClassName="!p-0"
-      headerClassName="shadow-md z-10"
       footerId={footerId}
       footer={<div></div>}
     >
@@ -207,6 +208,7 @@ const DataViewModal = ({
                   dataNavigationItemId || dataView?.data_navigation_item_id,
                 is_default: isDefault,
                 alias: kebabCase(label as string),
+                order: order || 0,
               } as IDataView);
             }}
             onFormChange={(values) => {

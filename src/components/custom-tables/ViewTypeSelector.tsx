@@ -124,6 +124,7 @@ const ViewTypeSelector = ({
         open={open}
         setOpen={setOpen}
         tableId={tableId}
+        order={dataViewsWithDefault.length}
         onSuccess={(newView) => {
           setOpen(false);
           setViewType(newView);
