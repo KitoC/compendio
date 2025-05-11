@@ -1,0 +1,16 @@
+.rbc-time-view {
+  border: none;
+  border-top: 1px solid #e0e0e0;
+}
+
+.rbc-time-column:nth-child(odd) {
+  background-color: hsl(var(--background));
+}
+
+.rbc-time-gutter {
+  background-color: #ffffff !important;
+}
+
+.rbc-day-slot.rbc-time-column > :nth-last-child(-n + 2) {
+  border-bottom: none;
+}

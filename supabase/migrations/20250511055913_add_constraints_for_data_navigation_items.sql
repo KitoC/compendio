@@ -1,0 +1,1 @@
+ALTER TABLE data_navigation_items ADD CONSTRAINT data_navigation_items_unique_path UNIQUE (name, path, tenant_id);

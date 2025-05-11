@@ -11,6 +11,7 @@ import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTenant } from "@/contexts/TenantContext";
 import { paths } from "@/utils/pathHelpers";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 interface DataNavigationPageParams extends Record<string, string> {
   id: string;
@@ -22,8 +23,11 @@ const DataNavigationPage = () => {
   const navigate = useNavigate();
   const { urlTenantAlias } = useTenant();
 
-  const { data: dataNavigationItem, isLoading } =
-    useDataNavigationItemQuery(dataNavigationPath);
+  const {
+    data: dataNavigationItem,
+    isLoading,
+    error,
+  } = useDataNavigationItemQuery(dataNavigationPath);
   const location = useLocation();
   const { dataViews, isLoading: isLoadingDataViews } =
     useDataNavigationItemViewsQuery(dataNavigationItem?.id);
@@ -39,6 +43,22 @@ const DataNavigationPage = () => {
     return dataView.alias === lastPart;
   });
 
+  if (
+    error?.message === "JSON object requested, multiple (or no) rows returned"
+  ) {
+    return (
+      <div className="flex flex-col justify-center items-center h-full p-8 gap-6">
+        <Alert variant="destructive" className="w-1/2">
+          <AlertTitle>Error: {error.message}</AlertTitle>
+          <AlertDescription>
+            This means that the data navigation item you are trying to access
+            does not exist.
+          </AlertDescription>
+        </Alert>
+        <p>Please contact support if you believe this is an error.</p>
+      </div>
+    );
+  }
   if (isLoading || isLoadingDataViews) {
     return (
       <div className="flex flex-col h-full p-8 gap-6">

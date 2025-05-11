@@ -1,4 +1,4 @@
-import { DataView } from "@/services/DataViewsService";
+import { IDataView } from "@/services/DataViewsService";
 import {
   CustomTableField,
   CustomTableRecord,
@@ -9,20 +9,21 @@ import { createContext, useContext } from "react";
 interface CalendarEvent {
   id?: string;
   title: string;
-  start: Date;
-  end: Date;
-  allDay: boolean;
+  start?: Date;
+  end?: Date;
+  allDay?: boolean;
   resource: CustomTableRecord;
   resourceId: string;
 }
 
 export type CalendarContextType = {
-  dataView: DataView;
+  dataView: IDataView;
   draggingEvent: { event: CalendarEvent } | null;
   setSelectedEvent: (event: CustomTableRecord) => void;
   selectedEvent: CustomTableRecord | null;
   table: CustomTableSchema;
   primaryField: CustomTableField;
+  setDraggingEvent: (event: { event: CalendarEvent }) => void;
 };
 
 export const CalendarContext = createContext<CalendarContextType>({
@@ -32,6 +33,7 @@ export const CalendarContext = createContext<CalendarContextType>({
   selectedEvent: null,
   table: null,
   primaryField: null,
+  setDraggingEvent: () => {},
 });
 
 export const useCalendarContext = () => {

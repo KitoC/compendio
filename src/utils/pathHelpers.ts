@@ -10,4 +10,10 @@ export const paths = {
       .replace(":dataNavigationPath", dataNavigationPath)
       .replace(":tenantId", tenantId);
   },
+  getDataNavigationPath: (dataNavigationPath: string, tenantId: string) => {
+    return ROUTES.DATA_NAVIGATION.replace(
+      ":dataNavigationPath",
+      dataNavigationPath
+    ).replace(":tenantId", tenantId);
+  },
 };

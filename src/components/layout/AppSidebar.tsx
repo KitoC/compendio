@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -14,7 +14,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DynamicIcon, IconName } from "lucide-react/dynamic";
-
+import { kebabCase } from "lodash";
 import {
   ArrowLeft,
   LogOut,
@@ -22,11 +22,13 @@ import {
   Table2,
   Bot,
   LayoutDashboard,
+  ListPlus,
+  Plus,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ROUTES } from "@/lib/constants";
 import { useSidebar } from "@/components/ui/sidebar/context";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import clsx from "clsx";
 import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
 import { useCustomTables } from "@/contexts/CustomTables/useCustomTables";
@@ -38,6 +40,16 @@ import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { IAiAgent } from "@/types/aiAgents";
 import { useDataNavigationItemsQuery } from "@/hooks/DataNavigationItems";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { Input } from "../ui/input";
+import { IconPicker } from "../ui/icon-picker";
+import { useDataNavigationItemMutation } from "@/hooks/DataNavigationItems/useDataNavigationItemMutation";
+import { paths } from "@/utils/pathHelpers";
 interface SidebarItemOrGroup {
   label: string;
   url?: string;
@@ -46,6 +58,86 @@ interface SidebarItemOrGroup {
   notificationCount?: number;
   onClick?: () => void;
 }
+
+const NavItemAdder = () => {
+  const isMobile = useIsMobile();
+  const { tenantId, urlTenantAlias } = useTenant();
+  const [showNavItemAdder, setShowNavItemAdder] = useState(false);
+  const [navItemName, setNavItemName] = useState("");
+  const [navItemIcon, setNavItemIcon] = useState("");
+  const path = kebabCase(navItemName);
+  const navigate = useNavigate();
+
+  const { mutate: createDataNavigationItem, isPending } =
+    useDataNavigationItemMutation();
+
+  const onAddNavItem = useCallback(async () => {
+    await createDataNavigationItem({
+      name: navItemName,
+      icon: navItemIcon as IconName,
+      path,
+      description: "",
+      tenant_id: tenantId,
+    });
+
+    navigate(paths.getDataNavigationPath(path, urlTenantAlias));
+  }, [
+    createDataNavigationItem,
+    navItemName,
+    navItemIcon,
+    path,
+    tenantId,
+    urlTenantAlias,
+    navigate,
+  ]);
+
+  return (
+    <SidebarGroup className="mt-0 pt-0">
+      <SidebarGroupContent>
+        <SidebarMenu>
+          <SidebarMenuItem key="nav-item-adder">
+            <DropdownMenu
+              open={showNavItemAdder}
+              onOpenChange={setShowNavItemAdder}
+            >
+              <DropdownMenuTrigger asChild>
+                <div
+                  className={clsx(
+                    "pr-2 pl-3 w-full flex items-center gap-2 min-h-fit rounded hover:bg-slate-300 dark:hover:bg-gray-700",
+                    isMobile ? "py-3" : "py-1",
+                    showNavItemAdder && "bg-muted"
+                  )}
+                >
+                  <ListPlus className="h-4 w-4" />
+                  Add module
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="right">
+                <div className="p-2 flex">
+                  <Input
+                    autoFocus
+                    placeholder="New module name"
+                    value={navItemName}
+                    onChange={(e) => setNavItemName(e.target.value)}
+                  />
+                  <IconPicker value={navItemIcon} onChange={setNavItemIcon} />
+                  <Button
+                    disabled={isPending || !navItemName || !navItemIcon}
+                    variant="outline"
+                    onClick={onAddNavItem}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add
+                  </Button>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
+};
 
 const SidebarItem = (item: SidebarItemOrGroup) => {
   const { urlTenantAlias } = useTenant();
@@ -131,16 +223,24 @@ const AppSidebar = () => {
         onClick: onNavItemClick,
       })),
     },
-    ...dataNavigationItems.map((navItem) => ({
-      label: navItem.name,
-      url: ROUTES.DATA_NAVIGATION.replace(":dataNavigationPath", navItem.path),
-      onClick: onNavItemClick,
-      icon: navItem.icon ? (
-        <DynamicIcon name={navItem.icon} className="h-4 w-4" />
-      ) : (
-        <Table2 className="h-4 w-4" />
-      ),
-    })),
+    {
+      label: "Modules",
+      children: [
+        ...dataNavigationItems.map((navItem) => ({
+          label: navItem.name,
+          url: ROUTES.DATA_NAVIGATION.replace(
+            ":dataNavigationPath",
+            navItem.path
+          ),
+          onClick: onNavItemClick,
+          icon: navItem.icon ? (
+            <DynamicIcon name={navItem.icon} className="h-4 w-4" />
+          ) : (
+            <Table2 className="h-4 w-4" />
+          ),
+        })),
+      ],
+    },
   ];
 
   // Define footer items for main navigation
@@ -321,7 +421,10 @@ const AppSidebar = () => {
         </div>
       </SidebarHeader>
 
-      <SidebarContent>{renderItems(itemsToShow)}</SidebarContent>
+      <SidebarContent>
+        {renderItems(itemsToShow)}
+        <NavItemAdder />
+      </SidebarContent>
 
       <SidebarFooter>
         {renderItems(footerItemsToShow)}

@@ -117,7 +117,7 @@ const CalendarToolbar = (props) => {
   }, [from, to, startDate, endDate, setQuery]);
 
   return (
-    <div className="flex items-center justify-between mb-2">
+    <div className="flex items-center justify-between mb-2 pt-2 px-2">
       <div className="flex items-center gap-6">
         <Button size="sm" onClick={() => props.onNavigate(Navigate.TODAY)}>
           {Navigate.TODAY}

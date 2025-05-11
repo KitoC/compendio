@@ -1,10 +1,13 @@
-
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { Check, ChevronsUpDown, Search } from "lucide-react";
-import { icons } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import {
+  DynamicIcon,
+  dynamicIconImports,
+  IconName,
+} from "lucide-react/dynamic";
 import {
   Command,
   CommandEmpty,
@@ -36,16 +39,15 @@ export function IconPicker({
 }: IconPickerProps) {
   const [open, setOpen] = useState(false);
   const [iconNames, setIconNames] = useState<string[]>([]);
-  
+
   useEffect(() => {
     // Get all icon names from the lucide-react icons object
-    const names = Object.keys(icons);
+    const names = Object.keys(dynamicIconImports);
     setIconNames(names);
   }, []);
 
   // Get the current icon component if a value is selected
-  const selectedIcon = value ? icons[value as keyof typeof icons] : undefined;
-  const IconComponent = selectedIcon;
+  const selectedIcon = value;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -56,26 +58,31 @@ export function IconPicker({
           aria-expanded={open}
           className={cn("w-full justify-between", className)}
           disabled={disabled}
+          onClick={() => setOpen(!open)}
         >
           <div className="flex items-center gap-2">
-            {value && IconComponent && (
-              <IconComponent className="h-4 w-4" aria-hidden="true" />
+            {value && (
+              <DynamicIcon
+                name={value as IconName}
+                className="h-4 w-4"
+                aria-hidden="true"
+              />
             )}
-            <span className="truncate">
-              {value ? value : placeholder}
-            </span>
+            <span className="truncate">{value ? value : placeholder}</span>
           </div>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0 w-[300px]">
         <Command>
-          <CommandInput placeholder="Search icons..." icon={<Search className="h-4 w-4" />} />
+          <CommandInput
+            placeholder="Search icons..."
+            icon={<Search className="h-4 w-4" />}
+          />
           <CommandList className="max-h-[300px]">
             <CommandEmpty>No icons found.</CommandEmpty>
             <CommandGroup>
               {iconNames.map((iconName) => {
-                const Icon = icons[iconName as keyof typeof icons];
                 return (
                   <CommandItem
                     key={iconName}
@@ -86,7 +93,10 @@ export function IconPicker({
                     }}
                   >
                     <div className="flex items-center gap-2">
-                      <Icon className="h-4 w-4" />
+                      <DynamicIcon
+                        name={iconName as IconName}
+                        className="h-4 w-4"
+                      />
                       <span>{iconName}</span>
                     </div>
                     {value === iconName && (

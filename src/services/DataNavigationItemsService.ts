@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { IconName } from "lucide-react/dynamic";
 
 export type DataNavigationItem = {
-  id: string;
+  id?: string;
   name: string;
   path: string;
   icon: IconName;
@@ -27,6 +27,19 @@ export const DataNavigationItemsService = {
       .from("data_navigation_items")
       .select("*")
       .eq("path", path)
+      .single();
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data as DataNavigationItem;
+  },
+  createOrUpdate: async (payload: DataNavigationItem) => {
+    const { data, error } = await supabase
+      .from("data_navigation_items")
+      .upsert(payload)
+      .select()
       .single();
 
     if (error) {

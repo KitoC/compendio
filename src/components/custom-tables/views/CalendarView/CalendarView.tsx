@@ -14,6 +14,9 @@ import EventComponent from "./Event";
 import { TEMP_RECORD_ID } from "@/contexts/DataViewProvider/DataViewProvider";
 import { CalendarContext } from "./CalendarContext";
 import { SelectOption } from "@/types/customTable";
+import CreateEventsFromResourcesPanel from "./CreateEventsFromResourcesPanel";
+import "./calender-style-overrides.css";
+
 const DragAndDropCalendar = withDragAndDrop(Calendar);
 
 const localizer = dayjsLocalizer(dayjs);
@@ -279,6 +282,45 @@ const CalendarView = ({
     [startTimeField, endTimeField, selectedEvent, groupBy, resources]
   );
 
+  const dragFromOutsideItem = useCallback(
+    () => (draggingEvent === "undroppable" ? null : draggingEvent),
+    [draggingEvent]
+  );
+
+  const customOnDragOverFromOutside = useCallback(
+    (dragEvent) => {
+      // check for undroppable is specific to this example
+      // and not part of API. This just demonstrates that
+      // onDragOver can optionally be passed to conditionally
+      // allow draggable items to be dropped on cal, based on
+      // whether event.preventDefault is called
+      if (draggingEvent !== "undroppable") {
+        console.log("preventDefault");
+        dragEvent.preventDefault();
+      }
+    },
+    [draggingEvent]
+  );
+
+  const onDropFromOutside = useCallback(
+    ({ start, end, allDay: isAllDay }) => {
+      if (draggingEvent === "undroppable") {
+        setDraggingEvent(null);
+        return;
+      }
+
+      const { name } = draggingEvent;
+      const event = {
+        title: draggingEvent.title,
+        start,
+        end,
+        isAllDay,
+      };
+      setDraggingEvent(null);
+    },
+    [draggingEvent]
+  );
+
   const components = useMemo(() => {
     return {
       toolbar: (props) => (
@@ -313,6 +355,8 @@ const CalendarView = ({
     );
   }
 
+  console.log("draggingEvent", draggingEvent);
+
   return (
     <CalendarContext.Provider
       value={{
@@ -322,11 +366,15 @@ const CalendarView = ({
         table,
         primaryField,
         selectedEvent,
+        setDraggingEvent,
       }}
     >
-      <div className="h-full flex flex-col">
+      <div className="h-full flex flex-col border rounded-md">
         <div className="flex-grow overflow-hidden">
-          <div className="flex h-full">
+          <div className="flex h-full w-full">
+            {dataView.config.createEventsFromTable?.length > 0 && (
+              <CreateEventsFromResourcesPanel />
+            )}
             {/* <div className="w-1/4">
               <div className="h-full p-1 relative rounded-md overflow-hidden flex-grow">
                 <div className="h-full p-1 relative rounded-md overflow-hidden flex-grow">
@@ -334,7 +382,7 @@ const CalendarView = ({
                 </div>
               </div>
             </div> */}
-            <div className="h-full p-1 relative rounded-md overflow-hidden flex-grow">
+            <div className="h-full relative rounded-md overflow-hidden flex-grow">
               {isLoadingData && (
                 <div className="absolute inset-0 flex items-center justify-center z-40 bg-background/75 animate-fade-in">
                   <Loader className="w-4 h-4" />
@@ -359,6 +407,9 @@ const CalendarView = ({
                 resizable
                 onDragStart={(event) => setDraggingEvent(event)}
                 onSelectEvent={() => setDraggingEvent(null)}
+                dragFromOutsideItem={dragFromOutsideItem}
+                onDropFromOutside={onDropFromOutside}
+                onDragOverFromOutside={customOnDragOverFromOutside}
               />
             </div>
           </div>

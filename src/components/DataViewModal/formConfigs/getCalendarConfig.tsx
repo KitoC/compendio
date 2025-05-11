@@ -42,11 +42,11 @@ export const getCalendarConfig = ({
       divider: true,
       fields: [
         {
-          id: "preloadTable",
-          label: "Preload table",
-          name: "preloadTable",
+          id: "createEventsFromTable",
+          label: "Create events from resource",
+          name: "createEventsFromTable",
           type: "select",
-          hint: "Table that",
+          hint: "Allows you to drag and drop events from a resource table to create events. ",
           validation: {
             required: true,
           },
@@ -54,9 +54,6 @@ export const getCalendarConfig = ({
             label: table.name,
             value: table.external_id,
           })),
-          CustomComponent: (fieldProps) => (
-            <DateFieldSelector {...fieldProps} dateFields={dateFields} />
-          ),
         },
         {
           id: "dateFields",
