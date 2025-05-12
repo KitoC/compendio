@@ -10,7 +10,7 @@ import { ServiceQuery } from "@/services/supabase/BaseService";
 import pluralize from "pluralize";
 import { startCase } from "lodash";
 import { toast } from "sonner";
-
+import { useTenant } from "@/contexts/TenantContext";
 type MutationOptions = {
   optimistic?: boolean;
 };
@@ -30,8 +30,7 @@ export interface UseServiceListQueryOptions<RecordType> {
   uniqueKey: string;
   initialQuery: ServiceQuery;
   onFetch?: (query: ServiceQuery) => void;
-  onCreate?: MutationFn<RecordType>;
-  onUpdate?: MutationFn<RecordType>;
+  onUpsert?: MutationFn<RecordType>;
   onDelete?: MutationFn<RecordType>;
   enabled?: boolean;
   optimistic?: boolean;
@@ -54,15 +53,9 @@ export interface UseServiceListQueryResponse<
   error: Error | null;
   query: ServiceQuery;
   setQuery: (query: ServiceQuery) => void;
-  createRecord: MutationAsyncFunction<RecordType>;
-  updateRecord: MutationAsyncFunction<RecordType>;
+  upsertRecord: MutationAsyncFunction<RecordType>;
   deleteRecord: MutationAsyncFunction<RecordType>;
-  createRecordMutation: UseMutationResult<
-    RecordType,
-    Error,
-    MutationFnArgs<RecordType>
-  >;
-  updateRecordMutation: UseMutationResult<
+  upsertRecordMutation: UseMutationResult<
     RecordType,
     Error,
     MutationFnArgs<RecordType>
@@ -91,13 +84,14 @@ export function useServiceListQuery<RecordType extends { id: string }>({
   uniqueKey,
   initialQuery,
   onFetch,
-  onCreate,
-  onUpdate,
+  onUpsert,
   onDelete,
   enabled = true,
   optimistic = true,
 }: UseServiceListQueryOptions<RecordType>): UseServiceListQueryResponse<RecordType> {
+  const { tenantId } = useTenant();
   const [query, setQuery] = useState<ServiceQuery>(initialQuery);
+  const [editingRecord, setEditingRecord] = useState<RecordType | null>(null);
 
   const queryClient = useQueryClient();
   const dataQueryKey = useMemo(
@@ -173,7 +167,7 @@ export function useServiceListQuery<RecordType extends { id: string }>({
 
   const updateOptimisticRecord = useCallback(
     async ({ record, options }: MutationFnArgs<RecordType>) => {
-      if (!optimistic || !options?.optimistic) return;
+      if (!optimistic && !options?.optimistic) return;
 
       await queryClient.cancelQueries({ queryKey: dataQueryKey });
 
@@ -199,27 +193,14 @@ export function useServiceListQuery<RecordType extends { id: string }>({
     queryClient.invalidateQueries({ queryKey: dataQueryKey });
   }, [dataQueryKey, queryClient]);
 
-  const createRecordMutation = useMutation({
+  const upsertRecordMutation = useMutation({
     mutationFn: ({ record, options }: MutationFnArgs<RecordType>) =>
-      onCreate?.(record, options),
+      onUpsert?.({ ...record, tenant_id: tenantId }, options),
     onMutate: updateOptimisticRecord,
     onSettled: () => null,
-    onSuccess: (record: RecordType) => {
+    onSuccess: () => {
       toast.success(`${tableNameSingular} saved successfully`);
-
-      if (record) {
-        addRecordToQueryData(record);
-      }
-    },
-  });
-
-  const updateRecordMutation = useMutation({
-    mutationFn: ({ record, options }: MutationFnArgs<RecordType>) =>
-      onUpdate?.(record, options),
-    onMutate: updateOptimisticRecord,
-    onSettled: () => null,
-    onSuccess: (record: RecordType) => {
-      toast.success(`${tableNameSingular} saved successfully`);
+      // invalidateQuery();
     },
   });
 
@@ -247,11 +228,9 @@ export function useServiceListQuery<RecordType extends { id: string }>({
     ...queryResults,
     isLoading: !queryResults.isPlaceholderData && queryResults.isFetching,
     data,
-    createRecord: createRecordMutation.mutateAsync,
-    updateRecord: updateRecordMutation.mutateAsync,
+    upsertRecord: upsertRecordMutation.mutateAsync,
     deleteRecord: deleteRecordMutation.mutateAsync,
-    createRecordMutation,
-    updateRecordMutation,
+    upsertRecordMutation,
     deleteRecordMutation,
     updateOptimisticRecord,
     invalidateQuery,

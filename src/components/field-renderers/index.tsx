@@ -1,5 +1,4 @@
 import React from "react";
-import type { CustomTableRecord } from "@/types/customTable";
 import CheckboxRenderer from "./CheckboxRenderer";
 import DateRenderer from "./DateRenderer";
 import MultiSelectRenderer from "./MultiSelectRenderer";
@@ -18,9 +17,10 @@ import DefaultRenderer from "./DefaultRenderer";
 import EntityRenderer from "./EntityRenderer";
 import RollupRenderer from "./RollupRenderer";
 import { GridViewColumn } from "@/components/views/GridView/GridView";
+import { FieldRenderOptions } from "@/types/fieldTypes";
 
 export interface FieldRendererProps<ValueType, RecordType> {
-  field: GridViewColumn<RecordType>;
+  field: FieldRenderOptions;
   value: ValueType;
   record?: RecordType;
 }
@@ -29,7 +29,7 @@ export interface FieldRendererProps<ValueType, RecordType> {
  * Field renderer factory - returns the appropriate renderer component based on field type
  */
 export function getFieldRenderer<RecordType>(
-  field: GridViewColumn<RecordType>,
+  field: FieldRenderOptions,
   value: unknown,
   record: RecordType
 ): React.ReactNode {
@@ -38,44 +38,26 @@ export function getFieldRenderer<RecordType>(
   }
 
   switch (field.type) {
-    case "checkbox":
     case "boolean":
       return <CheckboxRenderer field={field} value={value} />;
     case "date":
-    case "dateTime":
-    case "createdTime":
-    case "created_on":
-    case "last_modified":
-    case "lastModifiedTime":
+    case "date_time":
       return <DateRenderer field={field} value={value} />;
-    case "multipleSelects":
     case "multiple_select":
       return <MultiSelectRenderer field={field} value={value} />;
-    case "singleSelect":
     case "single_select":
       return (
         <SingleSelectRenderer field={field} value={value as string | number} />
       );
-    case "singleLineText":
     case "text":
-    case "longText":
-    case "long_text":
-    case "autoNumber":
-    case "count":
-    case "formula":
-    case "lookup":
-    case "aiText":
       return <TextRenderer field={field} value={value} />;
-    case "multipleLookupValues":
+    case "multiple_lookup":
       return <MultipleLookupRenderer field={field} value={value} />;
-    case "number":
     case "duration":
       return <NumberRenderer field={field} value={value} />;
     case "url":
       return <UrlRenderer field={field} value={value} />;
     case "file":
-    case "multipleAttachments":
-    case "attachment":
       return <AttachmentRenderer field={field} value={value} />;
     case "email":
       return <EmailRenderer field={field} value={value} />;
@@ -85,10 +67,8 @@ export function getFieldRenderer<RecordType>(
       return <CurrencyRenderer field={field} value={value} />;
     case "percent":
       return <PercentRenderer field={field} value={value} />;
-    case "phone_number":
-    case "phoneNumber":
+    case "phone":
       return <PhoneRenderer field={field} value={value} />;
-    case "multipleRecordLinks":
     case "link_row":
       return <EntityRenderer field={field} value={value} record={record} />;
     case "rollup":

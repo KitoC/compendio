@@ -1,6 +1,6 @@
 import type { GridViewColumn } from "../GridView";
 
-const sharedStyles = "sticky  bg-background  !z-30 opacity-95";
+const sharedStyles = "sticky  !z-30 opacity-95";
 
 const borderStyle =
   "after:content-[''] after:absolute after:inset-0 after:pointer-events-none after:border-border z-10";
@@ -22,7 +22,7 @@ const getStickyStyles = <RecordType>(
   }
 
   if (!isFirst && !isActions) {
-    return styles;
+    return (styles += " border-r");
   }
 
   styles += ` ${sharedStyles} ${borderStyle}`;
@@ -33,7 +33,7 @@ const getStickyStyles = <RecordType>(
   }
 
   if (isActions) {
-    styles += ` right-0 after:border-l`;
+    styles += ` right-0 after:border-l !max-w-[150px] truncate`;
   }
 
   return styles;

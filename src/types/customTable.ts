@@ -15,12 +15,6 @@ export interface CustomTableRecordResponse {
   previous: string;
 }
 
-export interface SelectOption {
-  value: string;
-  label: string;
-  color?: string;
-}
-
 export interface CustomTableField {
   id: string;
   name: string;

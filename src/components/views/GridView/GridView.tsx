@@ -4,7 +4,6 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   flexRender,
-  ColumnDef,
   createColumnHelper,
   CellContext,
 } from "@tanstack/react-table";
@@ -31,15 +30,9 @@ import Loader from "@/components/ui/loader";
 import { UserPermissions } from "@/types/user";
 import { BaseService, ServiceQuery } from "@/services/supabase/BaseService";
 import ActionsCell from "./ActionCell";
-import { getFieldRenderer } from "@/components/custom-tables/field-renderers";
+import { getFieldRenderer } from "@/components/field-renderers";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FieldType } from "@/types/fieldTypes";
-
-export interface SelectOption {
-  label: string;
-  value: string;
-  color?: string;
-}
+import { SelectOption, FieldRenderOptions } from "@/types/fieldTypes";
 
 export interface TableQuery {
   page: number;
@@ -50,9 +43,10 @@ export interface TableQuery {
 export interface GridViewColumn<RecordType> {
   id: string;
   header: string;
-  type: FieldType;
-  accessorKey: string;
-  cell: (info: CellContext<RecordType, unknown>) => React.ReactNode;
+  renderOptions: FieldRenderOptions;
+  accessorKey?: string;
+  accessorFn?: (row: RecordType) => string;
+  cell?: (info: CellContext<RecordType, unknown>) => React.ReactNode;
   options?: SelectOption[];
 }
 
@@ -65,9 +59,9 @@ export interface GridViewActions<RecordType> {
 }
 
 export interface GridViewProps<RecordType> {
-  service: BaseService;
+  service: BaseService<RecordType>;
   permissions?: UserPermissions;
-  emptyMessage?: string;
+  emptyMessage?: string | React.ReactNode;
   columns: GridViewColumn<RecordType>[];
   actions?: GridViewActions<RecordType>[];
   data: RecordType[];
@@ -78,7 +72,7 @@ export interface GridViewProps<RecordType> {
   count: number;
 }
 
-const GridView = <RecordType extends Record<string, unknown>>({
+const GridView = <RecordType extends object>({
   emptyMessage,
   columns,
   actions,
@@ -99,18 +93,29 @@ const GridView = <RecordType extends Record<string, unknown>>({
     const formattedCols = columns.map((column) =>
       columnHelper.display({
         id: column.id,
-        cell: (info) =>
-          getFieldRenderer(column, info.getValue(), info.row.original),
+        ...column,
+        cell: (info) => {
+          return getFieldRenderer(
+            column.renderOptions,
+            info.getValue(),
+            info.row.original
+          );
+        },
       })
     );
 
     if (actions?.length) {
-      columnHelper.display({
-        id: "actions",
-        header: () => null,
-        cell: ({ row }) => <ActionsCell actions={actions} row={row} />,
-      });
+      formattedCols.push(
+        columnHelper.display({
+          id: "actions",
+          header: () => null,
+          cell: ({ row }) => <ActionsCell actions={actions} row={row} />,
+          size: 40,
+          maxSize: 40,
+        })
+      );
     }
+
     return formattedCols;
   }, [columns, actions, columnHelper]);
 
@@ -122,14 +127,14 @@ const GridView = <RecordType extends Record<string, unknown>>({
     initialState: {
       columnPinning: {
         left: [columns[0].id],
-        right: ["actions-column"],
+        right: ["actions"],
       },
     },
   });
 
   return (
-    <div className="flex flex-col gap-2 max-h-full p-1">
-      <div className="flex items-center justify-end w-1/3 relative">
+    <div className="flex flex-col gap-3 max-h-full p-1 flex-grow">
+      <div className="flex items-center justify-end w-full relative">
         <Input
           icon={<Search className="w-4 h-4" />}
           placeholder="Search"
@@ -175,6 +180,10 @@ const GridView = <RecordType extends Record<string, unknown>>({
                           columns,
                           true
                         )}`}
+                        style={{
+                          width: header.id === "actions" ? "40px" : "auto",
+                          maxWidth: header.id === "actions" ? "40px" : "auto",
+                        }}
                         onClick={header.column.getToggleSortingHandler()}
                       >
                         <div className="flex items-center space-x-1">
@@ -223,6 +232,10 @@ const GridView = <RecordType extends Record<string, unknown>>({
                             columns,
                             false
                           )}`}
+                          style={{
+                            width: cell.id === "actions" ? "40px" : "auto",
+                            maxWidth: cell.id === "actions" ? "40px" : "auto",
+                          }}
                         >
                           {flexRender(
                             cell.column.columnDef.cell,
@@ -239,7 +252,7 @@ const GridView = <RecordType extends Record<string, unknown>>({
         </div>
       )}
 
-      <div className="flex items-center justify-end space-x-2 py-2 px-4 bg-background border border-border rounded-md">
+      <div className="flex items-center justify-end space-x-2 py-2 px-4">
         {isLoading && <Skeleton className="w-24 h-8 bg-muted-darker" />}
         {!isLoading && (
           <>

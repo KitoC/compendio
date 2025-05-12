@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-
+import { toast } from "sonner";
 export type ServiceQueryFilter = {
   [key: string]:
     | string
@@ -40,8 +40,8 @@ export type ServiceQuery = {
   };
 };
 
-type GetResponse = {
-  data: Record<string, unknown>[];
+type GetResponse<RecordType> = {
+  data: RecordType[];
   count: number;
 };
 
@@ -59,7 +59,7 @@ const ACCEPTABLE_OPERATORS = [
   "not",
 ];
 
-export class BaseService {
+export class BaseService<RecordType> {
   public tableName: string;
   public primaryKey: string;
   public defaultColumns: string;
@@ -70,69 +70,81 @@ export class BaseService {
     this.defaultColumns = "*";
   }
 
-  async get({
-    filter = {},
-    sort = null,
-    limit = null,
-    offset = null,
-    or = null,
-    textSearch = null,
-    pagination = null,
-    columns = this.defaultColumns,
-    options = { count: "exact" },
-  }: ServiceQuery = {}): Promise<GetResponse> {
-    console.log("get");
-    let query = supabase.from(this.tableName).select(columns, options);
+  async get(queryOptions: ServiceQuery = {}): Promise<GetResponse<RecordType>> {
+    try {
+      const {
+        filter,
+        sort,
+        limit,
+        offset,
+        or,
+        textSearch,
+        pagination,
+        columns,
+        options,
+      } = queryOptions;
+      let query = supabase.from(this.tableName).select(columns, options);
+      console.log("queryOptions", queryOptions.pagination);
 
-    Object.entries(filter).forEach(([key, value]) => {
-      if (typeof value === "object" && value !== null) {
-        Object.entries(value).forEach(([operator, val]) => {
-          if (ACCEPTABLE_OPERATORS.includes(operator)) {
-            query = query[operator](key, val);
+      if (filter) {
+        Object.entries(filter).forEach(([key, value]) => {
+          if (typeof value === "object" && value !== null) {
+            Object.entries(value).forEach(([operator, val]) => {
+              if (ACCEPTABLE_OPERATORS.includes(operator)) {
+                query = query[operator](key, val);
+              }
+            });
+          } else {
+            query = query.eq(key, value);
           }
         });
-      } else {
-        query = query.eq(key, value);
       }
-    });
 
-    if (or) {
-      query = query.or(or);
+      if (or) {
+        query = query.or(or);
+      }
+
+      if (textSearch && textSearch.column && textSearch.query) {
+        query = query.textSearch(textSearch.column, textSearch.query);
+      }
+
+      if (sort) {
+        const { column, ascending = true } = sort;
+        query = query.order(column, { ascending });
+      }
+
+      if (limit !== null) {
+        query = query.limit(limit);
+      }
+
+      if (offset !== null) {
+        query = query.range(offset, offset + (limit || 10) - 1);
+      }
+
+      if (pagination) {
+        console.log("pagination --> ", pagination);
+        query = query.range(
+          pagination.page * pagination.pageSize - pagination.pageSize,
+          pagination.page * pagination.pageSize
+        );
+      }
+
+      const { data, error, count } = await query;
+
+      if (error) {
+        console.error("error", error);
+        throw error;
+      }
+
+      return {
+        data: (data || []) as unknown as RecordType[],
+        count: count || 0,
+      };
+    } catch (error) {
+      console.error("error", error);
+      toast.error("Error fetching data ");
+      throw error;
     }
-
-    if (textSearch && textSearch.column && textSearch.query) {
-      query = query.textSearch(textSearch.column, textSearch.query);
-    }
-
-    if (sort) {
-      const { column, ascending = true } = sort;
-      query = query.order(column, { ascending });
-    }
-
-    if (limit !== null) {
-      query = query.limit(limit);
-    }
-
-    if (offset !== null) {
-      query = query.range(offset, offset + (limit || 10) - 1);
-    }
-
-    if (pagination && pagination.page && pagination.pageSize) {
-      query = query.range(
-        pagination.page * pagination.pageSize - pagination.pageSize,
-        pagination.page * pagination.pageSize
-      );
-    }
-
-    const { data, error, count } = await query;
-
-    if (error) throw error;
-
-    console.log({ data, count });
-    return {
-      data: (data || []) as unknown as Record<string, unknown>[],
-      count: count || 0,
-    };
   }
 
   async getById(id: string, columns: string = this.defaultColumns) {
@@ -146,11 +158,11 @@ export class BaseService {
       throw error;
     }
 
-    return data;
+    return data as unknown as RecordType;
   }
 
   // TODO: Type this
-  async create(payload: unknown) {
+  async create(payload: RecordType) {
     const { data, error } = await supabase
       .from(this.tableName)
       .insert(payload)
@@ -160,11 +172,11 @@ export class BaseService {
       throw error;
     }
 
-    return data;
+    return data as unknown as RecordType;
   }
 
   // TODO: Type this
-  async update(id: string, updates: unknown) {
+  async update(id: string, updates: RecordType) {
     const { data, error } = await supabase
       .from(this.tableName)
       .update(updates)
@@ -175,19 +187,32 @@ export class BaseService {
       throw error;
     }
 
-    return data;
+    return data as unknown as RecordType;
   }
 
-  async delete(id: string) {
-    const { error } = await supabase
+  async upsert(record: RecordType) {
+    const { data, error } = await supabase
       .from(this.tableName)
-      .delete()
-      .eq(this.primaryKey, id);
+      .upsert(record)
+      .select();
 
     if (error) {
       throw error;
     }
 
-    return { success: true };
+    return data as unknown as RecordType;
+  }
+
+  async delete(record: RecordType) {
+    const { error } = await supabase
+      .from(this.tableName)
+      .delete()
+      .eq(this.primaryKey, record[this.primaryKey]);
+
+    if (error) {
+      throw error;
+    }
+
+    return record;
   }
 }

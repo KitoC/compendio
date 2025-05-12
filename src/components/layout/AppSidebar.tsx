@@ -105,16 +105,10 @@ const AppSidebar = () => {
     }
   };
 
-  const getNotificationCount = (agent: IAiAgent) => {
-    if (agent.name === "email-assistant") {
-      return emailCount;
-    }
-    return 0;
-  };
-
   // Define sidebar items for main navigation
   const sidebarItems = [
     {
+      id: "menu",
       children: [
         {
           icon: <LayoutDashboard className="h-4 w-4" />,
@@ -136,35 +130,6 @@ const AppSidebar = () => {
         },
       ],
     },
-
-    // {
-    //   icon: <Bot className="h-4 w-4" />,
-    //   label: "Assistants",
-    //   children: aiAgents.map((agent) => ({
-    //     label: agent.human_name || agent.name,
-    //     url: ROUTES.AGENT_CHAT.replace(":id", agent.name),
-    //     notificationCount: getNotificationCount(agent),
-    //     onClick: onNavItemClick,
-    //   })),
-    // },
-    // {
-    //   label: "Modules",
-    //   children: [
-    //     ...dataNavigationItems.map((navItem) => ({
-    //       label: navItem.name,
-    //       url: ROUTES.DATA_NAVIGATION.replace(
-    //         ":dataNavigationPath",
-    //         navItem.path
-    //       ),
-    //       onClick: onNavItemClick,
-    //       icon: navItem.icon ? (
-    //         <DynamicIcon name={navItem.icon} className="h-4 w-4" />
-    //       ) : (
-    //         <Table2 className="h-4 w-4" />
-    //       ),
-    //     })),
-    //   ],
-    // },
   ];
 
   // Define footer items for main navigation
@@ -262,7 +227,7 @@ const AppSidebar = () => {
   const renderSidebarItems = (items) => {
     return items.map((item) => {
       if (item.url) {
-        return <SidebarItem key={item.label} {...item} />;
+        return <SidebarItem key={item.label + item.id} {...item} />;
       }
       return null;
     });
@@ -273,7 +238,7 @@ const AppSidebar = () => {
       if (section.hidden) return null;
 
       return (
-        <div key={section.label}>
+        <div key={section.label + section.id}>
           {index > 0 && <SidebarSeparator />}
 
           {section.children?.length ? (

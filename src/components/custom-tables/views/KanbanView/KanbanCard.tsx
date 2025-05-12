@@ -6,7 +6,7 @@ import {
   CustomTableRecord,
   CustomTableSchema,
 } from "@/types/customTable";
-import SingleSelectRenderer from "../../field-renderers/SingleSelectRenderer";
+import SingleSelectRenderer from "../../../field-renderers/SingleSelectRenderer";
 import { getCustomTableColor } from "@/utils/customTableHelpers";
 import { useDataViewContext } from "@/contexts/DataViewProvider";
 

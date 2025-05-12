@@ -4,7 +4,7 @@ import {
   FormFieldType,
   FormFieldOption,
 } from "@/components/form-builder/types";
-import { getFieldRenderer } from "./field-renderers";
+import { getFieldRenderer } from "../field-renderers";
 import CustomTableEntityField from "./EntityField";
 import pluralize from "pluralize";
 import { SystemSettings } from "@/contexts/SystemSettingsProvider/SystemSettingsContext";

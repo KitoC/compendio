@@ -1,5 +1,5 @@
 import { FieldRendererProps } from "./index";
-import RecordTag from "../RecordTag";
+import RecordTag from "../custom-tables/RecordTag";
 
 // TODO: re-implement this
 const MultipleRecordLinksRenderer = ({

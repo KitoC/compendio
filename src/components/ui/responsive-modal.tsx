@@ -107,42 +107,51 @@ const ResponsiveModal = ({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen} modal={modal}>
-      {Trigger && (
-        <DialogTrigger asChild>
-          <Trigger isOpen={isOpen} setIsOpen={setIsOpen} />
-        </DialogTrigger>
-      )}
-      <DialogContent
-        className={cn(
-          "p-4 border-0 max-w-3xl h-[80vh] bg-background",
-          className
+    <div
+      onKeyDown={(e) => {
+        e.stopPropagation();
+      }}
+      onKeyDownCapture={(e) => {
+        e.stopPropagation();
+      }}
+    >
+      <Dialog open={isOpen} onOpenChange={setIsOpen} modal={modal}>
+        {Trigger && (
+          <DialogTrigger asChild>
+            <Trigger isOpen={isOpen} setIsOpen={setIsOpen} />
+          </DialogTrigger>
         )}
-        onOpenAutoFocus={onOpenAutoFocus}
-        hideOverlay={hideOverlay}
-        onPointerDownOutside={onPointerDownOutside}
-        onCloseAutoFocus={onCloseAutoFocus}
-        onInteractOutside={onInteractOutside}
-        onEscapeKeyDown={onEscapeKeyDown}
-      >
-        {header && (
-          <DialogHeader className={headerClassName}>
-            {title && <DialogTitle>{title}</DialogTitle>}
-            {description && (
-              <DialogDescription>{description}</DialogDescription>
-            )}
-            {header}
-          </DialogHeader>
-        )}
-        <div className={cn("flex-1 overflow-auto p-6", bodyClassName)}>
-          {children}
-        </div>
+        <DialogContent
+          className={cn(
+            "p-4 border-0 max-w-3xl h-[80vh] bg-background",
+            className
+          )}
+          onOpenAutoFocus={onOpenAutoFocus}
+          hideOverlay={hideOverlay}
+          onPointerDownOutside={onPointerDownOutside}
+          onCloseAutoFocus={onCloseAutoFocus}
+          onInteractOutside={onInteractOutside}
+          onEscapeKeyDown={onEscapeKeyDown}
+        >
+          {header && (
+            <DialogHeader className={headerClassName}>
+              {title && <DialogTitle>{title}</DialogTitle>}
+              {description && (
+                <DialogDescription>{description}</DialogDescription>
+              )}
+              {header}
+            </DialogHeader>
+          )}
+          <div className={cn("flex-1 overflow-auto p-6", bodyClassName)}>
+            {children}
+          </div>
 
-        {footer && (
-          <DialogFooter className={footerClassName}>{footer}</DialogFooter>
-        )}
-      </DialogContent>
-    </Dialog>
+          {footer && (
+            <DialogFooter className={footerClassName}>{footer}</DialogFooter>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 
