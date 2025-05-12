@@ -1,0 +1,63 @@
+/* Calendar Style Overrides for Tailwind Integration */
+
+.rbc-calendar {
+  background: transparent;
+  font-family: inherit;
+}
+
+.rbc-toolbar {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.rbc-event {
+  background: transparent;
+  border: none;
+  color: inherit;
+  padding: 0;
+  box-shadow: none;
+}
+
+.rbc-selected {
+  background: rgba(59, 130, 246, 0.1) !important; /* Tailwind blue-500/10 */
+  color: inherit;
+}
+
+.rbc-today {
+  background: rgba(59, 130, 246, 0.05) !important; /* Tailwind blue-500/5 */
+}
+
+.rbc-row-segment,
+.rbc-agenda-event-cell {
+  padding: 0 !important;
+}
+
+.rbc-off-range-bg {
+  background: #f9fafb !important; /* Tailwind gray-50 */
+}
+
+.rbc-header {
+  border: none;
+  background: transparent;
+  font-weight: 500;
+}
+
+.rbc-time-header-content,
+.rbc-time-content {
+  border: none;
+}
+
+.rbc-time-slot {
+  border: none;
+}
+
+.rbc-agenda-table {
+  border: none;
+}
+
+.rbc-agenda-date-cell,
+.rbc-agenda-time-cell,
+.rbc-agenda-event-cell {
+  border: none;
+}
