@@ -2,10 +2,10 @@ import Page from "@/components/Page";
 import { Card } from "@/components/ui/card";
 import { GridView } from "@/components/views";
 import { Quote, QuoteService } from "@/services/supabase/QuoteService";
-import gridViewColumns from "./gridViewColumns";
+import quoteColumns from "./quoteColumns";
 import { useServiceListQuery } from "@/hooks/queries/useServiceListQuery";
 import { Button } from "@/components/ui/button";
-import { EditIcon, FilePlusIcon, FileTextIcon, TrashIcon } from "lucide-react";
+import { EditIcon, FileTextIcon, TrashIcon } from "lucide-react";
 import { paths } from "@/utils/pathHelpers";
 import { useNavigate } from "react-router-dom";
 import { useTenant } from "@/contexts/TenantContext";
@@ -37,57 +37,55 @@ export const QuotesGridPage = () => {
   });
 
   return (
-    <Page title="Quotes" subtitle="Manage your quotes and view their status">
-      <Card className="flex-grow flex flex-col p-4 gap-4">
-        <GridView
-          data={response.data}
-          count={response.count}
-          isLoading={response.isLoading}
-          isFetching={response.isFetching}
-          setQuery={response.setQuery}
-          query={response.query}
-          service={quoteService}
-          columns={gridViewColumns}
-          emptyMessage={
-            <div className="flex flex-col items-center justify-center h-full gap-2">
-              <p className="text-muted-foreground text-md font-medium">
-                No quotes found
-              </p>
-              <Button
-                onClick={() => {
-                  navigate(paths.getNewQuotePath(urlTenantAlias));
-                }}
-              >
-                <FileTextIcon />
-                Create Quote
-              </Button>
-            </div>
-          }
-          permissions={{
-            create: true,
-            read: true,
-            update: true,
-            delete: true,
-            export: true,
-          }}
-          actions={[
-            {
-              id: "edit",
-              label: "Edit",
-              icon: <EditIcon />,
-              onClick: (record) => {},
+    <Card className="h-full flex flex-col p-4 gap-4">
+      <GridView
+        data={response.data}
+        count={response.count}
+        isLoading={response.isLoading}
+        isFetching={response.isFetching}
+        setQuery={response.setQuery}
+        query={response.query}
+        service={quoteService}
+        columns={quoteColumns}
+        emptyMessage={
+          <div className="flex flex-col items-center justify-center h-full gap-2">
+            <p className="text-muted-foreground text-md font-medium">
+              No quotes found
+            </p>
+            <Button
+              onClick={() => {
+                navigate(paths.getNewQuotePath(urlTenantAlias));
+              }}
+            >
+              <FileTextIcon />
+              Create Quote
+            </Button>
+          </div>
+        }
+        permissions={{
+          create: true,
+          read: true,
+          update: true,
+          delete: true,
+          export: true,
+        }}
+        actions={[
+          {
+            id: "edit",
+            label: "Edit",
+            icon: <EditIcon />,
+            onClick: (record) => {},
+          },
+          {
+            id: "delete",
+            label: "Delete",
+            icon: <TrashIcon />,
+            onClick: (record) => {
+              response.deleteRecord({ record });
             },
-            {
-              id: "delete",
-              label: "Delete",
-              icon: <TrashIcon />,
-              onClick: (record) => {
-                response.deleteRecord({ record });
-              },
-            },
-          ]}
-        />
-      </Card>
-    </Page>
+          },
+        ]}
+      />
+    </Card>
   );
 };

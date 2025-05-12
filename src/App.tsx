@@ -27,7 +27,11 @@ import { VoiceProvider } from "./contexts/VoiceProvider";
 import { NotificationProvider } from "./contexts/NotificationProvider";
 import { PwaInstallPrompt } from "./components/PwaInstallPrompt";
 import BetaAccess from "./pages/BetaAccess";
-import { QuotesGridPage } from "./pages/application-layout/Quotes/QuotesGridPage";
+import {
+  QuotesGridPage,
+  QuoteItemsGridPage,
+  QuotesIndex,
+} from "./pages/application-layout/Quotes";
 import { ClientsGridPage } from "./pages/application-layout/Clients/ClientsGridPage";
 import NewQuote from "./pages/application-layout/Quotes/NewQuote";
 import { StaffMembersGridPage } from "./pages/application-layout/StaffManagement/StaffMembersGridPage";
@@ -71,11 +75,15 @@ function App() {
                       element={<ApplicationLayout />}
                     >
                       <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
-                      <Route
-                        path={ROUTES.QUOTES}
-                        element={<QuotesGridPage />}
-                      ></Route>
                       <Route path={ROUTES.QUOTES_NEW} element={<NewQuote />} />
+                      <Route path={ROUTES.QUOTES} element={<QuotesIndex />}>
+                        <Route index element={<QuotesGridPage />} />
+                        <Route
+                          path={ROUTES.QUOTE_ITEMS}
+                          element={<QuoteItemsGridPage />}
+                        />
+                      </Route>
+
                       <Route
                         path={ROUTES.CLIENTS}
                         element={<ClientsGridPage />}

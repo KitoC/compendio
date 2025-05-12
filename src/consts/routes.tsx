@@ -23,6 +23,7 @@ export const APP_ROUTES = {
   QUOTES: "/:tenantId/app/quotes",
   QUOTES_NEW: "/:tenantId/app/quotes/new",
   QUOTE: "/:tenantId/app/quotes/:quoteId",
+  QUOTE_ITEMS: "items",
   STAFF_MEMBERS: "/:tenantId/app/staff-members",
   CLIENTS: "/:tenantId/app/clients",
   AGENT_CHAT: "/:tenantId/app/assistant-chat/:id",
