@@ -9,7 +9,7 @@ import RequestAccess from "./pages/RequestAccess";
 import AccessPending from "./pages/AccessPending";
 import Dashboard from "./pages/application-layout/Dashboard";
 import AgentChat from "./pages/application-layout/AgentChat";
-import { ROUTES } from "./lib/constants";
+import { ROUTES } from "./consts/routes";
 import AgentDetail from "./pages/application-layout/settings/AgentDetail";
 import AgentWorkflowsSettings from "./pages/application-layout/settings/AgentWorkflowsSettings";
 import AgentsSettings from "./pages/application-layout/settings/AgentsSettings";
@@ -38,7 +38,8 @@ import { PwaInstallPrompt } from "./components/PwaInstallPrompt";
 import BetaAccess from "./pages/BetaAccess";
 import DataNavigationPage from "./pages/application-layout/DataNavigationPage";
 import DataNavigationViewPage from "./pages/application-layout/DataNavigationViewPage";
-
+import Quotes from "./pages/application-layout/Quotes";
+import Clients from "./pages/application-layout/Clients";
 function App() {
   return (
     <QueryProvider>
@@ -78,10 +79,12 @@ function App() {
                       element={<ApplicationLayout />}
                     >
                       <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
-                      <Route
+                      <Route path={ROUTES.QUOTES} element={<Quotes />} />
+                      <Route path={ROUTES.CLIENTS} element={<Clients />} />
+                      {/* <Route
                         path={ROUTES.ONBOARDING}
                         element={<OnboardingPage />}
-                      />
+                      /> */}
                       {/* <Route
                         path={ROUTES.CUSTOM_TABLE_DATA}
                         element={<CustomTablePage />}
@@ -92,7 +95,7 @@ function App() {
                         />
                       </Route> */}
 
-                      <Route
+                      {/* <Route
                         path={ROUTES.DATA_NAVIGATION}
                         element={<DataNavigationPage />}
                       >
@@ -101,7 +104,7 @@ function App() {
                           path={ROUTES.DATA_NAVIGATION_VIEW}
                           element={<DataNavigationViewPage />}
                         />
-                      </Route>
+                      </Route> */}
 
                       <Route path={ROUTES.AGENT_CHAT} element={<AgentChat />} />
 
@@ -111,15 +114,15 @@ function App() {
                           path={ROUTES.SETTINGS_APPEARANCE}
                           element={<AppearanceSettings />}
                         />
-                        <Route
+                        {/* <Route
                           path={ROUTES.SETTINGS_AGENTS}
                           element={<AgentsSettings />}
                         />
                         <Route
                           path={ROUTES.SETTINGS_AGENTS_DETAIL}
                           element={<AgentDetail />}
-                        />
-                        <Route
+                        /> */}
+                        {/* <Route
                           path={ROUTES.SETTINGS_AGENT_WORKFLOWS}
                           element={<AgentWorkflowsSettings />}
                         />
@@ -130,7 +133,7 @@ function App() {
                         <Route
                           path={ROUTES.SETTINGS_WORKFLOW_DETAIL}
                           element={<WorkflowDetail />}
-                        />
+                        /> */}
                         <Route
                           path={ROUTES.SETTINGS_INTEGRATIONS}
                           element={<IntegrationsSettings />}
@@ -143,18 +146,18 @@ function App() {
                           path={ROUTES.SETTINGS_WORKFLOW_INSTANCES}
                           element={<WorkflowInstancesSettings />}
                         />
-                        <Route
+                        {/* <Route
                           path={ROUTES.SETTINGS_CUSTOM_TABLES}
                           element={<CustomTablesPage />}
-                        />
-                        <Route
+                        /> */}
+                        {/* <Route
                           path={ROUTES.SETTINGS_CUSTOM_TABLES_DETAIL}
                           element={<CustomTableForm tableId="" />}
                         />
                         <Route
                           path={ROUTES.SETTINGS_CUSTOM_TABLES_NEW}
                           element={<CustomTableForm tableId="" />}
-                        />
+                        /> */}
                         <Route
                           path={ROUTES.SETTINGS_CUSTOM_ROLES_DETAIL}
                           element={<CustomRoleForm />}
@@ -163,10 +166,10 @@ function App() {
                           path={ROUTES.SETTINGS_CUSTOM_ROLES_NEW}
                           element={<CustomRoleForm />}
                         />
-                        <Route
+                        {/* <Route
                           path={ROUTES.SETTINGS_TABLE_BUILDER}
                           element={<TableBuilderPage />}
-                        />
+                        /> */}
                         {/* Default Settings Route */}
                         <Route
                           index

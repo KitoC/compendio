@@ -1,6 +1,6 @@
 import { useMemo, useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ROUTES } from "@/lib/constants";
+import { ROUTES } from "@/consts/routes";
 import DataTable, { Column } from "@/components/data-table";
 import { Pencil, Trash2, Plus, Loader2 } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";

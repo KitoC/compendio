@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { ROUTES } from "@/lib/constants";
+import { ROUTES } from "@/consts/routes";
 import {
   Card,
   CardContent,

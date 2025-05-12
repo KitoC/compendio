@@ -10,7 +10,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
 import { LogOut, User, MessageSquare, Menu, X } from "lucide-react";
-import { ROUTES } from "@/lib/constants";
+import { ROUTES } from "@/consts/routes";
 
 const Navbar: React.FC = () => {
   const { user, signOut } = useAuth();

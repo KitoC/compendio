@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TenantContext } from "./TenantContext";
-import { ROUTES } from "@/lib/constants";
+import { ROUTES } from "@/consts/routes";
 import { Database } from "@/integrations/supabase/types";
 import Loader from "@/components/ui/loader";
 import { uniqueNamesGenerator, colors, Config } from "unique-names-generator";

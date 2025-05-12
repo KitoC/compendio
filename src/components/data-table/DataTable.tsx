@@ -46,7 +46,7 @@ const defaultPermissions: UserPermissions = {
   export: true,
 };
 
-function DataTable<T extends object>({
+function DataTable<T extends Record<string, unknown>>({
   data,
   idField = "id" as keyof T,
   columns: providedColumns,
@@ -394,7 +394,7 @@ function DataTable<T extends object>({
           item={editingItem as unknown as Record<string, unknown>}
           onSave={handleSave}
           columns={columns as unknown as Column<Record<string, unknown>>[]}
-          idField={idField}
+          idField={idField as string}
           isCreating={isCreating}
           getFormConfig={getFormConfig}
         />

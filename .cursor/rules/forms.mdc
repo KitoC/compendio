@@ -1,0 +1,399 @@
+---
+description:
+globs: src/**
+alwaysApply: false
+---
+
+# Form System Architecture
+
+The application implements a flexible and powerful form system using a configuration-based approach. This allows for creating complex forms with minimal boilerplate code.
+
+## Form Configuration Structure
+
+Each form is defined by a `FormConfig` object that contains sections, fields, and various customization options:
+
+```typescript
+// Example form configuration
+const exampleFormConfig: FormConfig = {
+  id: "example-form",
+  title: "Example Form",
+  description: "This form allows users to create or edit an example.",
+  sections: [
+    {
+      id: "basic-info",
+      title: "Basic Information",
+      description: "Enter the basic details of the example.",
+      fields: [
+        {
+          id: "name",
+          name: "name",
+          label: "Name",
+          type: "text",
+          placeholder: "Enter name",
+          validation: {
+            required: true,
+            minLength: 3,
+            maxLength: 50,
+          },
+        },
+        {
+          id: "description",
+          name: "description",
+          label: "Description",
+          type: "textarea",
+          placeholder: "Enter description",
+        },
+        {
+          id: "category",
+          name: "category",
+          label: "Category",
+          type: "select",
+          options: [
+            { label: "Category A", value: "a" },
+            { label: "Category B", value: "b" },
+            { label: "Category C", value: "c" },
+          ],
+          validation: {
+            required: true,
+          },
+        },
+      ],
+    },
+    {
+      id: "advanced-settings",
+      title: "Advanced Settings",
+      description: "Configure advanced options.",
+      fields: [
+        {
+          id: "isActive",
+          name: "is_active",
+          label: "Active Status",
+          type: "switch",
+          defaultValue: true,
+        },
+        {
+          id: "dueDate",
+          name: "due_date",
+          label: "Due Date",
+          type: "date",
+          hidden: (values) => !values.is_active,
+        },
+      ],
+      hidden: (values) => values.category === "a",
+    },
+  ],
+  submitButtonText: "Save Example",
+  showReset: true,
+};
+```
+
+## Type Definitions
+
+The form system is built around the following core TypeScript interfaces:
+
+```typescript
+export type FormFieldType =
+  | "text"
+  | "textarea"
+  | "number"
+  | "email"
+  | "password"
+  | "select"
+  | "checkbox"
+  | "radio"
+  | "date"
+  | "custom"
+  | "datetime"
+  | "multiselect"
+  | "integer"
+  | "boolean"
+  | "switch"
+  | "conditional"
+  | "reference"
+  | "timestamp"
+  | "uuid"
+  | "record-select";
+
+export interface FormFieldOption {
+  label: string;
+  value: string;
+  color?: string;
+  variant?: "airtable" | "default";
+}
+
+export interface FormFieldValidation {
+  required?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  pattern?: string;
+  min?: number;
+  max?: number;
+  custom?: (value: unknown) => boolean | string;
+}
+
+export interface CustomFieldComponentProps {
+  id: string;
+  name: string;
+  type: string;
+  value: any;
+  onChange: (name: string, value: any) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  error?: string;
+  touched?: boolean;
+  formValues: Record<string, unknown>;
+  setFormValues: (values: Record<string, unknown>) => void;
+}
+
+export interface FormFieldSideEffectParams {
+  name: string;
+  value: unknown;
+  formValues: Record<string, unknown>;
+  setFormValues: (values: Record<string, unknown>) => void;
+}
+
+export interface FormField {
+  id: string | number;
+  name: string;
+  label?: string;
+  type: FormFieldType;
+  placeholder?: string;
+  defaultValue?: unknown;
+  options?: FormFieldOption[];
+  validation?: FormFieldValidation;
+  validationAsyncOnBlur?: (
+    value: unknown
+  ) => Promise<{ isValid: boolean; error?: string }>;
+  disabled?: boolean;
+  className?: string;
+  hidden?: boolean | ((values: Record<string, unknown>) => boolean);
+  props?: Record<string, unknown>;
+  description?: string;
+  hint?: string;
+  afterLabel?: React.ReactNode;
+  onChangeSideEffect?: (params: FormFieldSideEffectParams) => void;
+  CustomComponent?: React.ComponentType<CustomFieldComponentProps>;
+  renderAfterInput?: (
+    value: unknown,
+    formValues: Record<string, unknown>
+  ) => React.ReactNode;
+  renderBelowInput?: (
+    value: unknown,
+    formValues: Record<string, unknown>
+  ) => React.ReactNode;
+}
+
+export interface FormSection {
+  id: string;
+  title?: string;
+  description?: string;
+  fields: FormField[];
+  className?: string;
+  divider?: boolean;
+  hidden?: boolean | ((values: Record<string, unknown>) => boolean);
+}
+
+export interface FormConfig {
+  id: string;
+  title?: string;
+  description?: string;
+  sections: FormSection[];
+  submitButtonText?: string;
+  resetButtonText?: string;
+  cancelButtonText?: string;
+  showReset?: boolean;
+  removeBorder?: boolean;
+  resetIconButtonAfter?: React.ReactNode;
+  cancelIconButtonAfter?: React.ReactNode;
+  cancelIconButtonBefore?: React.ReactNode;
+  resetIconButtonBefore?: React.ReactNode;
+  submitIconButtonBefore?: React.ReactNode;
+  submitIconButtonAfter?: React.ReactNode;
+  initialValues?: Record<string, unknown>;
+}
+
+export interface FormBuilderProps {
+  config: FormConfig;
+  onSubmit: (values: Record<string, unknown>) => void;
+  onFormChange?: (values: Record<string, unknown>) => void;
+  onFormChangeDebounce?: number;
+  onSubmitChangeDebounce?: number;
+  initialValues?: Record<string, unknown>;
+  isSubmitting?: boolean;
+  className?: string;
+  buttonPortalId?: string;
+  onCancel?: () => void;
+  hideSubmitButton?: boolean;
+  hideTitles?: boolean;
+  footerClassname?: string;
+  submitOnChange?: boolean;
+  contentClassName?: string;
+}
+
+export interface FormFieldProps {
+  field: FormField;
+  value: unknown;
+  onChange: (name: string, value: unknown) => void;
+  error?: string;
+  touched?: boolean;
+  formValues: Record<string, unknown>;
+  setFormValues: (values: Record<string, unknown>) => void;
+  setError: (name: string, error: string) => void;
+  menuPortalId?: string;
+}
+```
+
+## FormBuilder Component
+
+The `FormBuilder` component accepts a configuration object and handles:
+
+1. Form state management
+2. Field rendering based on type
+3. Validation (synchronous and asynchronous)
+4. Conditional visibility
+5. Form submission
+6. Side effects on field changes
+
+```tsx
+// Usage example
+import { FormBuilder } from "@/components/views/form-builder";
+import { exampleFormConfig } from "@/forms/example-form";
+import { useExamples } from "@/hooks/queries/useExamples";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/consts/routes";
+
+function CreateExamplePage() {
+  const navigate = useNavigate();
+  const { createExample } = useExamples();
+
+  const handleSubmit = async (values: Record<string, unknown>) => {
+    await createExample.mutateAsync(values);
+    navigate(ROUTES.EXAMPLES.LIST);
+  };
+
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6">Create New Example</h1>
+
+      <FormBuilder
+        config={exampleFormConfig}
+        onSubmit={handleSubmit}
+        isSubmitting={createExample.isPending}
+        onCancel={() => navigate(ROUTES.EXAMPLES.LIST)}
+      />
+    </div>
+  );
+}
+```
+
+## Advanced Form Features
+
+The form system supports several advanced features:
+
+### 1. Conditional Fields
+
+Fields can be shown/hidden based on the values of other fields:
+
+```typescript
+{
+  id: 'conditionalField',
+  name: 'additional_info',
+  label: 'Additional Information',
+  type: 'textarea',
+  hidden: (values) => values.type !== 'special'
+}
+```
+
+### 2. Async Validation
+
+Fields can perform asynchronous validation on blur:
+
+```typescript
+{
+  id: 'username',
+  name: 'username',
+  label: 'Username',
+  type: 'text',
+  validationAsyncOnBlur: async (value) => {
+    // Check if username is available
+    const response = await checkUsernameAvailability(value as string);
+    return {
+      isValid: response.available,
+      error: response.available ? undefined : 'Username is already taken'
+    };
+  }
+}
+```
+
+### 3. Side Effects
+
+Fields can trigger side effects when their values change:
+
+```typescript
+{
+  id: 'country',
+  name: 'country',
+  label: 'Country',
+  type: 'select',
+  options: COUNTRY_OPTIONS,
+  onChangeSideEffect: ({ value, formValues, setFormValues }) => {
+    // Reset state when country changes
+    setFormValues({
+      ...formValues,
+      state: '',
+      city: ''
+    });
+  }
+}
+```
+
+### 4. Custom Components
+
+Fields can use custom React components for rendering:
+
+```typescript
+{
+  id: 'customField',
+  name: 'custom_data',
+  label: 'Custom Input',
+  type: 'custom',
+  CustomComponent: MyCustomInputComponent
+}
+```
+
+### 5. Form Sections
+
+Forms can be organized into sections, which can also have conditional visibility:
+
+```typescript
+{
+  id: 'advanced-section',
+  title: 'Advanced Options',
+  description: 'These options are only needed for special cases',
+  hidden: (values) => values.type !== 'advanced',
+  fields: [
+    // Fields for this section
+  ]
+}
+```
+
+### 6. Field Rendering Customization
+
+Additional content can be rendered before, after, or below input fields:
+
+```typescript
+{
+  id: 'price',
+  name: 'price',
+  label: 'Price',
+  type: 'number',
+  renderAfterInput: (value) => (
+    <span className="text-gray-600 ml-2">USD</span>
+  ),
+  renderBelowInput: (value, formValues) => (
+    <div className="text-sm text-gray-500 mt-1">
+      {`Discounted price: $${Number(value || 0) * 0.9}`}
+    </div>
+  )
+}
+```

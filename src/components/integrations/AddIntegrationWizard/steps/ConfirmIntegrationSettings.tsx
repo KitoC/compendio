@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { INTEGRATION_TYPES, ROUTES } from "@/lib/constants";
+import { INTEGRATION_TYPES, ROUTES } from "@/consts/routes";
 import {
   DialogHeader,
   DialogTitle,

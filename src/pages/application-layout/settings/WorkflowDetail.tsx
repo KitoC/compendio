@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { ROUTES } from "@/lib/constants";
+import { ROUTES } from "@/consts/routes";
 
 import { ArrowLeft, Save, Loader2, Undo2, Redo2 } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";

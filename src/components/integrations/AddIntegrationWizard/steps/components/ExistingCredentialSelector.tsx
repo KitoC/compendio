@@ -9,7 +9,7 @@ import {
 import { Select } from "@/components/ui/select";
 import CredentialCard from "./CredentialCard";
 import { ICredential, WizardState } from "../../types";
-import { INTEGRATION_TYPES } from "@/lib/constants";
+import { INTEGRATION_TYPES } from "@/consts/routes";
 import { User } from "lucide-react";
 import { hasValidationError } from "../../utils";
 

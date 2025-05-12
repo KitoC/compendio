@@ -6,7 +6,7 @@ import Hero from "@/components/Hero";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
 import { MessageSquare } from "lucide-react";
-import { ROUTES } from "@/lib/constants";
+import { ROUTES } from "@/consts/routes";
 
 // This value will change with each build
 const BUILD_TIMESTAMP = new Date().toISOString();

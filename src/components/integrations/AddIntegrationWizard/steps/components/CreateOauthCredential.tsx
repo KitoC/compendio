@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { INTEGRATION_TYPES } from "@/lib/constants";
+import { INTEGRATION_TYPES } from "@/consts/routes";
 import FormBuilder from "@/components/form-builder";
 import { INTEGRATION_FORM_CONFIGS } from "@/forms/integrations";
 import { Button } from "@/components/ui/button";

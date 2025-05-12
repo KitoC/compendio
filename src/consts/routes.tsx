@@ -28,6 +28,8 @@ export const ROUTES = {
   TENANT_GUARD: "/:tenantId",
   DASHBOARD: "/:tenantId/app",
   APP: "/app",
+  QUOTES: "/:tenantId/app/quotes",
+  CLIENTS: "/:tenantId/app/clients",
   AGENT_CHAT: "/:tenantId/app/assistant-chat/:id",
   CUSTOM_TABLE_DATA: "/:tenantId/app/ct/:id",
   DATA_NAVIGATION: "/:tenantId/app/nav/:dataNavigationPath",
@@ -62,36 +64,36 @@ export const settingsItems = [
         url: ROUTES.SETTINGS_APPEARANCE,
         icon: <Palette className="h-4 w-4" />,
       },
-      {
-        label: "Agents",
-        url: ROUTES.SETTINGS_AGENTS,
-        icon: <Bot className="h-4 w-4" />,
-      },
-      {
-        label: "Workflows",
-        url: ROUTES.SETTINGS_WORKFLOWS,
-        icon: <Workflow className="h-4 w-4" />,
-      },
-      {
-        label: "Workflow Executions",
-        url: ROUTES.SETTINGS_WORKFLOW_INSTANCES,
-        icon: <GitBranch className="h-4 w-4" />,
-      },
+      // {
+      //   label: "Agents",
+      //   url: ROUTES.SETTINGS_AGENTS,
+      //   icon: <Bot className="h-4 w-4" />,
+      // },
+      // {
+      //   label: "Workflows",
+      //   url: ROUTES.SETTINGS_WORKFLOWS,
+      //   icon: <Workflow className="h-4 w-4" />,
+      // },
+      // {
+      //   label: "Workflow Executions",
+      //   url: ROUTES.SETTINGS_WORKFLOW_INSTANCES,
+      //   icon: <GitBranch className="h-4 w-4" />,
+      // },
       {
         label: "Integrations",
         url: ROUTES.SETTINGS_INTEGRATIONS,
         icon: <Link className="h-4 w-4" />,
       },
-      {
-        label: "Custom Tables",
-        url: ROUTES.SETTINGS_CUSTOM_TABLES,
-        icon: <Table2 className="h-4 w-4" />,
-      },
-      {
-        label: "Table Builder",
-        url: ROUTES.SETTINGS_TABLE_BUILDER,
-        icon: <Table2 className="h-4 w-4" />,
-      },
+      // {
+      //   label: "Custom Tables",
+      //   url: ROUTES.SETTINGS_CUSTOM_TABLES,
+      //   icon: <Table2 className="h-4 w-4" />,
+      // },
+      // {
+      //   label: "Table Builder",
+      //   url: ROUTES.SETTINGS_TABLE_BUILDER,
+      //   icon: <Table2 className="h-4 w-4" />,
+      // },
     ],
   },
 ];

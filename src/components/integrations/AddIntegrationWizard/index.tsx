@@ -21,7 +21,7 @@ import {
   initialWizardState,
   setIntegrationWizardState,
 } from "./utils";
-import { INTEGRATION_TYPES } from "@/lib/constants";
+import { INTEGRATION_TYPES } from "@/consts/routes";
 
 const AddIntegrationWizard = ({
   isOpen,

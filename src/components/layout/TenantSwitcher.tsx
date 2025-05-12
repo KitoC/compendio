@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Check, ChevronDown, Building } from "lucide-react";
+import { Check, ChevronDown, Building, Layers2, Layers } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTenant } from "@/contexts/TenantContext";
 import { supabase } from "@/integrations/supabase/client";
-import { ROUTES } from "@/lib/constants";
+import { ROUTES } from "@/consts/routes";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 interface TenantOption {
@@ -71,12 +71,12 @@ const TenantSwitcher: React.FC = () => {
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          className="w-full justify-between border-dashed bg-background hover:bg-muted"
+          className="w-full justify-between border-dashed bg-sidebar-accent text-primary disabled:opacity-100"
           disabled={isLoading || tenants.length <= 1}
         >
           <div className="flex items-center gap-2 text-left">
-            <Building className="h-4 w-4" />
-            <span className="truncate">
+            <Layers2 className="h-4 w-4" />
+            <span className="truncate text-primary">
               {tenantData.name || tenantData.workspace}
             </span>
           </div>

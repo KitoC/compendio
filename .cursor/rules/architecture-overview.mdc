@@ -1,0 +1,179 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+# Architecture Overview
+
+## Project Overview
+
+This document outlines the high-level architecture of our React-Supabase application. The application uses React with TailwindCSS for the frontend, Supabase for the backend database and authentication, and implements a service layer pattern between Supabase and TanStack Query for data fetching and state management.
+
+## High-Level Architecture
+
+```
+┌─────────────────────────────────────────────────────┐
+│                                                     │
+│                    React Frontend                   │
+│            (Components + TailwindCSS)               │
+│                                                     │
+└──────────────────────┬──────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────┐
+│                                                     │
+│                  TanStack Query                     │
+│               (Data Fetching, Cache)                │
+│                                                     │
+└──────────────────────┬──────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────┐
+│                                                     │
+│                   Service Layer                     │
+│      (BaseService → ExampleService classes)         │
+│                                                     │
+└──────────────────────┬──────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────┐
+│                                                     │
+│                     Supabase                        │
+│          (Database, Auth, Storage, Functions)       │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+```
+
+## Layer Responsibilities
+
+### Frontend Layer (React + TailwindCSS)
+
+- User interface components and layouts
+- Component state management
+- Form handling and validation
+- User interactions and events
+- Styling with TailwindCSS utility classes
+
+### Data Fetching Layer (TanStack Query)
+
+- Declarative data fetching
+- Caching and background updates
+- Loading and error states
+- Pagination and infinite scrolling
+- Optimistic updates
+
+### Service Layer
+
+- Abstract Supabase operations
+- CRUD operations through BaseService
+- Table-specific logic in ExampleService classes
+- Data transformation and mapping
+- Business rules implementation
+
+### Backend Layer (Supabase)
+
+- Database tables and relationships
+- Authentication and authorization
+- Storage for files and assets
+- Edge functions for server-side logic
+- Realtime subscriptions
+
+## Technology Stack
+
+- **Frontend**: React with TypeScript
+- **UI Styling**: TailwindCSS
+- **State Management**: React Context + TanStack Query
+- **Backend & Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth
+- **Serverless Functions**: Supabase Edge Functions (Deno)
+- **File Storage**: Supabase Storage
+
+## Tools and Libraries
+
+- **React**: ^18.0.0
+- **TypeScript**: ^5.0.0
+- **TailwindCSS**: ^3.3.0
+- **TanStack Query** (React Query): ^5.0.0
+- **Supabase JS Client**: ^2.7.0
+- **Supabase Auth Helpers**: ^0.5.0
+- **React Router**: ^6.0.0
+- **Zod**: ^3.0.0 (for schema validation)
+- **DayJS**: ^1.11.0 (for date manipulation)
+- **React Hook Form**: ^7.0.0 (for form handling)
+
+## Security Guidelines
+
+### Supabase Security Best Practices
+
+- **Row-Level Security (RLS)**
+
+  - Implement RLS policies for all tables
+  - Never disable RLS unless absolutely necessary
+  - Example policy:
+    ```sql
+    -- Users can only read/write their own data
+    CREATE POLICY "Users can manage their own profiles"
+    ON profiles
+    FOR ALL
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
+    ```
+
+- **Authentication**
+
+  - Use Supabase Auth for all authentication needs
+  - Implement appropriate session management
+  - Set up proper password policies
+  - Consider enabling 2FA for admin accounts
+
+- **Edge Functions Security**
+
+  - Validate and sanitize all inputs
+  - Use proper error handling to avoid leaking sensitive information
+  - Check authentication and authorization in each function
+  - Keep environment variables secure
+
+- **Frontend Security**
+  - Never store sensitive information in localStorage
+  - Implement proper CSRF protection
+  - Use Content Security Policy (CSP) headers
+  - Sanitize user inputs to prevent XSS attacks
+
+### Data Protection
+
+- Encrypt sensitive data at rest when necessary
+- Limit the exposure of user IDs and other identifiers
+- Implement proper access controls
+- Follow data protection regulations (GDPR, CCPA, etc.)
+
+## Performance Considerations
+
+### React Performance
+
+- Use React.memo for components that render often but rarely change
+- Implement virtualization for long lists (react-window or react-virtualized)
+- Code-splitting with React.lazy() and Suspense
+- Use proper key props in lists (unique and stable identifiers)
+
+### TanStack Query Optimization
+
+- Configure appropriate staleTime and cacheTime for queries
+- Use selective invalidation of queries
+- Implement optimistic updates for a better UX
+- Set up prefetching for anticipated data needs
+
+### Supabase Performance
+
+- Create appropriate indexes on frequently queried columns
+- Use Row-Level Security (RLS) policies effectively
+- Optimize select statements (avoid SELECT \* when possible)
+- Use foreign key constraints for data integrity
+- Consider using Supabase Views for complex queries
+
+### General Optimizations
+
+- Implement proper pagination for large datasets
+- Use debounce for search inputs and other frequent events
+- Lazy load images and components
+- Minimize bundle size with tree-shaking and code-splitting

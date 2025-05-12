@@ -18,7 +18,7 @@ import { IDataView } from "@/services/DataViewsService";
 import { useState } from "react";
 import DataViewModal from "@/components/DataViewModal";
 import { useNavigate } from "react-router-dom";
-import { ROUTES } from "@/lib/constants";
+import { ROUTES } from "@/consts/routes";
 import { kebabCase } from "lodash";
 
 interface ViewTypeSelectorProps {

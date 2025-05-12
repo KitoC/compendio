@@ -93,7 +93,7 @@ export interface EditModalProps<T extends object> {
   item?: T | null;
   onSave: (item: T) => Promise<void>;
   columns: Column<T>[];
-  idField: keyof T;
+  idField: string;
   isCreating?: boolean;
   getFormConfig?: (config: FormConfig, value: T) => FormConfig;
 }

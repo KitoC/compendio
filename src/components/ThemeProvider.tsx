@@ -1,4 +1,4 @@
-import { ROUTES } from "@/lib/constants";
+import { ROUTES } from "@/consts/routes";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { type ThemeProviderProps } from "next-themes/dist/types";
 import { useLocation } from "react-router-dom";

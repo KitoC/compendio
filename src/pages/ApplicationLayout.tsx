@@ -2,10 +2,10 @@ import { ReactNode, useEffect, Suspense, useRef } from "react";
 import { useLocation, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import AppSidebar from "@/components/layout/AppSidebar";
-import { ROUTES } from "@/lib/constants";
+import { ROUTES } from "@/consts/routes";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Menu } from "lucide-react";
+import { Menu, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AiAgentsProvider } from "@/contexts/AiAgents/AiAgentsProvider";
 import { CustomTablesProvider } from "@/contexts/CustomTables/CustomTablesProvider";
@@ -112,41 +112,50 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
                     } as React.CSSProperties
                   }
                 >
-                  {isMobile && (
-                    <header
-                      ref={headerRef}
-                      className="fixed top-0 left-0 right-0 z-40 h-[var(--header-height)]  w-full flex items-center h-fit px-4 border-b bg-background shadow pt-safe-top"
-                    >
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="mr-2 h-14 w-14 p-2"
-                        onClick={() =>
-                          document.dispatchEvent(
-                            new CustomEvent("toggle-sidebar")
-                          )
-                        }
-                      >
-                        <Menu />
-                        <span className="sr-only">Toggle menu</span>
-                      </Button>
-                      <div id="page-header-anchor" className="flex-1"></div>
-                    </header>
-                  )}
                   {<AppSidebar />}
 
                   {isMobile ? (
                     suspensedContent
                   ) : (
-                    <main
-                      className={clsx(" flex-grow overflow-y-scroll relative", {
-                        "h-screen": !isMobile,
-                        "h-[calc(100vh-var(--header-height))] pb-[var(--page-bottom-padding)]":
-                          isMobile,
-                      })}
-                    >
-                      {suspensedContent}
-                    </main>
+                    <div className="flex flex-col m-h-full flex-grow">
+                      <header
+                        ref={headerRef}
+                        className="z-40  w-full flex items-center h-fit px-4 border-b bg-header py-2"
+                      >
+                        {isMobile && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="mr-2 h-14 w-14 p-2"
+                            onClick={() =>
+                              document.dispatchEvent(
+                                new CustomEvent("toggle-sidebar")
+                              )
+                            }
+                          >
+                            <Menu />
+                            <span className="sr-only">Toggle menu</span>
+                          </Button>
+                        )}
+
+                        <div className="ml-auto">
+                          <Button>
+                            <FileText className="h-4 w-4 mr-1" />
+                            Create quote
+                          </Button>
+                        </div>
+                      </header>
+
+                      <main
+                        className={clsx(
+                          "flex-grow overflow-y-scroll relative",
+                          isMobile &&
+                            "h-[calc(100vh-var(--header-height))] pb-[var(--page-bottom-padding)]"
+                        )}
+                      >
+                        {suspensedContent}
+                      </main>
+                    </div>
                   )}
                   <PwaInstallPrompt />
                 </SidebarProvider>

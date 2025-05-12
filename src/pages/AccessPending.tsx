@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
-import { ROUTES } from "@/lib/constants";
+import { ROUTES } from "@/consts/routes";
 import { useNavigate } from "react-router-dom";
 
 const AccessPending = () => {

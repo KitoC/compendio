@@ -1,0 +1,429 @@
+---
+description: 
+globs: src/**
+alwaysApply: false
+---
+# Services and Data Fetching
+
+## Service Layer Pattern
+
+The application implements a service layer pattern to abstract database operations and provide a consistent interface for data access.
+
+### BaseService Class
+
+The BaseService class provides a foundation for all service classes with common CRUD operations and advanced querying capabilities:
+
+```typescript
+import { supabase } from "@/integrations/supabase/client";
+
+export type ServiceQueryFilter = {
+  [key: string]:
+    | string
+    | number
+    | boolean
+    | null
+    | Record<string, string | number | boolean | null>;
+};
+
+export type ServiceQuerySort = {
+  column: string;
+  ascending?: boolean;
+};
+
+export type ServiceQueryTextSearch = {
+  column: string;
+  query: string;
+};
+
+export type ServiceQueryPagination = {
+  page: number;
+  pageSize: number;
+};
+
+export type ServiceQuery = {
+  filter?: ServiceQueryFilter;
+  sort?: ServiceQuerySort | null;
+  limit?: number | null;
+  offset?: number | null;
+  or?: string | null;
+  textSearch?: ServiceQueryTextSearch | null;
+  search?: string | null;
+  pagination?: ServiceQueryPagination | null;
+  columns?: string;
+  options?: {
+    count: "exact" | "planned" | "estimated";
+    head?: boolean;
+  };
+};
+
+type GetResponse = {
+  data: Record<string, unknown>[];
+  count: number;
+};
+
+const ACCEPTABLE_OPERATORS = [
+  "eq", "gt", "gte", "lt", "lte", "neq", 
+  "like", "ilike", "is", "in", "not"
+];
+
+export class BaseService {
+  public tableName: string;
+  public primaryKey: string;
+  public defaultColumns: string;
+  
+  constructor() {
+    this.tableName = "replace";
+    this.primaryKey = "id";
+    this.defaultColumns = "*";
+  }
+  
+  // Advanced get method with comprehensive query options
+  async get({
+    filter = {},
+    sort = null,
+    limit = null,
+    offset = null,
+    or = null,
+    textSearch = null,
+    pagination = null,
+    columns = this.defaultColumns,
+    options = { count: "exact" },
+  }: ServiceQuery = {}): Promise<GetResponse> {
+    let query = supabase.from(this.tableName).select(columns, options);
+    
+    // Handle filters with operators
+    Object.entries(filter).forEach(([key, value]) => {
+      if (typeof value === "object" && value !== null) {
+        Object.entries(value).forEach(([operator, val]) => {
+          if (ACCEPTABLE_OPERATORS.includes(operator)) {
+            query = query[operator](key, val);
+          }
+        });
+      } else {
+        query = query.eq(key, value);
+      }
+    });
+    
+    // Handle OR conditions
+    if (or) {
+      query = query.or(or);
+    }
+    
+    // Handle text search
+    if (textSearch && textSearch.column && textSearch.query) {
+      query = query.textSearch(textSearch.column, textSearch.query);
+    }
+    
+    // Handle sorting
+    if (sort) {
+      const { column, ascending = true } = sort;
+      query = query.order(column, { ascending });
+    }
+    
+    // Handle pagination
+    if (limit !== null) {
+      query = query.limit(limit);
+    }
+    
+    if (offset !== null) {
+      query = query.range(offset, offset + (limit || 10) - 1);
+    }
+    
+    if (pagination && pagination.page && pagination.pageSize) {
+      query = query.range(
+        pagination.page * pagination.pageSize,
+        (pagination.page + 1) * pagination.pageSize - 1
+      );
+    }
+    
+    const { data, error, count } = await query;
+    
+    if (error) throw error;
+    
+    return {
+      data: (data || []) as unknown as Record<string, unknown>[],
+      count: count || 0,
+    };
+  }
+  
+  // Get a single record by ID
+  async getById(id: string, columns: string = this.defaultColumns) {
+    const { data, error } = await supabase
+      .from(this.tableName)
+      .select(columns)
+      .eq(this.primaryKey, id)
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    
+    return data;
+  }
+  
+  // Create a new record
+  async create(payload: unknown) {
+    const { data, error } = await supabase
+      .from(this.tableName)
+      .insert(payload)
+      .select();
+    
+    if (error) {
+      throw error;
+    }
+    
+    return data;
+  }
+  
+  // Update an existing record
+  async update(id: string, updates: unknown) {
+    const { data, error } = await supabase
+      .from(this.tableName)
+      .update(updates)
+      .eq(this.primaryKey, id)
+      .select();
+    
+    if (error) {
+      throw error;
+    }
+    
+    return data;
+  }
+  
+  // Delete a record
+  async delete(id: string) {
+    const { error } = await supabase
+      .from(this.tableName)
+      .delete()
+      .eq(this.primaryKey, id);
+    
+    if (error) {
+      throw error;
+    }
+    
+    return { success: true };
+  }
+}
+```
+
+### Table-Specific Services
+
+Each database table has a corresponding service class that extends BaseService:
+
+```typescript
+import { BaseService } from './base-service';
+import { User } from '@/types';
+
+export class UserService extends BaseService {
+  constructor() {
+    super();
+    this.tableName = 'users';
+    this.defaultColumns = 'id, email, first_name, last_name, avatar_url, created_at';
+  }
+  
+  async getCurrentUser(): Promise<User | null> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    
+    return this.getById(user.id) as Promise<User>;
+  }
+  
+  async getUsersByTeam(teamId: string): Promise<User[]> {
+    const { data } = await this.get({
+      filter: { team_id: teamId },
+      sort: { column: 'created_at', ascending: false }
+    });
+    
+    return data as unknown as User[];
+  }
+}
+```
+
+## Data Fetching Patterns
+
+The application implements a sophisticated data fetching layer using TanStack Query integrated with the service layer. This approach provides optimistic updates, caching, and consistent error handling.
+
+### The useServiceListQuery Hook
+
+A key component in the data fetching architecture is the `useServiceListQuery` hook, which provides a reusable abstraction for working with lists of records from any service:
+
+```typescript
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  UseMutationResult,
+  UseMutateAsyncFunction,
+} from "@tanstack/react-query";
+import { useState, useMemo, useCallback } from "react";
+import { ServiceQuery } from "@/services/supabase/BaseService";
+import pluralize from "pluralize";
+import { startCase } from "lodash";
+import { toast } from "sonner";
+
+type MutationOptions = {
+  optimistic?: boolean;
+};
+
+export type MutationFnArgs<RecordType> = {
+  record: RecordType;
+  options?: MutationOptions;
+};
+
+type MutationFn<RecordType> = (
+  record: RecordType,
+  options?: MutationOptions
+) => Promise<RecordType>;
+
+export interface UseServiceListQueryOptions<RecordType> {
+  tableName: string;
+  uniqueKey: string;
+  initialQuery: ServiceQuery;
+  onFetch?: (query: ServiceQuery) => void;
+  onCreate?: MutationFn<RecordType>;
+  onUpdate?: MutationFn<RecordType>;
+  onDelete?: MutationFn<RecordType>;
+  enabled?: boolean;
+  optimistic?: boolean;
+}
+
+export function useServiceListQuery<RecordType extends { id: string }>({
+  tableName,
+  uniqueKey,
+  initialQuery,
+  onFetch,
+  onCreate,
+  onUpdate,
+  onDelete,
+  enabled = true,
+  optimistic = true,
+}: UseServiceListQueryOptions<RecordType>): UseServiceListQueryResponse<RecordType> {
+  const [query, setQuery] = useState<ServiceQuery>(initialQuery);
+  const queryClient = useQueryClient();
+  const dataQueryKey = useMemo(
+    () => [tableName, query, uniqueKey],
+    [tableName, query, uniqueKey]
+  );
+  
+  // Implementation details...
+  
+  return {
+    ...queryResults,
+    isLoading: !queryResults.isPlaceholderData && queryResults.isFetching,
+    data,
+    createRecord: createRecordMutation.mutateAsync,
+    updateRecord: updateRecordMutation.mutateAsync,
+    deleteRecord: deleteRecordMutation.mutateAsync,
+    createRecordMutation,
+    updateRecordMutation,
+    deleteRecordMutation,
+    updateOptimisticRecord,
+    invalidateQuery,
+    count,
+    query,
+    setQuery,
+  };
+}
+```
+
+### Key Features of useServiceListQuery
+
+1. **Unified Interface**: Provides a consistent interface for querying and mutating data across all services.
+
+2. **Integrated Filtering**: Works with the ServiceQuery type from the BaseService to support advanced filtering, sorting, and pagination.
+
+3. **Optimistic Updates**: Automatically updates the UI before the server responds, then reconciles the response.
+
+4. **Toast Notifications**: Provides user feedback on operations with smart toast messages.
+
+5. **Automatic Query Invalidation**: Ensures data is refreshed when needed.
+
+6. **Type Safety**: Fully typed using TypeScript generics for end-to-end type safety.
+
+### Usage with Services
+
+The hook is used with service methods to create table-specific query hooks:
+
+```typescript
+// hooks/queries/useUsers.ts
+import { useServiceListQuery } from '@/hooks/useServiceListQuery';
+import { UserService } from '@/services/user-service';
+import { User } from '@/types';
+
+export function useUsers(initialQuery = {}) {
+  const userService = new UserService();
+  
+  return useServiceListQuery<User>({
+    tableName: 'users',
+    uniqueKey: 'users-list',
+    initialQuery,
+    onFetch: (query) => userService.get(query),
+    onCreate: (record) => userService.create(record),
+    onUpdate: (record) => userService.update(record.id, record),
+    onDelete: (record) => userService.delete(record.id).then(() => record),
+  });
+}
+```
+
+### Integration with UI Components
+
+This pattern integrates seamlessly with the Table component:
+
+```tsx
+// pages/users/list.tsx
+import { Table } from '@/components/views/table';
+import { useUsers } from '@/hooks/queries/useUsers';
+import { userColumns } from '@/table-configs/user-columns';
+
+function UsersPage() {
+  const {
+    data,
+    count,
+    isLoading,
+    query,
+    setQuery,
+    createRecord,
+    updateRecord,
+    deleteRecord
+  } = useUsers({
+    sort: { column: 'created_at', ascending: false },
+    pagination: { page: 0, pageSize: 10 }
+  });
+  
+  const handleCreateUser = (userData) => {
+    createRecord({ record: userData, options: { optimistic: true } });
+  };
+  
+  return (
+    <div>
+      <h1>Users</h1>
+      
+      <button onClick={() => /* open create user form */}>
+        Add User
+      </button>
+      
+      <Table
+        data={data}
+        columns={userColumns}
+        count={count}
+        isLoading={isLoading}
+        query={query}
+        onQueryChange={setQuery}
+        onDelete={(user) => deleteRecord({ record: user, options: { optimistic: true } })}
+      />
+    </div>
+  );
+}
+```
+
+### Advanced Features
+
+1. **Query Persistence**: Maintains query state between component renders
+
+2. **Automatic Pluralization**: Uses the correct singular/plural form in toast messages
+
+3. **Optimistic Updates Toggle**: Can be disabled for critical operations
+
+4. **Temporary IDs**: Handles temporary IDs for new records before server assignment
+
+5. **Query Cancellation**: Cancels in-flight queries when optimistic updates are applied to prevent race conditions

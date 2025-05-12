@@ -1,4 +1,4 @@
-import { ROUTES } from "@/lib/constants";
+import { ROUTES } from "@/consts/routes";
 
 export const paths = {
   getDataNavigationViewPath: (

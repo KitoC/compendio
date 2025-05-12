@@ -1,10 +1,10 @@
 import { FieldRendererProps } from "./index";
 import { getCustomTableColor } from "@/utils/customTableHelpers";
 
-const SingleSelectRenderer = ({
+function SingleSelectRenderer<RecordType>({
   value,
   field,
-}: FieldRendererProps<string | number>) => {
+}: FieldRendererProps<string | number, RecordType>) {
   if (!value) return <span className="text-sm text-muted-foreground">-</span>;
 
   const option = field.options.find((option) => option.value === value);
@@ -18,6 +18,6 @@ const SingleSelectRenderer = ({
       {option?.label}
     </span>
   );
-};
+}
 
 export default SingleSelectRenderer;

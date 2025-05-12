@@ -5,3 +5,11 @@ export interface User extends SupabaseUser {
   tenant_id: string;
   role?: "admin" | "member" | "guest" | "super-admin" | "tenant-owner";
 }
+
+export interface UserPermissions {
+  create: boolean;
+  read: boolean;
+  update: boolean;
+  delete: boolean;
+  export: boolean;
+}

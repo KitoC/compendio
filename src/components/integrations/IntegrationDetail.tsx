@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { ROUTES, INTEGRATION_TYPES } from "@/lib/constants";
+import { ROUTES, INTEGRATION_TYPES } from "@/consts/routes";
 import WebhookEventsTable from "./WebhookEventsTable";
 import {
   Card,

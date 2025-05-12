@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ROUTES, INTEGRATION_TYPES } from "@/lib/constants";
+import { ROUTES, INTEGRATION_TYPES } from "@/consts/routes";
 import DataTable, { Column } from "@/components/data-table";
 import AddIntegrationWizard from "@/components/integrations/AddIntegrationWizard";
 import WebhookEventsTable from "@/components/integrations/WebhookEventsTable";

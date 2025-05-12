@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { INTEGRATION_TYPES } from "@/lib/constants";
+import { INTEGRATION_TYPES } from "@/consts/routes";
 import FormBuilder from "@/components/form-builder";
 import { INTEGRATION_FORM_CONFIGS } from "@/forms/integrations";
 import {

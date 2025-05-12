@@ -6,7 +6,7 @@ import ChatFooter from "./ChatFooter";
 import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
-import { ROUTES } from "@/lib/constants";
+import { ROUTES } from "@/consts/routes";
 import { useTenant } from "@/contexts/TenantContext";
 import useFindOrCreateConversation from "@/hooks/useFindOrCreateConversation";
 import clsx from "clsx";

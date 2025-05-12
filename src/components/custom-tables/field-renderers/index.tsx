@@ -1,5 +1,4 @@
 import React from "react";
-import { CustomTableField, SelectOption } from "@/types/customTable";
 import type { CustomTableRecord } from "@/types/customTable";
 import CheckboxRenderer from "./CheckboxRenderer";
 import DateRenderer from "./DateRenderer";
@@ -18,21 +17,22 @@ import MultipleLookupRenderer from "./MultipleLookupRenderer";
 import DefaultRenderer from "./DefaultRenderer";
 import EntityRenderer from "./EntityRenderer";
 import RollupRenderer from "./RollupRenderer";
+import { GridViewColumn } from "@/components/views/GridView/GridView";
 
-export interface FieldRendererProps<V = unknown> {
-  field: CustomTableField;
-  value: V;
-  record?: CustomTableRecord;
+export interface FieldRendererProps<ValueType, RecordType> {
+  field: GridViewColumn<RecordType>;
+  value: ValueType;
+  record?: RecordType;
 }
 
 /**
  * Field renderer factory - returns the appropriate renderer component based on field type
  */
-export const getFieldRenderer = (
-  field: CustomTableField,
+export function getFieldRenderer<RecordType>(
+  field: GridViewColumn<RecordType>,
   value: unknown,
-  record: CustomTableRecord
-): React.ReactNode => {
+  record: RecordType
+): React.ReactNode {
   if (value === null || value === undefined) {
     return <span className="text-muted-foreground">-</span>;
   }
@@ -96,4 +96,4 @@ export const getFieldRenderer = (
     default:
       return <DefaultRenderer field={field} value={value} />;
   }
-};
+}

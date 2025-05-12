@@ -1,0 +1,301 @@
+---
+description:
+globs: src/**
+alwaysApply: false
+---
+
+# Frontend Architecture
+
+## Project Structure
+
+```
+src/
+├── components/                     # React components
+│   ├── ui/                         # Common UI components (buttons, inputs, etc.)
+│   └── views/                      # View components (table, kanban, calendar, etc.)
+│
+├── consts/                         # Constants
+│   └── routes.ts                   # Route-specific constants
+│
+├── contexts/                       # React contexts and providers
+│
+├── events/                         # Event emitters
+│
+├── forms/                          # Form configurations for FormBuilder
+│
+├── hooks/                          # Custom React hooks
+│   └── queries/                    # TanStack Query custom hooks
+│
+├── integrations/
+│   └── supabase/
+│       ├── client.ts               # Supabase client initialization
+│       └── types.ts                # Supabase database specific types
+│
+├── pages/                          # Page components for routing
+│
+├── services/                       # Service layer
+│   ├── base-service.ts             # BaseService class
+│   ├── supabase/                   # Supabase-specific services
+│   └── [table]-service.ts          # Table-specific services
+│
+├── table-configs/                  # Column definitions for table views
+│
+├── types/                          # Common TypeScript type definitions
+│
+├── utils/                          # Utility functions
+│
+└── App.tsx                         # Application entry point and routing definition (react-router-dom v7)
+```
+
+## Directory Responsibilities
+
+### Components
+
+- **components/ui/**: Reusable UI components like buttons, inputs, modals, etc. These are the building blocks of the application's UI.
+- **components/views/**: Higher-level view components that implement specific visualization patterns like tables, kanban boards, calendars, etc.
+
+### Application Configuration
+
+- **consts/**: Application-wide constants, enums, and configuration values.
+- **consts/routes.ts**: Route paths and route-related configuration constants.
+
+### State Management
+
+- **contexts/**: React context providers for application-wide state management.
+- **events/**: Event emitter implementation for cross-component communication.
+
+### Forms and Tables
+
+- **forms/**: Form configurations for a FormBuilder component, defining form fields, validation, and behavior.
+- **table-configs/**: Configuration for table views, including column definitions, sorting, and filtering options.
+
+### Data Access and Business Logic
+
+- **hooks/**: Custom React hooks for shared stateful logic.
+- **hooks/queries/**: TanStack Query hooks that wrap service methods for data fetching with caching.
+- **services/**: Service layer implementing data access and business logic.
+- **services/supabase/**: Supabase-specific service implementations.
+
+### Routing and Pages
+
+- **pages/**: React components that represent full pages, used by the router.
+- **App.tsx**: Main application component with routing configuration using react-router-dom v7.
+
+### Types and Utilities
+
+- **integrations/supabase/types.ts**: Supabase-specific TypeScript types for database tables.
+- **types/**: Shared TypeScript type definitions.
+- **utils/**: Utility functions and helper methods.
+
+## Common Patterns and Component Usage
+
+### Routing Structure
+
+The application uses React Router v7 for navigation. Routes are defined in the App component:
+
+```tsx
+// src/App.tsx
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { ROUTES } from "@/consts/routes";
+import { Layout } from "@/components/layout";
+import { Dashboard } from "@/pages/dashboard";
+import { ExamplesList } from "@/pages/examples/list";
+import { ExampleDetails } from "@/pages/examples/details";
+import { ExampleForm } from "@/pages/examples/form";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Layout />,
+    children: [
+      {
+        path: ROUTES.DASHBOARD,
+        element: <Dashboard />,
+      },
+      {
+        path: ROUTES.EXAMPLES.LIST,
+        element: <ExamplesList />,
+      },
+      {
+        path: ROUTES.EXAMPLES.DETAILS,
+        element: <ExampleDetails />,
+      },
+      {
+        path: ROUTES.EXAMPLES.CREATE,
+        element: <ExampleForm />,
+      },
+      {
+        path: ROUTES.EXAMPLES.EDIT,
+        element: <ExampleForm />,
+      },
+    ],
+  },
+]);
+
+export function App() {
+  return <RouterProvider router={router} />;
+}
+```
+
+### Context Usage
+
+The application uses React Context for global state management:
+
+```tsx
+// src/contexts/auth-context.tsx
+import { createContext, useContext, useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { User } from "@/types";
+
+const AuthContext = createContext<{
+  user: User | null;
+  isLoading: boolean;
+  signIn: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
+}>({
+  user: null,
+  isLoading: true,
+  signIn: async () => {},
+  signOut: async () => {},
+});
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user || null);
+      setIsLoading(false);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signIn = async (email: string, password: string) => {
+    // Implementation
+  };
+
+  const signOut = async () => {
+    // Implementation
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, isLoading, signIn, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => useContext(AuthContext);
+```
+
+### View Components
+
+The application uses a set of reusable view components that implement common UI patterns:
+
+#### Table View
+
+```tsx
+import { Table } from "@/components/views/table";
+import { useExamples } from "@/hooks/queries/useExamples";
+import { exampleColumns } from "@/table-configs/example-columns";
+
+function ExamplesPage() {
+  const { getExamples } = useExamples();
+
+  return (
+    <Table
+      columns={exampleColumns}
+      useQuery={getExamples}
+      defaultSort={{ column: "created_at", ascending: false }}
+      enableBulkActions
+      actions={[
+        {
+          label: "Edit",
+          icon: "edit",
+          onClick: (row) => {
+            /* handle edit */
+          },
+        },
+        {
+          label: "Delete",
+          icon: "trash",
+          onClick: (row) => {
+            /* handle delete */
+          },
+        },
+      ]}
+    />
+  );
+}
+```
+
+### Table Configuration
+
+Table columns are defined in the `table-configs` directory:
+
+```typescript
+// src/table-configs/example-columns.ts
+import { ColumnDef } from "@/components/views/table";
+import { Example } from "@/types";
+import { formatDate } from "@/utils/date-utils";
+
+export const exampleColumns: ColumnDef<Example>[] = [
+  {
+    id: "name",
+    header: "Name",
+    accessorKey: "name",
+    cell: (info) => (
+      <div className="font-medium">{info.getValue() as string}</div>
+    ),
+    enableSorting: true,
+    meta: {
+      width: "250px",
+    },
+  },
+  {
+    id: "status",
+    header: "Status",
+    accessorKey: "status",
+    cell: (info) => {
+      const status = info.getValue() as string;
+      return (
+        <div
+          className={`inline-flex rounded-full px-2 py-1 text-xs ${
+            status === "active"
+              ? "bg-green-100 text-green-800"
+              : status === "pending"
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-gray-100 text-gray-800"
+          }`}
+        >
+          {status}
+        </div>
+      );
+    },
+    enableSorting: true,
+    filterOptions: [
+      { label: "Active", value: "active" },
+      { label: "Pending", value: "pending" },
+      { label: "Inactive", value: "inactive" },
+    ],
+  },
+  {
+    id: "created_at",
+    header: "Created",
+    accessorKey: "created_at",
+    cell: (info) => formatDate(info.getValue() as string),
+    enableSorting: true,
+  },
+];
+```

@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ROUTES } from "@/lib/constants";
+import { ROUTES } from "@/consts/routes";
 import { toast } from "sonner";
 import { getUrlParameter } from "@/utils/oAuth/shared";
 import { callSupabaseFunction } from "@/services/supabaseFunctionServices";

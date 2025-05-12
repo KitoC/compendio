@@ -1,0 +1,303 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Project Requirements Overview
+
+## Project Summary
+
+The AI Job Management System is a comprehensive platform designed specifically for small Australian trade businesses. This modular system aims to streamline operations, improve customer satisfaction, increase profitability, and ensure compliance through 13 integrated modules. The platform leverages AI technology to automate routine tasks, enhance communication, and provide real-time insights into business performance.
+
+## Core Modules & Requirements
+
+### 1. Job Scheduling System
+
+**Functional Requirements:**
+- Calendar-based job scheduling interface for assigning team members to jobs
+- Detailed job cards with scope of work, materials list, and task instructions
+- Appointment scheduling for sales visits with auto-conversion to jobs upon quote acceptance
+- Real-time synchronization across all devices (mobile, tablet, desktop)
+- Integration with other modules (communication, profitability tracking)
+
+**Technical Requirements:**
+- Calendar view component with day, week, and month visualization
+- Drag-and-drop functionality for scheduling
+- User role-based access controls
+- Push notifications for schedule changes
+- Offline capabilities with sync on reconnection
+
+### 2. Job Profitability Tracker
+
+**Functional Requirements:**
+- Real-time tracking of job costs against income
+- Mobile check-in/out system for labor tracking
+- Materials tracking through supplier invoice uploads and inventory logs
+- Live dashboard displaying job margins and profitability metrics
+- Alert system for budget overruns
+
+**Technical Requirements:**
+- Integration with accounting software (Xero/MYOB)
+- GPS verification for check-ins/outs
+- OCR capability for invoice processing
+- Real-time calculation of labor costs based on hourly rates
+- Threshold-based alert system
+
+### 3. Overhead & Target Tracker
+
+**Functional Requirements:**
+- Monthly revenue target setting and tracking
+- Operating overhead monitoring
+- Dashboard showing business financial health
+- Alert system for performance issues
+- Strategic decision support tools
+
+**Technical Requirements:**
+- API integration with accounting software
+- Data visualization for financial metrics
+- Predictive analytics for revenue forecasting
+- Custom alert thresholds configuration
+- Report generation capabilities
+
+### 4. AI Chatbot & Voice Assistant
+
+**Functional Requirements:**
+- Website-embedded chatbot for customer inquiries
+- Voice assistant for natural language interaction
+- Customer qualification through guided questions
+- Ballpark pricing suggestions based on project parameters
+- Seamless handover of information to sales team
+
+**Technical Requirements:**
+- Natural Language Processing (NLP) capabilities
+- Integration with pricing database
+- Conversation logging and analysis
+- Voice recognition and processing
+- Machine learning components for continual improvement
+
+### 5. Marketing & Content System
+
+**Functional Requirements:**
+- Content management for marketing materials
+- Video capture and storage capabilities
+- Integration with social media platforms
+- Content tagging and categorization
+- Scheduled or random prompts for employees to record videos
+
+**Technical Requirements:**
+- Mobile-friendly video capture interface
+- Cloud storage for media files
+- Social media API integrations
+- Content scheduling capabilities
+- Search and retrieval system for stored media
+
+### 6. Client Communication System
+
+**Functional Requirements:**
+- Automated job update notifications
+- Multi-channel communication (SMS, email)
+- Follow-up automation for quotes
+- AI-powered communication templates
+- Local gift partner integration
+
+**Technical Requirements:**
+- SMS and email gateway integration
+- Template management system
+- Automated trigger system based on job status
+- Natural language generation for personalized messages
+- E-commerce integration for gift card processing
+
+### 7. Central Job Communications & Media Archive
+
+**Functional Requirements:**
+- Centralized storage for all job-related communications
+- Media archive for photos and videos
+- Access controls based on job assignment
+- Historical job record retrieval
+- Search functionality across job records
+
+**Technical Requirements:**
+- Secure cloud storage with backup
+- High-resolution media handling
+- Full-text search capabilities
+- Version control for documents
+- Record retention policies
+
+### 8. Automated Materials List & Purchase Orders
+
+**Functional Requirements:**
+- Template-based materials list generation
+- Editable materials lists
+- Automatic purchase order generation
+- Supplier management
+- Material cost tracking
+
+**Technical Requirements:**
+- Integration with supplier databases
+- PDF generation for purchase orders
+- Email functionality for PO distribution
+- Inventory management capabilities
+- Cost comparison tools
+
+### 9. Client Gift Automation
+
+**Functional Requirements:**
+- Threshold-based gift triggering
+- Automatic gift card issuance
+- Local business partnership management
+- Gift tracking and reporting
+
+**Technical Requirements:**
+- Integration with e-gift card platforms
+- Configurable triggering thresholds
+- Email/SMS delivery of gift notifications
+- Partnership management database
+
+### 10. Training & SOP Knowledge Base
+
+**Functional Requirements:**
+- Structured repository for company information and procedures
+- Video and document upload capabilities
+- Mobile-friendly access
+- Search functionality
+- External resource integration
+
+**Technical Requirements:**
+- Document management system
+- Video streaming capabilities
+- Mobile responsive design
+- Content categorization and tagging
+- User access tracking
+
+### 11. Employee Growth & Feedback System
+
+**Functional Requirements:**
+- Automated quarterly staff surveys
+- Goal setting and tracking
+- Feedback collection and analysis
+- Performance review integration
+
+**Technical Requirements:**
+- Survey creation and distribution tools
+- Response analytics
+- Reminder system
+- Goal tracking dashboard
+- Data privacy controls
+
+### 12. Reporting & Analytics Dashboard
+
+**Functional Requirements:**
+- Real-time KPI visualization
+- Custom report generation
+- Performance trend analysis
+- Data drill-down capabilities
+
+**Technical Requirements:**
+- Data visualization components
+- Integration with all platform modules
+- Export functionality
+- Scheduled report generation
+- User-configurable dashboards
+
+### 13. Customer Feedback & Review Loop
+
+**Functional Requirements:**
+- Automated post-job review requests
+- Customer satisfaction measurement (NPS)
+- Public review display capabilities
+- Internal routing for issue resolution
+
+**Technical Requirements:**
+- Survey distribution system
+- Integration with public review platforms
+- Sentiment analysis for feedback
+- Alert system for negative reviews
+- Response tracking
+
+## Non-Functional Requirements
+
+### Usability
+- Intuitive user interface for trade professionals
+- Mobile-first design approach
+- Minimal training required for basic operations
+- Consistent design language across all modules
+
+### Performance
+- Page load times under 2 seconds
+- Real-time data updates without page refresh
+- Support for up to 50 concurrent users
+- Efficient operation on 4G mobile connections
+
+### Security
+- Role-based access control
+- End-to-end encryption for sensitive data
+- Compliance with Australian privacy regulations
+- Secure authentication with multi-factor options
+- Regular security audits and updates
+
+### Scalability
+- Support for businesses with 5-50 employees
+- Ability to handle up to 500 active jobs
+- Storage capacity for historical data (5+ years)
+- Modular architecture allowing for selective implementation
+
+### Reliability
+- 99.9% uptime during business hours
+- Automated backup system
+- Offline functionality for critical features
+- Graceful degradation when connectivity is limited
+
+### Integration
+- API-first architecture
+- Standard connectors for common accounting software
+- Webhook support for third-party integrations
+- Bulk import/export capabilities
+
+## Technical Stack Recommendations
+
+Based on the existing project architecture:
+
+### Frontend
+- React with TypeScript
+- TailwindCSS for styling
+- TanStack Query for data fetching
+- FormBuilder for dynamic forms
+
+### Backend
+- Supabase for database, authentication, and storage
+- Supabase Edge Functions for serverless operations
+- PostgreSQL for relational data
+
+### AI Components
+- OpenAI API for natural language processing
+- Whisper API for voice transcription
+- Fine-tuned models for industry-specific terminology
+
+### Mobile Access
+- Progressive Web App (PWA) approach
+- React Native consideration for future native apps
+
+## Implementation Phases
+
+### Phase 1: Core Operations
+- Job Scheduling System
+- Job Profitability Tracker
+- Central Job Communications & Media Archive
+- Automated Materials List & Purchase Orders
+
+### Phase 2: Client Experience
+- Client Communication System
+- Customer Feedback & Review Loop
+- Client Gift Automation
+
+### Phase 3: Business Intelligence
+- Overhead & Target Tracker
+- Reporting & Analytics Dashboard
+
+### Phase 4: AI Enhancement
+- AI Chatbot & Voice Assistant
+- Marketing & Content System
+
+### Phase 5: Team Development
+- Training & SOP Knowledge Base
+- Employee Growth & Feedback System

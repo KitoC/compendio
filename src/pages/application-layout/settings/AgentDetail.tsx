@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { IAiAgent } from "@/types/aiAgents";
-import { ROUTES } from "@/lib/constants";
+import { ROUTES } from "@/consts/routes";
 import {
   Card,
   CardContent,

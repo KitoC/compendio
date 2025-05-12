@@ -1,4 +1,4 @@
-import { INTEGRATION_TYPES } from "@/lib/constants";
+import { INTEGRATION_TYPES } from "@/consts/routes";
 
 import {
   DialogHeader,

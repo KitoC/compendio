@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ROUTES } from "@/lib/constants";
+import { ROUTES } from "@/consts/routes";
 import DataTable, { Column } from "@/components/data-table";
 import { Badge } from "@/components/ui/badge";
 import { useTenant } from "@/contexts/TenantContext";

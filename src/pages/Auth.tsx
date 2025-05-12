@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Provider } from "@supabase/supabase-js";
-import { ROUTES } from "@/lib/constants";
+import { ROUTES } from "@/consts/routes";
 import { useAuth } from "@/hooks/useAuth";
 import { SiGoogle, SiMicrosoft } from "react-icons/si";
 

@@ -13,14 +13,14 @@ export type FormFieldType =
   | "custom"
   | "datetime"
   | "multiselect"
-  | "integer" // Added for custom table fields
-  | "boolean" // Added for custom table fields
+  | "integer"
+  | "boolean"
   | "switch"
   | "conditional"
-  | "reference" // Added for custom table fields
-  | "timestamp" // Added for custom table fields
-  | "uuid" // Added for custom table fields
-  | "record-select"; // Added for custom table fields
+  | "reference"
+  | "timestamp"
+  | "uuid"
+  | "record-select";
 
 export interface FormFieldOption {
   label: string;

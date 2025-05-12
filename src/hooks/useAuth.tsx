@@ -9,7 +9,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
-import { ROUTES } from "@/lib/constants";
+import { ROUTES } from "@/consts/routes";
 import { cleanupSupabaseAuth, getRedirectUri } from "@/utils/supabaseUtils";
 import { toast } from "sonner";
 import { Provider } from "@supabase/supabase-js";
