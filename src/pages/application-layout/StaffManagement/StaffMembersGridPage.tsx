@@ -11,7 +11,7 @@ import { EditIcon, PlusIcon, TrashIcon } from "lucide-react";
 
 const staffService = new StaffService();
 
-const Staff = () => {
+export const StaffMembersGridPage = () => {
   const [editingRecord, setEditingRecord] = useState<StaffMember | null>(null);
 
   const response = useServiceListQuery<StaffMember>({
@@ -99,5 +99,3 @@ const Staff = () => {
     </Page>
   );
 };
-
-export default Staff;

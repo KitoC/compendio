@@ -11,7 +11,7 @@ import { EditIcon, PlusIcon, TrashIcon } from "lucide-react";
 
 const clientService = new ClientService();
 
-const Clients = () => {
+export const ClientsGridPage = () => {
   const [editingRecord, setEditingRecord] = useState<Client | null>(null);
 
   const response = useServiceListQuery<Client>({
@@ -99,5 +99,3 @@ const Clients = () => {
     </Page>
   );
 };
-
-export default Clients;

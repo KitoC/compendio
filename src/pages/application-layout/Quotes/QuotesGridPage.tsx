@@ -12,7 +12,7 @@ import { useTenant } from "@/contexts/TenantContext";
 
 const quoteService = new QuoteService();
 
-const Quotes = () => {
+export const QuotesGridPage = () => {
   const navigate = useNavigate();
   const { urlTenantAlias } = useTenant();
 
@@ -91,5 +91,3 @@ const Quotes = () => {
     </Page>
   );
 };
-
-export default Quotes;

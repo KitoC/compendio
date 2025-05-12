@@ -27,10 +27,10 @@ import { VoiceProvider } from "./contexts/VoiceProvider";
 import { NotificationProvider } from "./contexts/NotificationProvider";
 import { PwaInstallPrompt } from "./components/PwaInstallPrompt";
 import BetaAccess from "./pages/BetaAccess";
-import Quotes from "./pages/application-layout/Quotes/QuotesList";
-import Clients from "./pages/application-layout/Clients";
+import { QuotesGridPage } from "./pages/application-layout/Quotes/QuotesGridPage";
+import { ClientsGridPage } from "./pages/application-layout/Clients/ClientsGridPage";
 import NewQuote from "./pages/application-layout/Quotes/NewQuote";
-import StaffManagement from "./pages/application-layout/StaffManagement";
+import { StaffMembersGridPage } from "./pages/application-layout/StaffManagement/StaffMembersGridPage";
 
 function App() {
   return (
@@ -71,12 +71,18 @@ function App() {
                       element={<ApplicationLayout />}
                     >
                       <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
-                      <Route path={ROUTES.QUOTES} element={<Quotes />}></Route>
+                      <Route
+                        path={ROUTES.QUOTES}
+                        element={<QuotesGridPage />}
+                      ></Route>
                       <Route path={ROUTES.QUOTES_NEW} element={<NewQuote />} />
-                      <Route path={ROUTES.CLIENTS} element={<Clients />} />
+                      <Route
+                        path={ROUTES.CLIENTS}
+                        element={<ClientsGridPage />}
+                      />
                       <Route
                         path={ROUTES.STAFF_MEMBERS}
-                        element={<StaffManagement />}
+                        element={<StaffMembersGridPage />}
                       />
                       <Route path={ROUTES.AGENT_CHAT} element={<AgentChat />} />
 
