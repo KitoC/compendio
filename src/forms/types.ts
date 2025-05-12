@@ -1,5 +1,4 @@
-
-import { FormConfig } from "@/components/form-builder/types";
+import { FormConfig } from "@/components/FormBuilder/types";
 
 export interface IntegrationFormConfigs {
   [key: string]: FormConfig;

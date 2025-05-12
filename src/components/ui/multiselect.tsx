@@ -125,7 +125,7 @@ const Multiselect = ({
   onInputChange,
   inputValue,
   isLoading,
-  menuPortalTarget,
+  ...reactSelectProps
 }: MultiselectProps) => {
   const onSortEnd: SortEndHandler = useCallback(
     ({ oldIndex, newIndex }) => {
@@ -158,7 +158,7 @@ const Multiselect = ({
       onChange,
       isMulti: true,
       classNames,
-      menuPortalTarget,
+      ...reactSelectProps,
     };
   }, [
     isLoading,
@@ -170,7 +170,7 @@ const Multiselect = ({
     value,
     onChange,
     classNames,
-    menuPortalTarget,
+    reactSelectProps,
   ]);
 
   if (sortable) {

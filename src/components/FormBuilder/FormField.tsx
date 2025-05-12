@@ -24,7 +24,8 @@ import {
   useState,
   useEffect,
 } from "react";
-import { SelectOption } from "@/types/customTable";
+import { SelectOption } from "@/types/fieldTypes";
+import EntitySelect from "../EntitySelect/EntitySelect";
 
 const FormField = ({
   field,
@@ -54,6 +55,7 @@ const FormField = ({
     renderAfterInput,
     renderBelowInput,
     validationAsyncOnBlur,
+    wrapperClassName,
   } = field;
 
   const [menuPortalTarget, setMenuPortalTarget] = useState<HTMLElement | null>(
@@ -502,7 +504,7 @@ const FormField = ({
   };
 
   return (
-    <div className="space-y-2">
+    <div className={cn("space-y-2 w-full", wrapperClassName)}>
       {type !== "checkbox" && type !== "switch" && label && (
         <div className="flex items-center gap-2">
           <Label

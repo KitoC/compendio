@@ -1,6 +1,6 @@
 import ResponsiveModal from "@/components/ui/responsive-modal";
 import { useState, useEffect, useCallback } from "react";
-import FormBuilder from "@/components/form-builder";
+import FormBuilder from "@/components/FormBuilder";
 import { useCustomTables } from "@/contexts/CustomTables";
 import {
   ACTION_FORM_CONFIGS,

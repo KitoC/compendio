@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { CustomTableRecord, CustomTableSchema } from "@/types/customTable";
-import FormBuilder, { FormConfig } from "@/components/form-builder";
+import FormBuilder, { FormConfig } from "@/components/FormBuilder";
 import { customTableToFormConfig } from "@/components/custom-tables/utils";
 import ResponsiveModal from "@/components/ui/responsive-modal";
 import {

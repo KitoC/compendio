@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
-import { FormBuilderProps } from "./types";
+import { FormBuilderProps, FormField as FormFieldConfig } from "./types";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -212,6 +212,25 @@ const FormBuilder = ({
     </CardFooter>
   );
 
+  const renderField = (field: FormFieldConfig) => {
+    return (
+      <FormField
+        key={field.id}
+        field={field}
+        menuPortalId={menuPortalId}
+        value={values[field.name] ?? field.defaultValue ?? ""}
+        onChange={handleChange}
+        error={errors[field.name]}
+        touched={touched[field.name] || submitAttempted}
+        formValues={values}
+        setFormValues={setValues}
+        setError={(name, error) =>
+          setErrors((prev) => ({ ...prev, [name]: error }))
+        }
+      />
+    );
+  };
+
   const menuPortalId = useMemo(() => {
     return `${config.id}-menu-portal`;
   }, [config.id]);
@@ -268,22 +287,17 @@ const FormBuilder = ({
                         ? !field?.hidden(values)
                         : !field.hidden
                     )
-                    .map((field) => (
-                      <FormField
-                        key={field.id}
-                        field={field}
-                        menuPortalId={menuPortalId}
-                        value={values[field.name] ?? field.defaultValue ?? ""}
-                        onChange={handleChange}
-                        error={errors[field.name]}
-                        touched={touched[field.name] || submitAttempted}
-                        formValues={values}
-                        setFormValues={setValues}
-                        setError={(name, error) =>
-                          setErrors((prev) => ({ ...prev, [name]: error }))
-                        }
-                      />
-                    ))}
+                    .map((field) => {
+                      if (field.type === "field-group") {
+                        return (
+                          <div key={field.id} className="flex gap-4 w-full">
+                            {field.fields.map(renderField)}
+                          </div>
+                        );
+                      }
+
+                      return renderField(field);
+                    })}
                 </div>
               </div>
               {section.divider && index !== filteredSections.length - 1 && (

@@ -6,10 +6,10 @@ import {
   TRIGGER_DESCRIPTION,
 } from "../consts/triggers";
 import { useState, useEffect } from "react";
-import FormBuilder from "@/components/form-builder";
+import FormBuilder from "@/components/FormBuilder";
 import TriggerSelect from "./TriggerSelect";
 import { useCustomTables } from "@/contexts/CustomTables";
-import { FormFieldType } from "@/components/form-builder/types";
+import { FormFieldType } from "@/components/FormBuilder/types";
 import { useWorkflowEditor } from "@/contexts/WorkflowEditorProvider";
 import { getSupabaseFunctionsUrl } from "@/utils/supabaseUtils";
 

@@ -1,4 +1,4 @@
-import FormBuilder from "@/components/form-builder";
+import FormBuilder from "@/components/FormBuilder";
 import { customTableToFormConfig } from "../../utils";
 import { useCalendarContext } from "./CalendarContext";
 import { useSystemSettings } from "@/contexts/SystemSettingsProvider";

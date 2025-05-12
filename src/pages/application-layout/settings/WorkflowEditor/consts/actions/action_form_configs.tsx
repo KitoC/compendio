@@ -1,5 +1,5 @@
 import { ACTION_TYPES } from "./types";
-import { FormSection, FormField } from "@/components/form-builder/types";
+import { FormSection, FormField } from "@/components/FormBuilder/types";
 import { ConditionBuilder } from "../../components/ActionModal/ConditionBuilder";
 import { CustomTable } from "@/contexts/CustomTables/CustomTablesContext";
 import { WorkflowAction, Workflow } from "@/types/workflows";

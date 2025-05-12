@@ -28,4 +28,5 @@ export type FieldRenderOptions = {
   options?: SelectOption[];
   prefix?: string;
   suffix?: string;
+  isMulti?: boolean;
 };

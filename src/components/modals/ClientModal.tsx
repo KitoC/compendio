@@ -1,4 +1,4 @@
-import { Client } from "@/services/supabase/ClientsServices";
+import { Client } from "@/services/supabase/ClientService";
 import ServiceRecordModal, { ServiceRecordModalProps } from "./FormModal";
 import { clientFormConfig } from "@/forms/clientForm";
 

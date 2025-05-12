@@ -46,8 +46,8 @@ export const EmailContent = ({
         <h3 className="text-sm font-bold">{header}</h3>
       </div>
       <div
-        className={cn("bg-sidebar p-4 rounded-md", {
-          "bg-sidebar mr-4": type === TYPES.RECEIVED,
+        className={cn("bg-background p-4 rounded-md", {
+          "bg-background mr-4": type === TYPES.RECEIVED,
           "bg-primary text-white ml-4 border": type === TYPES.SENT,
           "border border-2 border-dashed border-primary bg-primary/5 ml-4":
             type === TYPES.DRAFT,

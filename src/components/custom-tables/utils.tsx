@@ -3,7 +3,7 @@ import {
   FormField,
   FormFieldType,
   FormFieldOption,
-} from "@/components/form-builder/types";
+} from "@/components/FormBuilder/types";
 import { getFieldRenderer } from "../field-renderers";
 import CustomTableEntityField from "./EntityField";
 import pluralize from "pluralize";

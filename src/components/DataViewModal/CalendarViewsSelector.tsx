@@ -1,4 +1,4 @@
-import { CustomFieldComponentProps } from "../form-builder/types";
+import { CustomFieldComponentProps } from "../FormBuilder/types";
 import { Views } from "react-big-calendar";
 import { DateFieldValue } from "./DateFieldSelector";
 import { Label } from "../ui/label";

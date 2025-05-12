@@ -1,5 +1,5 @@
 import { Column } from "./types";
-import type { FormConfig, FormField, FormFieldType } from "../form-builder";
+import type { FormConfig, FormField, FormFieldType } from "../FormBuilder";
 
 /**
  * Maps DataTable column types to FormBuilder field types

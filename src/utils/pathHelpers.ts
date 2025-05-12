@@ -1,19 +1,16 @@
 import { ROUTES } from "@/consts/routes";
 
 export const paths = {
-  getDataNavigationViewPath: (
-    dataViewAlias: string,
-    dataNavigationPath: string,
-    tenantId: string
-  ) => {
-    return ROUTES.DATA_NAVIGATION_VIEW.replace(":dataViewAlias", dataViewAlias)
-      .replace(":dataNavigationPath", dataNavigationPath)
-      .replace(":tenantId", tenantId);
+  getNewQuotePath: (tenantId: string) => {
+    return ROUTES.QUOTES_NEW.replace(":tenantId", tenantId);
   },
-  getDataNavigationPath: (dataNavigationPath: string, tenantId: string) => {
-    return ROUTES.DATA_NAVIGATION.replace(
-      ":dataNavigationPath",
-      dataNavigationPath
-    ).replace(":tenantId", tenantId);
+  getQuotesPath: (tenantId: string) => {
+    return ROUTES.QUOTES.replace(":tenantId", tenantId);
+  },
+  getQuotePath: (tenantId: string, quoteId: string) => {
+    return ROUTES.QUOTE.replace(":tenantId", tenantId).replace(
+      ":quoteId",
+      quoteId
+    );
   },
 };

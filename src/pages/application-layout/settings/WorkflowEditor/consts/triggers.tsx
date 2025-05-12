@@ -7,7 +7,7 @@ import {
   Copy,
 } from "lucide-react";
 import { WorkflowTrigger } from "@/services/WorkflowService";
-import { FormSection } from "@/components/form-builder/types";
+import { FormSection } from "@/components/FormBuilder/types";
 import {
   CustomTable,
   CustomTableField,

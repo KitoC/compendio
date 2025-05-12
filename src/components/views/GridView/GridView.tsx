@@ -33,6 +33,8 @@ import ActionsCell from "./ActionCell";
 import { getFieldRenderer } from "@/components/field-renderers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SelectOption, FieldRenderOptions } from "@/types/fieldTypes";
+import { cn } from "@/lib/utils";
+import { GenericTable } from "@supabase/supabase-js/dist/module/lib/types";
 
 export interface TableQuery {
   page: number;
@@ -58,8 +60,12 @@ export interface GridViewActions<RecordType> {
   disabled?: (record: RecordType) => boolean;
 }
 
-export interface GridViewProps<RecordType> {
-  service: BaseService<RecordType>;
+export interface GridViewProps<
+  Table extends GenericTable,
+  RecordType extends Table["Row"] = Table["Row"]
+> {
+  // @ts-expect-error TODO: Fix this typing
+  service: BaseService<Table>;
   permissions?: UserPermissions;
   emptyMessage?: string | React.ReactNode;
   columns: GridViewColumn<RecordType>[];
@@ -72,7 +78,10 @@ export interface GridViewProps<RecordType> {
   count: number;
 }
 
-const GridView = <RecordType extends object>({
+const GridView = <
+  Table extends GenericTable,
+  RecordType extends Table["Row"] = Table["Row"]
+>({
   emptyMessage,
   columns,
   actions,
@@ -82,7 +91,7 @@ const GridView = <RecordType extends object>({
   setQuery,
   query,
   count,
-}: GridViewProps<RecordType>) => {
+}: GridViewProps<Table, RecordType>) => {
   const columnHelper = useMemo(() => createColumnHelper<RecordType>(), []);
   const { page, pageSize } = query?.pagination || {};
 
@@ -155,7 +164,7 @@ const GridView = <RecordType extends object>({
       {isLoading && <GridViewLoadingSkeleton />}
       {!isLoading && (
         <div
-          className="relative w-full rounded-md border overflow-hidden h-full bg-muted"
+          className="relative w-full rounded-md border overflow-hidden h-full bg-muted flex flex-col"
           ref={tableContainerRef}
         >
           {isFetching && !isLoading && (
@@ -164,7 +173,11 @@ const GridView = <RecordType extends object>({
             </div>
           )}
 
-          <Table className="border-b border-border bg-white">
+          <Table
+            className={cn("border-b border-border bg-white", {
+              "h-full": !tableInstance.getRowModel().rows.length,
+            })}
+          >
             <TableHeader className="[&_tr]:border-b-transparent">
               {tableInstance.getHeaderGroups().map((headerGroup) => (
                 <TableRow
@@ -201,16 +214,11 @@ const GridView = <RecordType extends object>({
                 </TableRow>
               ))}
             </TableHeader>
-            <TableBody className="flex-grow overflow-auto">
+            <TableBody className="h-full overflow-auto relative">
               {tableInstance.getRowModel().rows.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    {emptyMessage}
-                  </TableCell>
-                </TableRow>
+                <div className="absolute inset-0 flex items-center justify-center bg-background">
+                  {emptyMessage}
+                </div>
               ) : (
                 tableInstance.getRowModel().rows.map((row, rowIndex) => (
                   <TableRow

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { EditModalProps } from "./types";
 import { toast } from "sonner";
-import FormBuilder from "@/components/form-builder";
+import FormBuilder from "@/components/FormBuilder";
 import { columnsToFormConfig, createInitialValues } from "./utils";
 import ResponsiveModal from "../ui/responsive-modal";
 

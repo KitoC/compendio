@@ -1,7 +1,7 @@
 import ResponsiveModal from "@/components/ui/responsive-modal";
-import FormBuilder from "@/components/form-builder/FormBuilder";
+import FormBuilder from "@/components/FormBuilder/FormBuilder";
 import { DATA_VIEW_TYPES } from "../custom-tables/consts";
-import { FormConfig } from "@/components/form-builder/types";
+import { FormConfig } from "@/components/FormBuilder/types";
 import {
   useCustomRecordsQuery,
   useCustomTableSchemaQuery,

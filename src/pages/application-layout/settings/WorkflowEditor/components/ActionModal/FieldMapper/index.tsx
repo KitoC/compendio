@@ -3,7 +3,7 @@ import { useActionModalContext } from "../ActionModalContext";
 import { CustomTablesContext } from "@/contexts/CustomTables/CustomTablesContext";
 import { customTableFieldToFormField } from "@/components/custom-tables/utils";
 import { CustomTableField } from "@/types/customTable";
-import FormField from "@/components/form-builder/FormField";
+import FormField from "@/components/FormBuilder/FormField";
 import {
   DropdownMenu,
   DropdownMenuContent,

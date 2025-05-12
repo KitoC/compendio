@@ -1,7 +1,7 @@
 // NO_CHANGE
 
 import { DataGridColumn, GridAction } from "../DataGrid";
-import { FormConfig } from "../form-builder/types";
+import { FormConfig } from "../FormBuilder/types";
 
 export type Permission = "create" | "read" | "update" | "delete" | "export";
 

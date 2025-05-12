@@ -3,7 +3,8 @@ import {
   useMutation,
   useQueryClient,
   UseMutationOptions,
-  keepPreviousData,
+  UseQueryOptions,
+  PlaceholderDataFunction,
 } from "@tanstack/react-query";
 import { CustomTableService } from "@/services/CustomTableService";
 import type {
@@ -17,7 +18,7 @@ import { useCustomTables } from "@/contexts/CustomTables";
 import { useCallback, useMemo, useEffect } from "react";
 import pluralize from "pluralize";
 
-interface UseCustomTableQueryOptions {
+interface UseCustomTableQueryOptions extends Omit<UseQueryOptions, "queryKey"> {
   baseId?: string;
   tableId?: string;
   enableRealtime?: boolean;
@@ -26,6 +27,8 @@ interface UseCustomTableQueryOptions {
   isOptimistic?: boolean;
   dataViewId?: string;
   enabled?: boolean;
+  placeholder?: unknown | PlaceholderDataFunction<unknown, unknown>;
+  keepPreviousData?: boolean;
 }
 
 const QUERY_KEYS = {
@@ -222,6 +225,8 @@ export const useCustomRecordsQuery = ({
   isOptimistic = false,
   dataViewId,
   enabled = true,
+  placeholderData,
+  keepPreviousData = false,
 }: UseCustomTableQueryOptions = {}) => {
   const { tables } = useCustomTables();
   const table = tables.find((table) => table.external_id == tableId);
@@ -267,7 +272,6 @@ export const useCustomRecordsQuery = ({
       return response as CustomTableRecordResponse;
     },
     enabled: !!tableId && enabled,
-    // keepPreviousData: true,
   });
 
   const updateQueryData = useCallback(

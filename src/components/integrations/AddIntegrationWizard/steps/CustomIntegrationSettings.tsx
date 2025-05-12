@@ -1,4 +1,4 @@
-import FormBuilder from "@/components/form-builder";
+import FormBuilder from "@/components/FormBuilder";
 import { DialogDescription } from "@/components/ui/dialog";
 import { DialogTitle } from "@/components/ui/dialog";
 import { DialogHeader } from "@/components/ui/dialog";

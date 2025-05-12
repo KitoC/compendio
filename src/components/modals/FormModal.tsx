@@ -1,5 +1,5 @@
 import { useState } from "react";
-import FormBuilder, { FormConfig } from "@/components/form-builder";
+import FormBuilder, { FormConfig } from "@/components/FormBuilder";
 import ResponsiveModal from "@/components/ui/responsive-modal";
 
 export interface ServiceRecordModalProps<RecordType> {

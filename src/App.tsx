@@ -27,8 +27,10 @@ import { VoiceProvider } from "./contexts/VoiceProvider";
 import { NotificationProvider } from "./contexts/NotificationProvider";
 import { PwaInstallPrompt } from "./components/PwaInstallPrompt";
 import BetaAccess from "./pages/BetaAccess";
-import Quotes from "./pages/application-layout/Quotes";
+import Quotes from "./pages/application-layout/Quotes/QuotesList";
 import Clients from "./pages/application-layout/Clients";
+import NewQuote from "./pages/application-layout/Quotes/NewQuote";
+import StaffManagement from "./pages/application-layout/StaffManagement";
 
 function App() {
   return (
@@ -69,8 +71,13 @@ function App() {
                       element={<ApplicationLayout />}
                     >
                       <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
-                      <Route path={ROUTES.QUOTES} element={<Quotes />} />
+                      <Route path={ROUTES.QUOTES} element={<Quotes />}></Route>
+                      <Route path={ROUTES.QUOTES_NEW} element={<NewQuote />} />
                       <Route path={ROUTES.CLIENTS} element={<Clients />} />
+                      <Route
+                        path={ROUTES.STAFF_MEMBERS}
+                        element={<StaffManagement />}
+                      />
                       <Route path={ROUTES.AGENT_CHAT} element={<AgentChat />} />
 
                       {/* Settings Routes */}

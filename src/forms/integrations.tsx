@@ -1,4 +1,4 @@
-import { FormConfig } from "@/components/form-builder/types";
+import { FormConfig } from "@/components/FormBuilder/types";
 import { ArrowLeft, ArrowRight, LogIn } from "lucide-react";
 
 // OAuth-based integrations

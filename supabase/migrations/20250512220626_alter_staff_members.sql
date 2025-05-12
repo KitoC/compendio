@@ -1,0 +1,7 @@
+ALTER TABLE staff_members ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE;
+ALTER TABLE staff_members ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE staff_members RENAME COLUMN name TO first_name;
+ALTER TABLE staff_members ADD COLUMN last_name VARCHAR(255) NOT NULL;
+
+
+

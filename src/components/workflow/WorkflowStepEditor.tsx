@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -19,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import FormBuilder from "@/components/form-builder";
+import FormBuilder from "@/components/FormBuilder";
 
 interface WorkflowStep {
   id: string;
@@ -106,7 +105,9 @@ const WorkflowStepEditor = ({
   }, [editedStep.type]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setEditedStep((prev) => ({ ...prev, [name]: value }));
@@ -118,7 +119,8 @@ const WorkflowStepEditor = ({
       type,
       config: getDefaultConfig(type),
       function_id: type === "function" ? prev.function_id : undefined,
-      connected_service_id: type === "service" ? prev.connected_service_id : undefined,
+      connected_service_id:
+        type === "service" ? prev.connected_service_id : undefined,
     }));
   };
 
@@ -161,10 +163,17 @@ const WorkflowStepEditor = ({
         fields: Object.keys(editedStep.config || {}).map((key) => ({
           id: key,
           name: key,
-          label: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, " $1"),
-          type: typeof editedStep.config[key] === "boolean" ? "checkbox" : 
-                Array.isArray(editedStep.config[key]) ? "select" :
-                typeof editedStep.config[key] === "number" ? "number" : "text",
+          label:
+            key.charAt(0).toUpperCase() +
+            key.slice(1).replace(/([A-Z])/g, " $1"),
+          type:
+            typeof editedStep.config[key] === "boolean"
+              ? "checkbox"
+              : Array.isArray(editedStep.config[key])
+              ? "select"
+              : typeof editedStep.config[key] === "number"
+              ? "number"
+              : "text",
           defaultValue: editedStep.config[key],
         })),
       },
@@ -185,10 +194,7 @@ const WorkflowStepEditor = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="type">Step Type</Label>
-              <Select
-                value={editedStep.type}
-                onValueChange={handleTypeChange}
-              >
+              <Select value={editedStep.type} onValueChange={handleTypeChange}>
                 <SelectTrigger id="type">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
@@ -201,7 +207,7 @@ const WorkflowStepEditor = ({
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Input
@@ -214,7 +220,11 @@ const WorkflowStepEditor = ({
             </div>
           </div>
 
-          <Tabs value={configTab} onValueChange={setConfigTab} className="w-full">
+          <Tabs
+            value={configTab}
+            onValueChange={setConfigTab}
+            className="w-full"
+          >
             <TabsList>
               <TabsTrigger value="general">General</TabsTrigger>
               {editedStep.type === "function" && (
@@ -235,7 +245,7 @@ const WorkflowStepEditor = ({
                 <p className="text-sm text-muted-foreground">
                   Configure basic settings for this workflow step.
                 </p>
-                
+
                 {/* Display fields based on step type */}
                 {editedStep.type === "wait" && (
                   <div className="space-y-2 pt-2">
@@ -244,12 +254,14 @@ const WorkflowStepEditor = ({
                       id="delay"
                       type="number"
                       value={editedStep.config?.delay || 0}
-                      onChange={(e) => handleConfigChange("delay", parseInt(e.target.value))}
+                      onChange={(e) =>
+                        handleConfigChange("delay", parseInt(e.target.value))
+                      }
                       min="0"
                     />
                   </div>
                 )}
-                
+
                 {editedStep.type === "conditional" && (
                   <div className="space-y-4 pt-2">
                     <div className="space-y-2">
@@ -257,14 +269,16 @@ const WorkflowStepEditor = ({
                       <Textarea
                         id="condition"
                         value={editedStep.config?.condition || ""}
-                        onChange={(e) => handleConfigChange("condition", e.target.value)}
+                        onChange={(e) =>
+                          handleConfigChange("condition", e.target.value)
+                        }
                         placeholder="Enter a condition expression"
                       />
                       <p className="text-xs text-muted-foreground">
                         Use JavaScript expressions that evaluate to true/false.
                       </p>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="trueStep">If True, Go To Step</Label>
@@ -272,18 +286,28 @@ const WorkflowStepEditor = ({
                           id="trueStep"
                           type="number"
                           value={editedStep.config?.trueStepIndex || ""}
-                          onChange={(e) => handleConfigChange("trueStepIndex", parseInt(e.target.value))}
+                          onChange={(e) =>
+                            handleConfigChange(
+                              "trueStepIndex",
+                              parseInt(e.target.value)
+                            )
+                          }
                           min="0"
                         />
                       </div>
-                      
+
                       <div className="space-y-2">
                         <Label htmlFor="falseStep">If False, Go To Step</Label>
                         <Input
                           id="falseStep"
                           type="number"
                           value={editedStep.config?.falseStepIndex || ""}
-                          onChange={(e) => handleConfigChange("falseStepIndex", parseInt(e.target.value))}
+                          onChange={(e) =>
+                            handleConfigChange(
+                              "falseStepIndex",
+                              parseInt(e.target.value)
+                            )
+                          }
                           min="0"
                         />
                       </div>
@@ -312,20 +336,25 @@ const WorkflowStepEditor = ({
                       ))}
                     </SelectContent>
                   </Select>
-                  
+
                   {editedStep.function_id && (
                     <div className="mt-4 p-4 border rounded-md bg-muted/50">
                       <h4 className="font-medium mb-2">Function Details</h4>
                       <p className="text-sm">
-                        {functions.find(f => f.id === editedStep.function_id)?.description || "No description available"}
+                        {functions.find((f) => f.id === editedStep.function_id)
+                          ?.description || "No description available"}
                       </p>
                     </div>
                   )}
-                  
+
                   <div className="mt-4 space-y-2">
                     <Label>Function Parameters</Label>
                     <Textarea
-                      value={JSON.stringify(editedStep.config?.parameters || {}, null, 2)}
+                      value={JSON.stringify(
+                        editedStep.config?.parameters || {},
+                        null,
+                        2
+                      )}
                       onChange={(e) => {
                         try {
                           const params = JSON.parse(e.target.value);
@@ -364,33 +393,45 @@ const WorkflowStepEditor = ({
                       ))}
                     </SelectContent>
                   </Select>
-                  
+
                   {editedStep.connected_service_id && (
                     <div className="mt-4 p-4 border rounded-md bg-muted/50">
                       <h4 className="font-medium mb-2">Service Details</h4>
                       <p className="text-sm">
-                        Type: {connectedServices.find(s => s.id === editedStep.connected_service_id)?.service_type || "Unknown"}
+                        Type:{" "}
+                        {connectedServices.find(
+                          (s) => s.id === editedStep.connected_service_id
+                        )?.service_type || "Unknown"}
                       </p>
                       <p className="text-sm">
-                        Status: {connectedServices.find(s => s.id === editedStep.connected_service_id)?.status || "Unknown"}
+                        Status:{" "}
+                        {connectedServices.find(
+                          (s) => s.id === editedStep.connected_service_id
+                        )?.status || "Unknown"}
                       </p>
                     </div>
                   )}
-                  
+
                   <div className="mt-4 space-y-2">
                     <Label htmlFor="action">Service Action</Label>
                     <Input
                       id="action"
                       value={editedStep.config?.action || ""}
-                      onChange={(e) => handleConfigChange("action", e.target.value)}
+                      onChange={(e) =>
+                        handleConfigChange("action", e.target.value)
+                      }
                       placeholder="Enter action name"
                     />
                   </div>
-                  
+
                   <div className="mt-4 space-y-2">
                     <Label>Service Parameters</Label>
                     <Textarea
-                      value={JSON.stringify(editedStep.config?.parameters || {}, null, 2)}
+                      value={JSON.stringify(
+                        editedStep.config?.parameters || {},
+                        null,
+                        2
+                      )}
                       onChange={(e) => {
                         try {
                           const params = JSON.parse(e.target.value);
@@ -418,24 +459,32 @@ const WorkflowStepEditor = ({
                     <Input
                       id="formTitle"
                       value={editedStep.config?.title || ""}
-                      onChange={(e) => handleConfigChange("title", e.target.value)}
+                      onChange={(e) =>
+                        handleConfigChange("title", e.target.value)
+                      }
                       placeholder="Enter form title"
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="submitButtonText">Submit Button Text</Label>
                     <Input
                       id="submitButtonText"
                       value={editedStep.config?.submitButtonText || "Submit"}
-                      onChange={(e) => handleConfigChange("submitButtonText", e.target.value)}
+                      onChange={(e) =>
+                        handleConfigChange("submitButtonText", e.target.value)
+                      }
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label>Form Fields</Label>
                     <Textarea
-                      value={JSON.stringify(editedStep.config?.fields || [], null, 2)}
+                      value={JSON.stringify(
+                        editedStep.config?.fields || [],
+                        null,
+                        2
+                      )}
                       onChange={(e) => {
                         try {
                           const fields = JSON.parse(e.target.value);
@@ -448,7 +497,8 @@ const WorkflowStepEditor = ({
                       rows={10}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Define form fields as JSON array. Each field should have at minimum: id, name, label, and type.
+                      Define form fields as JSON array. Each field should have
+                      at minimum: id, name, label, and type.
                     </p>
                   </div>
                 </div>
@@ -483,9 +533,7 @@ const WorkflowStepEditor = ({
           <Button variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>
-            Save
-          </Button>
+          <Button onClick={handleSave}>Save</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

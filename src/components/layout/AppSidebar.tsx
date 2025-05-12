@@ -20,6 +20,7 @@ import {
   LayoutDashboard,
   FileText,
   Users,
+  BookUser,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ROUTES } from "@/consts/routes";
@@ -123,9 +124,15 @@ const AppSidebar = () => {
           onClick: onNavItemClick,
         },
         {
-          icon: <Users className="h-4 w-4" />,
+          icon: <BookUser className="h-4 w-4" />,
           label: "Clients",
           url: ROUTES.CLIENTS,
+          onClick: onNavItemClick,
+        },
+        {
+          icon: <Users className="h-4 w-4" />,
+          label: "Employees",
+          url: ROUTES.STAFF_MEMBERS,
           onClick: onNavItemClick,
         },
       ],

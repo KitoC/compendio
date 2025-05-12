@@ -66,7 +66,7 @@ export interface FormField {
   id: string | number;
   name: string;
   label?: string;
-  type: FormFieldType;
+  type: FormFieldType | "field-group";
   placeholder?: string;
   defaultValue?: unknown;
   options?: FormFieldOption[];
@@ -76,6 +76,7 @@ export interface FormField {
   ) => Promise<{ isValid: boolean; error?: string }>;
   disabled?: boolean;
   className?: string;
+  wrapperClassName?: string;
   hidden?: boolean | ((values: Record<string, unknown>) => boolean);
   props?: Record<string, unknown>;
   description?: string;
@@ -91,6 +92,7 @@ export interface FormField {
     value: unknown,
     formValues: Record<string, unknown>
   ) => React.ReactNode;
+  fields?: FormField[];
 }
 
 export interface FormSection {

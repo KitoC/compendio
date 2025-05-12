@@ -1,5 +1,5 @@
 import { Database } from "@/integrations/supabase/types";
-import { FormConfig } from "@/components/form-builder/types";
+import { FormConfig } from "@/components/FormBuilder/types";
 
 export interface AiAgent {
   id: string;

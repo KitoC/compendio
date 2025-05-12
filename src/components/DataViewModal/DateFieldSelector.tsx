@@ -1,4 +1,4 @@
-import { CustomFieldComponentProps } from "@/components/form-builder/types";
+import { CustomFieldComponentProps } from "@/components/FormBuilder/types";
 import {
   Select,
   SelectContent,

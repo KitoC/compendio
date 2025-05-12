@@ -11,7 +11,10 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "functions:dev": "supabase functions serve",
-    "seed:dev": "source .env && node supabase/.seeds/index.js"
+    "seed:dev": "source .env && node supabase/.seeds/index.js",
+    "migrations:new": "supabase migrations new",
+    "migrations:up": "supabase migrations up && npm run generate:types",
+    "generate:types": "supabase gen types typescript --local > src/integrations/supabase/types.ts"
   },
   "browserslist": [
     "defaults",

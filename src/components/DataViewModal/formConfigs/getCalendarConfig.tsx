@@ -1,4 +1,4 @@
-import { FormConfig } from "@/components/form-builder/types";
+import { FormConfig } from "@/components/FormBuilder/types";
 import { TableSchema } from "@/hooks/useTableBuilderService";
 import {
   CustomTableField,

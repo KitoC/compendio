@@ -1,5 +1,5 @@
 import { CustomTableField, SelectOption } from "@/types/customTable";
-import { CustomFieldComponentProps } from "../form-builder/types";
+import { CustomFieldComponentProps } from "../FormBuilder/types";
 import Multiselect from "../ui/multiselect";
 import RecordTag from "./RecordTag";
 import { components } from "react-select";
@@ -48,6 +48,8 @@ const CustomTableEntityField = ({
   name,
 }: CustomTableEntityFieldProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+
   const [inputValue, setInputValue] = useState("");
   const { tables } = useCustomTables();
   const inverseTable = tables.find(
@@ -120,6 +122,9 @@ const CustomTableEntityField = ({
         components={components}
         onInputChange={handleInputChange}
         inputValue={inputValue}
+        menuIsOpen={isOpen}
+        onMenuOpen={() => setIsOpen(true)}
+        onMenuClose={() => setIsOpen(false)}
       />
       <div id={`${name}-modal`} />
     </>

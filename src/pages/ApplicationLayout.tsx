@@ -16,13 +16,15 @@ import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
 import clsx from "clsx";
 import useEmailAgentNotifications from "@/contexts/NotificationProvider/useEmailNotifications";
 import { SystemSettingsProvider } from "@/contexts/SystemSettingsProvider";
-
+import { paths } from "@/utils/pathHelpers";
+import { useTenant } from "@/contexts/TenantContext";
 interface ApplicationLayoutProps {
   children?: ReactNode;
 }
 
 const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
   const { user, isLoading: authLoading } = useAuth();
+  const { urlTenantAlias } = useTenant();
 
   const headerRef = useRef<HTMLHeadElement>(null);
   const navigate = useNavigate();
@@ -139,7 +141,11 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
                         )}
 
                         <div className="ml-auto">
-                          <Button>
+                          <Button
+                            onClick={() =>
+                              navigate(paths.getNewQuotePath(urlTenantAlias))
+                            }
+                          >
                             <FileText className="h-4 w-4 mr-1" />
                             Create quote
                           </Button>
