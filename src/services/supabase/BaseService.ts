@@ -119,8 +119,8 @@ export class BaseService {
 
     if (pagination && pagination.page && pagination.pageSize) {
       query = query.range(
-        pagination.page * pagination.pageSize,
-        (pagination.page + 1) * pagination.pageSize - 1
+        pagination.page * pagination.pageSize - pagination.pageSize,
+        pagination.page * pagination.pageSize
       );
     }
 

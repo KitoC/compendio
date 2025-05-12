@@ -10,19 +10,11 @@ import AccessPending from "./pages/AccessPending";
 import Dashboard from "./pages/application-layout/Dashboard";
 import AgentChat from "./pages/application-layout/AgentChat";
 import { ROUTES } from "./consts/routes";
-import AgentDetail from "./pages/application-layout/settings/AgentDetail";
-import AgentWorkflowsSettings from "./pages/application-layout/settings/AgentWorkflowsSettings";
-import AgentsSettings from "./pages/application-layout/settings/AgentsSettings";
 import AppearanceSettings from "./pages/application-layout/settings/AppearanceSettings";
-import CustomTableForm from "./pages/application-layout/settings/CustomTableForm";
 import CustomRoleForm from "./pages/application-layout/settings/CustomRoleForm";
-import CustomTablesPage from "./pages/application-layout/settings/CustomTablesPage";
 import IntegrationsSettings from "./pages/application-layout/settings/IntegrationsSettings";
 import IntegrationDetailPage from "./pages/application-layout/settings/IntegrationDetailPage";
 import Settings from "./pages/application-layout/Settings";
-import TableBuilderPage from "./pages/application-layout/settings/TableBuilderPage";
-import WorkflowDetail from "./pages/application-layout/settings/WorkflowDetail";
-import WorkflowsSettings from "./pages/application-layout/settings/WorkflowsSettings";
 import WorkflowInstancesSettings from "./pages/application-layout/settings/WorkflowInstancesSettings";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { AuthProvider } from "./hooks/useAuth";
@@ -32,14 +24,12 @@ import { TenantProvider } from "./contexts/TenantContext";
 import { SocketProvider } from "./contexts/SocketProvider";
 import { TTSProvider } from "./contexts/TTSProvider";
 import { VoiceProvider } from "./contexts/VoiceProvider";
-import OnboardingPage from "./pages/OnboardingPage";
 import { NotificationProvider } from "./contexts/NotificationProvider";
 import { PwaInstallPrompt } from "./components/PwaInstallPrompt";
 import BetaAccess from "./pages/BetaAccess";
-import DataNavigationPage from "./pages/application-layout/DataNavigationPage";
-import DataNavigationViewPage from "./pages/application-layout/DataNavigationViewPage";
 import Quotes from "./pages/application-layout/Quotes";
 import Clients from "./pages/application-layout/Clients";
+
 function App() {
   return (
     <QueryProvider>
@@ -81,31 +71,6 @@ function App() {
                       <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
                       <Route path={ROUTES.QUOTES} element={<Quotes />} />
                       <Route path={ROUTES.CLIENTS} element={<Clients />} />
-                      {/* <Route
-                        path={ROUTES.ONBOARDING}
-                        element={<OnboardingPage />}
-                      /> */}
-                      {/* <Route
-                        path={ROUTES.CUSTOM_TABLE_DATA}
-                        element={<CustomTablePage />}
-                      >
-                        <Route
-                          path={ROUTES.CUSTOM_TABLE_DATA_VIEW}
-                          element={<CustomTablePage />}
-                        />
-                      </Route> */}
-
-                      {/* <Route
-                        path={ROUTES.DATA_NAVIGATION}
-                        element={<DataNavigationPage />}
-                      >
-                        <Route path={""} element={<DataNavigationViewPage />} />
-                        <Route
-                          path={ROUTES.DATA_NAVIGATION_VIEW}
-                          element={<DataNavigationViewPage />}
-                        />
-                      </Route> */}
-
                       <Route path={ROUTES.AGENT_CHAT} element={<AgentChat />} />
 
                       {/* Settings Routes */}
@@ -114,26 +79,6 @@ function App() {
                           path={ROUTES.SETTINGS_APPEARANCE}
                           element={<AppearanceSettings />}
                         />
-                        {/* <Route
-                          path={ROUTES.SETTINGS_AGENTS}
-                          element={<AgentsSettings />}
-                        />
-                        <Route
-                          path={ROUTES.SETTINGS_AGENTS_DETAIL}
-                          element={<AgentDetail />}
-                        /> */}
-                        {/* <Route
-                          path={ROUTES.SETTINGS_AGENT_WORKFLOWS}
-                          element={<AgentWorkflowsSettings />}
-                        />
-                        <Route
-                          path={ROUTES.SETTINGS_WORKFLOWS}
-                          element={<WorkflowsSettings />}
-                        />
-                        <Route
-                          path={ROUTES.SETTINGS_WORKFLOW_DETAIL}
-                          element={<WorkflowDetail />}
-                        /> */}
                         <Route
                           path={ROUTES.SETTINGS_INTEGRATIONS}
                           element={<IntegrationsSettings />}
@@ -146,18 +91,6 @@ function App() {
                           path={ROUTES.SETTINGS_WORKFLOW_INSTANCES}
                           element={<WorkflowInstancesSettings />}
                         />
-                        {/* <Route
-                          path={ROUTES.SETTINGS_CUSTOM_TABLES}
-                          element={<CustomTablesPage />}
-                        /> */}
-                        {/* <Route
-                          path={ROUTES.SETTINGS_CUSTOM_TABLES_DETAIL}
-                          element={<CustomTableForm tableId="" />}
-                        />
-                        <Route
-                          path={ROUTES.SETTINGS_CUSTOM_TABLES_NEW}
-                          element={<CustomTableForm tableId="" />}
-                        /> */}
                         <Route
                           path={ROUTES.SETTINGS_CUSTOM_ROLES_DETAIL}
                           element={<CustomRoleForm />}
@@ -166,10 +99,6 @@ function App() {
                           path={ROUTES.SETTINGS_CUSTOM_ROLES_NEW}
                           element={<CustomRoleForm />}
                         />
-                        {/* <Route
-                          path={ROUTES.SETTINGS_TABLE_BUILDER}
-                          element={<TableBuilderPage />}
-                        /> */}
                         {/* Default Settings Route */}
                         <Route
                           index
