@@ -11,7 +11,7 @@ const Input = React.forwardRef<
     icon?: React.ReactNode;
     resize?: boolean;
   }
->(({ className, type, icon, resize, ...props }, ref) => {
+>(({ className, type, icon, resize, prefix, ...props }, ref) => {
   const [inputWidth, setInputWidth] = useState(50); // Default width
 
   // Measure text width on render and update input width
@@ -54,9 +54,19 @@ const Input = React.forwardRef<
           {icon}
         </div>
       )}
+      {prefix && (
+        <div className="absolute left-3 flex items-center pointer-events-none text-muted-foreground">
+          {prefix}
+        </div>
+      )}
       <input
         type={type}
-        className={cn(inputClassName, icon && "pl-9", className)}
+        className={cn(
+          inputClassName,
+          icon && "pl-9",
+          prefix && "pl-6",
+          className
+        )}
         ref={ref}
         {...props}
         style={{ width: resize ? inputWidth : undefined }}

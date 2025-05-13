@@ -119,26 +119,29 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
                   {isMobile ? (
                     suspensedContent
                   ) : (
-                    <div className="flex flex-col m-h-full flex-grow">
+                    <div className="flex flex-col min-h-screen h-screen flex-grow overflow-hidden">
                       <header
                         ref={headerRef}
                         className="z-40  w-full flex items-center h-fit px-4 border-b bg-header py-2"
                       >
-                        {isMobile && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="mr-2 h-14 w-14 p-2"
-                            onClick={() =>
-                              document.dispatchEvent(
-                                new CustomEvent("toggle-sidebar")
-                              )
-                            }
-                          >
-                            <Menu />
-                            <span className="sr-only">Toggle menu</span>
-                          </Button>
-                        )}
+                        <div className="flex items-center">
+                          {isMobile && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="mr-2 h-14 w-14 p-2"
+                              onClick={() =>
+                                document.dispatchEvent(
+                                  new CustomEvent("toggle-sidebar")
+                                )
+                              }
+                            >
+                              <Menu />
+                              <span className="sr-only">Toggle menu</span>
+                            </Button>
+                          )}
+                          <div id="header-anchor-left"></div>
+                        </div>
 
                         <div className="ml-auto">
                           <Button
@@ -154,7 +157,7 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
 
                       <main
                         className={clsx(
-                          "flex-grow overflow-y-scroll relative",
+                          "flex-grow overflow-hidden relative",
                           isMobile &&
                             "h-[calc(100vh-var(--header-height))] pb-[var(--page-bottom-padding)]"
                         )}

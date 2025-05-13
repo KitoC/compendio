@@ -43,7 +43,7 @@ export type ServiceQuery = {
   };
 };
 
-type GetResponse<RecordType> = {
+export type GetResponse<RecordType> = {
   data: RecordType[];
   count: number;
 };

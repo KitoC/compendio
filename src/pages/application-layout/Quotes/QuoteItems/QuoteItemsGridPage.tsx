@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { EditIcon, PlusIcon, TrashIcon } from "lucide-react";
 import ServiceRecordModal from "@/components/modals/FormModal";
 import { quoteItemFormConfig } from "@/forms/quoteItemForm";
-import { useRenderPortal } from "@/hooks/usePortal";
+import { useRenderPortal } from "@/hooks/useRenderPortal";
 
 const quoteItemService = new QuoteItemService();
 

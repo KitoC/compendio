@@ -1,7 +1,8 @@
-export interface SelectOption {
+export interface SelectOption<T> {
   value: string;
   label: string;
   color?: string;
+  data?: T;
 }
 
 export type FieldType =
@@ -25,7 +26,7 @@ export type FieldType =
 
 export type FieldRenderOptions = {
   type: FieldType;
-  options?: SelectOption[];
+  options?: SelectOption<unknown>[];
   prefix?: string;
   suffix?: string;
   isMulti?: boolean;

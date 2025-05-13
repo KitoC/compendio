@@ -6,6 +6,7 @@ import { useTenant } from "@/contexts/TenantContext";
 import { paths } from "@/utils/pathHelpers";
 import FormBuilder from "@/components/FormBuilder";
 import { quoteFormConfig } from "@/forms/quoteForm";
+import { useRenderPortal } from "@/hooks/useRenderPortal";
 
 const NewQuote = () => {
   const { urlTenantAlias } = useTenant();
@@ -15,9 +16,11 @@ const NewQuote = () => {
     console.log(data);
   };
 
+  const renderPortal = useRenderPortal("header-anchor-left");
+
   return (
-    <Page
-      title={
+    <Page title="Draft quote">
+      {renderPortal(
         <Button
           variant="outline"
           onClick={() => navigate(paths.getQuotesPath(urlTenantAlias))}
@@ -25,10 +28,11 @@ const NewQuote = () => {
           <ArrowLeftIcon />
           Back to quotes
         </Button>
-      }
-    >
+      )}
+
       <FormBuilder
-        className="pt-4"
+        className="pt-4 h-fit"
+        contentClassName="h-fit overflow-y-unset"
         config={quoteFormConfig}
         onSubmit={onSubmit}
         initialValues={{

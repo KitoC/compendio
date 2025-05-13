@@ -2,22 +2,22 @@ import { CustomFieldComponentProps } from "../FormBuilder/types";
 import Multiselect from "../ui/multiselect";
 import RecordTag from "./RecordTag";
 import { components } from "react-select";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { differenceBy } from "lodash";
 import { SelectOption } from "@/types/fieldTypes";
-import { ServiceQuery } from "@/services/supabase/BaseService";
+import { ServiceQuery, GetResponse } from "@/services/supabase/BaseService";
 import { useDebounce } from "use-debounce";
 import { useQuery } from "@tanstack/react-query";
 
 interface EntitySelectProps<RecordType> extends CustomFieldComponentProps {
   isMulti: boolean;
-  value: SelectOption[];
-  onChange: (name: string, value: SelectOption[]) => void;
+  value: SelectOption<RecordType>[];
+  onChange: (name: string, value: SelectOption<RecordType>[]) => void;
 
   renderLabel: (record: RecordType) => string;
   tableName: string;
   uniqueKey: string;
-  onFetch?: (query: ServiceQuery) => { data: RecordType[] };
+  onFetch?: (query: ServiceQuery) => Promise<GetResponse<RecordType>>;
   placeholder?: string;
 }
 
@@ -69,11 +69,17 @@ function EntitySelect<RecordType extends { id: string }>({
     data: { data = [] },
     isLoading,
     isFetching,
+    refetch,
   } = useQuery<{ data: RecordType[] }, Error>({
     queryKey: [tableName, debouncedInputValue],
     queryFn: () => {
       setIsOpen(true);
-      return onFetch?.({ search: debouncedInputValue });
+
+      return onFetch?.({
+        search: debouncedInputValue,
+        limit: 100,
+        sort: { column: "created_at", ascending: false },
+      });
     },
     enabled: !!onFetch && !!debouncedInputValue,
     placeholderData: (previousData, previousQuery) => {
@@ -86,7 +92,7 @@ function EntitySelect<RecordType extends { id: string }>({
     // keepPreviousData: true,
   });
 
-  const options: SelectOption[] = useMemo(() => {
+  const options: SelectOption<RecordType>[] = useMemo(() => {
     return data?.map((record) => ({
       value: record.id,
       label: renderLabel(record),
@@ -95,7 +101,7 @@ function EntitySelect<RecordType extends { id: string }>({
   }, [data, renderLabel]);
 
   const handleChange = useCallback(
-    (newValue: SelectOption[]) => {
+    (newValue: SelectOption<RecordType>[]) => {
       if (isMulti) {
         onChange(name, newValue);
       } else {
@@ -126,6 +132,10 @@ function EntitySelect<RecordType extends { id: string }>({
     };
   }, [name]);
 
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
   return (
     <>
       <Multiselect
@@ -138,11 +148,6 @@ function EntitySelect<RecordType extends { id: string }>({
         components={components}
         onInputChange={handleInputChange}
         inputValue={inputValue}
-        menuIsOpen={isOpen}
-        onMenuOpen={() => setIsOpen(true)}
-        onMenuClose={() => {
-          setIsOpen(false);
-        }}
         isSearchable
         placeholder={placeholder}
       />

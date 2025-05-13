@@ -63,7 +63,7 @@ const FormField = ({
   );
 
   const id = field.id as string;
-  let optionValue: SelectOption | undefined;
+  let optionValue: SelectOption<unknown> | undefined;
   const handleChangeSideEffect = useCallback(
     (newFormValues: Record<string, unknown>) => {
       onChangeSideEffect?.({

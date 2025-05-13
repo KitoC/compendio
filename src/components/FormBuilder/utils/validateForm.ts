@@ -1,4 +1,4 @@
-import { FormConfig, FormSection } from "../types";
+import { FormConfig, FormSection, FormField } from "../types";
 import validateField from "./validateField";
 
 interface ValidateFormProps {
@@ -19,26 +19,34 @@ export const validateForm = ({
   const invalidFields: Record<string, string> = {};
   let isValid = true;
   const newTouched: Record<string, boolean> = { ...touched };
+  console.log({ filteredSections });
 
-  // Validate all fields
-  filteredSections.forEach((section) => {
-    section.fields.forEach((field) => {
+  const validateFields = (fields: FormField[]) => {
+    fields.forEach((field) => {
       newTouched[field.name] = true;
 
-      const { isValid: isValidField, errorMessage } = validateField({
-        name: field.name,
-        value: values[field.name],
-        config,
-        errors,
-        touched,
-      });
+      // Handle field groups recursively
+      if (field.type === "field-group" && field.fields) {
+        validateFields(field.fields);
+      } else {
+        const { isValid: isValidField, errorMessage } = validateField({
+          value: values[field.name],
+          field,
+        });
 
-      if (!isValidField) {
-        isValid = false;
-        invalidFields[field.name] = errorMessage;
+        if (!isValidField) {
+          isValid = false;
+          invalidFields[field.name] = errorMessage;
+        }
       }
     });
+  };
+
+  // Validate all sections
+  filteredSections.forEach((section) => {
+    validateFields(section.fields);
   });
 
+  console.log({ invalidFields });
   return { isValid, invalidFields };
 };

@@ -1,31 +1,11 @@
-import { FormConfig, FormField } from "../types";
+import { FormField } from "../types";
 
 interface ValidateFieldProps {
-  name: string;
   value: unknown;
-  config: FormConfig;
-  errors: Record<string, string>;
-  touched: Record<string, boolean>;
+  field: FormField;
 }
 
-const validateField = ({
-  name,
-  value,
-  config,
-  errors,
-  touched,
-}: ValidateFieldProps) => {
-  // Find the field in the config
-  let field: FormField | undefined;
-
-  for (const section of config.sections) {
-    const foundField = section.fields.find((f) => f.name === name);
-    if (foundField) {
-      field = foundField;
-      break;
-    }
-  }
-
+const validateField = ({ value, field }: ValidateFieldProps) => {
   if (!field || !field.validation) return { isValid: true, errorMessage: "" };
 
   const validation = field.validation;

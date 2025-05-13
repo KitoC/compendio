@@ -8,8 +8,8 @@ const Page = ({
   subtitle?: React.ReactNode;
 }) => {
   return (
-    <div className="container mx-auto py-8 max-w-8xl flex flex-col h-full">
-      <div className="flex flex-col h-full overflow-y-auto gap-4 w-full">
+    <div className="flex flex-col h-full overflow-y-auto w-full">
+      <div className="flex flex-col h-full gap-4 w-full px-8 py-8">
         <div className="flex w-full">
           <div className="flex flex-col gap-2">
             {title && typeof title === "string" && (
@@ -21,7 +21,7 @@ const Page = ({
           </div>
         </div>
 
-        {children}
+        <div className="flex-1 pb-8 w-full">{children}</div>
       </div>
     </div>
   );

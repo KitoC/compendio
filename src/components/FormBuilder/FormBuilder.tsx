@@ -1,26 +1,21 @@
 // NO_CHANGE
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useMemo } from "react";
 import { createPortal } from "react-dom";
 import { FormBuilderProps, FormField as FormFieldConfig } from "./types";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import FormField from "./FormField";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useDebouncedCallback } from "use-debounce";
-import isEqual from "lodash/isEqual";
 import { Divider } from "@/components/ui/divider";
-import validateField from "./utils/validateField";
-import { validateForm } from "./utils/validateForm";
-import { isEmpty } from "lodash";
+import { useFormState } from "./hooks/useFormState";
+import { FormFooter } from "./components/FormFooter";
 
 const FormBuilder = ({
   config,
@@ -39,178 +34,31 @@ const FormBuilder = ({
   onFormChangeDebounce = 50,
   onSubmitChangeDebounce = 500,
 }: FormBuilderProps) => {
-  const [values, setValues] = useState<Record<string, unknown>>(initialValues);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const [footerEl, setFooterEl] = useState<HTMLDivElement | null>(null);
-  const [submitAttempted, setSubmitAttempted] = useState(false);
-
-  const previousValues = useRef(initialValues);
-
-  const filteredSections = useMemo(
-    () =>
-      config.sections.filter((section) =>
-        typeof section.hidden === "function"
-          ? !section?.hidden(values)
-          : !section.hidden
-      ),
-    [config.sections, values]
-  );
-
-  const invalidateField = useCallback(
-    (name: string, message = "Invalid field") => {
-      setErrors((prev) => ({ ...prev, [name]: message }));
-    },
-    []
-  );
-
-  const handleChange = useCallback(
-    (name: string, value: unknown) => {
-      setValues((prev) => ({ ...prev, [name]: value }));
-
-      // Mark field as touched
-      if (!touched[name]) {
-        setTouched((prev) => ({ ...prev, [name]: true }));
-      }
-
-      // Clear error if it exists
-      if (errors[name]) {
-        setErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors[name];
-          return newErrors;
-        });
-      }
-
-      // Validate field
-      const isValid = validateField({ name, value, config, errors, touched });
-
-      if (!isValid) {
-        invalidateField(name);
-      }
-    },
-    [config, errors, invalidateField, setErrors, setTouched, setValues, touched]
-  );
-
-  const handleSubmit = useCallback(
-    (e?: React.FormEvent) => {
-      e?.preventDefault();
-
-      const { isValid, invalidFields } = validateForm({
-        config,
-        values,
-        errors,
-        touched,
-        filteredSections,
-      });
-
-      setSubmitAttempted(true);
-
-      if (isValid) {
-        onSubmit(values);
-      } else {
-        setErrors(invalidFields);
-        toast.error("Please fix the errors in the form");
-      }
-    },
-    [onSubmit, values, errors, touched, filteredSections, config]
-  );
-
-  const handleReset = () => {
-    setValues(initialValues);
-    setErrors({});
-    setTouched({});
-  };
-
-  useEffect(() => {
-    if (!buttonPortalId) return;
-
-    setTimeout(() => {
-      const el = document.getElementById(buttonPortalId);
-      if (el) {
-        setFooterEl(el as HTMLDivElement);
-      }
-    }, 0);
-  }, [values, buttonPortalId]);
-
-  const debouncedHandleSubmit = useDebouncedCallback(
+  const {
+    values,
+    setValues,
+    errors,
+    setErrors,
+    touched,
+    submitAttempted,
+    filteredSections,
+    handleChange,
     handleSubmit,
-    onSubmitChangeDebounce,
-    { leading: false }
-  );
-  const debouncedHandleFormChange = useDebouncedCallback(
+    handleReset,
+    hasErrors,
+  } = useFormState({
+    config,
+    initialValues,
+    onSubmit,
     onFormChange,
     onFormChangeDebounce,
-    { leading: false }
-  );
+    onSubmitChangeDebounce,
+    submitOnChange,
+  });
 
-  useEffect(() => {
-    if (
-      submitOnChange &&
-      previousValues.current &&
-      !isEqual(values, previousValues.current)
-    ) {
-      debouncedHandleSubmit();
-      previousValues.current = values;
-    }
-  }, [values, debouncedHandleSubmit, submitOnChange]);
-
-  useEffect(() => {
-    if (
-      onFormChange &&
-      previousValues.current &&
-      !isEqual(values, previousValues.current)
-    ) {
-      debouncedHandleFormChange(values);
-
-      previousValues.current = values;
-    }
-  }, [values, debouncedHandleFormChange, onFormChange]);
-
-  const footer = (
-    <CardFooter className={`flex justify-between mt-auto ${footerClassname}`}>
-      {config.showReset && (
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleReset}
-          disabled={isSubmitting}
-        >
-          {config.resetIconButtonBefore}
-          {config.resetButtonText || "Reset"}
-          {config.resetIconButtonAfter}
-        </Button>
-      )}
-      <div className="flex gap-2 ml-auto">
-        {(config.cancelButtonText || onCancel) && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            disabled={isSubmitting}
-          >
-            {config.cancelIconButtonBefore}
-            {config.cancelButtonText || "Cancel"}
-            {config.cancelIconButtonAfter}
-          </Button>
-        )}
-
-        {!hideSubmitButton && (
-          <Button
-            disabled={isSubmitting || !isEmpty(errors)}
-            className={!config.showReset ? "ml-auto" : ""}
-            onClick={handleSubmit}
-          >
-            {config.submitIconButtonBefore}
-            {isSubmitting
-              ? "Submitting..."
-              : config.submitButtonText || "Submit"}
-            {config.submitIconButtonAfter}
-          </Button>
-        )}
-      </div>
-    </CardFooter>
-  );
+  const menuPortalId = useMemo(() => {
+    return `${config.id}-menu-portal`;
+  }, [config.id]);
 
   const renderField = (field: FormFieldConfig) => {
     return (
@@ -231,9 +79,18 @@ const FormBuilder = ({
     );
   };
 
-  const menuPortalId = useMemo(() => {
-    return `${config.id}-menu-portal`;
-  }, [config.id]);
+  const footer = (
+    <FormFooter
+      config={config}
+      isSubmitting={isSubmitting}
+      hasErrors={hasErrors}
+      onReset={handleReset}
+      onSubmit={handleSubmit}
+      onCancel={onCancel}
+      hideSubmitButton={hideSubmitButton}
+      footerClassname={footerClassname}
+    />
+  );
 
   return (
     <Card className={cn("w-full h-full", className)}>
@@ -290,7 +147,13 @@ const FormBuilder = ({
                     .map((field) => {
                       if (field.type === "field-group") {
                         return (
-                          <div key={field.id} className="flex gap-4 w-full">
+                          <div
+                            key={field.id}
+                            className={cn(
+                              "flex flex-row gap-4 w-full flex-wrap xl:flex-nowrap",
+                              field.className
+                            )}
+                          >
                             {field.fields.map(renderField)}
                           </div>
                         );
@@ -306,8 +169,9 @@ const FormBuilder = ({
             </>
           ))}
         </CardContent>
-        {!footerEl && footer}
-        {footerEl && createPortal(footer, footerEl)}
+        {!buttonPortalId && footer}
+        {buttonPortalId &&
+          createPortal(footer, document.getElementById(buttonPortalId)!)}
       </form>
     </Card>
   );
