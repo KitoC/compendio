@@ -1,4 +1,5 @@
 import { FormField } from "../types";
+import pluralize from "pluralize";
 
 interface ValidateFieldProps {
   value: unknown;
@@ -54,6 +55,23 @@ const validateField = ({ value, field }: ValidateFieldProps) => {
     else if (validation.max !== undefined && value > validation.max) {
       isValid = false;
       errorMessage = `${field.label} must be at most ${validation.max}`;
+    }
+  } else if (Array.isArray(value)) {
+    const { minLength, maxLength } = validation;
+
+    if (minLength && value.length < minLength) {
+      isValid = false;
+      errorMessage = `${
+        field.label
+      } must have at least ${minLength} ${pluralize("item", minLength)}`;
+    }
+
+    if (maxLength && value.length > maxLength) {
+      isValid = false;
+      errorMessage = `${field.label} must have at most ${maxLength} ${pluralize(
+        "item",
+        maxLength
+      )}`;
     }
   }
 

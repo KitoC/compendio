@@ -1,0 +1,1 @@
+ALTER TABLE "public"."quotes" ADD COLUMN "quote_number" text NOT NULL DEFAULT '';

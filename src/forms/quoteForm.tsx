@@ -37,6 +37,9 @@ export const quoteFormConfig: FormConfig = {
               validation: {
                 required: true,
               },
+              props: {
+                isMulti: false,
+              },
             },
             {
               id: "client",
@@ -47,6 +50,9 @@ export const quoteFormConfig: FormConfig = {
               CustomComponent: ClientSelect,
               validation: {
                 required: true,
+              },
+              props: {
+                isMulti: true,
               },
             },
           ],
@@ -76,6 +82,7 @@ export const quoteFormConfig: FormConfig = {
           defaultValue: [],
           validation: {
             required: true,
+            minLength: 1,
           },
         },
       ],

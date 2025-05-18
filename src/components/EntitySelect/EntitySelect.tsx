@@ -11,8 +11,11 @@ import { useQuery } from "@tanstack/react-query";
 
 interface EntitySelectProps<RecordType> extends CustomFieldComponentProps {
   isMulti: boolean;
-  value: SelectOption<RecordType>[];
-  onChange: (name: string, value: SelectOption<RecordType>[]) => void;
+  value: SelectOption<RecordType>[] | SelectOption<RecordType>;
+  onChange: (
+    name: string,
+    value: SelectOption<RecordType>[] | SelectOption<RecordType>
+  ) => void;
 
   renderLabel: (record: RecordType) => string;
   tableName: string;
@@ -89,7 +92,6 @@ function EntitySelect<RecordType extends { id: string }>({
 
       return { data: [] };
     },
-    // keepPreviousData: true,
   });
 
   const options: SelectOption<RecordType>[] = useMemo(() => {
@@ -101,14 +103,10 @@ function EntitySelect<RecordType extends { id: string }>({
   }, [data, renderLabel]);
 
   const handleChange = useCallback(
-    (newValue: SelectOption<RecordType>[]) => {
-      if (isMulti) {
-        onChange(name, newValue);
-      } else {
-        onChange(name, differenceBy(newValue, value, "value"));
-      }
+    (newValue: SelectOption<RecordType>[] | SelectOption<RecordType>) => {
+      onChange(name, newValue);
     },
-    [name, onChange, isMulti, value]
+    [name, onChange]
   );
 
   const handleInputChange = useCallback((value: string) => {
@@ -126,7 +124,8 @@ function EntitySelect<RecordType extends { id: string }>({
 
     return {
       MultiValue,
-      SingleValue: RecordValue,
+      // TODO: enable this when we have a way to render the record tag
+      // SingleValue: RecordValue,
       MultiValueLabel: ({ children }) => children,
       MultiValueContainer: RecordValue,
     };
@@ -142,7 +141,7 @@ function EntitySelect<RecordType extends { id: string }>({
         isLoading={isLoading || isFetching}
         disabled={isLoading}
         name={name}
-        value={value || []}
+        value={value}
         onChange={handleChange}
         options={options}
         components={components}
@@ -150,6 +149,7 @@ function EntitySelect<RecordType extends { id: string }>({
         inputValue={inputValue}
         isSearchable
         placeholder={placeholder}
+        isMulti={isMulti}
       />
       <div id={`${name}-modal`} />
     </>

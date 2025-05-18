@@ -6,7 +6,7 @@ const tableName = "quote_line_items";
 export type QuoteLineItem = Tables<"quote_line_items">;
 export type QuoteLineItemInsert = TablesInsert<"quote_line_items">;
 export type QuoteLineItemWithRelations = QuoteLineItemInsert & {
-  quote_item: QuoteItem;
+  quote_item: Partial<QuoteItem>;
 };
 
 export class QuoteLineItemService extends BaseService<

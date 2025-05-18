@@ -12,10 +12,10 @@ import {
 } from "@/components/ui/card";
 import FormField from "./FormField";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 import { Divider } from "@/components/ui/divider";
 import { useFormState } from "./hooks/useFormState";
 import { FormFooter } from "./components/FormFooter";
+import { useRenderPortal } from "@/hooks/useRenderPortal";
 
 const FormBuilder = ({
   config,
@@ -91,6 +91,8 @@ const FormBuilder = ({
       footerClassname={footerClassname}
     />
   );
+
+  const renderPortal = useRenderPortal(buttonPortalId);
 
   return (
     <Card className={cn("w-full h-full", className)}>
@@ -170,8 +172,7 @@ const FormBuilder = ({
           ))}
         </CardContent>
         {!buttonPortalId && footer}
-        {buttonPortalId &&
-          createPortal(footer, document.getElementById(buttonPortalId)!)}
+        {buttonPortalId && renderPortal(footer)}
       </form>
     </Card>
   );

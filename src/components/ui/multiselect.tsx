@@ -16,6 +16,7 @@ import {
   SortEndHandler,
   SortableHandle,
 } from "react-sortable-hoc";
+import { cn } from "@/lib/utils";
 
 function arrayMove<T>(array: readonly T[], from: number, to: number) {
   const slicedArray = array.slice();
@@ -60,14 +61,16 @@ export interface MultiselectOption {
   data?: unknown;
 }
 
-interface MultiselectProps extends Props<MultiselectOption> {
-  value: MultiselectOption[];
-  onChange: (value: MultiselectOption[]) => void;
+interface MultiselectProps
+  extends Omit<Props<MultiselectOption>, "value" | "onChange"> {
+  value: MultiselectOption[] | MultiselectOption;
+  onChange: (value: MultiselectOption[] | MultiselectOption) => void;
   options: MultiselectOption[];
   disabled?: boolean;
   name: string;
   isClearable?: boolean;
   sortable?: boolean;
+  isMulti?: boolean;
 }
 
 const MultiValueContainer = ({ children, ...props }) => {
@@ -125,11 +128,16 @@ const Multiselect = ({
   onInputChange,
   inputValue,
   isLoading,
+  isMulti = true,
   ...reactSelectProps
 }: MultiselectProps) => {
   const onSortEnd: SortEndHandler = useCallback(
     ({ oldIndex, newIndex }) => {
-      const newValue = arrayMove(value, oldIndex, newIndex);
+      const newValue = arrayMove(
+        Array.isArray(value) ? value : [value],
+        oldIndex,
+        newIndex
+      );
       onChange(newValue);
     },
     [onChange, value]
@@ -138,10 +146,19 @@ const Multiselect = ({
   const classNames = useMemo(() => {
     return {
       control: (state) =>
-        "bg-background dark:bg-background border border-input !rounded-md overflow-hidden",
+        cn(
+          "bg-background dark:bg-background border !border-input !rounded-md overflow-hidden truncate ",
+          state.isFocused && "!border-transparent !shadow-none ring-2 ring-ring"
+        ),
       multiValue: (state) => "!dark:bg-sidebar dark:text-white",
       menu: (state) => "dark:bg-sidebar dark:text-white pointer-events-auto",
-      option: (state) => "dark:bg-sidebar hover:!bg-muted dark:text-white",
+      option: (state) => {
+        return cn(
+          "dark:bg-sidebar  dark:text-white",
+          state.isSelected && "!bg-primary",
+          state.isFocused && !state.isSelected && "!bg-primary/50"
+        );
+      },
       container: () => "w-full",
     };
   }, []);
@@ -154,10 +171,11 @@ const Multiselect = ({
       isClearable,
       isDisabled: disabled,
       options,
-      value,
+      value: Array.isArray(value) ? value : value ? [value] : [],
       onChange,
-      isMulti: true,
+      isMulti,
       classNames,
+      menuPortalTarget: document.body,
       ...reactSelectProps,
     };
   }, [
@@ -169,11 +187,12 @@ const Multiselect = ({
     options,
     value,
     onChange,
+    isMulti,
     classNames,
     reactSelectProps,
   ]);
 
-  if (sortable) {
+  if (sortable && !isMulti) {
     return (
       <SortableSelect
         useDragHandle
@@ -184,7 +203,6 @@ const Multiselect = ({
         distance={4}
         // small fix for https://github.com/clauderic/react-sortable-hoc/pull/352:
         getHelperDimensions={({ node }) => node.getBoundingClientRect()}
-        menuPortalTarget={document.body}
         // react-select props:
         components={{
           ...sortableComponents,
@@ -200,20 +218,8 @@ const Multiselect = ({
 
   return (
     <Select
-      menuPortalTarget={document.body}
-      name={name}
-      isClearable={isClearable}
-      classNamePrefix="select"
-      menuPlacement="auto"
-      styles={{
-        ...defaultStyles,
-        ...styles,
-      }}
-      components={{
-        ...defaultComponents,
-        ...components,
-      }}
       {...sharedProps}
+      components={{ ...defaultComponents, ...components }}
     />
   );
 };

@@ -9,7 +9,7 @@ import RequestAccess from "./pages/RequestAccess";
 import AccessPending from "./pages/AccessPending";
 import Dashboard from "./pages/application-layout/Dashboard";
 import AgentChat from "./pages/application-layout/AgentChat";
-import { ROUTES } from "./consts/routes";
+import { ROUTES, SETTINGS_ROUTES } from "./consts/routes";
 import AppearanceSettings from "./pages/application-layout/settings/AppearanceSettings";
 import CustomRoleForm from "./pages/application-layout/settings/CustomRoleForm";
 import IntegrationsSettings from "./pages/application-layout/settings/IntegrationsSettings";
@@ -35,6 +35,7 @@ import {
 import { ClientsGridPage } from "./pages/application-layout/Clients/ClientsGridPage";
 import NewQuote from "./pages/application-layout/Quotes/NewQuote";
 import { StaffMembersGridPage } from "./pages/application-layout/StaffManagement/StaffMembersGridPage";
+import AccountSettings from "./pages/application-layout/settings/AccountSettings";
 
 function App() {
   return (
@@ -96,6 +97,10 @@ function App() {
 
                       {/* Settings Routes */}
                       <Route path={ROUTES.SETTINGS} element={<Settings />}>
+                        <Route
+                          path={SETTINGS_ROUTES.SETTINGS_ACCOUNT}
+                          element={<AccountSettings />}
+                        />
                         <Route
                           path={ROUTES.SETTINGS_APPEARANCE}
                           element={<AppearanceSettings />}

@@ -36,6 +36,7 @@ type ResponsiveModalProps = {
   onEscapeKeyDown?: (e: KeyboardEvent) => void;
   container?: HTMLElement;
   modal?: boolean;
+  side?: "top" | "bottom" | "left" | "right";
 };
 
 const ResponsiveModal = ({
@@ -63,6 +64,7 @@ const ResponsiveModal = ({
   onCloseAutoFocus,
   onInteractOutside,
   onEscapeKeyDown,
+  side,
 }: ResponsiveModalProps) => {
   const isMobile = useIsMobile();
 
@@ -76,7 +78,7 @@ const ResponsiveModal = ({
           title={title}
           description={description}
           headerContent={header}
-          side={isMobile ? "bottom" : "right"}
+          side={side || isMobile ? "bottom" : "right"}
           open={isOpen}
           onOpenChange={(nextIsOpen, ...rest) => {
             console.log("onOpenChange", nextIsOpen, rest);

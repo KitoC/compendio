@@ -25,7 +25,6 @@ import {
   useEffect,
 } from "react";
 import { SelectOption } from "@/types/fieldTypes";
-import EntitySelect from "../EntitySelect/EntitySelect";
 
 const FormField = ({
   field,
@@ -215,6 +214,7 @@ const FormField = ({
           touched={touched}
           formValues={formValues}
           setFormValues={setFormValues}
+          {...props}
         />
       );
     }

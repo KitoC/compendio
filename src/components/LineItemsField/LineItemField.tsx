@@ -25,7 +25,7 @@ const LineItemField = ({
 }: LineItemFieldProps) => {
   const handleChange = (
     fieldName: keyof QuoteLineItemWithRelations,
-    fieldValue: number | string | SelectOption<QuoteItem>[]
+    fieldValue: number | string | SelectOption<QuoteItem>
   ) => {
     const newValue = { ...value, [fieldName]: fieldValue };
 
@@ -40,7 +40,7 @@ const LineItemField = ({
         : value.discount_percentage;
 
     if (fieldName === "quote_item") {
-      const [quoteItem] = fieldValue as SelectOption<QuoteItem>[];
+      const quoteItem = fieldValue as SelectOption<QuoteItem>;
       newValue.quote_item = quoteItem?.data;
       newValue.unit_price = quoteItem?.data?.unit_price;
       newValue.quantity = quoteItem?.data?.quantity;

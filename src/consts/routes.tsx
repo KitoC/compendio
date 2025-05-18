@@ -1,4 +1,4 @@
-import { Palette, Link } from "lucide-react";
+import { Palette, Link, User } from "lucide-react";
 import Authentication from "@/components/integrations/AddIntegrationWizard/steps/Authentication";
 import ConfirmIntegrationSettings from "@/components/integrations/AddIntegrationWizard/steps/ConfirmIntegrationSettings";
 import CustomIntegrationSettings from "@/components/integrations/AddIntegrationWizard/steps/CustomIntegrationSettings";
@@ -40,6 +40,7 @@ export const SETTINGS_ROUTES = {
   SETTINGS_CUSTOM_ROLES_DETAIL:
     "/:tenantId/app/settings/custom-tables/roles/:id",
   SETTINGS_CUSTOM_ROLES_NEW: "/:tenantId/app/settings/custom-tables/new-role",
+  SETTINGS_ACCOUNT: "/:tenantId/app/settings/account",
 };
 
 // Integration Routes
@@ -61,6 +62,11 @@ export const settingsItems = [
   {
     label: "Settings",
     children: [
+      {
+        label: "Account",
+        url: ROUTES.SETTINGS_ACCOUNT,
+        icon: <User className="h-4 w-4" />,
+      },
       {
         label: "Appearance",
         url: ROUTES.SETTINGS_APPEARANCE,
