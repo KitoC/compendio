@@ -11,7 +11,19 @@ The AI Job Management System is a comprehensive platform designed specifically f
 
 ## Core Modules & Requirements
 
-### 1. Job Scheduling System
+
+### Rich and interactive quoting system
+
+**Functional Requirements:**
+- Initial quote generation by AI via text type or voice transcription from audio ot video uploaded. Also uses Web Speech API for direct transciription.
+- Ability to add quote line items that are direcly mapped to a quote item.
+- Two views: 
+    - internal, this shows profitablity on the quote
+    - customer facing, this shows only thee quote pricing
+- statuses: Draft, Sent, Accepted, Complete, Rejected.
+- When sent from Compendio, it will email the Client with a button to preview the quote and where they can accept or reject or request ammendments.
+
+### Job Scheduling System
 
 **Functional Requirements:**
 - Calendar-based job scheduling interface for assigning team members to jobs
@@ -27,7 +39,7 @@ The AI Job Management System is a comprehensive platform designed specifically f
 - Push notifications for schedule changes
 - Offline capabilities with sync on reconnection
 
-### 2. Job Profitability Tracker
+### Job Profitability Tracker
 
 **Functional Requirements:**
 - Real-time tracking of job costs against income
@@ -43,7 +55,7 @@ The AI Job Management System is a comprehensive platform designed specifically f
 - Real-time calculation of labor costs based on hourly rates
 - Threshold-based alert system
 
-### 3. Overhead & Target Tracker
+### 4. Overhead & Target Tracker
 
 **Functional Requirements:**
 - Monthly revenue target setting and tracking
