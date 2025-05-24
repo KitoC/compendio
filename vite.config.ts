@@ -75,10 +75,10 @@ export default defineConfig(({ mode, command }) => ({
       },
     },
     minify: true,
-    target: "es2017",
+    target: "es2020",
   },
   esbuild: {
-    target: "es2017",
+    target: "es2020",
     supported: {
       "top-level-await": true,
     },
@@ -93,7 +93,7 @@ export default defineConfig(({ mode, command }) => ({
       "@tanstack/react-query",
     ],
     esbuildOptions: {
-      target: "es2017",
+      target: "es2020",
       supported: {
         "top-level-await": true,
       },

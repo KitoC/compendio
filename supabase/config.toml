@@ -22,6 +22,9 @@ verify_jwt = false
 [functions.openai]
 verify_jwt = false
 
+[functions.openai-token]
+verify_jwt = false
+
 [functions.process-queue]
 verify_jwt = false
 
@@ -32,6 +35,12 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.register_webhook]
+verify_jwt = false
+
+[functions.stt]
+verify_jwt = false
+
+[functions.stt-realtime]
 verify_jwt = false
 
 [functions.sync-table-schema]
@@ -62,4 +71,4 @@ verify_jwt = false
 verify_jwt = false
 
 # [edge_runtime]
-# enabled = true
+# policy = "per_worker"

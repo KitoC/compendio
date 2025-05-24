@@ -8,16 +8,16 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Menu, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AiAgentsProvider } from "@/contexts/AiAgents/AiAgentsProvider";
-import { CustomTablesProvider } from "@/contexts/CustomTables/CustomTablesProvider";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { UserSettingsProvider } from "@/contexts/UserSettingsProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
 import clsx from "clsx";
-import useEmailAgentNotifications from "@/contexts/NotificationProvider/useEmailNotifications";
 import { SystemSettingsProvider } from "@/contexts/SystemSettingsProvider";
 import { paths } from "@/utils/pathHelpers";
 import { useTenant } from "@/contexts/TenantContext";
+import { RealtimeAiAgentProvider } from "@/contexts/RealtimeAIAgent/RealtimeAiAgentProvider";
+
 interface ApplicationLayoutProps {
   children?: ReactNode;
 }
@@ -99,7 +99,7 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
         <ThemeProvider defaultTheme="system">
           <TooltipProvider>
             <AiAgentsProvider>
-              <CustomTablesProvider>
+              <RealtimeAiAgentProvider>
                 <SidebarProvider
                   className={clsx(
                     "page-container flex min-h-screen w-full bg-background",
@@ -168,7 +168,7 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
                   )}
                   <PwaInstallPrompt />
                 </SidebarProvider>
-              </CustomTablesProvider>
+              </RealtimeAiAgentProvider>
             </AiAgentsProvider>
           </TooltipProvider>
         </ThemeProvider>

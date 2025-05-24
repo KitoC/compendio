@@ -45,7 +45,7 @@ export const getSupabaseUrl = () => {
   return "https://zgtukvtbfucrvdpicvxx.supabase.co"; // Fallback to hardcoded URL as last resort
 };
 
-export const getWebsocketUrl = () => {
+export const getWebsocketUrl = (wss = "wss") => {
   let baseUrl = "ws://localhost:54321";
 
   if (import.meta.env.VITE_SUPABASE_URL) {
@@ -64,7 +64,7 @@ export const getWebsocketUrl = () => {
     baseUrl = baseUrl.replace("https:", "wss:");
   }
 
-  return `${baseUrl}/functions/v1/wss`;
+  return `${baseUrl}/functions/v1/${wss}`;
 };
 
 /**

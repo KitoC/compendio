@@ -15,7 +15,6 @@ const handler = async (req: Request, context: AuthenticatedContext) => {
 
   switch (method) {
     case "GET": {
-      console.log(searchParams);
       const conversation_id = searchParams.get("conversation_id")!;
       const search = searchParams.get("search") || undefined;
       const metadata_search = searchParams.get("metadata_search") || undefined;

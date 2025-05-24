@@ -7,9 +7,11 @@ import { paths } from "@/utils/pathHelpers";
 import FormBuilder from "@/components/FormBuilder";
 import { quoteFormConfig } from "@/forms/quoteForm";
 import { useRenderPortal } from "@/hooks/useRenderPortal";
-import { Quote, QuotePreviewType } from "@/services/supabase/QuoteService";
+import { QuotePreviewType } from "@/services/supabase/QuoteService";
 import { useState } from "react";
 import QuotePreview from "@/components/quotes/QuotePreview";
+import { AIQuoteAssistant } from "@/components/quotes/AIQuoteAssistant";
+import { AIQuoteData } from "@/types/quote";
 
 const mockQuotePreview: QuotePreviewType = {
   id: "1",
@@ -117,14 +119,41 @@ const NewQuote = () => {
   const [quotePreview, setQuotePreview] = useState<QuotePreviewType | null>(
     null
   );
+  const [showAIAssistant, setShowAIAssistant] = useState(true);
 
   const onSubmit = (data: unknown) => {
     console.log(data);
     setQuotePreview(mockQuotePreview);
   };
 
+  const handleGenerateQuote = (quoteData: AIQuoteData) => {
+    // Transform the AI-generated quote data to match the form structure
+    const transformedData = {
+      name: quoteData.name,
+      description: quoteData.description,
+      quote_line_items: quoteData.quote_line_items.map((item) => ({
+        quote_item: {
+          name: item.name,
+          description: item.description,
+        },
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total_price: item.quantity * item.unit_price,
+      })),
+    };
+
+    // Set the form values and hide the AI assistant
+    setShowAIAssistant(false);
+    // TODO: Set the form values using FormBuilder's methods
+  };
+
+  const handleManualCreate = () => {
+    setShowAIAssistant(false);
+  };
+
   const renderPortal = useRenderPortal("header-anchor-left");
 
+  console.log({ quotePreview, showAIAssistant });
   return (
     <Page title={quotePreview ? "" : "New quote"}>
       {renderPortal(
@@ -146,16 +175,23 @@ const NewQuote = () => {
         />
       )}
 
-      {!quotePreview && (
-        <FormBuilder
-          className="pt-4 h-fit"
-          contentClassName="h-fit overflow-y-unset"
-          config={quoteFormConfig}
-          onSubmit={onSubmit}
-          initialValues={{
-            name: "My new quote",
-          }}
+      {!quotePreview && showAIAssistant ? (
+        <AIQuoteAssistant
+          onGenerateQuote={handleGenerateQuote}
+          onManualCreate={handleManualCreate}
         />
+      ) : (
+        !quotePreview && (
+          <FormBuilder
+            className="pt-4 h-fit"
+            contentClassName="h-fit overflow-y-unset"
+            config={quoteFormConfig}
+            onSubmit={onSubmit}
+            initialValues={{
+              name: "My new quote",
+            }}
+          />
+        )
       )}
     </Page>
   );

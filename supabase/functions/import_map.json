@@ -87,9 +87,12 @@
     "@/utils/env": "./_shared/utils/env.ts",
     "@/utils/processInBatches": "./_shared/utils/processInBatches.ts",
     "@/utils/withRetry": "./_shared/utils/withRetry.ts",
+    "@deepgram/sdk": "npm:@deepgram/sdk@4.2.0",
+    "assemblyai": "npm:assemblyai@4.12.2",
     "deno-land": "https://deno.land/std@0.168.0/http/server.ts",
     "djwt": "https://deno.land/x/djwt@v2.8/mod.ts",
     "lodash": "https://esm.sh/lodash@4",
+    "openai": "npm:openai@4.8.0",
     "supabase-js": "https://esm.sh/@supabase/supabase-js@2.8.0"
   }
 }

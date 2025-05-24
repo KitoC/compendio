@@ -12,29 +12,41 @@ const getFunctionUrl = (functionName: string, searchParams?: string) => {
   return functionUrl;
 };
 
-const getHeaders = async () => {
+const getHeaders = async (isFormData?: boolean) => {
   const session = await supabase.auth.getSession();
 
   const userToken = session?.data?.session?.access_token;
 
   const token = userToken || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const sharedHeaders = {
+    "x-tenant-id": dynamicHeaders["x-tenant-id"],
+    Authorization: `Bearer ${token}`,
+  };
+
+  if (!isFormData) {
+    return {
+      "Content-Type": "application/json",
+      ...sharedHeaders,
+    };
+  }
 
   return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-    "x-tenant-id": dynamicHeaders["x-tenant-id"],
+    ...sharedHeaders,
   };
 };
 
 export const callSupabaseFunction = async (
   functionName: string,
-  body: object
+  body: object | FormData
 ) => {
-  const headers = await getHeaders();
-  const response = await fetch(getFunctionUrl(functionName), {
+  const isFormData = body instanceof FormData;
+  const headers = await getHeaders(isFormData);
+  const url = getFunctionUrl(functionName);
+  console.log("url", url);
+  const response = await fetch(url, {
     method: "POST",
     headers,
-    body: JSON.stringify(body),
+    body: isFormData ? body : JSON.stringify(body),
   });
 
   return response;
@@ -54,12 +66,13 @@ export const SupabaseFunctionService = {
     return response;
   },
 
-  async post(functionName: string, body: object) {
-    const headers = await getHeaders();
+  async post(functionName: string, body: object | FormData) {
+    const isFormData = body instanceof FormData;
+    const headers = await getHeaders(isFormData);
     const response = await fetch(getFunctionUrl(functionName), {
       method: "POST",
       headers,
-      body: JSON.stringify(body),
+      body: isFormData ? body : JSON.stringify(body),
     });
 
     return response;

@@ -42,6 +42,7 @@ export function withCors<Context>(params: Params = defaultParams) {
 
       const origin = req.headers.get("origin");
 
+      console.log("origin", origin);
       if (origin && !allowedOrigins?.includes(origin)) {
         logger.debug("Forbidden: invalid origin", origin);
 
