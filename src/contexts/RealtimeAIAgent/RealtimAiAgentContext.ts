@@ -1,7 +1,11 @@
 import { createContext, useContext } from "react";
+import { ToolHandler, ToolsAndHandlers } from "./types";
+import {
+  ConversationItem,
+  CreateResponseArgs,
+} from "./hooks/useGlobalToolHandler";
 
 interface RealtimeAiAgentContextType {
-  transcript: string;
   startListening: () => void;
   stopListening: () => void;
   isListening: boolean;
@@ -10,6 +14,13 @@ interface RealtimeAiAgentContextType {
   assistantTalking: boolean;
   currentInteraction: CurrentInteraction;
   messages: Message[];
+  setToolsAndHandlers: React.Dispatch<React.SetStateAction<ToolsAndHandlers>>;
+  addToolCallHandlers: (
+    handlers: Record<string, ToolHandler>,
+    context: { dc: RTCDataChannel }
+  ) => void;
+  createConversationItem: (item: ConversationItem) => void;
+  createResponse: (response: CreateResponseArgs) => void;
 }
 
 export interface Message {
@@ -24,7 +35,6 @@ export interface CurrentInteraction {
 
 export const RealtimeAiAgentContext = createContext<RealtimeAiAgentContextType>(
   {
-    transcript: "",
     startListening: () => {},
     stopListening: () => {},
     isListening: false,
@@ -36,6 +46,10 @@ export const RealtimeAiAgentContext = createContext<RealtimeAiAgentContextType>(
       assistant: { role: "assistant", content: "", done: false },
     },
     messages: [],
+    setToolsAndHandlers: () => {},
+    addToolCallHandlers: () => {},
+    createConversationItem: () => {},
+    createResponse: () => {},
   }
 );
 

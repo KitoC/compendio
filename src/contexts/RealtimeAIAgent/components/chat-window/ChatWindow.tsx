@@ -13,7 +13,7 @@ const ChatWindow = ({
   isOpen: boolean;
   toggleOpen: (isOpen: boolean) => void;
 }) => {
-  const [isMiniOpen, setIsMiniOpen] = useState(false);
+  const [isMiniOpen, setIsMiniOpen] = useState(true);
 
   return (
     <div

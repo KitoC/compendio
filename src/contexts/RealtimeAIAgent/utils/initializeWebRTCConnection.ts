@@ -35,7 +35,13 @@ export const initializeWebRTCConnection = async ({
 }: InitializeWebRTCConnectionProps): Promise<InitializeWebRTCConnectionReturn> => {
   try {
     // Get an ephemeral key from your server - see server code below
-    const data = await getRealtimeSession({ model });
+    const data = await getRealtimeSession({
+      model,
+      turn_detection: {
+        type: "server_vad",
+        silence_duration_ms: 1000,
+      },
+    });
 
     console.log("session", data);
 

@@ -17,6 +17,7 @@ import { SystemSettingsProvider } from "@/contexts/SystemSettingsProvider";
 import { paths } from "@/utils/pathHelpers";
 import { useTenant } from "@/contexts/TenantContext";
 import { RealtimeAiAgentProvider } from "@/contexts/RealtimeAIAgent/RealtimeAiAgentProvider";
+import useGlobalTools from "@/contexts/RealtimeAIAgent/hooks/useGlobalTools";
 
 interface ApplicationLayoutProps {
   children?: ReactNode;
@@ -39,6 +40,8 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
       }
     }
   }, [user, authLoading, navigate, location.pathname]);
+
+  const globalTools = useGlobalTools();
 
   if (authLoading) {
     return (
@@ -99,7 +102,7 @@ const ApplicationLayout = ({ children }: ApplicationLayoutProps) => {
         <ThemeProvider defaultTheme="system">
           <TooltipProvider>
             <AiAgentsProvider>
-              <RealtimeAiAgentProvider>
+              <RealtimeAiAgentProvider globalTools={globalTools}>
                 <SidebarProvider
                   className={clsx(
                     "page-container flex min-h-screen w-full bg-background",
