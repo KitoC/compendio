@@ -11,11 +11,9 @@ import Dashboard from "./pages/application-layout/Dashboard";
 import AgentChat from "./pages/application-layout/AgentChat";
 import { ROUTES, SETTINGS_ROUTES } from "./consts/routes";
 import AppearanceSettings from "./pages/application-layout/settings/AppearanceSettings";
-import CustomRoleForm from "./pages/application-layout/settings/CustomRoleForm";
 import IntegrationsSettings from "./pages/application-layout/settings/IntegrationsSettings";
 import IntegrationDetailPage from "./pages/application-layout/settings/IntegrationDetailPage";
 import Settings from "./pages/application-layout/Settings";
-import WorkflowInstancesSettings from "./pages/application-layout/settings/WorkflowInstancesSettings";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { AuthProvider } from "./hooks/useAuth";
 import ApplicationLayout from "./pages/ApplicationLayout";
@@ -113,18 +111,7 @@ function App() {
                           path={ROUTES.SETTINGS_INTEGRATION_DETAIL}
                           element={<IntegrationDetailPage />}
                         />
-                        <Route
-                          path={ROUTES.SETTINGS_WORKFLOW_INSTANCES}
-                          element={<WorkflowInstancesSettings />}
-                        />
-                        <Route
-                          path={ROUTES.SETTINGS_CUSTOM_ROLES_DETAIL}
-                          element={<CustomRoleForm />}
-                        />
-                        <Route
-                          path={ROUTES.SETTINGS_CUSTOM_ROLES_NEW}
-                          element={<CustomRoleForm />}
-                        />
+
                         {/* Default Settings Route */}
                         <Route
                           index

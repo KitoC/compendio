@@ -11,6 +11,7 @@ import pluralize from "pluralize";
 import { startCase } from "lodash";
 import { toast } from "sonner";
 import { useTenant } from "@/contexts/TenantContext";
+
 type MutationOptions = {
   optimistic?: boolean;
 };

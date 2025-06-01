@@ -1,4 +1,4 @@
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -27,16 +27,12 @@ import { ROUTES } from "@/consts/routes";
 import { useSidebar } from "@/components/ui/sidebar/context";
 import { useEffect, useState } from "react";
 import clsx from "clsx";
-import { useAiAgents } from "@/contexts/AiAgents/useAiAgents";
-import { useCustomTables } from "@/contexts/CustomTables/useCustomTables";
 import { settingsItems } from "@/consts/routes";
 import { useTenant } from "@/contexts/TenantContext";
 import TenantSwitcher from "./TenantSwitcher";
 import { useNotifications } from "@/contexts/NotificationProvider";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { IAiAgent } from "@/types/aiAgents";
-import { useDataNavigationItemsQuery } from "@/hooks/DataNavigationItems";
 
 interface SidebarItemOrGroup {
   label: string;
@@ -88,8 +84,6 @@ const SidebarItem = (item: SidebarItemOrGroup) => {
 
 const AppSidebar = () => {
   const { user, profile, signOut } = useAuth();
-  const { aiAgents } = useAiAgents();
-  const { data: dataNavigationItems } = useDataNavigationItemsQuery();
   const { toggleSidebar } = useSidebar();
   const [showSettingsSidebar, setShowSettingsSidebar] = useState(false);
   const location = useLocation();

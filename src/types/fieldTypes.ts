@@ -30,4 +30,6 @@ export type FieldRenderOptions = {
   prefix?: string;
   suffix?: string;
   isMulti?: boolean;
+  dateFormat?: string;
+  dateIncludeTime?: boolean;
 };

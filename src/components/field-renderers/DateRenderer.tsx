@@ -1,5 +1,5 @@
 import { FieldRendererProps } from "./index";
-import { formatValue } from "../custom-tables/utils";
+import { formatValue } from "./utils";
 import { useUserSettings } from "@/contexts/UserSettingsProvider";
 
 const DateRenderer = ({ field, value }: FieldRendererProps) => {
