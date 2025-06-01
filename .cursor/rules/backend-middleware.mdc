@@ -1,0 +1,70 @@
+---
+description: 
+globs: supabase/functions/**
+alwaysApply: false
+---
+# Cursor Rule: Supabase Edge Function Handler/Middleware Pattern
+
+## Overview
+
+All Supabase Edge Functions should use a consistent handler/middleware pattern for maintainability, composability, and testability.
+
+## Pattern
+
+- **Handler Function**:  
+  - Pure async function: `(req, context) => { ... }`
+  - Receives the HTTP request and a context object (with helpers/services).
+  - Returns an object: `{ body, headers, status }`.
+
+- **Middleware Wrapping**:  
+  - Use composable middleware to add cross-cutting concerns:
+    - `withRequestHandlers`: Standardizes handler signature.
+    - `withAuthenticatedContext`: Adds authentication/user context.
+    - `withErrorBoundary`: Catches and formats errors.
+    - `withCors`: Adds CORS headers.
+
+- **Entrypoint**:  
+  - Use `serve(...)` to start the function, wrapping the handler with middleware.
+
+## Example
+
+```typescript
+import { serve } from "std/server";
+import { withCors } from "@/lib/middleware/withCors";
+import { withErrorBoundary } from "@/lib/middleware/withErrorBoundary";
+import { withRequestHandlers } from "@/lib/middleware/withRequestHandlers";
+import { withAuthenticatedContext } from "@/lib/middleware/withAuthenticatedContext";
+
+const handler = async (req: Request, context: MyContext) => {
+  // ...business logic...
+  return {
+    body: JSON.stringify({ result: "ok" }),
+    headers: { ...context.corsHeaders, "Content-Type": "application/json" },
+    status: 200,
+  };
+};
+
+serve(
+  withCors()(
+    withErrorBoundary(
+      withAuthenticatedContext(
+        withRequestHandlers<MyContext>(handler)
+      )
+    )
+  )
+);
+```
+
+## Benefits
+
+- **Consistency**: All functions follow the same structure.
+- **Composability**: Easily add/remove middleware.
+- **Testability**: Handler is pure and easy to test.
+- **Separation of Concerns**: Middleware handles cross-cutting logic.
+
+## Usage
+
+- Always define a handler function with `(req, context)`.
+- Always wrap with the required middleware in the order:  
+  `withCors` → `withErrorBoundary` → `withAuthenticatedContext` → `withRequestHandlers`.
+- Return `{ body, headers, status }` from the handler.

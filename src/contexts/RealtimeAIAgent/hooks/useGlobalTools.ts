@@ -1,24 +1,24 @@
+import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import navigateTo from "../global-tool-definitions/navigateTo";
-import { useTenant } from "@/contexts/TenantContext";
-import { keyBy } from "lodash";
 
-const useGlobalTools = () => {
+const useGlobalTools = ({ realtimeAgent }) => {
   const navigate = useNavigate();
-  const { urlTenantAlias } = useTenant();
 
-  const navigateToHandler = ({ url }: { url: string }) => {
-    navigate(`/${urlTenantAlias}/app${url}`);
-  };
-
-  const globalTools = {
-    tools: keyBy([navigateTo], "name"),
-    handlers: {
-      navigateTo: navigateToHandler,
+  const navigateToHandler = useCallback(
+    ({ arguments: { url, dynamicUrl } }) => {
+      navigate(dynamicUrl ? `${dynamicUrl}` : `${url}`);
     },
-  };
+    [navigate]
+  );
 
-  return globalTools;
+  useEffect(() => {
+    return realtimeAgent?.registerTools([navigateTo]);
+  }, [realtimeAgent]);
+
+  useEffect(() => {
+    return realtimeAgent?.onFunctionCall(navigateTo.name, navigateToHandler);
+  }, [navigateToHandler, realtimeAgent]);
 };
 
 export default useGlobalTools;

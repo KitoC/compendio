@@ -16,6 +16,9 @@ verify_jwt = false
 [functions.handle_oauth_callback]
 verify_jwt = false
 
+[functions.import-quote-items]
+verify_jwt = false
+
 [functions.messages]
 verify_jwt = false
 

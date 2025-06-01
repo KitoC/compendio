@@ -13,11 +13,13 @@ import { EditIcon, PlusIcon, TrashIcon } from "lucide-react";
 import ServiceRecordModal from "@/components/modals/FormModal";
 import { quoteItemFormConfig } from "@/forms/quoteItemForm";
 import { useRenderPortal } from "@/hooks/useRenderPortal";
+import { QuoteItemsImportModal } from "./QuoteItemsImportModal";
 
 const quoteItemService = new QuoteItemService();
 
 export const QuoteItemsGridPage = () => {
   const [editingRecord, setEditingRecord] = useState<QuoteItem | null>(null);
+  const [importModalOpen, setImportModalOpen] = useState(false);
 
   const response = useServiceListQuery<QuoteItem>({
     optimistic: true,
@@ -49,6 +51,9 @@ export const QuoteItemsGridPage = () => {
               <PlusIcon />
               Add Quote Item
             </Button>
+            <Button variant="outline" onClick={() => setImportModalOpen(true)}>
+              Import
+            </Button>
           </div>
         )}
       <Card className="h-full flex flex-col p-4 gap-4">
@@ -67,6 +72,12 @@ export const QuoteItemsGridPage = () => {
               <Button onClick={() => setEditingRecord({} as QuoteItem)}>
                 <PlusIcon />
                 Add Quote Item
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setImportModalOpen(true)}
+              >
+                Import
               </Button>
             </div>
           }
@@ -105,6 +116,14 @@ export const QuoteItemsGridPage = () => {
           setEditingRecord(null);
         }}
         formConfig={quoteItemFormConfig}
+      />
+      <QuoteItemsImportModal
+        isOpen={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
+        onSuccess={() => {
+          setImportModalOpen(false);
+          response.invalidateQuery();
+        }}
       />
     </>
   );

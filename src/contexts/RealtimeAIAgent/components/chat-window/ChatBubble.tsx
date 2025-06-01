@@ -1,26 +1,36 @@
-import RenderMarkdown from "@/components/chat/RenderMarkdown";
-import { cn } from "@/lib/utils";
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 
-const ChatBubble = ({ message, scrollOnMount }) => {
-  const isUser = message.role === "user";
-  const bubbleRef = useRef(null);
+interface Message {
+  role: string;
+  content: string;
+}
+
+interface ChatBubbleProps {
+  message: Message;
+  scrollOnMount: boolean;
+  children: React.ReactNode;
+}
+
+const ChatBubble = ({ message, scrollOnMount, children }: ChatBubbleProps) => {
+  const isUser = message?.role === "user";
+  const bubbleRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (scrollOnMount) {
+    if (scrollOnMount && bubbleRef.current) {
       bubbleRef.current.scrollTop = bubbleRef.current.scrollHeight;
     }
   }, [scrollOnMount]);
 
   return (
-    <div className="w-full" ref={bubbleRef}>
+    <div ref={bubbleRef} className="w-full">
       <div
-        className={cn(
-          "w-fit max-w-[90%] bg-white rounded-lg p-2 shadow-sm border border-border",
-          isUser && "ml-auto"
-        )}
+        className={`
+          w-fit max-w-[90%] bg-white rounded-lg p-2 
+          shadow-sm border border-gray-300
+          ${isUser ? "ml-auto" : "ml-0"}
+        `}
       >
-        <RenderMarkdown message={message.content} isUser={isUser} />
+        {children}
       </div>
     </div>
   );

@@ -45,6 +45,9 @@ const buttonVariants = cva(
         icon: "h-10 w-10 [&_svg]:size-5",
         "icon-only": "h-fit w-fit h-fit w-fit !p-0 hover:bg-transparent",
       },
+      round: {
+        true: "rounded-full h-10 w-10",
+      },
     },
     defaultVariants: {
       variant: "default",
@@ -61,13 +64,22 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
-    { className, variant, size, asChild = false, onClick, type, ...props },
+    {
+      className,
+      variant,
+      size,
+      asChild = false,
+      onClick,
+      type,
+      round,
+      ...props
+    },
     ref
   ) => {
     const Comp = asChild ? Slot : "button";
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(buttonVariants({ variant, size, className, round }))}
         ref={ref}
         {...props}
         onClick={(e) => {

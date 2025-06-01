@@ -1,0 +1,1 @@
+ALTER TABLE quote_items ADD CONSTRAINT quote_item_external_id_unique UNIQUE (external_id, tenant_id);

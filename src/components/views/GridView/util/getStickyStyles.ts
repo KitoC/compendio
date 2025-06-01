@@ -29,11 +29,11 @@ const getStickyStyles = <RecordType>(
   //   if (isHeader) {
 
   if (isFirst) {
-    styles += ` left-0 after:border-r max-w-[150px] truncate`;
+    styles += ` left-0 after:border-r max-w-[150px] truncate bg-background`;
   }
 
   if (isActions) {
-    styles += ` right-0 after:border-l !max-w-[150px] truncate`;
+    styles += ` right-0 after:border-l !max-w-[150px] truncate bg-background`;
   }
 
   return styles;

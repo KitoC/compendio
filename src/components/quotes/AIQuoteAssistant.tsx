@@ -4,7 +4,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { AIQuoteData } from "@/types/quote";
 import { toast } from "sonner";
-import useLocalTools from "@/contexts/RealtimeAIAgent/hooks/useLocalTools";
 import { Type } from "@sinclair/typebox";
 
 interface AIQuoteAssistantProps {
@@ -48,59 +47,6 @@ export const AIQuoteAssistant = ({
       setIsGenerating(false);
     }
   };
-
-  const localToolsAndHandlers = useMemo(
-    () => ({
-      tools: {
-        fillInJobDescription: {
-          name: "fillInJobDescription",
-          description: "Fill in the job description",
-          parameters: Type.Object({
-            jobDescription: Type.String({
-              description: "The job description to fill in",
-            }),
-          }),
-          type: "function",
-        },
-        getDescriptionForContext: {
-          name: "getDescriptionForContext",
-          description:
-            "Get the description for the context so that you don't overwrite the existing job description",
-          type: "function",
-        },
-      },
-      handlers: {
-        fillInJobDescription: async (
-          args: { jobDescription: string },
-          { createResponse }
-        ) => {
-          setJobDescription(args.jobDescription);
-          createResponse({
-            instructions: "Briefly acknowledge the user's request",
-          });
-        },
-        getDescriptionForContext: async (
-          _,
-          { toolCall, createConversationItem, createResponse }
-        ) => {
-          createConversationItem({
-            role: "user",
-            call_id: toolCall.call_id,
-            arguments: toolCall.arguments,
-            output: jobDescription,
-          });
-
-          createResponse({
-            instructions:
-              "Read the job description and return a description of the context",
-          });
-        },
-      },
-    }),
-    [setJobDescription, jobDescription]
-  );
-
-  useLocalTools(localToolsAndHandlers);
 
   return (
     <Card className="space-y-6">

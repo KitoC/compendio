@@ -1,85 +1,52 @@
-import { Button } from "@/components/ui/button";
-import { ReactNode, useState } from "react";
-import { X, ArrowDownToLine, ArrowUpToLine } from "lucide-react";
-import { cn } from "@/lib/utils";
+import React from "react";
+import { X } from "lucide-react";
 import ChatMessages from "./ChatMessages";
+import ChatFooter from "./ChatFooter";
+import TranscriptBubbles from "./TranscriptBubbles";
 
-const ChatWindow = ({
-  children,
-  isOpen,
-  toggleOpen,
-}: {
-  children: ReactNode;
+interface ChatWindowProps {
+  children: React.ReactNode;
   isOpen: boolean;
-  toggleOpen: (isOpen: boolean) => void;
-}) => {
-  const [isMiniOpen, setIsMiniOpen] = useState(true);
+  toggleOpen: (open: boolean) => void;
+}
 
+const ChatWindow = ({ children, isOpen, toggleOpen }: ChatWindowProps) => {
   return (
     <div
-      className={cn(
-        "rounded-lg  relative group",
-        isOpen ? "border border-border bg-white shadow-lg" : "rounded-full"
-      )}
+      className={`
+        relative pointer-events-auto 
+        ${isOpen ? "rounded-lg p-0.5 bg-lime-600" : "rounded-full"}
+      `}
     >
+      <TranscriptBubbles isOpen={isOpen} />
       <div
-        className={cn(
-          "flex flex-col absolute  -right-4 transition-all duration-300 hover:bg-slate-100/50 border border-transparent hover:border-border rounded-md",
-          isOpen && "opacity-0",
-          isMiniOpen && " h-[300px] w-[300px] -top-[305px]",
-          !isMiniOpen && "h-0 w-0 top-4"
-        )}
-      >
-        <div
-          className={cn(
-            "flex items-center justify-between absolute -top-8 right-0 group-hover:opacity-100 opacity-0 transition-all duration-300"
-          )}
-        >
-          <div className="text-sm text-gray-500 ml-auto pt-1 pr-1">
-            <Button
-              size="icon-only"
-              variant="ghost"
-              onClick={() => setIsMiniOpen(!isMiniOpen)}
-            >
-              {isMiniOpen ? <ArrowDownToLine /> : <ArrowUpToLine />}
-            </Button>
-          </div>
-        </div>
-        <ChatMessages isOpen={isOpen} />
-      </div>
-
-      <div
-        className={cn(
-          isOpen &&
-            "absolute -top-10  w-full flex justify-center pointer-events-none"
-        )}
+        className={`
+          ${isOpen ? "absolute top-3 left-3" : ""}
+        `}
       >
         {children}
       </div>
       <div
-        className={cn(
-          "flex flex-col transition-all duration-300",
-          isOpen ? "h-[500px] w-[400px] opacity-1" : "h-0 w-0 opacity-0"
-        )}
+        className={`
+          flex flex-col transition-all duration-300 rounded-lg
+          ${isOpen ? "h-[500px] w-[400px] opacity-100" : "h-0 w-0 opacity-0"}
+        `}
       >
         {isOpen && (
-          <div className="flex items-center justify-between border-b p-2 px-4">
-            <div className="text-lg font-bold">Assistant</div>
-            <div className="text-sm text-gray-500">
-              <Button variant="ghost" onClick={() => toggleOpen(!isOpen)}>
-                <X />
-              </Button>
+          <div className="flex items-start justify-between p-4 h-[100px] bg-stone-600 rounded-lg rounded-b-none">
+            <div className="ml-auto">
+              <button
+                type="button"
+                className="p-1.5 px-2 bg-white/20 border-none rounded hover:bg-white/30 transition-colors"
+                onClick={() => toggleOpen(!isOpen)}
+              >
+                <X size={16} />
+              </button>
             </div>
           </div>
         )}
-
         <ChatMessages isOpen={isOpen} />
-
-        {isOpen && (
-          <div className="mt-auto w-full border-t border-border p-4">
-            footer
-          </div>
-        )}
+        {isOpen && <ChatFooter />}
       </div>
     </div>
   );

@@ -11,5 +11,6 @@ export class QuoteItemService extends BaseService<
   constructor() {
     super();
     this.tableName = tableName;
+    this.searchColumns = ["name", "description"];
   }
 }

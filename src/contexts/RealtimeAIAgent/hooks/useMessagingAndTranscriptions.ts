@@ -1,74 +1,69 @@
-import { Message } from "../RealtimAiAgentContext";
-import { useEffect, useState } from "react";
-import { CurrentInteraction } from "../RealtimAiAgentContext";
-import { EVENTS } from "../consts";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ROLES, Interaction } from "../types";
 
-export const useMessagingAndTranscriptions = ({ dc }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
+export const useMessagingAndTranscriptions = ({ realtimeAgent }) => {
+  const [messages, setMessages] = useState([]);
   const [assistantTalking, setAssistantTalking] = useState(false);
 
-  const [currentInteraction, setCurrentInteraction] =
-    useState<CurrentInteraction>({
-      user: { role: "user", content: "", done: false },
-      assistant: { role: "assistant", content: "", done: false },
+  const [currentInteraction, setCurrentInteraction] = useState<Interaction>({
+    user: { role: ROLES.USER, content: "", done: false },
+    assistant: { role: ROLES.ASSISTANT, content: "", done: false },
+  });
+
+  const resetMessageState = useCallback(() => {
+    setMessages([]);
+    setCurrentInteraction({
+      user: { role: ROLES.USER, content: "", done: false },
+      assistant: { role: ROLES.ASSISTANT, content: "", done: false },
     });
+    setAssistantTalking(false);
+  }, []);
 
   useEffect(() => {
-    if (dc) {
-      dc.onmessage = (event) => {
-        const data = JSON.parse(event.data);
+    realtimeAgent?.onAgentTalking((isTalking) => {
+      setAssistantTalking(isTalking);
+    });
+  }, [realtimeAgent]);
 
-        if (data.type === EVENTS.OUTPUT_AUDIO_BUFFER_STARTED) {
-          setAssistantTalking(true);
-        }
+  useEffect(() => {
+    realtimeAgent?.onAgentResponseDelta(({ text, done }) => {
+      setCurrentInteraction((prev) => ({
+        ...prev,
+        assistant: {
+          role: ROLES.ASSISTANT,
+          content: prev.assistant.content + text,
+          done,
+        },
+      }));
+    });
+  }, [realtimeAgent]);
 
-        if (data.type === EVENTS.OUTPUT_AUDIO_BUFFER_STOPPED) {
-          setAssistantTalking(false);
-        }
+  useEffect(() => {
+    realtimeAgent?.onAgentResponseDone(({ text, done }) => {
+      setCurrentInteraction((prev) => ({
+        ...prev,
+        assistant: { role: ROLES.ASSISTANT, content: text, done },
+      }));
+    });
+  }, [realtimeAgent]);
 
-        // if(data.type)
-        if (data.type === EVENTS.ASSISTANT_RESPONSE_DELTA) {
-          setCurrentInteraction((prev) => ({
-            ...prev,
-            assistant: {
-              role: "assistant",
-              content: prev.assistant.content + data.delta,
-              done: false,
-            },
-          }));
-        }
+  useEffect(() => {
+    realtimeAgent?.onUserTranscriptionDelta(({ text, done }) => {
+      setCurrentInteraction((prev) => ({
+        ...prev,
+        user: { role: ROLES.USER, content: prev.user.content + text, done },
+      }));
+    });
+  }, [realtimeAgent]);
 
-        if (data.type === EVENTS.ASSISTANT_RESPONSE_DONE) {
-          setCurrentInteraction((prev) => ({
-            ...prev,
-            assistant: {
-              role: "assistant",
-              content: data.transcript,
-              done: true,
-            },
-          }));
-        }
-
-        if (data.type === EVENTS.CONVERSATION_DELTA) {
-          setCurrentInteraction((prev) => ({
-            ...prev,
-            user: {
-              role: "user",
-              content: prev.user.content + data.delta,
-              done: false,
-            },
-          }));
-        }
-
-        if (data.type === EVENTS.CONVERSATION_DONE) {
-          setCurrentInteraction((prev) => ({
-            ...prev,
-            user: { role: "user", content: data.transcript, done: true },
-          }));
-        }
-      };
-    }
-  }, [dc]);
+  useEffect(() => {
+    realtimeAgent?.onUserTranscriptionDone(({ text, done }) => {
+      setCurrentInteraction((prev) => ({
+        ...prev,
+        user: { role: ROLES.USER, content: text, done },
+      }));
+    });
+  }, [realtimeAgent]);
 
   useEffect(() => {
     if (currentInteraction.user.done && currentInteraction.assistant.done) {
@@ -78,17 +73,59 @@ export const useMessagingAndTranscriptions = ({ dc }) => {
         currentInteraction.assistant,
       ]);
       setCurrentInteraction({
-        user: { role: "user", content: "", done: false },
-        assistant: { role: "assistant", content: "", done: false },
+        user: { role: ROLES.USER, content: "", done: false },
+        assistant: { role: ROLES.ASSISTANT, content: "", done: false },
       });
     }
   }, [currentInteraction]);
 
+  useEffect(() => {
+    return realtimeAgent?.onConversationItemCreated(({ data }) => {
+      if (data?.item?.role === ROLES.USER && data?.item?.content[0]?.text) {
+        realtimeAgent?.createAiResponse({
+          instructions: "Respond to user's message",
+        });
+      }
+    });
+  }, [realtimeAgent]);
+
+  const sendMessage = useCallback(
+    (message) => {
+      realtimeAgent?.interruptAudio();
+      realtimeAgent?.createUserMessage({ text: message });
+
+      setCurrentInteraction({
+        user: { role: ROLES.USER, content: message, done: true },
+        assistant: { role: ROLES.ASSISTANT, content: "", done: false },
+      });
+    },
+    [realtimeAgent]
+  );
+
+  const messagesWithTranscriptions = useMemo(() => {
+    const allMessages = [...messages];
+
+    if (currentInteraction.user.content) {
+      allMessages.push(currentInteraction.user);
+    }
+
+    if (
+      currentInteraction.assistant.content &&
+      currentInteraction.user.content
+    ) {
+      allMessages.push(currentInteraction.assistant);
+    }
+
+    return allMessages;
+  }, [messages, currentInteraction]);
+
   return {
-    messages,
+    messages: messagesWithTranscriptions,
     setMessages,
     currentInteraction,
     setCurrentInteraction,
     assistantTalking,
+    sendMessage,
+    resetMessageState,
   };
 };

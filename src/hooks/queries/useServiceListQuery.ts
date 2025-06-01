@@ -113,7 +113,7 @@ export function useServiceListQuery<RecordType extends { id: string }>({
       return undefined;
     },
     queryKey: dataQueryKey,
-    queryFn: () => onFetch?.(query),
+    queryFn: () => onFetch?.({ ...query, options: { count: "exact" } }),
     enabled: !!onFetch && enabled,
     // keepPreviousData: true,
   });

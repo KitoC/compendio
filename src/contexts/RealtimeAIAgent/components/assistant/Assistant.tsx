@@ -1,15 +1,15 @@
+import React, { useState, useCallback } from "react";
 import ChatWindow from "../chat-window/ChatWindow";
-import { AssistantAvatar } from "./AssistantAvatar";
-import { useState, useCallback } from "react";
+import AssistantAvatar from "./AssistantAvatar";
 
-export const Assistant = () => {
+const Assistant = () => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const toggleOpen = useCallback((isOpen: boolean) => setIsOpen(isOpen), []);
+  const toggleOpen = useCallback(() => setIsOpen((prev) => !prev), []);
 
   return (
     <div className="absolute bottom-0 right-0">
-      <div className="p-8 pointer-events-auto">
+      <div className="p-8">
         <ChatWindow isOpen={isOpen} toggleOpen={toggleOpen}>
           <AssistantAvatar toggleOpen={toggleOpen} isOpen={isOpen} />
         </ChatWindow>
@@ -17,3 +17,5 @@ export const Assistant = () => {
     </div>
   );
 };
+
+export default Assistant;

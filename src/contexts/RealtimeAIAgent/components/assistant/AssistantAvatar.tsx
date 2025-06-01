@@ -1,48 +1,32 @@
-import { useRealtimeAiAgent } from "@/contexts/RealtimeAIAgent/RealtimAiAgentContext";
-import { cn } from "@/lib/utils";
+import React, { useEffect, useState } from "react";
+import PropTypes from "prop-types";
+import MicrophoneToggle from "../controls/MicrophoneToggle";
+import ContextModal from "../modals/ContextModal";
+import { useRealtimeAiAgent } from "../../RealtimAiAgentContext";
+import ControlButton from "../controls/ControlButton";
 import SpeakingAnimation from "./SpeakingAnimation";
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Mic, MessageCircle } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 
-const FloatingButton = ({
-  onClick,
-  children,
-  className,
-}: {
-  onClick: () => void;
-  children: React.ReactNode;
-  className?: string;
+interface AssistantAvatarProps {
+  toggleOpen: () => void;
+  isOpen: boolean;
+}
+
+const AssistantAvatar: React.FC<AssistantAvatarProps> = ({
+  toggleOpen,
+  isOpen,
 }) => {
-  return (
-    <Button
-      onClick={onClick}
-      className={cn(
-        "transition-all opacity-0 hover:scale-110 !hover:bg-slate-300 duration-200 !bg-white border !border-border shadow-lg text-gray-800 p-1.5 rounded-full h-[40px] w-[40px] flex items-center justify-center z-100",
-        className
-      )}
-    >
-      {children}
-    </Button>
-  );
-};
-
-export const AssistantAvatar = ({ toggleOpen, isOpen }) => {
   const {
     startListening,
     stopListening,
     isListening,
     isConnecting,
     assistantTalking,
+    error,
   } = useRealtimeAiAgent();
 
   const [blinking, setBlinking] = useState(false);
 
-  const activeColor = isListening
-    ? "bg-primary hover:bg-primary/80"
-    : "bg-slate-400 hover:bg-slate-500";
-
-  // Random blink effect
   useEffect(() => {
     const blinkInterval = setInterval(() => {
       setBlinking(true);
@@ -50,68 +34,125 @@ export const AssistantAvatar = ({ toggleOpen, isOpen }) => {
     }, Math.random() * 4000 + 2000);
 
     return () => clearInterval(blinkInterval);
-  }, []);
+  }, [blinking]);
 
-  const eyeStyles = cn(
-    "w-4 h-5 rounded-full transition-all duration-200",
-    activeColor,
-    !isListening && "h-0.5",
-    !isListening && isConnecting && blinking && "h-1",
-    isListening && blinking && "h-1"
-  );
+  const getEyeHeight = () => {
+    if (!isListening) return "h-0.5";
+    if ((isConnecting || isListening) && blinking) return "h-1";
+    return "h-5";
+  };
 
   return (
-    <div className="pointer-events-auto relative group flex items-end gap-1">
+    <div
+      className="pointer-events-auto relative flex items-end gap-1"
+      id="avatar-container"
+    >
       {!isOpen && (
-        <div className="flex items-center justify-center gap-1">
-          <FloatingButton
-            onClick={isListening ? stopListening : startListening}
-            className={isListening ? "opacity-100 -left-[30px]" : "opacity-0"}
-          >
-            <Mic className="h-2 w-2" />
-          </FloatingButton>
-          <FloatingButton
+        <div className="flex items-center justify-center gap-2 ml-auto">
+          <ContextModal />
+          <MicrophoneToggle />
+          <ControlButton
             onClick={toggleOpen}
-            className={isListening ? "opacity-100 -left-[70px]" : "opacity-0"}
-          >
-            <MessageCircle className="h-2 w-2" />
-          </FloatingButton>
+            isVisible={isListening}
+            isListening={isListening}
+            icon={<MessageCircle />}
+            tooltip="Open chat"
+          />
         </div>
       )}
-      <Button
-        onClick={isListening ? stopListening : startListening}
-        className={cn(
-          "bg-slate-400 hover:bg-slate-500 shadow-lg text-gray-800 p-1.5 rounded-full h-[80px] w-[80px] flex items-center justify-center relative z-100",
-          activeColor,
-          isConnecting && "animate-pulse"
-        )}
+
+      <div
+        className={`
+          ${!isOpen ? "bg-stone-600" : "bg-transparent"} 
+          rounded-full h-20 w-20 flex items-center justify-center
+          shadow-lg
+        `}
       >
-        <div
-          className={cn(
-            "bg-white rounded-full h-full w-full relative flex items-center justify-center z-10 relative",
-            isConnecting && "animate-pulse"
-          )}
+        <button
+          onClick={isListening ? stopListening : startListening}
+          className={`
+            border-none text-gray-800 p-0.5  h-20 w-20 
+            flex items-center justify-center relative z-50 
+            ${isConnecting ? "animate-pulse" : ""} 
+            cursor-pointer bg-transparent transform scale-75
+          `}
         >
-          <div className="absolute -top-1.5 left-0 w-full h-full flex items-center justify-between p-2">
-            <div className={eyeStyles} />
-            <div className={eyeStyles} />
-          </div>
-          {assistantTalking ? (
-            <SpeakingAnimation
-              className="scale-[0.2] relative top-4"
-              barClassName="bg-primary"
-            />
-          ) : (
+          <div
+            className="
+              bg-white rounded-2xl h-full w-full border border-stone-500
+              flex items-center justify-center relative z-10 p-1
+              shadow-lg
+              scale-125
+            "
+          >
+            {/* Inner head */}
             <div
-              className={cn(
-                "w-4 h-1 bg-primary rounded-full top-4 relative",
-                activeColor
+              className={`
+                bg-stone-600 border-[3px] border-stone-400 rounded-2xl h-full w-full relative flex items-center 
+                justify-center z-20 text-lime-600
+                ${isConnecting ? "animate-pulse" : ""}
+             
+              `}
+            >
+              {error ? (
+                <div>
+                  <span className="text-sm font-medium">ERROR</span>
+                </div>
+              ) : (
+                <>
+                  {/* Eyes */}
+                  <div className="absolute -top-1.5 left-0 w-full h-full flex items-center justify-between px-2">
+                    <div
+                      className={`
+                        w-4 ${getEyeHeight()} rounded-full transition-all duration-200
+                        ${
+                          isListening
+                            ? "bg-lime-500 hover:bg-lime-500"
+                            : "bg-slate-400 hover:bg-slate-500"
+                        }
+                      `}
+                    />
+                    <div
+                      className={`
+                        w-4 ${getEyeHeight()} rounded-full transition-all duration-200
+                        ${
+                          isListening
+                            ? "bg-lime-500 hover:bg-lime-500"
+                            : "bg-slate-400 hover:bg-slate-500"
+                        }
+                      `}
+                    />
+                  </div>
+
+                  {/* Mouth */}
+                  {assistantTalking ? (
+                    <div className="scale-50 relative top-4">
+                      <SpeakingAnimation
+                        className=""
+                        barClassName="bg-lime-500"
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      className={`
+                        w-4 h-1 rounded-full relative top-4
+                        ${isListening ? "bg-lime-500" : "bg-slate-400"}
+                      `}
+                    />
+                  )}
+                </>
               )}
-            />
-            //   <Bot className="h-10 w-10 text-slate-600" />
-          )}
-        </div>
-      </Button>
+            </div>
+          </div>
+        </button>
+      </div>
     </div>
   );
 };
+
+AssistantAvatar.propTypes = {
+  toggleOpen: PropTypes.func.isRequired,
+  isOpen: PropTypes.bool.isRequired,
+};
+
+export default AssistantAvatar;

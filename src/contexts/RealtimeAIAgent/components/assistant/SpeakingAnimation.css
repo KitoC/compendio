@@ -8,7 +8,7 @@
 .bar {
   bottom: 1px;
   height: 3px;
-  width: 16px;
+  width: 6px;
   margin: 0px 4px;
   border-radius: 5px;
   animation: sound 0ms -600ms linear infinite alternate;
@@ -21,7 +21,7 @@
   }
   100% {
     opacity: 1;
-    height: 50px;
+    height: 20px;
   }
 }
 

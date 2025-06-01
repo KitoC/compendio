@@ -67,10 +67,10 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   }, [session?.access_token]);
 
   useEffect(() => {
-    connect();
-    return () => {
-      socketRef.current?.close();
-    };
+    // connect();
+    // return () => {
+    //   socketRef.current?.close();
+    // };
   }, [connect]);
 
   const sendMessage = useCallback((payload: object) => {

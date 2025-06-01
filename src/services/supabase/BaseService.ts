@@ -153,7 +153,6 @@ export class BaseService<Table extends GenericTable> {
       }
 
       if (pagination) {
-        console.log("pagination --> ", pagination);
         query = query.range(
           pagination.page * pagination.pageSize - pagination.pageSize,
           pagination.page * pagination.pageSize

@@ -12,15 +12,11 @@ const SpeakingAnimation = ({
 }: SpeakingAnimationProps) => {
   return (
     <div id="bars" className={className}>
-      {/* <div className={cn("bar", barClassName)}></div>
-      <div className={cn("bar", barClassName)}></div> */}
       <div className={cn("bar", barClassName)}></div>
       <div className={cn("bar", barClassName)}></div>
       <div className={cn("bar", barClassName)}></div>
       <div className={cn("bar", barClassName)}></div>
       <div className={cn("bar", barClassName)}></div>
-      {/* <div className={cn("bar", barClassName)}></div>
-      <div className={cn("bar", barClassName)}></div> */}
     </div>
   );
 };
